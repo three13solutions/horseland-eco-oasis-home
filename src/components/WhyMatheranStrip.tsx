@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Ban, Mountain, Horse, Train } from 'lucide-react';
+import { Ban, Mountain, Zap, Train } from 'lucide-react';
 
 const WhyMatheranStrip = () => {
   const features = [
@@ -15,7 +15,7 @@ const WhyMatheranStrip = () => {
       description: 'Unique laterite pathways'
     },
     {
-      icon: Horse,
+      icon: Zap,
       title: 'Horse Rides',
       description: 'Traditional hill transport'
     },
