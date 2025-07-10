@@ -3,10 +3,21 @@ import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Camera, Heart, MapPin, ArrowRight } from 'lucide-react';
 
+interface OfficialPhoto {
+  url: string;
+  caption: string;
+}
+
+interface GuestPhoto {
+  url: string;
+  caption: string;
+  likes: number;
+}
+
 const MatheranMoments = () => {
   const [activeTab, setActiveTab] = useState('official');
 
-  const officialPhotos = [
+  const officialPhotos: OfficialPhoto[] = [
     { url: 'https://images.unsplash.com/photo-1469474968028-56623f02e42e?w=400&h=400&fit=crop', caption: 'Sunrise at Echo Point' },
     { url: 'https://images.unsplash.com/photo-1482938289607-e9573fc25ebb?w=400&h=400&fit=crop', caption: 'Mountain Spa Experience' },
     { url: 'https://images.unsplash.com/photo-1501854140801-50d01698950b?w=400&h=400&fit=crop', caption: 'Forest Trail Adventures' },
@@ -18,7 +29,7 @@ const MatheranMoments = () => {
     { url: 'https://images.unsplash.com/photo-1472396961693-142e6e269027?w=400&h=400&fit=crop', caption: 'Wildlife Encounters' }
   ];
 
-  const guestPhotos = [
+  const guestPhotos: GuestPhoto[] = [
     { url: 'https://images.unsplash.com/photo-1472396961693-142e6e269027?w=400&h=400&fit=crop', caption: '@anjali_travels', likes: 234 },
     { url: 'https://images.unsplash.com/photo-1439886183900-e79ec0057170?w=400&h=400&fit=crop', caption: '@wanderlust_couple', likes: 189 },
     { url: 'https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05?w=400&h=400&fit=crop', caption: '@mountain_seeker', likes: 156 },
@@ -29,8 +40,6 @@ const MatheranMoments = () => {
     { url: 'https://images.unsplash.com/photo-1482938289607-e9573fc25ebb?w=400&h=400&fit=crop', caption: '@horseland_fan', likes: 245 },
     { url: 'https://images.unsplash.com/photo-1469474968028-56623f02e42e?w=400&h=400&fit=crop', caption: '@sunrise_chaser', likes: 267 }
   ];
-
-  const currentPhotos = activeTab === 'official' ? officialPhotos : guestPhotos;
 
   return (
     <section className="py-24 bg-gradient-to-b from-muted/20 to-background">
@@ -74,26 +83,44 @@ const MatheranMoments = () => {
 
         {/* Photo Grid */}
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mb-12">
-          {currentPhotos.map((photo, index) => (
-            <div
-              key={index}
-              className="group relative aspect-square overflow-hidden rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1"
-            >
-              <img
-                src={photo.url}
-                alt={photo.caption}
-                className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
-              />
-              
-              {/* Overlay */}
-              <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                <div className="absolute bottom-4 left-4 right-4">
-                  {activeTab === 'official' ? (
+          {activeTab === 'official' ? (
+            officialPhotos.map((photo, index) => (
+              <div
+                key={index}
+                className="group relative aspect-square overflow-hidden rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1"
+              >
+                <img
+                  src={photo.url}
+                  alt={photo.caption}
+                  className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                />
+                
+                {/* Overlay */}
+                <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                  <div className="absolute bottom-4 left-4 right-4">
                     <div className="flex items-center space-x-2">
                       <MapPin className="w-4 h-4 text-white" />
                       <span className="text-white text-sm font-medium">{photo.caption}</span>
                     </div>
-                  ) : (
+                  </div>
+                </div>
+              </div>
+            ))
+          ) : (
+            guestPhotos.map((photo, index) => (
+              <div
+                key={index}
+                className="group relative aspect-square overflow-hidden rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1"
+              >
+                <img
+                  src={photo.url}
+                  alt={photo.caption}
+                  className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                />
+                
+                {/* Overlay */}
+                <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                  <div className="absolute bottom-4 left-4 right-4">
                     <div className="space-y-1">
                       <div className="flex items-center justify-between">
                         <span className="text-white text-sm font-medium">{photo.caption}</span>
@@ -103,11 +130,11 @@ const MatheranMoments = () => {
                         </div>
                       </div>
                     </div>
-                  )}
+                  </div>
                 </div>
               </div>
-            </div>
-          ))}
+            ))
+          )}
         </div>
 
         {/* Instagram CTA */}
