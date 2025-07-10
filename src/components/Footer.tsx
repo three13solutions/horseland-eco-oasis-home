@@ -33,7 +33,14 @@ const Footer = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 mb-12">
           {/* Brand Section */}
           <div className="lg:col-span-1">
-            <h3 className="text-2xl font-bold mb-4">Horseland</h3>
+            <div className="flex items-center space-x-3 mb-4">
+              <img 
+                src="/lovable-uploads/24f5ee9b-ce5a-4b86-a2d8-7ca42e0a78cf.png" 
+                alt="Horseland Hotel & Mountain Spa Logo" 
+                className="h-10 w-10"
+              />
+              <h3 className="text-xl font-bold">Horseland</h3>
+            </div>
             <p className="text-background/80 mb-6 leading-relaxed">
               A luxury eco-retreat nestled in Matheran's pristine hills, offering 
               sustainable hospitality and unforgettable mountain experiences.
@@ -97,7 +104,7 @@ const Footer = () => {
                   placeholder="Your email" 
                   className="bg-background/10 border-background/20 text-background placeholder:text-background/60"
                 />
-                <Button size="sm" variant="secondary">
+                <Button size="sm" className="bg-primary hover:bg-primary/90 text-primary-foreground">
                   Subscribe
                 </Button>
               </div>

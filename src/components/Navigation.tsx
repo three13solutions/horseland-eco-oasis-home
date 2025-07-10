@@ -36,8 +36,15 @@ const Navigation = () => {
       <div className="container mx-auto px-4 h-16 flex items-center justify-between">
         {/* Logo */}
         <div className="flex items-center">
-          <a href="/" className="text-2xl font-bold text-primary">
-            Horseland
+          <a href="/" className="flex items-center space-x-3">
+            <img 
+              src="/lovable-uploads/24f5ee9b-ce5a-4b86-a2d8-7ca42e0a78cf.png" 
+              alt="Horseland Hotel & Mountain Spa Logo" 
+              className="h-12 w-12"
+            />
+            <span className="text-xl font-bold text-primary hidden sm:block">
+              Horseland
+            </span>
           </a>
         </div>
 
