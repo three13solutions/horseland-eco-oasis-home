@@ -86,35 +86,44 @@ const DynamicFooter = () => {
   };
 
   return (
-    <footer className="bg-gray-900 text-gray-300">
+    <footer className="bg-primary text-white">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
           {/* Brand Section */}
           <div className="space-y-4">
-            <div className="flex items-center space-x-2">
+            <div className="flex items-center">
               <img 
                 src={siteSettings.site_logo} 
                 alt={siteSettings.site_title}
-                className="h-8 w-auto"
+                className="h-16 w-auto"
               />
-              <span className="font-bold text-xl text-white">
-                {siteSettings.site_title}
-              </span>
             </div>
             {brandSection && (
-              <>
-                <p className="text-sm leading-relaxed">
+              <div className="space-y-4">
+                <p className="text-sm leading-relaxed text-white/80">
                   {brandSection.content.description}
                 </p>
-                {brandSection.content.emergencyPhone && (
-                  <div className="flex items-center space-x-2 text-red-400">
-                    <Phone className="w-4 h-4" />
-                    <span className="text-sm font-medium">
-                      Emergency: {brandSection.content.emergencyPhone}
-                    </span>
-                  </div>
+                {/* Newsletter moved here */}
+                {newsletterSection && (
+                  <>
+                    <h3 className="text-lg font-semibold text-white">
+                      {newsletterSection.content.title || 'Stay Connected'}
+                    </h3>
+                    <p className="text-sm text-white/80">
+                      {newsletterSection.content.description || 'Subscribe for updates and special offers'}
+                    </p>
+                    <div className="flex space-x-2">
+                      <Input 
+                        placeholder="Your email" 
+                        className="bg-white/10 border-white/20 text-white placeholder-white/60"
+                      />
+                      <Button size="sm" variant="secondary">
+                        <Mail className="w-4 h-4" />
+                      </Button>
+                    </div>
+                  </>
                 )}
-              </>
+              </div>
             )}
           </div>
 
@@ -146,47 +155,46 @@ const DynamicFooter = () => {
             )}
           </div>
 
-          {/* Newsletter & Contact */}
+          {/* Contact Info */}
           <div className="space-y-4">
-            {newsletterSection && (
-              <>
-                <h3 className="text-lg font-semibold text-white">
-                  {newsletterSection.content.title || 'Stay Connected'}
-                </h3>
-                <p className="text-sm">
-                  {newsletterSection.content.description || 'Subscribe for updates and special offers'}
-                </p>
-                <div className="flex space-x-2">
-                  <Input 
-                    placeholder="Your email" 
-                    className="bg-gray-800 border-gray-700 text-white placeholder-gray-400"
-                  />
-                  <Button size="sm">
-                    <Mail className="w-4 h-4" />
-                  </Button>
-                </div>
-              </>
-            )}
-
             {contactSection && (
-              <div className="space-y-2">
-                <h4 className="font-medium text-white">Contact Info</h4>
-                {contactSection.content.email && (
-                  <div className="flex items-center space-x-2">
-                    <Mail className="w-4 h-4" />
-                    <span className="text-sm">{contactSection.content.email}</span>
-                  </div>
-                )}
-                {contactSection.content.phone && (
-                  <div className="flex items-center space-x-2">
-                    <Phone className="w-4 h-4" />
-                    <span className="text-sm">{contactSection.content.phone}</span>
-                  </div>
-                )}
-                {contactSection.content.address && (
-                  <div className="flex items-center space-x-2">
-                    <MapPin className="w-4 h-4" />
-                    <span className="text-sm">{contactSection.content.address}</span>
+              <div className="space-y-4">
+                <h4 className="text-lg font-semibold text-white">Contact Info</h4>
+                <div className="space-y-2">
+                  {contactSection.content.email && (
+                    <div className="flex items-center space-x-2">
+                      <Mail className="w-4 h-4" />
+                      <span className="text-sm text-white/80">{contactSection.content.email}</span>
+                    </div>
+                  )}
+                  {contactSection.content.phone && (
+                    <div className="flex items-center space-x-2">
+                      <Phone className="w-4 h-4" />
+                      <span className="text-sm text-white/80">{contactSection.content.phone}</span>
+                    </div>
+                  )}
+                  {contactSection.content.address && (
+                    <div className="flex items-center space-x-2">
+                      <MapPin className="w-4 h-4" />
+                      <span className="text-sm text-white/80">{contactSection.content.address}</span>
+                    </div>
+                  )}
+                </div>
+                {/* Social Icons moved here */}
+                {socialSection && (
+                  <div className="space-y-2">
+                    <h5 className="font-medium text-white">Follow Us</h5>
+                    <div className="flex items-center space-x-4">
+                      {Object.entries(socialSection.content).map(([platform, url]) => (
+                        <Link
+                          key={platform}
+                          to={url as string}
+                          className="text-white/80 hover:text-white transition-colors"
+                        >
+                          {getSocialIcon(platform)}
+                        </Link>
+                      ))}
+                    </div>
                   </div>
                 )}
               </div>
@@ -195,25 +203,12 @@ const DynamicFooter = () => {
         </div>
 
         {/* Bottom Section */}
-        <div className="border-t border-gray-800 mt-12 pt-8">
+        <div className="border-t border-white/20 mt-12 pt-8">
           <div className="flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
-            <p className="text-sm text-gray-400">
+            <p className="text-sm text-white/60">
               {siteSettings.copyright_text}
             </p>
-            
-            <div className="flex items-center space-x-4">
-              {socialSection && Object.entries(socialSection.content).map(([platform, url]) => (
-                <Link
-                  key={platform}
-                  to={url as string}
-                  className="text-gray-400 hover:text-white transition-colors"
-                >
-                  {getSocialIcon(platform)}
-                </Link>
-              ))}
-            </div>
-            
-            <p className="text-sm text-gray-400">
+            <p className="text-sm text-white/60">
               {siteSettings.tagline}
             </p>
           </div>
