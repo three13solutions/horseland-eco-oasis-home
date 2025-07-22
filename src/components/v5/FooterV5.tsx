@@ -68,8 +68,11 @@ const FooterV5 = () => {
               <div className="bg-primary-foreground/10 rounded-xl p-4 space-y-3">
                 <h4 className="text-sm font-heading font-semibold flex items-center">
                   <Sparkles className="w-4 h-4 mr-2 text-accent" />
-                  Stay Connected
+                  Mountain Mailers
                 </h4>
+                <p className="text-xs text-primary-foreground/70 mb-2">
+                  Musings from the mountains, delivered monthly
+                </p>
                 <div className="flex flex-col sm:flex-row gap-3">
                   <Input 
                     placeholder="Enter your email" 
