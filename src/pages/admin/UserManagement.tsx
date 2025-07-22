@@ -20,6 +20,19 @@ import {
   AlertTriangle
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { z } from 'zod';
+
+// Validation schema for admin profile forms
+const adminProfileSchema = z.object({
+  email: z.string()
+    .email('Invalid email address')
+    .min(1, 'Email is required')
+    .max(255, 'Email is too long')
+    .refine((email) => !email.includes('<') && !email.includes('>'), {
+      message: 'Invalid email format'
+    }),
+  role: z.enum(['content_editor', 'admin', 'super_admin'])
+});
 
 interface AdminProfile {
   id: string;
@@ -118,18 +131,34 @@ const UserManagement = () => {
     setError('');
 
     try {
+      // Validate form data using Zod schema
+      const validatedData = adminProfileSchema.parse(formData);
+      
+      // Additional XSS protection - sanitize input
+      const sanitizedEmail = validatedData.email.trim().toLowerCase();
+      const sanitizedRole = validatedData.role;
+
       if (editingUser) {
-        // Update existing user
+        // Update existing user with audit logging
         const { error } = await supabase
           .from('admin_profiles')
           .update({ 
-            email: formData.email,
-            role: formData.role,
+            email: sanitizedEmail,
+            role: sanitizedRole,
             updated_at: new Date().toISOString()
           })
           .eq('id', editingUser.id);
 
         if (error) throw error;
+
+        // Log admin action for audit trail
+        await supabase.rpc('log_admin_action', {
+          action_type: 'UPDATE_ADMIN_PROFILE',
+          table_name: 'admin_profiles',
+          record_id: editingUser.id,
+          old_data: { email: editingUser.email, role: editingUser.role },
+          new_data: { email: sanitizedEmail, role: sanitizedRole }
+        });
 
         toast({
           title: "Success",
@@ -138,7 +167,7 @@ const UserManagement = () => {
       } else {
         // For adding new users, we would need to handle auth user creation
         // This is a simplified approach - in production you'd want proper user invitation flow
-        setError('Adding new users requires implementing an invitation system.');
+        setError('Adding new users requires implementing an invitation system with proper email verification.');
         setFormLoading(false);
         return;
       }
@@ -146,7 +175,12 @@ const UserManagement = () => {
       setIsDialogOpen(false);
       loadAdminProfiles();
     } catch (error: any) {
-      setError(error.message || 'An error occurred');
+      if (error.errors) {
+        // Zod validation errors
+        setError(error.errors[0]?.message || 'Invalid input data');
+      } else {
+        setError(error.message || 'An error occurred');
+      }
     } finally {
       setFormLoading(false);
     }
@@ -158,12 +192,38 @@ const UserManagement = () => {
     }
 
     try {
+      // Additional security check - prevent deletion if user is only super admin
+      if (user.role === 'super_admin') {
+        const { data: superAdmins } = await supabase
+          .from('admin_profiles')
+          .select('id')
+          .eq('role', 'super_admin');
+        
+        if (superAdmins && superAdmins.length <= 1) {
+          toast({
+            title: "Error",
+            description: "Cannot delete the last super admin. System must have at least one super admin.",
+            variant: "destructive"
+          });
+          return;
+        }
+      }
+
       const { error } = await supabase
         .from('admin_profiles')
         .delete()
         .eq('id', user.id);
 
       if (error) throw error;
+
+      // Log admin action for audit trail
+      await supabase.rpc('log_admin_action', {
+        action_type: 'DELETE_ADMIN_PROFILE',
+        table_name: 'admin_profiles',
+        record_id: user.id,
+        old_data: { email: user.email, role: user.role },
+        new_data: null
+      });
 
       toast({
         title: "Success",
@@ -182,6 +242,8 @@ const UserManagement = () => {
 
   const getRoleBadgeVariant = (role: string) => {
     switch (role) {
+      case 'super_admin':
+        return 'default';
       case 'admin':
         return 'destructive';
       case 'content_editor':
@@ -219,7 +281,7 @@ const UserManagement = () => {
             <h1 className="text-xl font-serif font-semibold">User Management</h1>
           </div>
           
-          {currentUserRole === 'admin' && (
+          {(currentUserRole === 'admin' || currentUserRole === 'super_admin') && (
             <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
               <DialogTrigger asChild>
                 <Button onClick={handleAddUser}>
@@ -274,6 +336,9 @@ const UserManagement = () => {
                       <SelectContent>
                         <SelectItem value="content_editor">Content Editor</SelectItem>
                         <SelectItem value="admin">Admin</SelectItem>
+                        {currentUserRole === 'super_admin' && (
+                          <SelectItem value="super_admin">Super Admin</SelectItem>
+                        )}
                       </SelectContent>
                     </Select>
                   </div>
@@ -308,7 +373,7 @@ const UserManagement = () => {
             </p>
           </div>
 
-          {currentUserRole !== 'admin' && (
+          {currentUserRole !== 'admin' && currentUserRole !== 'super_admin' && (
             <Alert>
               <Shield className="h-4 w-4" />
               <AlertDescription>
@@ -337,7 +402,7 @@ const UserManagement = () => {
                       <Badge variant={getRoleBadgeVariant(profile.role)}>
                         {profile.role.replace('_', ' ')}
                       </Badge>
-                      {currentUserRole === 'admin' && (
+                      {(currentUserRole === 'admin' || currentUserRole === 'super_admin') && (
                         <div className="flex space-x-1">
                           <Button
                             variant="outline"
