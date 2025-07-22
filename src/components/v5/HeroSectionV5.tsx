@@ -54,11 +54,11 @@ const HeroSectionV5 = () => {
       <div className="relative z-10 h-full flex items-center">
         <div className="container mx-auto px-4">
           <div className="max-w-4xl mx-auto text-center text-white">
-            <h1 className="text-4xl md:text-6xl lg:text-7xl font-serif mb-6 leading-tight">
+            <h1 className="text-4xl md:text-6xl lg:text-7xl font-heading font-bold mb-6 leading-tight">
               Where the Forest <br />
               <span className="text-primary">Whispers You Awake</span>
             </h1>
-            <p className="text-lg md:text-xl mb-12 text-white/90 font-light max-w-2xl mx-auto">
+            <p className="text-lg md:text-xl mb-12 text-white/90 font-body font-light max-w-2xl mx-auto">
               A mindful retreat in Matheran's no-car eco zone
             </p>
 

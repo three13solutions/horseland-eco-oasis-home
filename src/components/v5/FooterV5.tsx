@@ -1,9 +1,23 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Facebook, Instagram, Twitter, Youtube, Phone, Mail, MapPin, Sparkles } from 'lucide-react';
+import { 
+  Facebook, 
+  Instagram, 
+  Twitter, 
+  Youtube, 
+  Phone, 
+  Mail, 
+  MapPin, 
+  Sparkles, 
+  ChevronDown,
+  ChevronUp 
+} from 'lucide-react';
 
 const FooterV5 = () => {
+  const [isPoliciesOpen, setIsPoliciesOpen] = useState(false);
+  const [isEmergencyOpen, setIsEmergencyOpen] = useState(false);
+
   const quickLinks = [
     'Stay', 'Experiences', 'Packages', 'Journal', 'Contact'
   ];
@@ -27,109 +41,118 @@ const FooterV5 = () => {
         <div className="absolute bottom-20 left-20 w-48 h-48 bg-accent rounded-full blur-3xl"></div>
       </div>
 
-      <div className="container mx-auto px-6 relative z-10">
-        {/* Main Footer Content */}
-        <div className="py-16">
-          <div className="grid grid-cols-1 lg:grid-cols-4 gap-12">
-            {/* Brand Section */}
-            <div className="lg:col-span-2 space-y-6">
+      <div className="container mx-auto px-6 relative z-10 max-w-7xl">
+        {/* Main Footer Content - Compact Mobile Layout */}
+        <div className="py-10 md:py-14">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 md:gap-10">
+            {/* Brand Section - Simplified */}
+            <div className="md:col-span-2 space-y-4">
               <div className="flex items-center space-x-4">
                 <img 
                   src="/lovable-uploads/24f5ee9b-ce5a-4b86-a2d8-7ca42e0a78cf.png" 
                   alt="Horseland Logo" 
-                  className="h-16 w-16 drop-shadow-lg"
+                  className="h-12 w-12 md:h-16 md:w-16 drop-shadow-lg"
                 />
                 <div>
-                  <h3 className="text-3xl font-bold">HORSELAND</h3>
-                  <p className="text-background/80 text-sm uppercase tracking-wider">Mountain Spa Resort</p>
+                  <h3 className="text-xl md:text-2xl font-heading font-bold">HORSELAND</h3>
+                  <p className="text-background/80 text-xs uppercase tracking-wider font-body">Mountain Spa Resort</p>
                 </div>
               </div>
               
-              <p className="text-background/80 leading-relaxed max-w-lg">
+              <p className="text-background/80 leading-relaxed max-w-lg text-sm font-body">
                 Where the forest whispers you awake. Experience mindful luxury in Matheran's 
-                pristine car-free sanctuary, where every moment connects you deeper with nature.
+                pristine car-free sanctuary.
               </p>
 
-              {/* Newsletter */}
-              <div className="space-y-4">
-                <h4 className="text-xl font-semibold flex items-center">
-                  <Sparkles className="w-5 h-5 mr-2 text-primary" />
+              {/* Compact Newsletter + Social */}
+              <div className="bg-background/10 rounded-xl p-4 space-y-3">
+                <h4 className="text-sm font-heading font-semibold flex items-center">
+                  <Sparkles className="w-4 h-4 mr-2 text-primary" />
                   Stay Connected
                 </h4>
-                <p className="text-background/80 text-sm">
-                  Subscribe for exclusive offers and mountain stories
-                </p>
-                <div className="flex space-x-3 max-w-md">
+                <div className="flex flex-col sm:flex-row gap-3">
                   <Input 
                     placeholder="Enter your email" 
-                    className="bg-background/10 border-background/20 text-background placeholder:text-background/50 rounded-xl"
-                  />
-                  <Button className="bg-primary hover:bg-primary/90 text-primary-foreground rounded-xl px-6">
-                    Subscribe
-                  </Button>
-                </div>
-              </div>
-            </div>
-
-            {/* Quick Links */}
-            <div className="space-y-4">
-              <h4 className="text-lg font-semibold">Quick Links</h4>
-              <ul className="space-y-2">
-                {quickLinks.map((link, index) => (
-                  <li key={index}>
-                    <a 
-                      href={`#${link.toLowerCase()}`}
-                      className="text-background/80 hover:text-primary transition-colors hover:translate-x-1 transform duration-200 inline-block text-sm"
-                    >
-                      {link}
-                    </a>
-                  </li>
-                ))}
-              </ul>
-            </div>
-
-            {/* Contact & Social */}
-            <div className="space-y-4">
-              <h4 className="text-lg font-semibold">Connect</h4>
-              
-              {/* Compact Contact & Social */}
-              <div className="space-y-3">
-                <div className="flex items-center space-x-2">
-                  <Phone className="w-4 h-4 text-primary flex-shrink-0" />
-                  <p className="font-medium text-sm">+91 98765 43210</p>
-                </div>
-                
-                <div className="flex items-center space-x-2">
-                  <Mail className="w-4 h-4 text-primary flex-shrink-0" />
-                  <p className="font-medium text-sm">hello@horselandresort.com</p>
-                </div>
-                
-                <details className="text-sm">
-                  <summary className="cursor-pointer text-background/80 hover:text-primary">Emergency Contact</summary>
-                  <p className="mt-1 text-background/60">+91 98765 43210 (24/7)</p>
-                </details>
-              </div>
-
-              {/* Newsletter & Social Combined */}
-              <div className="space-y-3">
-                <div className="flex space-x-3">
-                  <Input 
-                    placeholder="Your email" 
                     className="bg-background/10 border-background/20 text-background placeholder:text-background/50 rounded-lg text-sm h-9"
                   />
-                  <Button className="bg-primary hover:bg-primary/90 text-primary-foreground rounded-lg px-4 text-sm h-9">
+                  <Button className="bg-primary hover:bg-primary/90 text-primary-foreground rounded-lg px-4 py-2 text-sm whitespace-nowrap h-9">
                     Subscribe
                   </Button>
                 </div>
-                <div className="flex space-x-3">
+                {/* Social Links Row */}
+                <div className="flex justify-center sm:justify-start space-x-3">
                   {socialLinks.map((social, index) => (
                     <a
                       key={index}
                       href={social.href}
                       aria-label={social.label}
-                      className={`p-2 bg-background/10 rounded-full hover:bg-background/20 transition-all duration-300 transform hover:scale-110 ${social.color}`}
+                      className={`p-2 bg-background/10 rounded-lg hover:bg-background/20 transition-all duration-300 transform hover:scale-110 ${social.color}`}
                     >
                       <social.icon className="w-4 h-4" />
+                    </a>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* Contact & Links - Compact */}
+            <div className="space-y-4">
+              <h4 className="text-lg font-heading font-semibold">Connect</h4>
+              
+              {/* Compact Contact Info */}
+              <div className="space-y-3">
+                <div className="flex items-start space-x-3">
+                  <Phone className="w-4 h-4 text-primary mt-1 flex-shrink-0" />
+                  <div>
+                    <p className="text-background/80 text-xs">24/7 Reservations</p>
+                    <p className="font-medium text-sm">+91 98765 43210</p>
+                  </div>
+                </div>
+                
+                <div className="flex items-start space-x-3">
+                  <Mail className="w-4 h-4 text-primary mt-1 flex-shrink-0" />
+                  <div>
+                    <p className="text-background/80 text-xs">Email Us</p>
+                    <p className="font-medium text-sm">hello@horselandresort.com</p>
+                  </div>
+                </div>
+                
+                <div className="flex items-start space-x-3">
+                  <MapPin className="w-4 h-4 text-primary mt-1 flex-shrink-0" />
+                  <div>
+                    <p className="text-background/80 text-xs">Visit Us</p>
+                    <p className="font-medium text-sm">Matheran, Maharashtra</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Emergency Contact - Expandable */}
+              <button 
+                onClick={() => setIsEmergencyOpen(!isEmergencyOpen)}
+                className="flex items-center justify-between w-full text-left bg-background/10 rounded-lg p-3 hover:bg-background/20 transition-colors"
+              >
+                <span className="text-sm font-medium">Emergency Contact</span>
+                {isEmergencyOpen ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+              </button>
+              {isEmergencyOpen && (
+                <div className="bg-background/10 rounded-lg p-3 text-sm space-y-1">
+                  <p className="font-medium">24/7 Emergency Hotline</p>
+                  <p className="text-background/80">+91 98765 43210</p>
+                  <p className="text-background/80 text-xs">Available for all guest emergencies</p>
+                </div>
+              )}
+
+              {/* Quick Links */}
+              <div className="space-y-2">
+                <h5 className="text-sm font-medium text-background/90">Quick Links</h5>
+                <div className="space-y-1">
+                  {quickLinks.map((link, index) => (
+                    <a 
+                      key={index}
+                      href={`#${link.toLowerCase()}`}
+                      className="block text-background/70 hover:text-primary transition-colors text-xs font-body"
+                    >
+                      {link}
                     </a>
                   ))}
                 </div>
@@ -138,31 +161,38 @@ const FooterV5 = () => {
           </div>
         </div>
 
-        {/* Bottom Bar */}
-        <div className="border-t border-background/20 py-6">
-          <div className="flex flex-col md:flex-row justify-between items-center space-y-3 md:space-y-0">
-            <div className="flex flex-wrap items-center justify-center md:justify-start space-x-4 text-xs">
-              <details className="cursor-pointer">
-                <summary className="text-background/60 hover:text-primary">Policies</summary>
-                <div className="mt-2 space-y-1">
-                  {policies.map((policy, index) => (
-                    <a
-                      key={index}
-                      href={`#${policy.toLowerCase().replace(' ', '-')}`}
-                      className="block text-background/60 hover:text-primary transition-colors"
-                    >
-                      {policy}
-                    </a>
-                  ))}
-                </div>
-              </details>
+        {/* Bottom Bar - Compact */}
+        <div className="border-t border-background/20 py-4">
+          <div className="flex flex-col space-y-3">
+            {/* Collapsible Policies */}
+            <button 
+              onClick={() => setIsPoliciesOpen(!isPoliciesOpen)}
+              className="flex items-center justify-between bg-background/10 rounded-lg p-3 hover:bg-background/20 transition-colors md:hidden"
+            >
+              <span className="text-sm font-medium">Policies & Legal</span>
+              {isPoliciesOpen ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+            </button>
+            
+            {/* Show policies on desktop, or when expanded on mobile */}
+            <div className={`${isPoliciesOpen ? 'block' : 'hidden'} md:block`}>
+              <div className="flex flex-wrap items-center justify-center md:justify-start gap-4 text-sm">
+                {policies.map((policy, index) => (
+                  <a
+                    key={index}
+                    href={`#${policy.toLowerCase().replace(' ', '-')}`}
+                    className="text-background/60 hover:text-primary transition-colors font-body"
+                  >
+                    {policy}
+                  </a>
+                ))}
+              </div>
             </div>
             
-            <div className="text-center md:text-right">
-              <p className="text-background/60 text-xs">
+            <div className="text-center">
+              <p className="text-background/60 text-xs font-body">
                 © 2024 Horseland Resort. All rights reserved.
               </p>
-              <p className="text-background/60 text-xs">
+              <p className="text-background/60 text-xs font-body">
                 Crafted with ❤️ for sustainable luxury
               </p>
             </div>

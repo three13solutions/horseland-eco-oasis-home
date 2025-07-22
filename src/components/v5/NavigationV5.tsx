@@ -20,7 +20,7 @@ const NavigationV5 = () => {
 
   return (
     <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${
-      isScrolled ? 'bg-background/95 backdrop-blur-lg border-b border-border/20' : 'bg-transparent'
+      isScrolled ? 'glass-effect shadow-lg' : 'bg-white/10 backdrop-blur-sm'
     }`}>
       <div className="container mx-auto px-6">
         <div className="flex items-center justify-between h-20">
@@ -32,7 +32,7 @@ const NavigationV5 = () => {
               className="h-16 w-16 drop-shadow-lg"
             />
             <div className="hidden sm:block">
-              <h1 className="text-2xl font-bold text-primary tracking-wide">HORSELAND</h1>
+              <h1 className="text-2xl font-heading font-bold text-primary tracking-wide">HORSELAND</h1>
               <p className="text-xs text-muted-foreground uppercase tracking-wider">Mountain Spa Resort</p>
             </div>
           </div>
@@ -70,7 +70,7 @@ const NavigationV5 = () => {
 
         {/* Mobile Menu */}
         {isMobileMenuOpen && (
-          <div className="lg:hidden absolute top-full left-0 right-0 bg-background/98 backdrop-blur-lg border-b border-border/20">
+          <div className="lg:hidden absolute top-full left-0 right-0 glass-effect shadow-lg">
             <div className="container mx-auto px-6 py-6">
               <div className="flex flex-col space-y-4">
                 {navItems.map((item) => (
