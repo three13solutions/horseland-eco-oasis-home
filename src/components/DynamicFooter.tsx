@@ -94,7 +94,7 @@ const DynamicFooter = () => {
       </div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 relative z-10">
-        <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
           {/* Brand Section */}
           <div className="space-y-6">
             <div className="flex items-center">
@@ -110,28 +110,6 @@ const DynamicFooter = () => {
               </p>
             )}
           </div>
-
-          {/* Newsletter Section - Spanning 2 columns */}
-          {newsletterSection && (
-            <div className="md:col-span-2 lg:col-span-1 space-y-4">
-              <h3 className="text-xl font-semibold text-background flex items-center">
-                <Mail className="w-5 h-5 mr-2 text-primary" />
-                {newsletterSection.content.title || 'Stay Connected'}
-              </h3>
-              <p className="text-background/80 text-sm">
-                {newsletterSection.content.description || 'Subscribe for updates and special offers'}
-              </p>
-              <div className="flex space-x-3">
-                <Input 
-                  placeholder="Enter your email" 
-                  className="bg-background/10 border-background/20 text-background placeholder:text-background/50 rounded-xl flex-1"
-                />
-                <Button className="bg-primary hover:bg-primary/90 text-primary-foreground rounded-xl px-6">
-                  Subscribe
-                </Button>
-              </div>
-            </div>
-          )}
 
           {/* Quick Links */}
           <div className="space-y-4">
@@ -161,8 +139,31 @@ const DynamicFooter = () => {
             )}
           </div>
 
-          {/* Contact Info */}
-          <div className="space-y-4">
+          {/* Newsletter and Contact Combined */}
+          <div className="space-y-6">
+            {/* Newsletter Section */}
+            {newsletterSection && (
+              <div className="space-y-4">
+                <h3 className="text-xl font-semibold text-background flex items-center">
+                  <Mail className="w-5 h-5 mr-2 text-primary" />
+                  {newsletterSection.content.title || 'Stay Connected'}
+                </h3>
+                <p className="text-background/80 text-sm">
+                  {newsletterSection.content.description || 'Subscribe for updates and special offers'}
+                </p>
+                <div className="flex space-x-3">
+                  <Input 
+                    placeholder="Enter your email" 
+                    className="bg-background/10 border-background/20 text-background placeholder:text-background/50 rounded-xl flex-1"
+                  />
+                  <Button className="bg-primary hover:bg-primary/90 text-primary-foreground rounded-xl px-6">
+                    Subscribe
+                  </Button>
+                </div>
+              </div>
+            )}
+
+            {/* Contact Info */}
             {contactSection && (
               <div className="space-y-6">
                 <h4 className="text-xl font-semibold text-background">Connect</h4>
@@ -195,7 +196,7 @@ const DynamicFooter = () => {
                     </div>
                   )}
                 </div>
-                {/* Social Icons moved here */}
+                {/* Social Icons */}
                 {socialSection && (
                   <div className="space-y-3">
                     <p className="text-background/80 text-xs">Follow Our Journey</p>
