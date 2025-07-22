@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Calendar, Users, ArrowRight, ChevronLeft, ChevronRight, Home } from 'lucide-react';
+import { Calendar, Users, ArrowRight, ChevronLeft, ChevronRight } from 'lucide-react';
 
 const HeroSectionV5 = () => {
   const [currentSlide, setCurrentSlide] = useState(0);
@@ -123,8 +123,7 @@ const HeroSectionV5 = () => {
                 </div>
                 
                 <Button className="h-12 bg-gradient-to-r from-primary to-accent hover:shadow-2xl transform hover:scale-105 transition-all duration-300 rounded-xl text-lg font-semibold px-6">
-                  <Home className="mr-2 h-5 w-5" />
-                  Choose Stay
+                  Explore Stay
                   <ArrowRight className="ml-2 h-5 w-5" />
                 </Button>
               </div>
