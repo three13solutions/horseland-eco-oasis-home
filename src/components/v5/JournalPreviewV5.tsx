@@ -29,11 +29,11 @@ const JournalPreviewV5 = () => {
   return (
     <section className="py-12 md:py-16 bg-muted/10">
       <div className="container mx-auto px-4">
-        <div className="text-center mb-10">
-          <h2 className="text-2xl md:text-3xl font-serif text-foreground mb-4">
+        <div className="text-center mb-12">
+          <h2 className="text-3xl md:text-4xl font-serif font-bold text-foreground mb-4">
             From the <span className="text-primary">Journal</span>
           </h2>
-          <p className="text-muted-foreground max-w-2xl mx-auto">
+          <p className="text-lg text-muted-foreground max-w-2xl mx-auto mb-8">
             Discover Matheran, Horseland through Stories, insights, and inspiration from our mountain sanctuary
           </p>
         </div>
