@@ -28,17 +28,9 @@ const WelcomeStripV5 = () => {
           {/* Left: Welcome Message & Description */}
           <div className="space-y-8">
             <div className="space-y-4">
-              <div className="flex items-center space-x-3">
-                <img 
-                  src="/lovable-uploads/24f5ee9b-ce5a-4b86-a2d8-7ca42e0a78cf.png" 
-                  alt="Horseland Logo" 
-                  className="h-12 w-12"
-                />
-                <h2 className="text-4xl md:text-5xl font-bold text-foreground">
-                  Welcome to
-                  <span className="block text-primary italic">Horseland</span>
-                </h2>
-              </div>
+              <h2 className="text-4xl md:text-5xl font-bold text-foreground">
+                Welcome to <span className="text-primary italic">Horseland</span>
+              </h2>
               
               <p className="text-lg text-muted-foreground leading-relaxed">
                 Nestled in the heart of Matheran's car-free paradise, Horseland represents more than luxury accommodation—it's a sanctuary where sustainable elegance meets authentic mountain hospitality.
