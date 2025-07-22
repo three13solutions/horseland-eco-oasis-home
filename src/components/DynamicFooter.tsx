@@ -13,6 +13,14 @@ interface FooterSection {
   is_active: boolean;
 }
 
+interface NavigationItem {
+  id: string;
+  title: string;
+  href: string;
+  sort_order: number;
+  is_active: boolean;
+}
+
 interface SiteSettings {
   site_title: string;
   site_logo: string;
@@ -22,6 +30,7 @@ interface SiteSettings {
 
 const DynamicFooter = () => {
   const [footerSections, setFooterSections] = useState<FooterSection[]>([]);
+  const [navigationItems, setNavigationItems] = useState<NavigationItem[]>([]);
   const [siteSettings, setSiteSettings] = useState<SiteSettings>({
     site_title: 'Horseland Hotel',
     site_logo: '/lovable-uploads/24f5ee9b-ce5a-4b86-a2d8-7ca42e0a78cf.png',
@@ -42,6 +51,13 @@ const DynamicFooter = () => {
         .eq('is_active', true)
         .order('sort_order');
 
+      // Load navigation items
+      const { data: navData } = await supabase
+        .from('navigation_items')
+        .select('*')
+        .eq('is_active', true)
+        .order('sort_order');
+
       // Load site settings
       const { data: settingsData } = await supabase
         .from('site_settings')
@@ -49,6 +65,10 @@ const DynamicFooter = () => {
 
       if (footerData) {
         setFooterSections(footerData);
+      }
+
+      if (navData) {
+        setNavigationItems(navData);
       }
 
       if (settingsData) {
@@ -115,11 +135,16 @@ const DynamicFooter = () => {
           <div className="space-y-4">
             <h3 className="text-xl font-semibold text-background">Explore</h3>
             <ul className="space-y-3">
-              <li><Link to="/about" className="text-background/80 hover:text-primary transition-colors hover:translate-x-1 transform duration-200 inline-block text-sm">About Us</Link></li>
-              <li><Link to="/stay" className="text-background/80 hover:text-primary transition-colors hover:translate-x-1 transform duration-200 inline-block text-sm">Accommodation</Link></li>
-              <li><Link to="/experiences" className="text-background/80 hover:text-primary transition-colors hover:translate-x-1 transform duration-200 inline-block text-sm">Experiences</Link></li>
-              <li><Link to="/packages" className="text-background/80 hover:text-primary transition-colors hover:translate-x-1 transform duration-200 inline-block text-sm">Packages</Link></li>
-              <li><Link to="/journal" className="text-background/80 hover:text-primary transition-colors hover:translate-x-1 transform duration-200 inline-block text-sm">Journal</Link></li>
+              {navigationItems.map((item) => (
+                <li key={item.id}>
+                  <Link 
+                    to={item.href} 
+                    className="text-background/80 hover:text-primary transition-colors hover:translate-x-1 transform duration-200 inline-block text-sm"
+                  >
+                    {item.title}
+                  </Link>
+                </li>
+              ))}
             </ul>
           </div>
 
@@ -149,12 +174,12 @@ const DynamicFooter = () => {
               <p className="text-background/80 text-sm">
                 {newsletterSection.content.description || 'Subscribe for updates and special offers'}
               </p>
-              <div className="flex space-x-3">
+              <div className="flex flex-col space-y-3">
                 <Input 
                   placeholder="Enter your email" 
-                  className="bg-background/10 border-background/20 text-background placeholder:text-background/50 rounded-xl flex-1"
+                  className="bg-background/10 border-background/20 text-background placeholder:text-background/50 rounded-xl"
                 />
-                <Button className="bg-primary hover:bg-primary/90 text-primary-foreground rounded-xl px-6">
+                <Button className="bg-primary hover:bg-primary/90 text-primary-foreground rounded-xl">
                   Subscribe
                 </Button>
               </div>
