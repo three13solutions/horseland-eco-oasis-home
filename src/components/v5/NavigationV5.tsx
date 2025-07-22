@@ -1,9 +1,10 @@
 
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { Menu, X, Phone, ChevronDown } from 'lucide-react';
+import { Menu, X, Calendar, ChevronDown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
+import BookingModal from '@/components/BookingModal';
 
 interface NavigationItem {
   id: string;
@@ -28,6 +29,7 @@ const NavigationV5 = () => {
     site_logo: '/lovable-uploads/24f5ee9b-ce5a-4b86-a2d8-7ca42e0a78cf.png'
   });
   const [experiencesOpen, setExperiencesOpen] = useState(false);
+  const [showBookingModal, setShowBookingModal] = useState(false);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -217,8 +219,9 @@ const NavigationV5 = () => {
             <Button 
               size="sm" 
               className="hidden md:flex bg-primary hover:bg-primary/90 text-primary-foreground"
+              onClick={() => setShowBookingModal(true)}
             >
-              <Phone className="w-4 h-4 mr-2" />
+              <Calendar className="w-4 h-4 mr-2" />
               Book Now
             </Button>
             
@@ -265,8 +268,11 @@ const NavigationV5 = () => {
                     </div>
                   );
                 })}
-                <Button className="mt-4 w-full bg-primary hover:bg-primary/90 text-primary-foreground">
-                  <Phone className="w-4 h-4 mr-2" />
+                <Button 
+                  className="mt-4 w-full bg-primary hover:bg-primary/90 text-primary-foreground"
+                  onClick={() => setShowBookingModal(true)}
+                >
+                  <Calendar className="w-4 h-4 mr-2" />
                   Book Now
                 </Button>
               </div>
@@ -274,6 +280,12 @@ const NavigationV5 = () => {
           </div>
         )}
       </div>
+      
+      {/* Booking Modal */}
+      <BookingModal 
+        isOpen={showBookingModal} 
+        onClose={() => setShowBookingModal(false)} 
+      />
     </nav>
   );
 };
