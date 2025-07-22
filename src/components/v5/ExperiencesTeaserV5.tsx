@@ -1,72 +1,139 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Mountain, Utensils, HeartHandshake, ArrowRight } from 'lucide-react';
+import { ArrowRight, Mountain, Utensils, Flower2, Activity } from 'lucide-react';
 
 const ExperiencesTeaserV5 = () => {
+  const [activeIndex, setActiveIndex] = useState(0);
+
   const experiences = [
     {
-      icon: Mountain,
-      title: "Activities",
-      description: "Horse rides, bonfire evenings, and forest walks through Matheran's pristine trails",
-      image: "https://images.unsplash.com/photo-1551632811-561732d1e306?w=400&h=300&fit=crop",
-      cta: "Explore Activities"
+      id: 'activities',
+      icon: Activity,
+      title: 'Mountain Adventures',
+      subtitle: 'Embrace the Wild',
+      description: 'From horseback rides along red-earth trails to guided forest walks and heritage toy train journeys, discover Matheran\'s natural wonders through curated adventures.',
+      image: 'https://images.unsplash.com/photo-1439886183900-e79ec0057170?w=800&h=600&fit=crop',
+      features: ['Horse Riding', 'Forest Walks', 'Toy Train', 'Nature Photography']
     },
     {
+      id: 'dining',
       icon: Utensils,
-      title: "Dining",
-      description: "Buffet Only. Cooked with Purpose. Zero-waste culinary experiences with local flavors",
-      image: "https://images.unsplash.com/photo-1555939594-58d7cb561ad1?w=400&h=300&fit=crop",
-      cta: "Explore Dining"
+      title: 'Culinary Excellence',
+      subtitle: 'Buffet Only, Cooked with Purpose',
+      description: 'Our zero-waste kitchen philosophy meets gourmet excellence. Savor locally-sourced ingredients transformed into memorable dining experiences with panoramic mountain views.',
+      image: 'https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05?w=800&h=600&fit=crop',
+      features: ['Farm-to-Table', 'Zero Waste', 'Local Ingredients', 'Mountain Views']
     },
     {
-      icon: HeartHandshake,
-      title: "Spa & Wellness",
-      description: "Forest yoga, therapeutic massages, and guided meditation in nature's embrace",
-      image: "https://images.unsplash.com/photo-1544161515-4ab6ce6db874?w=400&h=300&fit=crop",
-      cta: "Book Spa"
+      id: 'wellness',
+      icon: Flower2,
+      title: 'Spa & Wellness',
+      subtitle: 'Rejuvenate Your Soul',
+      description: 'Ancient Ayurvedic traditions meet modern wellness techniques in our mountain spa. Experience therapeutic treatments designed to restore balance and vitality.',
+      image: 'https://images.unsplash.com/photo-1482938289607-e9573fc25ebb?w=800&h=600&fit=crop',
+      features: ['Ayurvedic Treatments', 'Yoga Sessions', 'Meditation', 'Therapeutic Massage']
     }
   ];
 
   return (
-    <section className="py-16 md:py-20 bg-gradient-to-b from-muted/20 to-background">
-      <div className="container mx-auto px-4">
-        <div className="text-center mb-12">
-          <h2 className="text-3xl md:text-4xl font-serif font-bold text-foreground mb-4">
-            Curated <span className="text-primary">Experiences</span>
+    <section className="py-24 bg-background relative">
+      <div className="container mx-auto px-6">
+        {/* Section Header */}
+        <div className="text-center mb-16">
+          <h2 className="text-4xl md:text-6xl font-bold text-foreground mb-6">
+            Curated
+            <span className="block text-primary italic">Experiences</span>
           </h2>
-          <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-            Immerse yourself in thoughtfully crafted experiences that connect you with nature and local heritage
+          <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
+            Every moment at Horseland is thoughtfully designed to create lasting memories
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl mx-auto">
-          {experiences.map((experience, index) => (
-            <div 
-              key={index}
-              className="bg-white/80 backdrop-blur-sm rounded-2xl border border-border/20 overflow-hidden hover:shadow-xl transition-all duration-300 hover:scale-105"
+        {/* Experience Tabs */}
+        <div className="flex justify-center mb-12">
+          <div className="flex space-x-4 bg-muted/50 rounded-full p-2">
+            {experiences.map((exp, index) => (
+              <button
+                key={exp.id}
+                onClick={() => setActiveIndex(index)}
+                className={`flex items-center space-x-2 px-6 py-3 rounded-full transition-all duration-300 ${
+                  activeIndex === index
+                    ? 'bg-primary text-primary-foreground shadow-lg'
+                    : 'text-muted-foreground hover:text-foreground'
+                }`}
+              >
+                <exp.icon className="w-5 h-5" />
+                <span className="font-medium">{exp.title}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Active Experience Display */}
+        <div className="max-w-7xl mx-auto">
+          {experiences.map((exp, index) => (
+            <div
+              key={exp.id}
+              className={`grid grid-cols-1 lg:grid-cols-2 gap-12 items-center transition-all duration-500 ${
+                activeIndex === index ? 'opacity-100' : 'opacity-0 absolute invisible'
+              }`}
             >
-              <div className="relative">
-                <img
-                  src={experience.image}
-                  alt={experience.title}
-                  className="w-full h-48 object-cover"
-                />
-                <div className="absolute top-4 left-4 w-12 h-12 bg-white/90 backdrop-blur-sm rounded-full flex items-center justify-center">
-                  <experience.icon className="w-6 h-6 text-primary" />
+              {/* Content */}
+              <div className="space-y-8">
+                <div>
+                  <div className="flex items-center space-x-3 mb-4">
+                    <exp.icon className="w-8 h-8 text-primary" />
+                    <span className="text-primary font-medium tracking-wider uppercase text-sm">
+                      {exp.subtitle}
+                    </span>
+                  </div>
+                  
+                  <h3 className="text-4xl md:text-5xl font-bold text-foreground mb-6">
+                    {exp.title}
+                  </h3>
+                  
+                  <p className="text-lg text-muted-foreground leading-relaxed mb-8">
+                    {exp.description}
+                  </p>
                 </div>
-              </div>
-              
-              <div className="p-6">
-                <h3 className="text-xl font-semibold text-foreground mb-3">{experience.title}</h3>
-                <p className="text-muted-foreground mb-6 leading-relaxed">{experience.description}</p>
-                
-                <Button 
-                  variant="outline" 
-                  className="w-full border-primary text-primary hover:bg-primary hover:text-primary-foreground transition-all duration-300"
-                >
-                  {experience.cta}
-                  <ArrowRight className="ml-2 h-4 w-4" />
+
+                {/* Features Grid */}
+                <div className="grid grid-cols-2 gap-4">
+                  {exp.features.map((feature, featureIndex) => (
+                    <div key={featureIndex} className="flex items-center space-x-2">
+                      <div className="w-2 h-2 bg-primary rounded-full"></div>
+                      <span className="text-foreground font-medium">{feature}</span>
+                    </div>
+                  ))}
+                </div>
+
+                <Button className="bg-gradient-to-r from-primary to-accent hover:shadow-xl transform hover:scale-105 transition-all duration-300 text-lg px-8 py-3">
+                  Explore {exp.title}
+                  <ArrowRight className="ml-2 h-5 w-5" />
                 </Button>
+              </div>
+
+              {/* Image */}
+              <div className="relative">
+                <div className="aspect-[4/3] rounded-3xl overflow-hidden shadow-2xl">
+                  <img
+                    src={exp.image}
+                    alt={exp.title}
+                    className="w-full h-full object-cover hover:scale-105 transform transition-transform duration-700"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent"></div>
+                </div>
+                
+                {/* Floating Badge */}
+                <div className="absolute -bottom-6 -left-6 bg-white rounded-2xl p-4 shadow-xl">
+                  <div className="flex items-center space-x-3">
+                    <exp.icon className="w-6 h-6 text-primary" />
+                    <div>
+                      <div className="font-bold text-foreground">{exp.title}</div>
+                      <div className="text-sm text-muted-foreground">Premium Experience</div>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
           ))}
