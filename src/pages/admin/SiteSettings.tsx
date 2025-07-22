@@ -9,6 +9,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { Trash2, Plus, ArrowUp, ArrowDown, Save, Settings } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import ImageUpload from '@/components/ImageUpload';
 
 interface NavigationItem {
   id: string;
@@ -324,7 +325,7 @@ const SiteSettings = () => {
                 Basic site configuration and branding
               </CardDescription>
             </CardHeader>
-            <CardContent className="space-y-4">
+            <CardContent className="space-y-6">
               <div>
                 <Label htmlFor="site_title">Site Title</Label>
                 <Input
@@ -336,12 +337,12 @@ const SiteSettings = () => {
               </div>
               
               <div>
-                <Label htmlFor="site_logo">Site Logo URL</Label>
-                <Input
-                  id="site_logo"
+                <ImageUpload
+                  label="Site Logo"
                   value={siteSettings.site_logo}
-                  onChange={(e) => setSiteSettings(prev => ({ ...prev, site_logo: e.target.value }))}
-                  placeholder="/path/to/logo.png"
+                  onChange={(url) => setSiteSettings(prev => ({ ...prev, site_logo: url }))}
+                  bucketName="uploads"
+                  folder="logos"
                 />
               </div>
 

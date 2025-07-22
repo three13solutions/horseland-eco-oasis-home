@@ -176,7 +176,7 @@ const NavigationV5 = () => {
               className="h-14 w-14 md:h-18 md:w-18 drop-shadow-lg"
             />
             <div>
-              <h1 className="text-xl md:text-2xl font-bold text-foreground tracking-wide">
+              <h1 className="text-xl md:text-2xl font-bold text-primary tracking-wide">
                 {siteSettings.site_title}
               </h1>
               <p className="text-xs text-muted-foreground uppercase tracking-wider hidden sm:block">
