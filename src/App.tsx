@@ -18,6 +18,8 @@ import Spa from "./pages/Spa";
 import Packages from "./pages/Packages";
 import Journal from "./pages/Journal";
 import FAQ from "./pages/FAQ";
+import Contact from "./pages/Contact";
+import Policies from "./pages/Policies";
 import RoomDetail from "./pages/RoomDetail";
 import NotFound from "./pages/NotFound";
 import AdminLogin from "./pages/AdminLogin";
@@ -51,6 +53,8 @@ const App = () => (
           <Route path="/packages" element={<Packages />} />
           <Route path="/journal" element={<Journal />} />
           <Route path="/faq" element={<FAQ />} />
+          <Route path="/contact" element={<Contact />} />
+          <Route path="/policies" element={<Policies />} />
           <Route path="/admin/login" element={<AdminLogin />} />
           <Route path="/admin" element={<AdminDashboard />} />
           <Route path="/admin/rooms" element={<RoomManagement />} />
