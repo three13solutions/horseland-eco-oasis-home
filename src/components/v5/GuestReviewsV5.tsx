@@ -50,6 +50,38 @@ const GuestReviewsV5 = () => {
       text: 'Clean rooms, friendly staff, great location. Everything you need for a comfortable stay in Matheran. Will recommend to friends.',
       date: '3 weeks ago',
       avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=100&h=100&fit=crop&crop=face'
+    },
+    {
+      name: 'Priya & Arjun',
+      location: 'Mumbai',
+      rating: 5,
+      text: 'Perfect honeymoon escape! The forest views from our room were breathtaking, and the spa treatments were incredibly relaxing.',
+      date: '1 month ago',
+      avatar: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=100&h=100&fit=crop&crop=face'
+    },
+    {
+      name: 'The Sharma Family',
+      location: 'Pune',
+      rating: 5,
+      text: 'Kids loved the horse rides and bonfire stories. Parents enjoyed the peaceful environment and zero vehicle noise. Highly recommend!',
+      date: '2 weeks ago',
+      avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop&crop=face'
+    },
+    {
+      name: 'Rajesh Kumar',
+      location: 'Delhi',
+      rating: 5,
+      text: 'Business retreat was perfectly organized. The conference facilities were excellent, and the mountain air boosted our team creativity.',
+      date: '3 weeks ago',
+      avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&h=100&fit=crop&crop=face'
+    },
+    {
+      name: 'Meera Patel',
+      location: 'Ahmedabad',
+      rating: 5,
+      text: 'Solo traveler here! Felt completely safe and welcomed. The yoga sessions and meditation walks were exactly what my soul needed.',
+      date: '1 week ago',
+      avatar: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=100&h=100&fit=crop&crop=face'
     }
   ];
 
@@ -74,7 +106,7 @@ const GuestReviewsV5 = () => {
               What Our <span className="text-primary">Guests</span> Say
             </h2>
             <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-              Real stories from travelers who found their perfect mountain escape at Horseland
+              See why families and couples choose Horseland for their Matheran stay and hear from travelers who found their perfect mountain escape at Horseland
             </p>
           </div>
 
