@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Camera, Heart, MapPin, Eye } from 'lucide-react';
+import { Camera, Heart, MapPin, Eye, ArrowRight, Share } from 'lucide-react';
 
 const GalleryV5 = () => {
   const [activeTab, setActiveTab] = useState('hotel');
@@ -12,7 +12,7 @@ const GalleryV5 = () => {
     { url: "https://images.unsplash.com/photo-1571896349842-33c89424de2d?w=400&h=400&fit=crop", caption: "Executive Bedroom", location: "Heritage Block" },
     { url: "https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?w=400&h=400&fit=crop", caption: "Spa & Wellness Center", location: "Wellness Wing" },
     { url: "https://images.unsplash.com/photo-1551632811-561732d1e306?w=400&h=400&fit=crop", caption: "Horse Riding Arena", location: "Adventure Zone" },
-    { url: "https://images.unsplash.com/photo-1560472354-b33ff0c44a43?w=400&h=400&fit=crop", caption: "Garden Restaurant", location: "Outdoor Terrace" },
+    { url: "https://images.unsplash.com/photo-1520250497591-112f2f40a3f4?w=400&h=400&fit=crop", caption: "Reception & Lobby", location: "Main Building" },
     { url: "https://images.unsplash.com/photo-1541971875076-8f970d573be6?w=400&h=400&fit=crop", caption: "Valley View Lounge", location: "Central Lobby" },
     { url: "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=400&h=400&fit=crop", caption: "Mountain Sunset", location: "Panorama Point" }
   ];
@@ -78,13 +78,15 @@ const GalleryV5 = () => {
                 index === 0 ? 'md:col-span-2 md:row-span-2' : ''
               }`}
             >
-              <img
-                src={image.url}
-                alt={activeTab === 'hotel' ? (image as any).caption : (image as any).caption}
-                className={`w-full object-cover group-hover:scale-110 transition-transform duration-500 ${
-                  index === 0 ? 'h-48 md:h-full' : 'h-32 md:h-48'
-                }`}
-              />
+              <div className={`w-full overflow-hidden ${
+                index === 0 ? 'aspect-[4/3] md:aspect-[4/3]' : 'aspect-square'
+              }`}>
+                <img
+                  src={image.url}
+                  alt={activeTab === 'hotel' ? (image as any).caption : (image as any).caption}
+                  className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                />
+              </div>
               
               {/* V3-style Overlay with V2 location info */}
               <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300">
@@ -122,10 +124,24 @@ const GalleryV5 = () => {
           ))}
         </div>
 
-        <div className="text-center mt-12">
-          <Button className="bg-gradient-to-r from-primary to-accent hover:shadow-lg transform hover:scale-105 transition-all duration-300">
-            View Full Gallery
-          </Button>
+        {/* Share Your Horseland Moments - V2 style with V3 buttons */}
+        <div className="text-center mt-12 p-6 md:p-8 bg-gradient-to-r from-primary/10 to-accent/10 rounded-2xl border border-primary/20">
+          <h3 className="text-xl md:text-2xl font-bold text-foreground mb-4">
+            Share Your Horseland Moments
+          </h3>
+          <p className="text-muted-foreground mb-6">
+            Tag us @horselandresort and use #MatheranMoments to be featured in our gallery
+          </p>
+          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <button className="bg-gradient-to-r from-primary to-accent text-white px-6 py-3 rounded-xl font-semibold hover:shadow-lg transform hover:scale-105 transition-all flex items-center justify-center">
+              <Camera className="w-4 h-4 mr-2" />
+              View Full Gallery
+            </button>
+            <button className="border border-primary text-primary px-6 py-3 rounded-xl font-semibold hover:bg-primary/10 transition-all flex items-center justify-center">
+              Follow @horselandresort
+              <ArrowRight className="ml-2 h-4 w-4" />
+            </button>
+          </div>
         </div>
       </div>
     </section>
