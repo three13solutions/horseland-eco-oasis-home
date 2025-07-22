@@ -1,85 +1,130 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
-import { ArrowRight } from 'lucide-react';
+import { ArrowRight, Sparkles } from 'lucide-react';
 
 const StayPreviewV5 = () => {
   const rooms = [
     {
-      name: "Deluxe Valley View",
-      price: "₹3,500",
-      image: "https://images.unsplash.com/photo-1611892440504-42a792e24d32?w=400&h=300&fit=crop",
-      features: "King bed, Valley view, Balcony"
+      id: 1,
+      name: 'Forest View Deluxe',
+      category: 'Deluxe Room',
+      price: '₹8,500',
+      image: 'https://images.unsplash.com/photo-1615729947596-a598e5de0ab3?w=600&h=400&fit=crop',
+      amenities: ['Forest Views', 'Premium Bath', 'Work Desk', 'Mini Bar'],
+      description: 'Immerse yourself in nature\'s embrace with panoramic forest views'
     },
     {
-      name: "Premium Forest Suite",
-      price: "₹5,200",
-      image: "https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?w=400&h=300&fit=crop",
-      features: "Suite, Forest view, Living area"
+      id: 2,
+      name: 'Valley Suite',
+      category: 'Suite',
+      price: '₹12,000',
+      image: 'https://images.unsplash.com/photo-1513836279014-a89f7a76ae86?w=600&h=400&fit=crop',
+      amenities: ['Valley Views', 'Separate Living', 'Jacuzzi', 'Butler Service'],
+      description: 'Spacious luxury with breathtaking valley vistas and premium amenities'
     },
     {
-      name: "Eco Cottage",
-      price: "₹4,800",
-      image: "https://images.unsplash.com/photo-1560472354-b33ff0c44a43?w=400&h=300&fit=crop",
-      features: "Private cottage, Garden, Eco-friendly"
-    },
-    {
-      name: "Heritage Room",
-      price: "₹2,800",
-      image: "https://images.unsplash.com/photo-1631049307264-da0ec9d70304?w=400&h=300&fit=crop",
-      features: "Classic decor, Mountain view, Heritage charm"
+      id: 3,
+      name: 'Mountain Cottage',
+      category: 'Premium Cottage',
+      price: '₹15,000',
+      image: 'https://images.unsplash.com/photo-1509316975850-ff9c5deb0cd9?w=600&h=400&fit=crop',
+      amenities: ['Private Garden', 'Fireplace', 'Outdoor Deck', 'Concierge'],
+      description: 'Your private mountain retreat with exclusive outdoor spaces'
     }
   ];
 
   return (
-    <section className="py-16 md:py-20 bg-background">
-      <div className="container mx-auto px-4">
-        <div className="text-center mb-12">
-          <h2 className="text-3xl md:text-4xl font-serif font-bold text-foreground mb-4">
-            Choose Your <span className="text-primary">Stay</span>
+    <section className="py-24 bg-gradient-to-b from-muted/30 to-background">
+      <div className="container mx-auto px-6">
+        {/* Section Header */}
+        <div className="text-center mb-16">
+          <h2 className="text-4xl md:text-6xl font-bold text-foreground mb-6">
+            Luxury
+            <span className="block text-primary italic">Accommodations</span>
           </h2>
-          <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-            Thoughtfully designed accommodations that blend comfort with nature's tranquility
+          <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
+            Each room tells a story of comfort, elegance, and natural beauty
           </p>
         </div>
 
-        <div className="flex overflow-x-auto md:grid md:grid-cols-2 lg:grid-cols-4 gap-4 pb-4 md:pb-0 hover:overflow-x-hidden" style={{maxWidth: '100vw'}}>
+        {/* Rooms Grid */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 max-w-7xl mx-auto">
           {rooms.map((room, index) => (
-            <div 
-              key={index}
-              className="flex-shrink-0 w-72 md:w-auto bg-white/80 backdrop-blur-sm rounded-2xl border border-border/20 overflow-hidden hover:shadow-xl transition-all duration-300 hover:scale-105"
+            <div
+              key={room.id}
+              className={`group relative bg-white rounded-3xl overflow-hidden shadow-xl hover:shadow-2xl transition-all duration-500 transform hover:-translate-y-2 ${
+                index === 1 ? 'lg:scale-105 z-10' : ''
+              }`}
             >
-              <div className="relative">
+              {/* Featured Badge */}
+              {index === 1 && (
+                <div className="absolute top-4 left-4 z-20 bg-primary text-primary-foreground px-3 py-1 rounded-full text-sm font-medium flex items-center">
+                  <Sparkles className="w-4 h-4 mr-1" />
+                  Most Popular
+                </div>
+              )}
+
+              {/* Image */}
+              <div className="aspect-[4/3] overflow-hidden relative">
                 <img
                   src={room.image}
                   alt={room.name}
-                  className="w-full h-44 object-cover"
+                  className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
                 />
-                <div className="absolute top-3 right-3 bg-white/90 backdrop-blur-sm px-2 py-1 rounded-full">
-                  <span className="text-primary font-bold text-sm">{room.price}</span>
-                  <span className="text-muted-foreground text-xs">/night</span>
+                <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent"></div>
+                
+                {/* Price Badge */}
+                <div className="absolute top-4 right-4 bg-white/90 backdrop-blur-sm rounded-full px-4 py-2">
+                  <span className="text-2xl font-bold text-foreground">{room.price}</span>
+                  <span className="text-sm text-muted-foreground">/night</span>
                 </div>
               </div>
-              
-              <div className="p-5">
-                <h3 className="text-lg font-semibold text-foreground mb-2">{room.name}</h3>
-                <p className="text-muted-foreground text-xs mb-4">{room.features}</p>
-                
+
+              {/* Content */}
+              <div className="p-8">
+                <div className="mb-4">
+                  <span className="text-primary font-medium text-sm uppercase tracking-wide">
+                    {room.category}
+                  </span>
+                  <h3 className="text-2xl font-bold text-foreground mt-2 mb-3">
+                    {room.name}
+                  </h3>
+                  <p className="text-muted-foreground leading-relaxed">
+                    {room.description}
+                  </p>
+                </div>
+
+                {/* Amenities */}
+                <div className="grid grid-cols-2 gap-2 mb-6">
+                  {room.amenities.map((amenity, amenityIndex) => (
+                    <div key={amenityIndex} className="flex items-center space-x-2">
+                      <div className="w-1.5 h-1.5 bg-primary rounded-full"></div>
+                      <span className="text-sm text-muted-foreground">{amenity}</span>
+                    </div>
+                  ))}
+                </div>
+
+                {/* CTA */}
                 <Button 
-                  variant="outline" 
-                  size="sm"
-                  className="w-full border-primary text-primary hover:bg-primary hover:text-primary-foreground transition-all duration-300 text-sm py-2"
+                  className={`w-full ${
+                    index === 1 
+                      ? 'bg-gradient-to-r from-primary to-accent' 
+                      : 'bg-foreground hover:bg-foreground/90'
+                  } hover:shadow-lg transform hover:scale-105 transition-all duration-300`}
                 >
                   View Details
-                  <ArrowRight className="ml-2 h-3 w-3" />
+                  <ArrowRight className="ml-2 h-4 w-4" />
                 </Button>
               </div>
             </div>
           ))}
         </div>
 
+        {/* View All CTA */}
         <div className="text-center mt-12">
-          <Button className="bg-gradient-to-r from-primary to-accent hover:shadow-lg transform hover:scale-105 transition-all duration-300">
+          <Button variant="outline" size="lg" className="hover:bg-primary hover:text-primary-foreground transition-all duration-300">
             View All Accommodations
+            <ArrowRight className="ml-2 h-5 w-5" />
           </Button>
         </div>
       </div>
