@@ -86,39 +86,46 @@ const DynamicFooter = () => {
   };
 
   return (
-    <footer className="bg-primary text-white">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+    <footer className="bg-gradient-to-b from-foreground to-foreground/90 text-background relative overflow-hidden">
+      {/* Background Decoration - Inspired by v2 */}
+      <div className="absolute inset-0 opacity-5">
+        <div className="absolute top-20 right-20 w-64 h-64 bg-primary rounded-full blur-3xl"></div>
+        <div className="absolute bottom-20 left-20 w-48 h-48 bg-accent rounded-full blur-3xl"></div>
+      </div>
+
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 relative z-10">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
           {/* Brand Section */}
-          <div className="space-y-4">
+          <div className="space-y-6">
             <div className="flex items-center">
               <img 
                 src={siteSettings.site_logo} 
                 alt={siteSettings.site_title}
-                className="h-16 w-auto"
+                className="h-48 w-auto drop-shadow-lg"
               />
             </div>
             {brandSection && (
-              <div className="space-y-4">
-                <p className="text-sm leading-relaxed text-white/80">
+              <div className="space-y-6">
+                <p className="text-background/80 leading-relaxed">
                   {brandSection.content.description}
                 </p>
                 {/* Newsletter moved here */}
                 {newsletterSection && (
                   <>
-                    <h3 className="text-lg font-semibold text-white">
+                    <h3 className="text-xl font-semibold text-background flex items-center">
+                      <Mail className="w-5 h-5 mr-2 text-primary" />
                       {newsletterSection.content.title || 'Stay Connected'}
                     </h3>
-                    <p className="text-sm text-white/80">
+                    <p className="text-background/80 text-sm">
                       {newsletterSection.content.description || 'Subscribe for updates and special offers'}
                     </p>
-                    <div className="flex space-x-2">
+                    <div className="flex space-x-3 max-w-md">
                       <Input 
-                        placeholder="Your email" 
-                        className="bg-white/10 border-white/20 text-white placeholder-white/60"
+                        placeholder="Enter your email" 
+                        className="bg-background/10 border-background/20 text-background placeholder:text-background/50 rounded-xl"
                       />
-                      <Button size="sm" variant="secondary">
-                        <Mail className="w-4 h-4" />
+                      <Button className="bg-primary hover:bg-primary/90 text-primary-foreground rounded-xl px-6">
+                        Subscribe
                       </Button>
                     </div>
                   </>
@@ -129,24 +136,24 @@ const DynamicFooter = () => {
 
           {/* Quick Links */}
           <div className="space-y-4">
-            <h3 className="text-lg font-semibold text-white">Quick Links</h3>
-            <ul className="space-y-2">
-              <li><Link to="/about" className="hover:text-white transition-colors">About Us</Link></li>
-              <li><Link to="/stay" className="hover:text-white transition-colors">Accommodation</Link></li>
-              <li><Link to="/experiences" className="hover:text-white transition-colors">Experiences</Link></li>
-              <li><Link to="/packages" className="hover:text-white transition-colors">Packages</Link></li>
-              <li><Link to="/journal" className="hover:text-white transition-colors">Journal</Link></li>
+            <h3 className="text-xl font-semibold text-background">Explore</h3>
+            <ul className="space-y-3">
+              <li><Link to="/about" className="text-background/80 hover:text-primary transition-colors hover:translate-x-1 transform duration-200 inline-block">About Us</Link></li>
+              <li><Link to="/stay" className="text-background/80 hover:text-primary transition-colors hover:translate-x-1 transform duration-200 inline-block">Accommodation</Link></li>
+              <li><Link to="/experiences" className="text-background/80 hover:text-primary transition-colors hover:translate-x-1 transform duration-200 inline-block">Experiences</Link></li>
+              <li><Link to="/packages" className="text-background/80 hover:text-primary transition-colors hover:translate-x-1 transform duration-200 inline-block">Packages</Link></li>
+              <li><Link to="/journal" className="text-background/80 hover:text-primary transition-colors hover:translate-x-1 transform duration-200 inline-block">Journal</Link></li>
             </ul>
           </div>
 
           {/* Policies */}
           <div className="space-y-4">
-            <h3 className="text-lg font-semibold text-white">Policies</h3>
+            <h3 className="text-xl font-semibold text-background">Policies</h3>
             {policiesSection && policiesSection.content.links && (
-              <ul className="space-y-2">
+              <ul className="space-y-3">
                 {policiesSection.content.links.map((link: any, index: number) => (
                   <li key={index}>
-                    <Link to={link.href} className="hover:text-white transition-colors">
+                    <Link to={link.href} className="text-background/80 hover:text-primary transition-colors hover:translate-x-1 transform duration-200 inline-block">
                       {link.title}
                     </Link>
                   </li>
@@ -158,38 +165,47 @@ const DynamicFooter = () => {
           {/* Contact Info */}
           <div className="space-y-4">
             {contactSection && (
-              <div className="space-y-4">
-                <h4 className="text-lg font-semibold text-white">Contact Info</h4>
-                <div className="space-y-2">
+              <div className="space-y-6">
+                <h4 className="text-xl font-semibold text-background">Connect</h4>
+                <div className="space-y-4">
                   {contactSection.content.email && (
-                    <div className="flex items-center space-x-2">
-                      <Mail className="w-4 h-4" />
-                      <span className="text-sm text-white/80">{contactSection.content.email}</span>
+                    <div className="flex items-start space-x-3">
+                      <Mail className="w-5 h-5 text-primary mt-1 flex-shrink-0" />
+                      <div>
+                        <p className="text-background/80 text-sm">Email Us</p>
+                        <p className="font-medium text-background">{contactSection.content.email}</p>
+                      </div>
                     </div>
                   )}
                   {contactSection.content.phone && (
-                    <div className="flex items-center space-x-2">
-                      <Phone className="w-4 h-4" />
-                      <span className="text-sm text-white/80">{contactSection.content.phone}</span>
+                    <div className="flex items-start space-x-3">
+                      <Phone className="w-5 h-5 text-primary mt-1 flex-shrink-0" />
+                      <div>
+                        <p className="text-background/80 text-sm">24/7 Reservations</p>
+                        <p className="font-medium text-background">{contactSection.content.phone}</p>
+                      </div>
                     </div>
                   )}
                   {contactSection.content.address && (
-                    <div className="flex items-center space-x-2">
-                      <MapPin className="w-4 h-4" />
-                      <span className="text-sm text-white/80">{contactSection.content.address}</span>
+                    <div className="flex items-start space-x-3">
+                      <MapPin className="w-5 h-5 text-primary mt-1 flex-shrink-0" />
+                      <div>
+                        <p className="text-background/80 text-sm">Visit Us</p>
+                        <p className="font-medium text-background">{contactSection.content.address}</p>
+                      </div>
                     </div>
                   )}
                 </div>
                 {/* Social Icons moved here */}
                 {socialSection && (
-                  <div className="space-y-2">
-                    <h5 className="font-medium text-white">Follow Us</h5>
-                    <div className="flex items-center space-x-4">
+                  <div className="space-y-3">
+                    <p className="text-background/80 text-sm">Follow Our Journey</p>
+                    <div className="flex space-x-4">
                       {Object.entries(socialSection.content).map(([platform, url]) => (
                         <Link
                           key={platform}
                           to={url as string}
-                          className="text-white/80 hover:text-white transition-colors"
+                          className="p-3 bg-background/10 rounded-full hover:bg-background/20 transition-all duration-300 transform hover:scale-110 text-background/80 hover:text-primary"
                         >
                           {getSocialIcon(platform)}
                         </Link>
@@ -203,12 +219,12 @@ const DynamicFooter = () => {
         </div>
 
         {/* Bottom Section */}
-        <div className="border-t border-white/20 mt-12 pt-8">
+        <div className="border-t border-background/20 mt-12 pt-8">
           <div className="flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
-            <p className="text-sm text-white/60">
+            <p className="text-sm text-background/60">
               {siteSettings.copyright_text}
             </p>
-            <p className="text-sm text-white/60">
+            <p className="text-sm text-background/60">
               {siteSettings.tagline}
             </p>
           </div>
