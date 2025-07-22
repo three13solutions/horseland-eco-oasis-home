@@ -177,6 +177,11 @@ const GuestReviewsV5 = () => {
             <h3 className="text-xl md:text-2xl font-bold text-foreground mb-4">
               Join Our Happy Guests
             </h3>
+            <div className="text-center mb-4">
+              <div className="text-muted-foreground">Read more stories on</div>
+              <div className="text-muted-foreground text-sm">TripAdvisor 4.8/5</div>
+              <div className="text-muted-foreground text-sm">Google Reviews 4.9/5</div>
+            </div>
             <p className="text-muted-foreground mb-6">
               Book your stay today and create your own memorable experience in Matheran.
             </p>
@@ -184,13 +189,9 @@ const GuestReviewsV5 = () => {
               <button className="bg-gradient-to-r from-primary to-accent text-white px-6 py-3 rounded-xl font-semibold hover:shadow-lg transform hover:scale-105 transition-all">
                 Book Your Stay
               </button>
-              <div className="border border-primary text-primary px-6 py-3 rounded-xl font-semibold">
-                <div className="text-center">
-                  <div>Read more stories on</div>
-                  <div className="text-sm mt-1">TripAdvisor 4.8/5</div>
-                  <div className="text-sm">Google Reviews 4.9/5</div>
-                </div>
-              </div>
+              <button className="border border-primary text-primary px-6 py-3 rounded-xl font-semibold hover:bg-primary/10 transition-all">
+                View All Reviews
+              </button>
             </div>
           </div>
         </div>
