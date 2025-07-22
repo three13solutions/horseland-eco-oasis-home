@@ -19,7 +19,7 @@ const BookingModal: React.FC<BookingModalProps> = ({ isOpen, onClose }) => {
             alt="Luxury hotel bedroom in Matheran" 
             className="w-full h-full object-cover animate-pulse"
           />
-          <div className="absolute inset-0 bg-black/50"></div>
+          <div className="absolute inset-0 bg-black/70"></div>
         </div>
         
         {/* Content Overlay */}
@@ -29,7 +29,7 @@ const BookingModal: React.FC<BookingModalProps> = ({ isOpen, onClose }) => {
             <h3 className="text-xl font-bold text-white">Zen Den</h3>
             <button
               onClick={onClose}
-              className="p-2 hover:bg-white/20 rounded-lg transition-colors text-white"
+              className="p-2 hover:bg-gray-600 rounded-lg transition-colors text-white"
             >
               <X className="w-5 h-5" />
             </button>
@@ -40,15 +40,15 @@ const BookingModal: React.FC<BookingModalProps> = ({ isOpen, onClose }) => {
             <div className="grid grid-cols-3 gap-2 text-center">
               <div>
                 <div className="text-base font-bold text-primary drop-shadow-md">4.3★</div>
-                <div className="text-xs text-white/80 drop-shadow-sm">Rating</div>
+                <div className="text-xs text-gray-200 drop-shadow-sm">Rating</div>
               </div>
               <div>
                 <div className="text-base font-bold text-primary drop-shadow-md">500+</div>
-                <div className="text-xs text-white/80 drop-shadow-sm">Guests</div>
+                <div className="text-xs text-gray-200 drop-shadow-sm">Guests</div>
               </div>
               <div>
                 <div className="text-base font-bold text-primary drop-shadow-md">24/7</div>
-                <div className="text-xs text-white/80 drop-shadow-sm">Support</div>
+                <div className="text-xs text-gray-200 drop-shadow-sm">Support</div>
               </div>
             </div>
           </div>
