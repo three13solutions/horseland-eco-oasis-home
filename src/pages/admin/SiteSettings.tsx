@@ -7,9 +7,28 @@ import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
-import { Trash2, Plus, ArrowUp, ArrowDown, Save, Settings } from 'lucide-react';
+import { Switch } from '@/components/ui/switch';
+import { Trash2, Plus, Save, Settings, GripVertical, ChevronRight } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import ImageUpload from '@/components/ImageUpload';
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+} from '@dnd-kit/core';
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  verticalListSortingStrategy,
+} from '@dnd-kit/sortable';
+import {
+  useSortable,
+} from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
 
 interface NavigationItem {
   id: string;
@@ -17,6 +36,7 @@ interface NavigationItem {
   href: string;
   sort_order: number;
   is_active: boolean;
+  parent_id?: string | null;
 }
 
 interface FooterSection {
@@ -143,7 +163,8 @@ const SiteSettings = () => {
             title: item.title,
             href: item.href,
             sort_order: item.sort_order,
-            is_active: item.is_active
+            is_active: item.is_active,
+            parent_id: item.parent_id
           })));
 
         if (error) throw error;
@@ -246,13 +267,14 @@ const SiteSettings = () => {
     }
   };
 
-  const addNavigationItem = () => {
+  const addNavigationItem = (parentId?: string) => {
     const newItem: NavigationItem = {
       id: `temp-${Date.now()}`,
       title: 'New Item',
       href: '/',
       sort_order: navigationItems.length + 1,
-      is_active: true
+      is_active: true,
+      parent_id: parentId || null
     };
     setNavigationItems([...navigationItems, newItem]);
   };
@@ -267,19 +289,30 @@ const SiteSettings = () => {
     setNavigationItems(navigationItems.filter((_, i) => i !== index));
   };
 
-  const moveNavigationItem = (index: number, direction: 'up' | 'down') => {
-    const newItems = [...navigationItems];
-    const targetIndex = direction === 'up' ? index - 1 : index + 1;
-    
-    if (targetIndex >= 0 && targetIndex < newItems.length) {
-      [newItems[index], newItems[targetIndex]] = [newItems[targetIndex], newItems[index]];
-      // Update sort orders
-      newItems.forEach((item, i) => {
-        item.sort_order = i + 1;
+  const handleDragEnd = (event: any) => {
+    const { active, over } = event;
+
+    if (active.id !== over.id) {
+      setNavigationItems((items) => {
+        const oldIndex = items.findIndex((item) => item.id === active.id);
+        const newIndex = items.findIndex((item) => item.id === over.id);
+
+        const reorderedItems = arrayMove(items, oldIndex, newIndex);
+        // Update sort orders
+        reorderedItems.forEach((item, index) => {
+          item.sort_order = index + 1;
+        });
+        return reorderedItems;
       });
-      setNavigationItems(newItems);
     }
   };
+
+  const sensors = useSensors(
+    useSensor(PointerSensor),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  );
 
   const updateFooterSection = (index: number, field: string, value: any) => {
     const updated = [...footerSections];
@@ -289,6 +322,96 @@ const SiteSettings = () => {
       updated[index] = { ...updated[index], [field]: value };
     }
     setFooterSections(updated);
+  };
+
+  // Sortable Navigation Item Component
+  const SortableNavigationItem = ({ 
+    item, 
+    index, 
+    onUpdate, 
+    onDelete, 
+    onAddChild,
+    isChild = false
+  }: {
+    item: NavigationItem;
+    index: number;
+    onUpdate: (index: number, field: string, value: any) => void;
+    onDelete: (index: number) => void;
+    onAddChild: (parentId: string) => void;
+    isChild?: boolean;
+  }) => {
+    const {
+      attributes,
+      listeners,
+      setNodeRef,
+      transform,
+      transition,
+    } = useSortable({ id: item.id });
+
+    const style = {
+      transform: CSS.Transform.toString(transform),
+      transition,
+    };
+
+    return (
+      <div
+        ref={setNodeRef}
+        style={style}
+        className={`flex items-center space-x-3 p-3 bg-background border rounded-lg ${isChild ? 'border-l-4 border-l-primary/30' : ''}`}
+      >
+        <div {...attributes} {...listeners} className="cursor-grab">
+          <GripVertical className="w-4 h-4 text-muted-foreground" />
+        </div>
+        
+        <div className="flex-1 grid grid-cols-2 gap-3">
+          <Input
+            value={item.title}
+            onChange={(e) => onUpdate(index, 'title', e.target.value)}
+            placeholder="Title"
+            className="text-sm"
+          />
+          <Input
+            value={item.href}
+            onChange={(e) => onUpdate(index, 'href', e.target.value)}
+            placeholder="/path"
+            className="text-sm"
+          />
+        </div>
+        
+        <div className="flex items-center space-x-2">
+          <div className="flex items-center space-x-2">
+            <Label htmlFor={`toggle-${item.id}`} className="text-xs text-muted-foreground">
+              {item.is_active ? 'Published' : 'Draft'}
+            </Label>
+            <Switch
+              id={`toggle-${item.id}`}
+              checked={item.is_active}
+              onCheckedChange={(checked) => onUpdate(index, 'is_active', checked)}
+            />
+          </div>
+          
+          {!isChild && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => onAddChild(item.id)}
+              title="Add sub-menu item"
+            >
+              <ChevronRight className="w-3 h-3" />
+            </Button>
+          )}
+          
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => onDelete(index)}
+            className="text-destructive hover:text-destructive"
+          >
+            <Trash2 className="w-3 h-3" />
+          </Button>
+        </div>
+      </div>
+    );
   };
 
   if (loading) {
@@ -383,69 +506,56 @@ const SiteSettings = () => {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="space-y-4">
-                {navigationItems.map((item, index) => (
-                  <div key={item.id} className="flex items-center space-x-2 p-4 border rounded-lg">
-                    <div className="flex-1 space-y-2">
-                      <Input
-                        value={item.title}
-                        onChange={(e) => updateNavigationItem(index, 'title', e.target.value)}
-                        placeholder="Menu item title"
-                      />
-                      <Input
-                        value={item.href}
-                        onChange={(e) => updateNavigationItem(index, 'href', e.target.value)}
-                        placeholder="/path"
-                      />
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <Badge variant={item.is_active ? "default" : "secondary"}>
-                        {item.is_active ? "Active" : "Inactive"}
-                      </Badge>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => updateNavigationItem(index, 'is_active', !item.is_active)}
-                      >
-                        Toggle
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => moveNavigationItem(index, 'up')}
-                        disabled={index === 0}
-                      >
-                        <ArrowUp className="w-4 h-4" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => moveNavigationItem(index, 'down')}
-                        disabled={index === navigationItems.length - 1}
-                      >
-                        <ArrowDown className="w-4 h-4" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => deleteNavigationItem(index)}
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </Button>
-                    </div>
+              <DndContext
+                sensors={sensors}
+                collisionDetection={closestCenter}
+                onDragEnd={handleDragEnd}
+              >
+                <SortableContext
+                  items={navigationItems.map(item => item.id)}
+                  strategy={verticalListSortingStrategy}
+                >
+                  <div className="space-y-2">
+                    {navigationItems
+                      .filter(item => !item.parent_id)
+                      .map((item, index) => (
+                        <div key={item.id}>
+                          <SortableNavigationItem
+                            item={item}
+                            index={navigationItems.indexOf(item)}
+                            onUpdate={updateNavigationItem}
+                            onDelete={deleteNavigationItem}
+                            onAddChild={addNavigationItem}
+                          />
+                          {navigationItems
+                            .filter(child => child.parent_id === item.id)
+                            .map((child) => (
+                              <div key={child.id} className="ml-8">
+                                <SortableNavigationItem
+                                  item={child}
+                                  index={navigationItems.indexOf(child)}
+                                  onUpdate={updateNavigationItem}
+                                  onDelete={deleteNavigationItem}
+                                  onAddChild={addNavigationItem}
+                                  isChild={true}
+                                />
+                              </div>
+                            ))}
+                        </div>
+                      ))}
                   </div>
-                ))}
-                
-                <div className="flex space-x-2">
-                  <Button onClick={addNavigationItem} variant="outline">
-                    <Plus className="w-4 h-4 mr-2" />
-                    Add Navigation Item
-                  </Button>
-                  <Button onClick={saveNavigationItems} disabled={saving}>
-                    <Save className="w-4 h-4 mr-2" />
-                    Save Navigation
-                  </Button>
-                </div>
+                </SortableContext>
+              </DndContext>
+              
+              <div className="flex space-x-2 mt-4">
+                <Button onClick={() => addNavigationItem()} variant="outline">
+                  <Plus className="w-4 h-4 mr-2" />
+                  Add Navigation Item
+                </Button>
+                <Button onClick={saveNavigationItems} disabled={saving}>
+                  <Save className="w-4 h-4 mr-2" />
+                  Save Navigation
+                </Button>
               </div>
             </CardContent>
           </Card>
