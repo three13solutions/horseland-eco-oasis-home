@@ -105,7 +105,7 @@ const StayPreviewV5 = () => {
 
                 {/* CTA */}
                 <Button 
-                  className={`w-full ${
+                  className={`w-full text-white ${
                     index === 1 
                       ? 'bg-gradient-to-r from-primary to-accent' 
                       : 'bg-foreground hover:bg-foreground/90'
