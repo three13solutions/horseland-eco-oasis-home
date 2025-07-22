@@ -143,7 +143,7 @@ const DynamicFooter = () => {
           )}
 
           {/* Policies - Third Column (Narrower) */}
-          <div className="md:col-span-1 lg:col-span-1 space-y-4">
+          <div className="md:col-span-2 lg:col-span-2 space-y-4">
             <h3 className="text-xl font-semibold text-background">Policies</h3>
             {policiesSection && policiesSection.content.links && (
               <ul className="space-y-3">
