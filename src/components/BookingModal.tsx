@@ -11,7 +11,7 @@ const BookingModal: React.FC<BookingModalProps> = ({ isOpen, onClose }) => {
 
   return (
     <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm" style={{ margin: 0, padding: '1rem' }}>
-      <div className="bg-background rounded-2xl p-6 w-full max-w-md shadow-2xl border border-border/20 max-h-[90vh] overflow-y-auto mx-auto my-auto animate-scale-in">
+      <div className="bg-background/80 backdrop-blur-lg rounded-2xl p-6 w-full max-w-md shadow-2xl border border-border/20 max-h-[90vh] overflow-y-auto mx-auto my-auto animate-scale-in">
         {/* Header */}
         <div className="flex items-center justify-between mb-6">
           <h3 className="text-xl font-bold text-foreground">Quick Booking</h3>
