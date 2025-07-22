@@ -112,23 +112,7 @@ const DynamicFooter = () => {
             )}
           </div>
 
-          {/* Policies */}
-          <div className="space-y-4">
-            <h3 className="text-xl font-semibold text-background">Policies</h3>
-            {policiesSection && policiesSection.content.links && (
-              <ul className="space-y-3">
-                {policiesSection.content.links.map((link: any, index: number) => (
-                  <li key={index}>
-                    <Link to={link.href} className="text-background/80 hover:text-primary transition-colors hover:translate-x-1 transform duration-200 inline-block text-sm">
-                      {link.title}
-                    </Link>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </div>
-
-          {/* Newsletter Section */}
+          {/* Newsletter Section - Second Column */}
           {newsletterSection && (
             <div className="space-y-4">
               <h3 className="text-xl font-semibold text-background flex items-center">
@@ -150,7 +134,23 @@ const DynamicFooter = () => {
             </div>
           )}
 
-          {/* Connect Section - All Contact Info */}
+          {/* Policies - Third Column */}
+          <div className="space-y-4">
+            <h3 className="text-xl font-semibold text-background">Policies</h3>
+            {policiesSection && policiesSection.content.links && (
+              <ul className="space-y-3">
+                {policiesSection.content.links.map((link: any, index: number) => (
+                  <li key={index}>
+                    <Link to={link.href} className="text-background/80 hover:text-primary transition-colors hover:translate-x-1 transform duration-200 inline-block text-sm">
+                      {link.title}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+
+          {/* Connect Section - Fourth Column */}
           {contactSection && (
             <div className="space-y-6">
               <h4 className="text-xl font-semibold text-background">Connect</h4>
