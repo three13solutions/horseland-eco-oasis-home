@@ -98,12 +98,20 @@ const DynamicFooter = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
           {/* Brand Section */}
           <div className="space-y-6">
-            <div className="flex items-center">
+            <div className="flex items-center space-x-3">
               <img 
                 src={siteSettings.site_logo} 
                 alt={siteSettings.site_title}
                 className="h-20 w-auto drop-shadow-lg"
               />
+              <div className="flex flex-col">
+                <span className="font-bold text-xl text-background">
+                  HORSELAND
+                </span>
+                <span className="text-background/80 text-sm">
+                  Mountain Spa & Hotel
+                </span>
+              </div>
             </div>
             {brandSection && (
               <p className="text-background/80 leading-relaxed text-sm">
