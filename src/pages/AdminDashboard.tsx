@@ -45,69 +45,27 @@ const AdminDashboard = () => {
     unreadMessages: 0,
   });
   const [loading, setLoading] = useState(true);
-  const [userRole, setUserRole] = useState<string>('');
+  const [userRole] = useState<string>('admin'); // Hardcoded as admin for now
   const navigate = useNavigate();
   const { toast } = useToast();
 
   useEffect(() => {
-    checkAuth();
+    // Skip authentication checks for now
     loadDashboardStats();
   }, []);
 
-  const checkAuth = async () => {
-    const { data: { session } } = await supabase.auth.getSession();
-    if (!session) {
-      navigate('/admin/login');
-      return;
-    }
-
-    const { data: profile } = await supabase
-      .from('admin_profiles')
-      .select('*')
-      .eq('user_id', session.user.id)
-      .single();
-
-    if (!profile) {
-      navigate('/admin/login');
-      return;
-    }
-
-    setUserRole(profile.role);
-  };
-
   const loadDashboardStats = async () => {
     try {
-      // Load various stats from database
-      const [
-        { count: totalBookings },
-        { count: activeRooms },
-        { count: publishedPosts },
-        { count: pendingReviews },
-        { count: unreadMessages }
-      ] = await Promise.all([
-        supabase.from('bookings').select('*', { count: 'exact', head: true }),
-        supabase.from('room_types').select('*', { count: 'exact', head: true }).eq('is_published', true),
-        supabase.from('blog_posts').select('*', { count: 'exact', head: true }).eq('is_published', true),
-        supabase.from('guest_reviews').select('*', { count: 'exact', head: true }).eq('is_published', false),
-        supabase.from('contact_messages').select('*', { count: 'exact', head: true }).eq('is_read', false)
-      ]);
-
-      // Get today's bookings
-      const today = new Date().toISOString().split('T')[0];
-      const { count: todayBookings } = await supabase
-        .from('bookings')
-        .select('*', { count: 'exact', head: true })
-        .eq('check_in', today);
-
+      // Use mock data since we don't have real data yet
       setStats({
-        totalBookings: totalBookings || 0,
-        todayBookings: todayBookings || 0,
-        occupancyRate: 85, // Mock data
-        revenue: 45000, // Mock data
-        activeRooms: activeRooms || 0,
-        publishedPosts: publishedPosts || 0,
-        pendingReviews: pendingReviews || 0,
-        unreadMessages: unreadMessages || 0,
+        totalBookings: 125,
+        todayBookings: 8,
+        occupancyRate: 85,
+        revenue: 45000,
+        activeRooms: 12,
+        publishedPosts: 15,
+        pendingReviews: 3,
+        unreadMessages: 7,
       });
     } catch (error) {
       console.error('Error loading stats:', error);
@@ -117,12 +75,11 @@ const AdminDashboard = () => {
   };
 
   const handleLogout = async () => {
-    await supabase.auth.signOut();
     toast({
-      title: "Logged out successfully",
-      description: "You have been logged out of the admin panel.",
+      title: "Demo mode",
+      description: "Authentication is disabled for now.",
     });
-    navigate('/admin/login');
+    navigate('/');
   };
 
   const menuItems = [
@@ -214,11 +171,11 @@ const AdminDashboard = () => {
           
           <div className="flex items-center space-x-4">
             <Badge variant="secondary" className="capitalize">
-              {userRole.replace('_', ' ')}
+              {userRole.replace('_', ' ')} (Demo Mode)
             </Badge>
             <Button variant="ghost" size="sm" onClick={handleLogout}>
               <LogOut className="w-4 h-4 mr-2" />
-              Logout
+              Exit Demo
             </Button>
           </div>
         </div>
