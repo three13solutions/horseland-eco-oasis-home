@@ -95,9 +95,9 @@ const DynamicFooter = () => {
       </div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 relative z-10">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-          {/* Brand Section */}
-          <div className="space-y-6">
+        <div className="grid grid-cols-1 md:grid-cols-6 lg:grid-cols-8 gap-8">
+          {/* Brand Section - Column 1 */}
+          <div className="md:col-span-2 lg:col-span-2 space-y-6">
             <div className="flex items-center space-x-3">
               <img 
                 src={siteSettings.site_logo} 
@@ -122,7 +122,7 @@ const DynamicFooter = () => {
 
           {/* Newsletter Section - Second Column */}
           {newsletterSection && (
-            <div className="space-y-4">
+            <div className="md:col-span-3 lg:col-span-3 space-y-4">
               <h3 className="text-xl font-semibold text-background flex items-center">
                 <Mail className="w-5 h-5 mr-2 text-primary" />
                 {newsletterSection.content.title || 'Stay Connected'}
@@ -142,8 +142,8 @@ const DynamicFooter = () => {
             </div>
           )}
 
-          {/* Policies - Third Column */}
-          <div className="space-y-4">
+          {/* Policies - Third Column (Narrower) */}
+          <div className="md:col-span-1 lg:col-span-1 space-y-4">
             <h3 className="text-xl font-semibold text-background">Policies</h3>
             {policiesSection && policiesSection.content.links && (
               <ul className="space-y-3">
@@ -160,7 +160,7 @@ const DynamicFooter = () => {
 
           {/* Connect Section - Fourth Column */}
           {contactSection && (
-            <div className="space-y-6">
+            <div className="md:col-span-2 lg:col-span-2 space-y-6">
               <h4 className="text-xl font-semibold text-background">Connect</h4>
               <div className="space-y-4">
                 {contactSection.content.email && (
