@@ -2,8 +2,7 @@
 import React from 'react';
 import NavigationV5 from '../components/v5/NavigationV5';
 import HeroSectionV5 from '../components/v5/HeroSectionV5';
-import WelcomeStripV5 from '../components/v5/WelcomeStripV5';
-import WhyMatheranV5 from '../components/v5/WhyMatheranV5';
+import WelcomeAndMatheranV5 from '../components/v5/WelcomeAndMatheranV5';
 import StayPreviewV5 from '../components/v5/StayPreviewV5';
 import ExperiencesTeaserV5 from '../components/v5/ExperiencesTeaserV5';
 import PackagesPreviewV5 from '../components/v5/PackagesPreviewV5';
@@ -19,8 +18,7 @@ const IndexV5 = () => {
     <div className="min-h-screen bg-background overflow-x-hidden">
       <NavigationV5 />
       <HeroSectionV5 />
-      <WelcomeStripV5 />
-      <WhyMatheranV5 />
+      <WelcomeAndMatheranV5 />
       <StayPreviewV5 />
       <ExperiencesTeaserV5 />
       <PackagesPreviewV5 />
