@@ -114,7 +114,7 @@ const NavigationV5 = () => {
       return (
         <a
           href={item.href}
-          className="text-sm font-medium text-foreground/80 hover:text-primary transition-all duration-300 flex items-center"
+          className="text-base font-medium text-foreground/80 hover:text-primary transition-all duration-300 flex items-center"
           target={isExternal ? '_blank' : undefined}
           rel={isExternal ? 'noopener noreferrer' : undefined}
         >
@@ -126,7 +126,7 @@ const NavigationV5 = () => {
     return (
       <Link
         to={item.href}
-        className="text-sm font-medium text-foreground/80 hover:text-primary transition-all duration-300 flex items-center"
+        className="text-base font-medium text-foreground/80 hover:text-primary transition-all duration-300 flex items-center"
       >
         {item.title}
       </Link>
@@ -201,7 +201,7 @@ const NavigationV5 = () => {
                   {hasChildren && (
                     <div className="absolute top-full left-0 mt-1 bg-background/95 backdrop-blur-lg border border-border/20 rounded-lg shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 min-w-[160px]">
                       {childItems.map((subItem) => (
-                        <div key={subItem.id} className="block px-4 py-2 text-sm text-foreground/70 hover:text-primary hover:bg-muted/50 transition-colors">
+                        <div key={subItem.id} className="block px-4 py-2 text-base text-foreground/70 hover:text-primary hover:bg-muted/50 transition-colors">
                           {renderNavigationLink(subItem)}
                         </div>
                       ))}
