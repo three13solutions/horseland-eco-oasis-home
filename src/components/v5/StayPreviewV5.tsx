@@ -134,6 +134,10 @@ const StayPreviewV5 = () => {
             <Button variant="outline">
               WhatsApp us
             </Button>
+            <Button variant="outline" className="hover:bg-primary hover:text-primary-foreground transition-all duration-300">
+              View All Accommodations
+              <ArrowRight className="ml-2 h-4 w-4" />
+            </Button>
           </div>
         </div>
       </div>
