@@ -84,7 +84,7 @@ const GalleryV5 = () => {
                 <img
                   src={image.url}
                   alt={activeTab === 'hotel' ? (image as any).caption : (image as any).caption}
-                  className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                  className="w-full h-full object-cover object-center group-hover:scale-110 transition-transform duration-500"
                 />
               </div>
               
