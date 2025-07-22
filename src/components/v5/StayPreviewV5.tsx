@@ -119,12 +119,22 @@ const StayPreviewV5 = () => {
           ))}
         </div>
 
-        {/* View All CTA */}
-        <div className="text-center mt-12">
-          <Button variant="outline" size="lg" className="hover:bg-primary hover:text-primary-foreground transition-all duration-300">
-            View All Accommodations
-            <ArrowRight className="ml-2 h-5 w-5" />
-          </Button>
+        {/* Can't decide? CTA Box */}
+        <div className="text-center mt-12 p-6 md:p-8 bg-gradient-to-r from-primary/10 to-accent/10 rounded-2xl border border-primary/20">
+          <h3 className="text-xl md:text-2xl font-bold text-foreground mb-4">
+            Can't decide? We'll help you choose!
+          </h3>
+          <p className="text-muted-foreground mb-6">
+            Call us for personalized recommendations based on your needs and budget.
+          </p>
+          <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
+            <Button className="bg-gradient-to-r from-primary to-accent">
+              Call: +91 98765 43210
+            </Button>
+            <Button variant="outline">
+              WhatsApp us
+            </Button>
+          </div>
         </div>
       </div>
     </section>
