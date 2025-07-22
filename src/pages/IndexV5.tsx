@@ -1,5 +1,6 @@
+
 import React from 'react';
-import DynamicNavigation from '../components/DynamicNavigation';
+import NavigationV5 from '../components/v5/NavigationV5';
 import HeroSectionV5 from '../components/v5/HeroSectionV5';
 import WelcomeStripV5 from '../components/v5/WelcomeStripV5';
 import WhyMatheranV5 from '../components/v5/WhyMatheranV5';
@@ -16,7 +17,7 @@ import FloatingElementsV5 from '../components/v5/FloatingElementsV5';
 const IndexV5 = () => {
   return (
     <div className="min-h-screen bg-background overflow-x-hidden">
-      <DynamicNavigation />
+      <NavigationV5 />
       <HeroSectionV5 />
       <WelcomeStripV5 />
       <WhyMatheranV5 />
