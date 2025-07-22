@@ -180,28 +180,15 @@ const GuestReviewsV5 = () => {
             <p className="text-muted-foreground mb-6">
               Book your stay today and create your own memorable experience in Matheran.
             </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center mb-6">
+            <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <button className="bg-gradient-to-r from-primary to-accent text-white px-6 py-3 rounded-xl font-semibold hover:shadow-lg transform hover:scale-105 transition-all">
                 Book Your Stay
               </button>
-            </div>
-            
-            <div className="text-center">
-              <p className="text-muted-foreground mb-4 font-medium">Read more stories on</p>
-              <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
-                <div className="flex items-center gap-2 text-foreground">
-                  <div className="w-6 h-6 bg-green-600 rounded-full flex items-center justify-center">
-                    <span className="text-white text-xs font-bold">T</span>
-                  </div>
-                  <span className="font-semibold">TripAdvisor</span>
-                  <span className="text-muted-foreground">4.8/5</span>
-                </div>
-                <div className="flex items-center gap-2 text-foreground">
-                  <div className="w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center">
-                    <span className="text-white text-xs font-bold">G</span>
-                  </div>
-                  <span className="font-semibold">Google Reviews</span>
-                  <span className="text-muted-foreground">4.9/5</span>
+              <div className="border border-primary text-primary px-6 py-3 rounded-xl font-semibold">
+                <div className="text-center">
+                  <div>Read more stories on</div>
+                  <div className="text-sm mt-1">TripAdvisor 4.8/5</div>
+                  <div className="text-sm">Google Reviews 4.9/5</div>
                 </div>
               </div>
             </div>
