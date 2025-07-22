@@ -1,6 +1,6 @@
 import React from 'react';
 import NavigationV5 from '../components/v5/NavigationV5';
-import FooterV5 from '../components/v5/FooterV5';
+import DynamicFooter from '../components/DynamicFooter';
 import FloatingElementsV5 from '../components/v5/FloatingElementsV5';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -261,7 +261,7 @@ const Packages = () => {
         </div>
       </section>
 
-      <FooterV5 />
+      <DynamicFooter />
       <FloatingElementsV5 />
     </div>
   );

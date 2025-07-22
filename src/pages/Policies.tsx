@@ -1,6 +1,6 @@
 import React from 'react';
 import NavigationV5 from '@/components/v5/NavigationV5';
-import FooterV5 from '@/components/v5/FooterV5';
+import DynamicFooter from '@/components/DynamicFooter';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Shield, CreditCard, Eye, FileText, Clock, Users } from 'lucide-react';
@@ -306,7 +306,7 @@ const Policies = () => {
         </div>
       </section>
 
-      <FooterV5 />
+      <DynamicFooter />
     </div>
   );
 };

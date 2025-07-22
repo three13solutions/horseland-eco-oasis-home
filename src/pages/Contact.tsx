@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import NavigationV5 from '@/components/v5/NavigationV5';
-import FooterV5 from '@/components/v5/FooterV5';
+import DynamicFooter from '@/components/DynamicFooter';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -311,7 +311,7 @@ const Contact = () => {
         </div>
       </section>
 
-      <FooterV5 />
+      <DynamicFooter />
     </div>
   );
 };
