@@ -122,7 +122,7 @@ const DynamicFooter = () => {
 
           {/* Newsletter Section - Second Column */}
           {newsletterSection && (
-            <div className="md:col-span-3 lg:col-span-3 space-y-4">
+            <div className="md:col-span-2 lg:col-span-2 space-y-4">
               <h3 className="text-xl font-semibold text-background flex items-center">
                 <Mail className="w-5 h-5 mr-2 text-primary" />
                 {newsletterSection.content.title || 'Stay Connected'}
