@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 
 const FloatingElementsV5 = () => {
   const [showScrollTop, setShowScrollTop] = useState(false);
+  
   useEffect(() => {
     const handleScroll = () => {
       setShowScrollTop(window.scrollY > 400);
