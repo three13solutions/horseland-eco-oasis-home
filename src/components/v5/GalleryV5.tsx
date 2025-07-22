@@ -6,27 +6,27 @@ const GalleryV5 = () => {
   const [activeTab, setActiveTab] = useState('hotel');
 
   const hotelImages = [
-    { url: "https://images.unsplash.com/photo-1571896349842-33c89424de2d?w=400&h=400&fit=crop", caption: "Luxury Mountain Suite", location: "Matheran Hills" },
-    { url: "https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?w=400&h=400&fit=crop", caption: "Heritage Dining Room", location: "Main Building" },
-    { url: "https://images.unsplash.com/photo-1611892440504-42a792e24d32?w=400&h=400&fit=crop", caption: "Spa & Wellness Center", location: "Wellness Wing" },
+    { url: "https://images.unsplash.com/photo-1566073771259-6a8506099945?w=800&h=600&fit=crop", caption: "Swimming Pool Paradise", location: "Main Pool Area" },
+    { url: "https://images.unsplash.com/photo-1631049307264-da0ec9d70304?w=400&h=400&fit=crop", caption: "Deluxe Mountain Suite", location: "Premium Wing" },
+    { url: "https://images.unsplash.com/photo-1555939594-58d7cb561ad1?w=400&h=400&fit=crop", caption: "Grand Buffet Dining", location: "Main Restaurant" },
+    { url: "https://images.unsplash.com/photo-1571896349842-33c89424de2d?w=400&h=400&fit=crop", caption: "Executive Bedroom", location: "Heritage Block" },
+    { url: "https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?w=400&h=400&fit=crop", caption: "Spa & Wellness Center", location: "Wellness Wing" },
+    { url: "https://images.unsplash.com/photo-1551632811-561732d1e306?w=400&h=400&fit=crop", caption: "Horse Riding Arena", location: "Adventure Zone" },
     { url: "https://images.unsplash.com/photo-1560472354-b33ff0c44a43?w=400&h=400&fit=crop", caption: "Garden Restaurant", location: "Outdoor Terrace" },
     { url: "https://images.unsplash.com/photo-1541971875076-8f970d573be6?w=400&h=400&fit=crop", caption: "Valley View Lounge", location: "Central Lobby" },
-    { url: "https://images.unsplash.com/photo-1551632811-561732d1e306?w=400&h=400&fit=crop", caption: "Horse Riding Arena", location: "Adventure Zone" },
-    { url: "https://images.unsplash.com/photo-1469474968028-56623f02e42e?w=400&h=400&fit=crop", caption: "Sunrise Point View", location: "Echo Point" },
-    { url: "https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=400&h=400&fit=crop", caption: "Forest Walking Trail", location: "Nature Reserve" },
     { url: "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=400&h=400&fit=crop", caption: "Mountain Sunset", location: "Panorama Point" }
   ];
 
   const guestImages = [
-    { url: "https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=400&h=400&fit=crop", caption: "Perfect honeymoon getaway! 💕", likes: 234, guest: "@priya_travels" },
-    { url: "https://images.unsplash.com/photo-1511895426328-dc8714191300?w=400&h=400&fit=crop", caption: "Family time in paradise 👨‍👩‍👧‍👦", likes: 189, guest: "@sharma_family" },
-    { url: "https://images.unsplash.com/photo-1515187029135-18ee286d815b?w=400&h=400&fit=crop", caption: "Best spa experience ever! ✨", likes: 156, guest: "@wellness_seeker" },
-    { url: "https://images.unsplash.com/photo-1544161515-4ab6ce6db874?w=400&h=400&fit=crop", caption: "Morning mist magic 🌫️", likes: 298, guest: "@mountain_lover" },
-    { url: "https://images.unsplash.com/photo-1555939594-58d7cb561ad1?w=400&h=400&fit=crop", caption: "Adventure of a lifetime! 🏔️", likes: 167, guest: "@adventure_duo" },
-    { url: "https://images.unsplash.com/photo-1631049307264-da0ec9d70304?w=400&h=400&fit=crop", caption: "Peaceful retreat 🧘‍♀️", likes: 203, guest: "@zen_traveler" },
-    { url: "https://images.unsplash.com/photo-1482938289607-e9573fc25ebb?w=400&h=400&fit=crop", caption: "Horseback riding fun! 🐎", likes: 178, guest: "@equestrian_life" },
-    { url: "https://images.unsplash.com/photo-1501854140801-50d01698950b?w=400&h=400&fit=crop", caption: "Nature therapy session 🌿", likes: 245, guest: "@nature_healer" },
-    { url: "https://images.unsplash.com/photo-1518684079-3c830dcef090?w=400&h=400&fit=crop", caption: "Sunrise worth waking up for! 🌅", likes: 267, guest: "@early_bird_explorer" }
+    { url: "https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=800&h=600&fit=crop", caption: "Perfect honeymoon at Horseland! 💕", likes: 234, guest: "@priya_travels" },
+    { url: "https://images.unsplash.com/photo-1511895426328-dc8714191300?w=400&h=400&fit=crop", caption: "Family time by the pool 👨‍👩‍👧‍👦", likes: 189, guest: "@sharma_family" },
+    { url: "https://images.unsplash.com/photo-1544161515-4ab6ce6db874?w=400&h=400&fit=crop", caption: "Couple enjoying breakfast buffet ✨", likes: 156, guest: "@wellness_seeker" },
+    { url: "https://images.unsplash.com/photo-1472396961693-142e6e269027?w=400&h=400&fit=crop", caption: "Morning horse ride adventure 🐎", likes: 298, guest: "@mountain_lover" },
+    { url: "https://images.unsplash.com/photo-1506744038136-46273834b3fb?w=400&h=400&fit=crop", caption: "Friends at the spa retreat 🧘‍♀️", likes: 167, guest: "@adventure_duo" },
+    { url: "https://images.unsplash.com/photo-1524230572899-a752b3835840?w=400&h=400&fit=crop", caption: "Swimming pool selfie time! 🏊‍♀️", likes: 203, guest: "@zen_traveler" },
+    { url: "https://images.unsplash.com/photo-1514315384763-ba401779410f?w=400&h=400&fit=crop", caption: "Group dining experience 🍽️", likes: 178, guest: "@equestrian_life" },
+    { url: "https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=400&h=400&fit=crop", caption: "Sunset view from our room 🌅", likes: 245, guest: "@nature_healer" },
+    { url: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=400&fit=crop", caption: "Best vacation memories made! 📸", likes: 267, guest: "@early_bird_explorer" }
   ];
 
   const currentImages = activeTab === 'hotel' ? hotelImages : guestImages;
