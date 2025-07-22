@@ -13,13 +13,6 @@ interface FooterSection {
   is_active: boolean;
 }
 
-interface NavigationItem {
-  id: string;
-  title: string;
-  href: string;
-  sort_order: number;
-  is_active: boolean;
-}
 
 interface SiteSettings {
   site_title: string;
@@ -30,7 +23,6 @@ interface SiteSettings {
 
 const DynamicFooter = () => {
   const [footerSections, setFooterSections] = useState<FooterSection[]>([]);
-  const [navigationItems, setNavigationItems] = useState<NavigationItem[]>([]);
   const [siteSettings, setSiteSettings] = useState<SiteSettings>({
     site_title: 'Horseland Hotel',
     site_logo: '/lovable-uploads/24f5ee9b-ce5a-4b86-a2d8-7ca42e0a78cf.png',
@@ -51,13 +43,6 @@ const DynamicFooter = () => {
         .eq('is_active', true)
         .order('sort_order');
 
-      // Load navigation items
-      const { data: navData } = await supabase
-        .from('navigation_items')
-        .select('*')
-        .eq('is_active', true)
-        .order('sort_order');
-
       // Load site settings
       const { data: settingsData } = await supabase
         .from('site_settings')
@@ -65,10 +50,6 @@ const DynamicFooter = () => {
 
       if (footerData) {
         setFooterSections(footerData);
-      }
-
-      if (navData) {
-        setNavigationItems(navData);
       }
 
       if (settingsData) {
@@ -114,7 +95,7 @@ const DynamicFooter = () => {
       </div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 relative z-10">
-        <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
           {/* Brand Section */}
           <div className="space-y-6">
             <div className="flex items-center">
@@ -129,23 +110,6 @@ const DynamicFooter = () => {
                 {brandSection.content.description}
               </p>
             )}
-          </div>
-
-          {/* Quick Links */}
-          <div className="space-y-4">
-            <h3 className="text-xl font-semibold text-background">Explore</h3>
-            <ul className="space-y-3">
-              {navigationItems.map((item) => (
-                <li key={item.id}>
-                  <Link 
-                    to={item.href} 
-                    className="text-background/80 hover:text-primary transition-colors hover:translate-x-1 transform duration-200 inline-block text-sm"
-                  >
-                    {item.title}
-                  </Link>
-                </li>
-              ))}
-            </ul>
           </div>
 
           {/* Policies */}
