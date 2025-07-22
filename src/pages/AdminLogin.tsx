@@ -14,7 +14,9 @@ const AdminLogin = () => {
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [resetLoading, setResetLoading] = useState(false);
   const [error, setError] = useState('');
+  const [resetEmailSent, setResetEmailSent] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -79,6 +81,37 @@ const AdminLogin = () => {
       setError('An unexpected error occurred');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleForgotPassword = async () => {
+    if (!email) {
+      setError('Please enter your email address first');
+      return;
+    }
+
+    setResetLoading(true);
+    setError('');
+
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/admin/login`,
+      });
+
+      if (error) {
+        setError(error.message);
+        return;
+      }
+
+      setResetEmailSent(true);
+      toast({
+        title: "Reset email sent",
+        description: "Check your email for password reset instructions.",
+      });
+    } catch (err) {
+      setError('Failed to send reset email');
+    } finally {
+      setResetLoading(false);
     }
   };
 
@@ -154,6 +187,27 @@ const AdminLogin = () => {
             >
               {loading ? 'Signing in...' : 'Sign In'}
             </Button>
+
+            <div className="text-center">
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={handleForgotPassword}
+                disabled={resetLoading || !email}
+                className="text-muted-foreground hover:text-foreground"
+              >
+                {resetLoading ? 'Sending...' : 'Forgot password?'}
+              </Button>
+            </div>
+
+            {resetEmailSent && (
+              <div className="text-center p-3 bg-green-50 rounded-md border border-green-200">
+                <p className="text-sm text-green-700">
+                  Password reset email sent! Check your inbox and follow the instructions to reset your password.
+                </p>
+              </div>
+            )}
           </form>
         </CardContent>
       </Card>
