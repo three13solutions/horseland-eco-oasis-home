@@ -94,55 +94,54 @@ const DynamicFooter = () => {
       </div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 relative z-10">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-8">
           {/* Brand Section */}
           <div className="space-y-6">
             <div className="flex items-center">
               <img 
                 src={siteSettings.site_logo} 
                 alt={siteSettings.site_title}
-                className="h-48 w-auto drop-shadow-lg"
+                className="h-20 w-auto drop-shadow-lg"
               />
             </div>
             {brandSection && (
-              <div className="space-y-6">
-                <p className="text-background/80 leading-relaxed">
-                  {brandSection.content.description}
-                </p>
-                {/* Newsletter moved here */}
-                {newsletterSection && (
-                  <>
-                    <h3 className="text-xl font-semibold text-background flex items-center">
-                      <Mail className="w-5 h-5 mr-2 text-primary" />
-                      {newsletterSection.content.title || 'Stay Connected'}
-                    </h3>
-                    <p className="text-background/80 text-sm">
-                      {newsletterSection.content.description || 'Subscribe for updates and special offers'}
-                    </p>
-                    <div className="flex space-x-3 max-w-md">
-                      <Input 
-                        placeholder="Enter your email" 
-                        className="bg-background/10 border-background/20 text-background placeholder:text-background/50 rounded-xl"
-                      />
-                      <Button className="bg-primary hover:bg-primary/90 text-primary-foreground rounded-xl px-6">
-                        Subscribe
-                      </Button>
-                    </div>
-                  </>
-                )}
-              </div>
+              <p className="text-background/80 leading-relaxed text-sm">
+                {brandSection.content.description}
+              </p>
             )}
           </div>
+
+          {/* Newsletter Section - Spanning 2 columns */}
+          {newsletterSection && (
+            <div className="md:col-span-2 lg:col-span-1 space-y-4">
+              <h3 className="text-xl font-semibold text-background flex items-center">
+                <Mail className="w-5 h-5 mr-2 text-primary" />
+                {newsletterSection.content.title || 'Stay Connected'}
+              </h3>
+              <p className="text-background/80 text-sm">
+                {newsletterSection.content.description || 'Subscribe for updates and special offers'}
+              </p>
+              <div className="flex space-x-3">
+                <Input 
+                  placeholder="Enter your email" 
+                  className="bg-background/10 border-background/20 text-background placeholder:text-background/50 rounded-xl flex-1"
+                />
+                <Button className="bg-primary hover:bg-primary/90 text-primary-foreground rounded-xl px-6">
+                  Subscribe
+                </Button>
+              </div>
+            </div>
+          )}
 
           {/* Quick Links */}
           <div className="space-y-4">
             <h3 className="text-xl font-semibold text-background">Explore</h3>
             <ul className="space-y-3">
-              <li><Link to="/about" className="text-background/80 hover:text-primary transition-colors hover:translate-x-1 transform duration-200 inline-block">About Us</Link></li>
-              <li><Link to="/stay" className="text-background/80 hover:text-primary transition-colors hover:translate-x-1 transform duration-200 inline-block">Accommodation</Link></li>
-              <li><Link to="/experiences" className="text-background/80 hover:text-primary transition-colors hover:translate-x-1 transform duration-200 inline-block">Experiences</Link></li>
-              <li><Link to="/packages" className="text-background/80 hover:text-primary transition-colors hover:translate-x-1 transform duration-200 inline-block">Packages</Link></li>
-              <li><Link to="/journal" className="text-background/80 hover:text-primary transition-colors hover:translate-x-1 transform duration-200 inline-block">Journal</Link></li>
+              <li><Link to="/about" className="text-background/80 hover:text-primary transition-colors hover:translate-x-1 transform duration-200 inline-block text-sm">About Us</Link></li>
+              <li><Link to="/stay" className="text-background/80 hover:text-primary transition-colors hover:translate-x-1 transform duration-200 inline-block text-sm">Accommodation</Link></li>
+              <li><Link to="/experiences" className="text-background/80 hover:text-primary transition-colors hover:translate-x-1 transform duration-200 inline-block text-sm">Experiences</Link></li>
+              <li><Link to="/packages" className="text-background/80 hover:text-primary transition-colors hover:translate-x-1 transform duration-200 inline-block text-sm">Packages</Link></li>
+              <li><Link to="/journal" className="text-background/80 hover:text-primary transition-colors hover:translate-x-1 transform duration-200 inline-block text-sm">Journal</Link></li>
             </ul>
           </div>
 
@@ -153,7 +152,7 @@ const DynamicFooter = () => {
               <ul className="space-y-3">
                 {policiesSection.content.links.map((link: any, index: number) => (
                   <li key={index}>
-                    <Link to={link.href} className="text-background/80 hover:text-primary transition-colors hover:translate-x-1 transform duration-200 inline-block">
+                    <Link to={link.href} className="text-background/80 hover:text-primary transition-colors hover:translate-x-1 transform duration-200 inline-block text-sm">
                       {link.title}
                     </Link>
                   </li>
@@ -170,28 +169,28 @@ const DynamicFooter = () => {
                 <div className="space-y-4">
                   {contactSection.content.email && (
                     <div className="flex items-start space-x-3">
-                      <Mail className="w-5 h-5 text-primary mt-1 flex-shrink-0" />
+                      <Mail className="w-4 h-4 text-primary mt-1 flex-shrink-0" />
                       <div>
-                        <p className="text-background/80 text-sm">Email Us</p>
-                        <p className="font-medium text-background">{contactSection.content.email}</p>
+                        <p className="text-background/80 text-xs">Email Us</p>
+                        <p className="font-medium text-background text-sm">{contactSection.content.email}</p>
                       </div>
                     </div>
                   )}
                   {contactSection.content.phone && (
                     <div className="flex items-start space-x-3">
-                      <Phone className="w-5 h-5 text-primary mt-1 flex-shrink-0" />
+                      <Phone className="w-4 h-4 text-primary mt-1 flex-shrink-0" />
                       <div>
-                        <p className="text-background/80 text-sm">24/7 Reservations</p>
-                        <p className="font-medium text-background">{contactSection.content.phone}</p>
+                        <p className="text-background/80 text-xs">24/7 Reservations</p>
+                        <p className="font-medium text-background text-sm">{contactSection.content.phone}</p>
                       </div>
                     </div>
                   )}
                   {contactSection.content.address && (
                     <div className="flex items-start space-x-3">
-                      <MapPin className="w-5 h-5 text-primary mt-1 flex-shrink-0" />
+                      <MapPin className="w-4 h-4 text-primary mt-1 flex-shrink-0" />
                       <div>
-                        <p className="text-background/80 text-sm">Visit Us</p>
-                        <p className="font-medium text-background">{contactSection.content.address}</p>
+                        <p className="text-background/80 text-xs">Visit Us</p>
+                        <p className="font-medium text-background text-sm">{contactSection.content.address}</p>
                       </div>
                     </div>
                   )}
@@ -199,13 +198,13 @@ const DynamicFooter = () => {
                 {/* Social Icons moved here */}
                 {socialSection && (
                   <div className="space-y-3">
-                    <p className="text-background/80 text-sm">Follow Our Journey</p>
-                    <div className="flex space-x-4">
+                    <p className="text-background/80 text-xs">Follow Our Journey</p>
+                    <div className="flex space-x-3">
                       {Object.entries(socialSection.content).map(([platform, url]) => (
                         <Link
                           key={platform}
                           to={url as string}
-                          className="p-3 bg-background/10 rounded-full hover:bg-background/20 transition-all duration-300 transform hover:scale-110 text-background/80 hover:text-primary"
+                          className="p-2 bg-background/10 rounded-full hover:bg-background/20 transition-all duration-300 transform hover:scale-110 text-background/80 hover:text-primary"
                         >
                           {getSocialIcon(platform)}
                         </Link>
