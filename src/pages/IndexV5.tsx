@@ -12,7 +12,7 @@ import TrustedByV5 from '../components/v5/TrustedByV5';
 import GalleryV5 from '../components/v5/GalleryV5';
 import JournalPreviewV5 from '../components/v5/JournalPreviewV5';
 import DynamicFooter from '../components/DynamicFooter';
-import WhatsAppFloatingV4 from '../components/v4/WhatsAppFloatingV4';
+import CombinedFloatingV5 from '../components/v5/CombinedFloatingV5';
 
 const IndexV5 = () => {
   return (
@@ -29,7 +29,7 @@ const IndexV5 = () => {
       <GalleryV5 />
       <JournalPreviewV5 />
       <DynamicFooter />
-      <WhatsAppFloatingV4 />
+      <CombinedFloatingV5 />
     </div>
   );
 };

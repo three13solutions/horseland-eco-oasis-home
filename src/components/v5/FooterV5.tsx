@@ -34,7 +34,7 @@ const FooterV5 = () => {
   ];
 
   return (
-    <footer className="bg-gradient-to-b from-foreground to-foreground/90 text-background relative overflow-hidden">
+    <footer className="bg-gradient-to-b from-primary to-accent text-primary-foreground relative overflow-hidden">
       {/* Background Decoration */}
       <div className="absolute inset-0 opacity-5">
         <div className="absolute top-20 right-20 w-64 h-64 bg-primary rounded-full blur-3xl"></div>
@@ -59,23 +59,23 @@ const FooterV5 = () => {
                 </div>
               </div>
               
-              <p className="text-background/80 leading-relaxed max-w-lg text-sm font-body">
+              <p className="text-primary-foreground/80 leading-relaxed max-w-lg text-sm font-body">
                 Where the forest whispers you awake. Experience mindful luxury in Matheran's 
                 pristine car-free sanctuary.
               </p>
 
               {/* Compact Newsletter + Social */}
-              <div className="bg-background/10 rounded-xl p-4 space-y-3">
+              <div className="bg-primary-foreground/10 rounded-xl p-4 space-y-3">
                 <h4 className="text-sm font-heading font-semibold flex items-center">
-                  <Sparkles className="w-4 h-4 mr-2 text-primary" />
+                  <Sparkles className="w-4 h-4 mr-2 text-accent" />
                   Stay Connected
                 </h4>
                 <div className="flex flex-col sm:flex-row gap-3">
                   <Input 
                     placeholder="Enter your email" 
-                    className="bg-background/10 border-background/20 text-background placeholder:text-background/50 rounded-lg text-sm h-9"
+                    className="bg-primary-foreground/10 border-primary-foreground/20 text-primary-foreground placeholder:text-primary-foreground/50 rounded-lg text-sm h-9"
                   />
-                  <Button className="bg-primary hover:bg-primary/90 text-primary-foreground rounded-lg px-4 py-2 text-sm whitespace-nowrap h-9">
+                  <Button className="bg-accent hover:bg-accent/90 text-accent-foreground rounded-lg px-4 py-2 text-sm whitespace-nowrap h-9">
                     Subscribe
                   </Button>
                 </div>
@@ -86,7 +86,7 @@ const FooterV5 = () => {
                       key={index}
                       href={social.href}
                       aria-label={social.label}
-                      className={`p-2 bg-background/10 rounded-lg hover:bg-background/20 transition-all duration-300 transform hover:scale-110 ${social.color}`}
+                      className={`p-2 bg-primary-foreground/10 rounded-lg hover:bg-primary-foreground/20 transition-all duration-300 transform hover:scale-110 ${social.color}`}
                     >
                       <social.icon className="w-4 h-4" />
                     </a>
@@ -102,25 +102,25 @@ const FooterV5 = () => {
               {/* Compact Contact Info */}
               <div className="space-y-3">
                 <div className="flex items-start space-x-3">
-                  <Phone className="w-4 h-4 text-primary mt-1 flex-shrink-0" />
+                  <Phone className="w-4 h-4 text-accent mt-1 flex-shrink-0" />
                   <div>
-                    <p className="text-background/80 text-xs">24/7 Reservations</p>
+                    <p className="text-primary-foreground/80 text-xs">24/7 Reservations</p>
                     <p className="font-medium text-sm">+91 98765 43210</p>
                   </div>
                 </div>
                 
                 <div className="flex items-start space-x-3">
-                  <Mail className="w-4 h-4 text-primary mt-1 flex-shrink-0" />
+                  <Mail className="w-4 h-4 text-accent mt-1 flex-shrink-0" />
                   <div>
-                    <p className="text-background/80 text-xs">Email Us</p>
+                    <p className="text-primary-foreground/80 text-xs">Email Us</p>
                     <p className="font-medium text-sm">hello@horselandresort.com</p>
                   </div>
                 </div>
                 
                 <div className="flex items-start space-x-3">
-                  <MapPin className="w-4 h-4 text-primary mt-1 flex-shrink-0" />
+                  <MapPin className="w-4 h-4 text-accent mt-1 flex-shrink-0" />
                   <div>
-                    <p className="text-background/80 text-xs">Visit Us</p>
+                    <p className="text-primary-foreground/80 text-xs">Visit Us</p>
                     <p className="font-medium text-sm">Matheran, Maharashtra</p>
                   </div>
                 </div>
@@ -129,28 +129,28 @@ const FooterV5 = () => {
               {/* Emergency Contact - Expandable */}
               <button 
                 onClick={() => setIsEmergencyOpen(!isEmergencyOpen)}
-                className="flex items-center justify-between w-full text-left bg-background/10 rounded-lg p-3 hover:bg-background/20 transition-colors"
+                className="flex items-center justify-between w-full text-left bg-primary-foreground/10 rounded-lg p-3 hover:bg-primary-foreground/20 transition-colors"
               >
                 <span className="text-sm font-medium">Emergency Contact</span>
                 {isEmergencyOpen ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
               </button>
               {isEmergencyOpen && (
-                <div className="bg-background/10 rounded-lg p-3 text-sm space-y-1">
+                <div className="bg-primary-foreground/10 rounded-lg p-3 text-sm space-y-1">
                   <p className="font-medium">24/7 Emergency Hotline</p>
-                  <p className="text-background/80">+91 98765 43210</p>
-                  <p className="text-background/80 text-xs">Available for all guest emergencies</p>
+                  <p className="text-primary-foreground/80">+91 98765 43210</p>
+                  <p className="text-primary-foreground/80 text-xs">Available for all guest emergencies</p>
                 </div>
               )}
 
               {/* Quick Links */}
               <div className="space-y-2">
-                <h5 className="text-sm font-medium text-background/90">Quick Links</h5>
+                <h5 className="text-sm font-medium text-primary-foreground/90">Quick Links</h5>
                 <div className="space-y-1">
                   {quickLinks.map((link, index) => (
                     <a 
                       key={index}
                       href={`#${link.toLowerCase()}`}
-                      className="block text-background/70 hover:text-primary transition-colors text-xs font-body"
+                      className="block text-primary-foreground/70 hover:text-accent transition-colors text-xs font-body"
                     >
                       {link}
                     </a>
@@ -162,12 +162,12 @@ const FooterV5 = () => {
         </div>
 
         {/* Bottom Bar - Compact */}
-        <div className="border-t border-background/20 py-4">
+        <div className="border-t border-primary-foreground/20 py-4">
           <div className="flex flex-col space-y-3">
             {/* Collapsible Policies */}
             <button 
               onClick={() => setIsPoliciesOpen(!isPoliciesOpen)}
-              className="flex items-center justify-between bg-background/10 rounded-lg p-3 hover:bg-background/20 transition-colors md:hidden"
+              className="flex items-center justify-between bg-primary-foreground/10 rounded-lg p-3 hover:bg-primary-foreground/20 transition-colors md:hidden"
             >
               <span className="text-sm font-medium">Policies & Legal</span>
               {isPoliciesOpen ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
@@ -180,7 +180,7 @@ const FooterV5 = () => {
                   <a
                     key={index}
                     href={`#${policy.toLowerCase().replace(' ', '-')}`}
-                    className="text-background/60 hover:text-primary transition-colors font-body"
+                    className="text-primary-foreground/60 hover:text-accent transition-colors font-body"
                   >
                     {policy}
                   </a>
@@ -189,10 +189,10 @@ const FooterV5 = () => {
             </div>
             
             <div className="text-center">
-              <p className="text-background/60 text-xs font-body">
+              <p className="text-primary-foreground/60 text-xs font-body">
                 © 2024 Horseland Resort. All rights reserved.
               </p>
-              <p className="text-background/60 text-xs font-body">
+              <p className="text-primary-foreground/60 text-xs font-body">
                 Crafted with ❤️ for sustainable luxury
               </p>
             </div>
