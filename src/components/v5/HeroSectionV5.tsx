@@ -16,14 +16,19 @@ const HeroSectionV5 = () => {
       alt: "Mountain sunrise view from Horseland"
     },
     {
-      type: 'video',
-      content: "https://videos.pexels.com/video-files/5752729/5752729-uhd_2560_1440_25fps.mp4",
-      alt: "Matheran toy train and mountain roads"
+      type: 'image',
+      content: "https://images.unsplash.com/photo-1441974231531-c6227db76b6e?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2071&q=80",
+      alt: "Forest trail in Matheran"
     },
     {
       type: 'image',
       content: "https://images.unsplash.com/photo-1469474968028-56623f02e42e?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2069&q=80",
       alt: "Peaceful mountain landscape"
+    },
+    {
+      type: 'image',
+      content: "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80",
+      alt: "Roadway to Matheran"
     }
   ];
 
@@ -52,22 +57,11 @@ const HeroSectionV5 = () => {
             index === currentSlide ? 'opacity-100' : 'opacity-0'
           }`}
         >
-          {slide.type === 'video' ? (
-            <video
-              src={slide.content}
-              autoPlay
-              muted
-              loop
-              playsInline
-              className="w-full h-full object-cover"
-            />
-          ) : (
-            <img
-              src={slide.content}
-              alt={slide.alt}
-              className="w-full h-full object-cover"
-            />
-          )}
+          <img
+            src={slide.content}
+            alt={slide.alt}
+            className="w-full h-full object-cover"
+          />
           <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-transparent to-black/60" />
         </div>
       ))}
@@ -77,8 +71,8 @@ const HeroSectionV5 = () => {
         <div className="container mx-auto px-4">
           <div className="max-w-4xl mx-auto text-center text-white">
             <h1 className="text-4xl md:text-6xl lg:text-7xl font-heading font-bold mb-6 leading-tight">
-              Where the Forest <br />
-              <span className="text-primary">Whispers You Awake</span>
+              Escape to <br />
+              <span className="text-primary">Nature's Embrace</span>
             </h1>
             <p className="text-lg md:text-xl mb-12 text-white/90 font-body font-light max-w-2xl mx-auto">
               A mindful retreat in Matheran's no-car eco zone
