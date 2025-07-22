@@ -29,11 +29,31 @@ const TrustedByV5 = () => {
       <div className="container mx-auto px-4">
         <div className="text-center mb-8">
           <h2 className="text-2xl md:text-3xl font-serif font-bold text-foreground mb-4">
-            Trusted by <span className="text-primary">Leading Publications</span>
+            Trusted by <span className="text-primary">Travellers & Leading Publications</span>
           </h2>
           <p className="text-muted-foreground">
             Recognized for excellence in sustainable luxury hospitality
           </p>
+        </div>
+
+        {/* Stats Section */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-12">
+          <div className="text-center p-4 bg-white/80 backdrop-blur-sm rounded-xl border border-border/20">
+            <div className="text-2xl md:text-3xl font-bold text-primary">4.9★</div>
+            <div className="text-sm text-muted-foreground">Average Rating</div>
+          </div>
+          <div className="text-center p-4 bg-white/80 backdrop-blur-sm rounded-xl border border-border/20">
+            <div className="text-2xl md:text-3xl font-bold text-primary">500+</div>
+            <div className="text-sm text-muted-foreground">Five Star Reviews</div>
+          </div>
+          <div className="text-center p-4 bg-white/80 backdrop-blur-sm rounded-xl border border-border/20">
+            <div className="text-2xl md:text-3xl font-bold text-primary">98%</div>
+            <div className="text-sm text-muted-foreground">Would Recommend</div>
+          </div>
+          <div className="text-center p-4 bg-white/80 backdrop-blur-sm rounded-xl border border-border/20">
+            <div className="text-xl md:text-2xl font-bold text-primary">TripAdvisor</div>
+            <div className="text-sm text-muted-foreground">Certificate of Excellence</div>
+          </div>
         </div>
 
         <div className="flex overflow-x-auto md:grid md:grid-cols-4 gap-6 pb-4 md:pb-0">
