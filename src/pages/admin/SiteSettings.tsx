@@ -39,6 +39,96 @@ interface NavigationItem {
   parent_id?: string | null;
 }
 
+// Sortable Navigation Item Component (moved outside to prevent re-renders)
+const SortableNavigationItem = React.memo(({ 
+  item, 
+  index, 
+  onUpdate, 
+  onDelete, 
+  onAddChild,
+  isChild = false
+}: {
+  item: NavigationItem;
+  index: number;
+  onUpdate: (index: number, field: string, value: any) => void;
+  onDelete: (index: number) => void;
+  onAddChild: (parentId: string) => void;
+  isChild?: boolean;
+}) => {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+  } = useSortable({ id: item.id });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+  };
+
+  return (
+    <div
+      ref={setNodeRef}
+      style={style}
+      className={`flex items-center space-x-3 p-3 bg-background border rounded-lg ${isChild ? 'border-l-4 border-l-primary/30' : ''}`}
+    >
+      <div {...attributes} {...listeners} className="cursor-grab">
+        <GripVertical className="w-4 h-4 text-muted-foreground" />
+      </div>
+      
+      <div className="flex-1 grid grid-cols-2 gap-3">
+        <Input
+          value={item.title}
+          onChange={(e) => onUpdate(index, 'title', e.target.value)}
+          placeholder="Title"
+          className="text-sm"
+        />
+        <Input
+          value={item.href}
+          onChange={(e) => onUpdate(index, 'href', e.target.value)}
+          placeholder="/path"
+          className="text-sm"
+        />
+      </div>
+      
+      <div className="flex items-center space-x-2">
+        <div className="flex items-center space-x-2">
+          <Label htmlFor={`toggle-${item.id}`} className="text-xs text-muted-foreground">
+            {item.is_active ? 'Published' : 'Draft'}
+          </Label>
+          <Switch
+            id={`toggle-${item.id}`}
+            checked={item.is_active}
+            onCheckedChange={(checked) => onUpdate(index, 'is_active', checked)}
+          />
+        </div>
+        
+        {!isChild && (
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => onAddChild(item.id)}
+            title="Add sub-menu item"
+          >
+            <ChevronRight className="w-3 h-3" />
+          </Button>
+        )}
+        
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => onDelete(index)}
+          className="text-destructive hover:text-destructive"
+        >
+          <Trash2 className="w-3 h-3" />
+        </Button>
+      </div>
+    </div>
+  );
+});
+
 interface FooterSection {
   id: string;
   section_key: string;
@@ -357,96 +447,6 @@ const SiteSettings = () => {
       updated[index] = { ...updated[index], [field]: value };
     }
     setFooterSections(updated);
-  };
-
-  // Sortable Navigation Item Component
-  const SortableNavigationItem = ({ 
-    item, 
-    index, 
-    onUpdate, 
-    onDelete, 
-    onAddChild,
-    isChild = false
-  }: {
-    item: NavigationItem;
-    index: number;
-    onUpdate: (index: number, field: string, value: any) => void;
-    onDelete: (index: number) => void;
-    onAddChild: (parentId: string) => void;
-    isChild?: boolean;
-  }) => {
-    const {
-      attributes,
-      listeners,
-      setNodeRef,
-      transform,
-      transition,
-    } = useSortable({ id: item.id });
-
-    const style = {
-      transform: CSS.Transform.toString(transform),
-      transition,
-    };
-
-    return (
-      <div
-        ref={setNodeRef}
-        style={style}
-        className={`flex items-center space-x-3 p-3 bg-background border rounded-lg ${isChild ? 'border-l-4 border-l-primary/30' : ''}`}
-      >
-        <div {...attributes} {...listeners} className="cursor-grab">
-          <GripVertical className="w-4 h-4 text-muted-foreground" />
-        </div>
-        
-        <div className="flex-1 grid grid-cols-2 gap-3">
-          <Input
-            value={item.title}
-            onChange={(e) => onUpdate(index, 'title', e.target.value)}
-            placeholder="Title"
-            className="text-sm"
-          />
-          <Input
-            value={item.href}
-            onChange={(e) => onUpdate(index, 'href', e.target.value)}
-            placeholder="/path"
-            className="text-sm"
-          />
-        </div>
-        
-        <div className="flex items-center space-x-2">
-          <div className="flex items-center space-x-2">
-            <Label htmlFor={`toggle-${item.id}`} className="text-xs text-muted-foreground">
-              {item.is_active ? 'Published' : 'Draft'}
-            </Label>
-            <Switch
-              id={`toggle-${item.id}`}
-              checked={item.is_active}
-              onCheckedChange={(checked) => onUpdate(index, 'is_active', checked)}
-            />
-          </div>
-          
-          {!isChild && (
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => onAddChild(item.id)}
-              title="Add sub-menu item"
-            >
-              <ChevronRight className="w-3 h-3" />
-            </Button>
-          )}
-          
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => onDelete(index)}
-            className="text-destructive hover:text-destructive"
-          >
-            <Trash2 className="w-3 h-3" />
-          </Button>
-        </div>
-      </div>
-    );
   };
 
   if (loading) {
