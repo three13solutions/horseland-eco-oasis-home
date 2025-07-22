@@ -23,20 +23,21 @@ const BookingModal: React.FC<BookingModalProps> = ({ isOpen, onClose }) => {
           </button>
         </div>
 
-        {/* Booking Image - Pulsating Matheran */}
-        <div className="mb-4 rounded-xl overflow-hidden">
+        {/* Booking Image with Price Overlay */}
+        <div className="mb-4 rounded-xl overflow-hidden relative">
           <img 
-            src="https://images.unsplash.com/photo-1506905925346-21bda4d32df4" 
-            alt="Beautiful Matheran mountain landscape" 
+            src="https://images.unsplash.com/photo-1566665797739-1674de7a421a" 
+            alt="Luxury hotel bedroom in Matheran" 
             className="w-full h-32 object-cover animate-pulse"
           />
-        </div>
-
-        {/* Price Highlight */}
-        <div className="bg-primary/10 rounded-xl p-3 mb-4 text-center">
-          <div className="text-xl font-bold text-primary">₹1,500</div>
-          <div className="text-xs text-muted-foreground">per night • Starting price</div>
-          <div className="text-xs text-accent font-medium mt-1">✓ No hidden charges</div>
+          {/* Price Overlay */}
+          <div className="absolute inset-0 bg-black/30 flex items-center justify-center">
+            <div className="text-center text-white">
+              <div className="text-2xl font-bold drop-shadow-lg">₹1,500</div>
+              <div className="text-sm drop-shadow-md">per night • Starting price</div>
+              <div className="text-xs font-medium mt-1 drop-shadow-md">✓ No hidden charges</div>
+            </div>
+          </div>
         </div>
 
         {/* Contact Options - Single Row */}
