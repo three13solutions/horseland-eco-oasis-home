@@ -18,7 +18,8 @@ import {
   LogOut,
   Users,
   TrendingUp,
-  DollarSign
+  DollarSign,
+  UserCog
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
@@ -45,44 +46,123 @@ const AdminDashboard = () => {
     unreadMessages: 0,
   });
   const [loading, setLoading] = useState(true);
-  const [userRole] = useState<string>('admin'); // Hardcoded as admin for now
+  const [userRole, setUserRole] = useState<string>('');
+  const [userEmail, setUserEmail] = useState<string>('');
   const navigate = useNavigate();
   const { toast } = useToast();
 
   useEffect(() => {
-    // Skip authentication checks for now
+    checkAuthentication();
     loadDashboardStats();
   }, []);
 
+  const checkAuthentication = async () => {
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (!session) {
+        navigate('/admin/login');
+        return;
+      }
+
+      // Check if user is admin
+      const { data: profile } = await supabase
+        .from('admin_profiles')
+        .select('*')
+        .eq('user_id', session.user.id)
+        .single();
+      
+      if (!profile) {
+        toast({
+          title: "Access denied",
+          description: "Admin privileges required.",
+          variant: "destructive"
+        });
+        await supabase.auth.signOut();
+        navigate('/admin/login');
+        return;
+      }
+
+      setUserRole(profile.role);
+      setUserEmail(profile.email);
+    } catch (error) {
+      console.error('Auth check error:', error);
+      navigate('/admin/login');
+    }
+  };
+
   const loadDashboardStats = async () => {
     try {
-      // Use mock data since we don't have real data yet
+      // Load real stats from database
+      const [
+        bookingsResult,
+        roomTypesResult,
+        blogPostsResult,
+        reviewsResult,
+        messagesResult
+      ] = await Promise.all([
+        supabase.from('bookings').select('*'),
+        supabase.from('room_types').select('*').eq('is_published', true),
+        supabase.from('blog_posts').select('*').eq('is_published', true),
+        supabase.from('guest_reviews').select('*').eq('is_published', false),
+        supabase.from('contact_messages').select('*').eq('is_read', false)
+      ]);
+
+      const bookings = bookingsResult.data || [];
+      const today = new Date().toISOString().split('T')[0];
+      const todayBookings = bookings.filter(b => 
+        new Date(b.created_at).toISOString().split('T')[0] === today
+      );
+
+      // Calculate total revenue
+      const totalRevenue = bookings.reduce((sum, booking) => 
+        sum + Number(booking.total_amount), 0
+      );
+
       setStats({
-        totalBookings: 125,
-        todayBookings: 8,
-        occupancyRate: 85,
-        revenue: 45000,
-        activeRooms: 12,
-        publishedPosts: 15,
-        pendingReviews: 3,
-        unreadMessages: 7,
+        totalBookings: bookings.length,
+        todayBookings: todayBookings.length,
+        occupancyRate: Math.round((bookings.length / 30) * 100), // Simplified calculation
+        revenue: totalRevenue,
+        activeRooms: roomTypesResult.data?.length || 0,
+        publishedPosts: blogPostsResult.data?.length || 0,
+        pendingReviews: reviewsResult.data?.length || 0,
+        unreadMessages: messagesResult.data?.length || 0,
       });
     } catch (error) {
       console.error('Error loading stats:', error);
+      // Keep stats at 0 if there's an error
     } finally {
       setLoading(false);
     }
   };
 
   const handleLogout = async () => {
-    toast({
-      title: "Demo mode",
-      description: "Authentication is disabled for now.",
-    });
-    navigate('/');
+    try {
+      await supabase.auth.signOut();
+      toast({
+        title: "Logged out",
+        description: "You have been successfully logged out.",
+      });
+      navigate('/admin/login');
+    } catch (error) {
+      console.error('Logout error:', error);
+      toast({
+        title: "Error",
+        description: "Failed to logout. Please try again.",
+        variant: "destructive"
+      });
+    }
   };
 
   const menuItems = [
+    { 
+      title: 'User Management', 
+      description: 'Manage admin users and roles',
+      icon: UserCog, 
+      path: '/admin/users',
+      color: 'bg-red-500'
+    },
     { 
       title: 'Room Management', 
       description: 'Manage room types and availability',
@@ -170,12 +250,15 @@ const AdminDashboard = () => {
           </div>
           
           <div className="flex items-center space-x-4">
+            <div className="text-sm text-muted-foreground">
+              {userEmail}
+            </div>
             <Badge variant="secondary" className="capitalize">
-              {userRole.replace('_', ' ')} (Demo Mode)
+              {userRole.replace('_', ' ')}
             </Badge>
             <Button variant="ghost" size="sm" onClick={handleLogout}>
               <LogOut className="w-4 h-4 mr-2" />
-              Exit Demo
+              Logout
             </Button>
           </div>
         </div>
@@ -213,26 +296,26 @@ const AdminDashboard = () => {
 
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Monthly Revenue</CardTitle>
+              <CardTitle className="text-sm font-medium">Total Revenue</CardTitle>
               <DollarSign className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">₹{stats.revenue.toLocaleString()}</div>
               <p className="text-xs text-muted-foreground">
-                +12% from last month
+                From {stats.totalBookings} bookings
               </p>
             </CardContent>
           </Card>
 
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Pending Reviews</CardTitle>
+              <CardTitle className="text-sm font-medium">Pending Items</CardTitle>
               <Users className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{stats.pendingReviews}</div>
+              <div className="text-2xl font-bold">{stats.pendingReviews + stats.unreadMessages}</div>
               <p className="text-xs text-muted-foreground">
-                {stats.unreadMessages} unread messages
+                {stats.pendingReviews} reviews, {stats.unreadMessages} messages
               </p>
             </CardContent>
           </Card>
