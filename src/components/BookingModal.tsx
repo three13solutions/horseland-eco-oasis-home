@@ -19,15 +19,15 @@ const BookingModal: React.FC<BookingModalProps> = ({ isOpen, onClose }) => {
             alt="Luxury hotel bedroom in Matheran" 
             className="w-full h-full object-cover animate-pulse"
           />
-          <div className="absolute inset-0 bg-black/60"></div>
+          <div className="absolute inset-0 bg-black/50"></div>
         </div>
         
         {/* Content Overlay */}
         <div className="relative z-10 text-white">
-
         {/* Header */}
         <div className="flex items-center justify-between mb-6">
-          <h3 className="text-xl font-bold text-white">Quick Booking</h3>
+          <h3 className="text-xl font-bold text-white">Zen Den</h3>
+
           <button
             onClick={onClose}
             className="p-2 hover:bg-white/20 rounded-lg transition-colors text-white"
@@ -36,8 +36,8 @@ const BookingModal: React.FC<BookingModalProps> = ({ isOpen, onClose }) => {
           </button>
         </div>
 
-        {/* Price Highlight */}
-        <div className="bg-black/40 backdrop-blur-sm rounded-xl p-3 mb-4 text-center border border-white/20">
+        {/* Price Overlay - Direct on Image */}
+        <div className="text-center mb-4">
           <div className="text-2xl font-bold drop-shadow-lg text-primary">₹1,500</div>
           <div className="text-sm drop-shadow-md text-white">per night • Starting price</div>
           <div className="text-xs font-medium mt-1 drop-shadow-md text-white">✓ No hidden charges</div>
