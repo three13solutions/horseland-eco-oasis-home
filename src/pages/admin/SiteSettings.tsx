@@ -157,23 +157,58 @@ const SiteSettings = () => {
       await supabase.from('navigation_items').delete().neq('id', '00000000-0000-0000-0000-000000000000');
       
       if (navigationItems.length > 0) {
-        const { error } = await supabase
-          .from('navigation_items')
-          .insert(navigationItems.map(item => ({
-            title: item.title,
-            href: item.href,
-            sort_order: item.sort_order,
-            is_active: item.is_active,
-            parent_id: item.parent_id
-          })));
+        // First, insert all parent items (items without parent_id)
+        const parentItems = navigationItems.filter(item => !item.parent_id);
+        const childItems = navigationItems.filter(item => item.parent_id);
+        
+        // Create a mapping from old temp IDs to new IDs
+        const idMapping: { [key: string]: string } = {};
+        
+        if (parentItems.length > 0) {
+          const { data: insertedParents, error: parentError } = await supabase
+            .from('navigation_items')
+            .insert(parentItems.map(item => ({
+              title: item.title,
+              href: item.href,
+              sort_order: item.sort_order,
+              is_active: item.is_active,
+              parent_id: null
+            })))
+            .select('id');
 
-        if (error) throw error;
+          if (parentError) throw parentError;
+          
+          // Map old IDs to new IDs
+          parentItems.forEach((item, index) => {
+            if (insertedParents && insertedParents[index]) {
+              idMapping[item.id] = insertedParents[index].id;
+            }
+          });
+        }
+        
+        // Then, insert child items with the correct parent IDs
+        if (childItems.length > 0) {
+          const { error: childError } = await supabase
+            .from('navigation_items')
+            .insert(childItems.map(item => ({
+              title: item.title,
+              href: item.href,
+              sort_order: item.sort_order,
+              is_active: item.is_active,
+              parent_id: item.parent_id ? idMapping[item.parent_id] || item.parent_id : null
+            })));
+
+          if (childError) throw childError;
+        }
       }
 
       toast({
         title: "Success",
         description: "Navigation items saved successfully"
       });
+      
+      // Reload the data to get the new IDs
+      loadData();
     } catch (error) {
       console.error('Error saving navigation:', error);
       toast({
