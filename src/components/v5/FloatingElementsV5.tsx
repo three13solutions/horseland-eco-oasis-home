@@ -1,16 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { MessageCircle, ArrowUp, Phone, Sparkles } from 'lucide-react';
+import { MessageCircle, ArrowUp, Phone } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 const FloatingElementsV5 = () => {
   const [showScrollTop, setShowScrollTop] = useState(false);
-  const [showStickyBooking, setShowStickyBooking] = useState(false);
-
   useEffect(() => {
     const handleScroll = () => {
       setShowScrollTop(window.scrollY > 400);
-      // Show after Packages section (approximately after 2000px scroll)
-      setShowStickyBooking(window.scrollY > 2000);
     };
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
@@ -28,10 +24,6 @@ const FloatingElementsV5 = () => {
   };
 
   const scrollToTop = () => {
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  };
-
-  const scrollToBooking = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
@@ -77,50 +69,6 @@ const FloatingElementsV5 = () => {
           <ArrowUp className="h-5 w-5 text-background" />
         </Button>
       )}
-
-      {/* Sticky Booking Banner */}
-      {showStickyBooking && (
-        <div className="fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-sm border-t border-border/20 p-4 animate-slide-in-from-bottom">
-          <div className="container mx-auto flex items-center justify-between">
-            <div className="flex items-center space-x-3">
-              <img 
-                src="/lovable-uploads/24f5ee9b-ce5a-4b86-a2d8-7ca42e0a78cf.png" 
-                alt="Horseland" 
-                className="h-10 w-10"
-              />
-              <div>
-                <p className="font-medium text-foreground">Ready to escape?</p>
-                <p className="text-sm text-muted-foreground">Book your mountain retreat</p>
-              </div>
-            </div>
-            <Button 
-              onClick={scrollToBooking}
-              className="bg-gradient-to-r from-primary to-accent hover:shadow-lg transform hover:scale-105 transition-all duration-300"
-            >
-              <Sparkles className="w-4 h-4 mr-2" />
-              Book Now
-            </Button>
-          </div>
-        </div>
-      )}
-
-      {/* Floating Booking Reminder - Desktop Only */}
-      <div className="fixed bottom-6 left-6 z-40 bg-white/95 backdrop-blur-sm rounded-2xl p-4 shadow-xl border border-border/20 max-w-sm hidden lg:block animate-fade-in">
-        <div className="flex items-center space-x-3">
-          <img 
-            src="/lovable-uploads/24f5ee9b-ce5a-4b86-a2d8-7ca42e0a78cf.png" 
-            alt="Horseland" 
-            className="h-10 w-10"
-          />
-          <div className="flex-1">
-            <p className="text-sm font-medium text-foreground">Ready to escape?</p>
-            <p className="text-xs text-muted-foreground">Book your mountain retreat</p>
-          </div>
-          <Button size="sm" className="bg-gradient-to-r from-primary to-accent text-xs px-3">
-            Book Now
-          </Button>
-        </div>
-      </div>
     </>
   );
 };
