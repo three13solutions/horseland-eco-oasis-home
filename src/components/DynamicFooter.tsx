@@ -94,7 +94,7 @@ const DynamicFooter = () => {
       </div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 relative z-10">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-8">
           {/* Brand Section */}
           <div className="space-y-6">
             <div className="flex items-center">
@@ -139,83 +139,80 @@ const DynamicFooter = () => {
             )}
           </div>
 
-          {/* Newsletter and Contact Combined */}
-          <div className="space-y-6">
-            {/* Newsletter Section */}
-            {newsletterSection && (
-              <div className="space-y-4">
-                <h3 className="text-xl font-semibold text-background flex items-center">
-                  <Mail className="w-5 h-5 mr-2 text-primary" />
-                  {newsletterSection.content.title || 'Stay Connected'}
-                </h3>
-                <p className="text-background/80 text-sm">
-                  {newsletterSection.content.description || 'Subscribe for updates and special offers'}
-                </p>
-                <div className="flex space-x-3">
-                  <Input 
-                    placeholder="Enter your email" 
-                    className="bg-background/10 border-background/20 text-background placeholder:text-background/50 rounded-xl flex-1"
-                  />
-                  <Button className="bg-primary hover:bg-primary/90 text-primary-foreground rounded-xl px-6">
-                    Subscribe
-                  </Button>
-                </div>
+          {/* Newsletter Section */}
+          {newsletterSection && (
+            <div className="space-y-4">
+              <h3 className="text-xl font-semibold text-background flex items-center">
+                <Mail className="w-5 h-5 mr-2 text-primary" />
+                {newsletterSection.content.title || 'Stay Connected'}
+              </h3>
+              <p className="text-background/80 text-sm">
+                {newsletterSection.content.description || 'Subscribe for updates and special offers'}
+              </p>
+              <div className="flex space-x-3">
+                <Input 
+                  placeholder="Enter your email" 
+                  className="bg-background/10 border-background/20 text-background placeholder:text-background/50 rounded-xl flex-1"
+                />
+                <Button className="bg-primary hover:bg-primary/90 text-primary-foreground rounded-xl px-6">
+                  Subscribe
+                </Button>
               </div>
-            )}
+            </div>
+          )}
 
-            {/* Contact Info */}
-            {contactSection && (
-              <div className="space-y-6">
-                <h4 className="text-xl font-semibold text-background">Connect</h4>
-                <div className="space-y-4">
-                  {contactSection.content.email && (
-                    <div className="flex items-start space-x-3">
-                      <Mail className="w-4 h-4 text-primary mt-1 flex-shrink-0" />
-                      <div>
-                        <p className="text-background/80 text-xs">Email Us</p>
-                        <p className="font-medium text-background text-sm">{contactSection.content.email}</p>
-                      </div>
+          {/* Connect Section - All Contact Info */}
+          {contactSection && (
+            <div className="space-y-6">
+              <h4 className="text-xl font-semibold text-background">Connect</h4>
+              <div className="space-y-4">
+                {contactSection.content.email && (
+                  <div className="flex items-start space-x-3">
+                    <Mail className="w-4 h-4 text-primary mt-1 flex-shrink-0" />
+                    <div>
+                      <p className="text-background/80 text-xs">Email Us</p>
+                      <p className="font-medium text-background text-sm">{contactSection.content.email}</p>
                     </div>
-                  )}
-                  {contactSection.content.phone && (
-                    <div className="flex items-start space-x-3">
-                      <Phone className="w-4 h-4 text-primary mt-1 flex-shrink-0" />
-                      <div>
-                        <p className="text-background/80 text-xs">24/7 Reservations</p>
-                        <p className="font-medium text-background text-sm">{contactSection.content.phone}</p>
-                      </div>
+                  </div>
+                )}
+                {contactSection.content.phone && (
+                  <div className="flex items-start space-x-3">
+                    <Phone className="w-4 h-4 text-primary mt-1 flex-shrink-0" />
+                    <div>
+                      <p className="text-background/80 text-xs">24/7 Reservations</p>
+                      <p className="font-medium text-background text-sm">{contactSection.content.phone}</p>
                     </div>
-                  )}
-                  {contactSection.content.address && (
-                    <div className="flex items-start space-x-3">
-                      <MapPin className="w-4 h-4 text-primary mt-1 flex-shrink-0" />
-                      <div>
-                        <p className="text-background/80 text-xs">Visit Us</p>
-                        <p className="font-medium text-background text-sm">{contactSection.content.address}</p>
-                      </div>
-                    </div>
-                  )}
-                </div>
-                {/* Social Icons */}
-                {socialSection && (
-                  <div className="space-y-3">
-                    <p className="text-background/80 text-xs">Follow Our Journey</p>
-                    <div className="flex space-x-3">
-                      {Object.entries(socialSection.content).map(([platform, url]) => (
-                        <Link
-                          key={platform}
-                          to={url as string}
-                          className="p-2 bg-background/10 rounded-full hover:bg-background/20 transition-all duration-300 transform hover:scale-110 text-background/80 hover:text-primary"
-                        >
-                          {getSocialIcon(platform)}
-                        </Link>
-                      ))}
+                  </div>
+                )}
+                {contactSection.content.address && (
+                  <div className="flex items-start space-x-3">
+                    <MapPin className="w-4 h-4 text-primary mt-1 flex-shrink-0" />
+                    <div>
+                      <p className="text-background/80 text-xs">Visit Us</p>
+                      <p className="font-medium text-background text-sm">{contactSection.content.address}</p>
                     </div>
                   </div>
                 )}
               </div>
-            )}
-          </div>
+              {/* Social Icons */}
+              {socialSection && (
+                <div className="space-y-3">
+                  <p className="text-background/80 text-xs">Follow Our Journey</p>
+                  <div className="flex space-x-3">
+                    {Object.entries(socialSection.content).map(([platform, url]) => (
+                      <Link
+                        key={platform}
+                        to={url as string}
+                        className="p-2 bg-background/10 rounded-full hover:bg-background/20 transition-all duration-300 transform hover:scale-110 text-background/80 hover:text-primary"
+                      >
+                        {getSocialIcon(platform)}
+                      </Link>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
         </div>
 
         {/* Bottom Section */}
