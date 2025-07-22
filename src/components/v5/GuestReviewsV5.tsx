@@ -178,7 +178,8 @@ const GuestReviewsV5 = () => {
               Join Our Happy Guests
             </h3>
             <p className="text-muted-foreground mb-6">
-              Continue to read more stories on TripAdvisor 4.8/5 and Google Reviews 4.9/5 or Book your stay today and create your own memorable experience in Matheran.
+              Continue to read more stories on TripAdvisor 4.8/5 and Google Reviews 4.9/5<br />
+              or Book your stay today and create your own memorable experience in Matheran.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <button className="bg-gradient-to-r from-primary to-accent text-white px-6 py-3 rounded-xl font-semibold hover:shadow-lg transform hover:scale-105 transition-all">
