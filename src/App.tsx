@@ -9,6 +9,16 @@ import IndexV2 from "./pages/IndexV2";
 import IndexV3 from "./pages/IndexV3";
 import IndexV4 from "./pages/IndexV4";
 import IndexV5 from "./pages/IndexV5";
+import About from "./pages/About";
+import Stay from "./pages/Stay";
+import Experiences from "./pages/Experiences";
+import Activities from "./pages/Activities";
+import Dining from "./pages/Dining";
+import Spa from "./pages/Spa";
+import Packages from "./pages/Packages";
+import Journal from "./pages/Journal";
+import FAQ from "./pages/FAQ";
+import RoomDetail from "./pages/RoomDetail";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -20,11 +30,22 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <Routes>
-          <Route path="/" element={<Index />} />
-        <Route path="/v2" element={<IndexV2 />} />
-        <Route path="/v3" element={<IndexV3 />} />
-        <Route path="/v4" element={<IndexV4 />} />
-        <Route path="/v5" element={<IndexV5 />} />
+          <Route path="/" element={<IndexV5 />} />
+          <Route path="/v1" element={<Index />} />
+          <Route path="/v2" element={<IndexV2 />} />
+          <Route path="/v3" element={<IndexV3 />} />
+          <Route path="/v4" element={<IndexV4 />} />
+          <Route path="/v5" element={<IndexV5 />} />
+          <Route path="/about" element={<About />} />
+          <Route path="/stay" element={<Stay />} />
+          <Route path="/stay/:roomId" element={<RoomDetail />} />
+          <Route path="/experiences" element={<Experiences />} />
+          <Route path="/experiences/activities" element={<Activities />} />
+          <Route path="/experiences/dining" element={<Dining />} />
+          <Route path="/experiences/spa" element={<Spa />} />
+          <Route path="/packages" element={<Packages />} />
+          <Route path="/journal" element={<Journal />} />
+          <Route path="/faq" element={<FAQ />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
