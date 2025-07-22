@@ -10,8 +10,8 @@ const BookingModal: React.FC<BookingModalProps> = ({ isOpen, onClose }) => {
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
-      <div className="bg-card rounded-2xl p-6 w-full max-w-md shadow-2xl transform animate-scale-in">
+    <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+      <div className="bg-background rounded-2xl p-6 w-full max-w-md shadow-2xl transform animate-scale-in border border-border/20 max-h-[90vh] overflow-y-auto">
         {/* Header */}
         <div className="flex items-center justify-between mb-6">
           <h3 className="text-xl font-bold text-foreground">Quick Booking</h3>
@@ -49,6 +49,19 @@ const BookingModal: React.FC<BookingModalProps> = ({ isOpen, onClose }) => {
             <MessageCircle className="w-5 h-5 inline mr-2" />
             WhatsApp Booking
           </a>
+
+          <button
+            onClick={() => {
+              // You can replace this with your actual booking system URL
+              window.open('https://booking.example.com', '_blank');
+            }}
+            className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 px-4 rounded-xl font-semibold text-center block hover:shadow-lg transform hover:scale-105 transition-all"
+          >
+            <svg className="w-5 h-5 inline mr-2" fill="currentColor" viewBox="0 0 20 20">
+              <path fillRule="evenodd" d="M3 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V4zm0 4a1 1 0 011-1h6a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h6a1 1 0 110 2H4a1 1 0 01-1-1zm10-4a1 1 0 00-1 1v4a1 1 0 001 1h3a1 1 0 001-1v-4a1 1 0 00-1-1h-3z" clipRule="evenodd" />
+            </svg>
+            Reserve Online
+          </button>
         </div>
 
         {/* Trust Indicators */}
