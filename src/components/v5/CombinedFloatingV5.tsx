@@ -56,9 +56,9 @@ const CombinedFloatingV5 = () => {
       {/* WhatsApp Chat Widget */}
       {isWhatsAppOpen && (
         <div className="fixed bottom-20 right-4 w-80 bg-background border border-border rounded-lg shadow-xl z-40 animate-in slide-in-from-bottom-2">
-          <div className="bg-primary text-primary-foreground p-4 rounded-t-lg flex items-center justify-between">
+          <div className="bg-foreground text-background p-4 rounded-t-lg flex items-center justify-between">
             <div className="flex items-center space-x-3">
-              <div className="w-10 h-10 bg-primary-foreground/20 rounded-full flex items-center justify-center">
+              <div className="w-10 h-10 bg-background/20 rounded-full flex items-center justify-center">
                 <MessageCircle className="w-5 h-5" />
               </div>
               <div>
@@ -68,7 +68,7 @@ const CombinedFloatingV5 = () => {
             </div>
             <button
               onClick={() => setIsWhatsAppOpen(false)}
-              className="w-6 h-6 flex items-center justify-center hover:bg-primary-foreground/20 rounded"
+              className="w-6 h-6 flex items-center justify-center hover:bg-background/20 rounded"
             >
               <X className="w-4 h-4" />
             </button>
@@ -96,7 +96,7 @@ const CombinedFloatingV5 = () => {
             
             <button
               onClick={handleWhatsAppClick}
-              className="w-full bg-accent hover:bg-accent/90 text-accent-foreground px-4 py-2 rounded-lg flex items-center justify-center space-x-2 transition-colors"
+              className="w-full bg-foreground hover:bg-foreground/90 text-background px-4 py-2 rounded-lg flex items-center justify-center space-x-2 transition-colors"
             >
               <Send className="w-4 h-4" />
               <span>Start Chat on WhatsApp</span>
