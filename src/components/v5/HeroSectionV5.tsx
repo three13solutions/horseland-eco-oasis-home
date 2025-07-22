@@ -122,7 +122,7 @@ const HeroSectionV5 = () => {
                   </div>
                 </div>
                 
-                <Button className="h-12 bg-gradient-to-r from-primary to-accent hover:shadow-2xl transform hover:scale-105 transition-all duration-300 rounded-xl text-lg font-semibold">
+                <Button className="h-12 bg-gradient-to-r from-primary to-accent hover:shadow-2xl transform hover:scale-105 transition-all duration-300 rounded-xl text-lg font-semibold px-6">
                   <span className="hidden md:inline">Check Availability</span>
                   <span className="md:hidden">Search</span>
                   <ArrowRight className="ml-2 h-5 w-5" />
