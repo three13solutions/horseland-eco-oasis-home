@@ -23,12 +23,12 @@ const BookingModal: React.FC<BookingModalProps> = ({ isOpen, onClose }) => {
           </button>
         </div>
 
-        {/* Booking Image */}
+        {/* Booking Image - Pulsating Matheran */}
         <div className="mb-4 rounded-xl overflow-hidden">
           <img 
-            src="https://images.unsplash.com/photo-1721322800607-8c38375eef04" 
-            alt="Hotel room" 
-            className="w-full h-32 object-cover"
+            src="https://images.unsplash.com/photo-1506905925346-21bda4d32df4" 
+            alt="Beautiful Matheran mountain landscape" 
+            className="w-full h-32 object-cover animate-pulse"
           />
         </div>
 
