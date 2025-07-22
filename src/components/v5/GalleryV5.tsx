@@ -79,7 +79,7 @@ const GalleryV5 = () => {
               }`}
             >
               <div className={`w-full overflow-hidden ${
-                index === 0 ? 'aspect-[3/2] md:aspect-[3/2]' : 'aspect-[4/3]'
+                index === 0 ? 'aspect-[2/1] md:aspect-[2/1]' : 'aspect-[3/2]'
               }`}>
                 <img
                   src={image.url}
