@@ -41,29 +41,51 @@ const NavigationV5 = () => {
     loadNavigationData();
   }, []);
 
+  const safeParseJSON = (value: any) => {
+    if (typeof value === 'string') {
+      try {
+        return JSON.parse(value);
+      } catch {
+        return value; // Return as string if parsing fails
+      }
+    }
+    return value; // Already an object or other type
+  };
+
   const loadNavigationData = async () => {
     try {
+      console.log('Loading navigation data...');
+      
       // Load navigation items
-      const { data: navData } = await supabase
+      const { data: navData, error: navError } = await supabase
         .from('navigation_items')
         .select('*')
         .eq('is_active', true)
         .order('sort_order');
 
+      if (navError) {
+        console.error('Error loading navigation items:', navError);
+      } else {
+        console.log('Navigation items loaded:', navData);
+        setNavigationItems(navData || []);
+      }
+
       // Load site settings
-      const { data: settingsData } = await supabase
+      const { data: settingsData, error: settingsError } = await supabase
         .from('site_settings')
         .select('*');
 
-      if (navData) {
-        setNavigationItems(navData);
-      }
-
-      if (settingsData) {
+      if (settingsError) {
+        console.error('Error loading site settings:', settingsError);
+      } else if (settingsData) {
+        console.log('Site settings loaded:', settingsData);
         const settings: any = {};
+        
         settingsData.forEach(setting => {
-          settings[setting.setting_key] = JSON.parse(setting.setting_value as string);
+          settings[setting.setting_key] = safeParseJSON(setting.setting_value);
         });
+        
+        console.log('Processed settings:', settings);
         setSiteSettings(prev => ({ ...prev, ...settings }));
       }
     } catch (error) {
