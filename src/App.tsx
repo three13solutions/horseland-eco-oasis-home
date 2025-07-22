@@ -8,6 +8,7 @@ import Index from "./pages/Index";
 import IndexV2 from "./pages/IndexV2";
 import IndexV3 from "./pages/IndexV3";
 import IndexV4 from "./pages/IndexV4";
+import IndexV5 from "./pages/IndexV5";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -23,6 +24,7 @@ const App = () => (
         <Route path="/v2" element={<IndexV2 />} />
         <Route path="/v3" element={<IndexV3 />} />
         <Route path="/v4" element={<IndexV4 />} />
+        <Route path="/v5" element={<IndexV5 />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
