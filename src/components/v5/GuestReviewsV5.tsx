@@ -9,7 +9,7 @@ const GuestReviewsV5 = () => {
       rating: 5,
       text: 'Amazing value for money! The room was clean, staff was helpful, and the location is perfect. Will definitely come back.',
       date: '2 weeks ago',
-      avatar: 'https://images.unsplash.com/photo-1494790108755-2616b612b786?w=100&h=100&fit=crop&crop=face'
+      avatar: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=100&h=100&fit=crop&crop=face'
     },
     {
       name: 'Rajesh Patel',
@@ -180,13 +180,30 @@ const GuestReviewsV5 = () => {
             <p className="text-muted-foreground mb-6">
               Book your stay today and create your own memorable experience in Matheran.
             </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <div className="flex flex-col sm:flex-row gap-4 justify-center mb-6">
               <button className="bg-gradient-to-r from-primary to-accent text-white px-6 py-3 rounded-xl font-semibold hover:shadow-lg transform hover:scale-105 transition-all">
                 Book Your Stay
               </button>
-              <button className="border border-primary text-primary px-6 py-3 rounded-xl font-semibold hover:bg-primary/10 transition-all">
-                View All Reviews
-              </button>
+            </div>
+            
+            <div className="text-center">
+              <p className="text-muted-foreground mb-4 font-medium">Read more stories on</p>
+              <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
+                <div className="flex items-center gap-2 text-foreground">
+                  <div className="w-6 h-6 bg-green-600 rounded-full flex items-center justify-center">
+                    <span className="text-white text-xs font-bold">T</span>
+                  </div>
+                  <span className="font-semibold">TripAdvisor</span>
+                  <span className="text-muted-foreground">4.8/5</span>
+                </div>
+                <div className="flex items-center gap-2 text-foreground">
+                  <div className="w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center">
+                    <span className="text-white text-xs font-bold">G</span>
+                  </div>
+                  <span className="font-semibold">Google Reviews</span>
+                  <span className="text-muted-foreground">4.9/5</span>
+                </div>
+              </div>
             </div>
           </div>
         </div>
