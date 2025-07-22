@@ -42,34 +42,35 @@ const StayPreviewV5 = () => {
           </p>
         </div>
 
-        <div className="flex overflow-x-auto md:grid md:grid-cols-2 lg:grid-cols-4 gap-6 pb-4 md:pb-0">
+        <div className="flex overflow-x-auto md:grid md:grid-cols-2 lg:grid-cols-4 gap-4 pb-4 md:pb-0 hover:overflow-x-hidden" style={{maxWidth: '100vw'}}>
           {rooms.map((room, index) => (
             <div 
               key={index}
-              className="flex-shrink-0 w-80 md:w-auto bg-white/80 backdrop-blur-sm rounded-2xl border border-border/20 overflow-hidden hover:shadow-xl transition-all duration-300 hover:scale-105"
+              className="flex-shrink-0 w-72 md:w-auto bg-white/80 backdrop-blur-sm rounded-2xl border border-border/20 overflow-hidden hover:shadow-xl transition-all duration-300 hover:scale-105"
             >
               <div className="relative">
                 <img
                   src={room.image}
                   alt={room.name}
-                  className="w-full h-48 object-cover"
+                  className="w-full h-44 object-cover"
                 />
-                <div className="absolute top-4 right-4 bg-white/90 backdrop-blur-sm px-3 py-1 rounded-full">
-                  <span className="text-primary font-bold">{room.price}</span>
-                  <span className="text-muted-foreground text-sm">/night</span>
+                <div className="absolute top-3 right-3 bg-white/90 backdrop-blur-sm px-2 py-1 rounded-full">
+                  <span className="text-primary font-bold text-sm">{room.price}</span>
+                  <span className="text-muted-foreground text-xs">/night</span>
                 </div>
               </div>
               
-              <div className="p-6">
-                <h3 className="text-xl font-semibold text-foreground mb-2">{room.name}</h3>
-                <p className="text-muted-foreground text-sm mb-4">{room.features}</p>
+              <div className="p-5">
+                <h3 className="text-lg font-semibold text-foreground mb-2">{room.name}</h3>
+                <p className="text-muted-foreground text-xs mb-4">{room.features}</p>
                 
                 <Button 
                   variant="outline" 
-                  className="w-full border-primary text-primary hover:bg-primary hover:text-primary-foreground transition-all duration-300"
+                  size="sm"
+                  className="w-full border-primary text-primary hover:bg-primary hover:text-primary-foreground transition-all duration-300 text-sm py-2"
                 >
                   View Details
-                  <ArrowRight className="ml-2 h-4 w-4" />
+                  <ArrowRight className="ml-2 h-3 w-3" />
                 </Button>
               </div>
             </div>

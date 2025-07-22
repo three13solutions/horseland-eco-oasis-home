@@ -45,31 +45,31 @@ const GuestReviewsV5 = () => {
           </p>
         </div>
 
-        <div className="flex overflow-x-auto md:grid md:grid-cols-2 lg:grid-cols-4 gap-6 pb-4 md:pb-0">
+        <div className="flex overflow-x-auto md:grid md:grid-cols-2 lg:grid-cols-4 gap-4 pb-4 md:pb-0 hover:overflow-x-hidden" style={{maxWidth: '100vw'}}>
           {reviews.map((review, index) => (
             <div 
               key={index}
-              className="flex-shrink-0 w-80 md:w-auto bg-white/80 backdrop-blur-sm rounded-2xl border border-border/20 p-6 hover:shadow-xl transition-all duration-300 hover:scale-105"
+              className="flex-shrink-0 w-72 md:w-auto bg-white/80 backdrop-blur-sm rounded-2xl border border-border/20 p-5 hover:shadow-xl transition-all duration-300 hover:scale-105"
             >
               <div className="flex items-center mb-4">
                 <img
                   src={review.image}
                   alt={review.name}
-                  className="w-12 h-12 rounded-full object-cover mr-4"
+                  className="w-10 h-10 rounded-full object-cover mr-3"
                 />
                 <div>
-                  <h4 className="font-semibold text-foreground">{review.name}</h4>
-                  <p className="text-sm text-muted-foreground">{review.location}</p>
+                  <h4 className="font-semibold text-foreground text-sm">{review.name}</h4>
+                  <p className="text-xs text-muted-foreground">{review.location}</p>
                 </div>
               </div>
               
               <div className="flex mb-3">
                 {[...Array(review.rating)].map((_, i) => (
-                  <Star key={i} className="w-4 h-4 fill-primary text-primary" />
+                  <Star key={i} className="w-3 h-3 fill-primary text-primary" />
                 ))}
               </div>
               
-              <p className="text-muted-foreground text-sm leading-relaxed">
+              <p className="text-muted-foreground text-xs leading-relaxed">
                 "{review.review}"
               </p>
             </div>

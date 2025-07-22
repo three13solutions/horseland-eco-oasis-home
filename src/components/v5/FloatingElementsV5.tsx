@@ -9,7 +9,8 @@ const FloatingElementsV5 = () => {
   useEffect(() => {
     const handleScroll = () => {
       setShowScrollTop(window.scrollY > 400);
-      setShowStickyBooking(window.scrollY > 800);
+      // Show after Packages section (approximately after 2000px scroll)
+      setShowStickyBooking(window.scrollY > 2000);
     };
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);

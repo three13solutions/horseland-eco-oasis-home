@@ -50,7 +50,7 @@ const PackagesPreviewV5 = () => {
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-5xl mx-auto">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-5xl mx-auto hover:overflow-hidden" style={{maxWidth: '100vw'}}>
           {packages.map((pkg, index) => (
             <div 
               key={index}
@@ -60,29 +60,29 @@ const PackagesPreviewV5 = () => {
                 <img
                   src={pkg.image}
                   alt={pkg.title}
-                  className="w-full h-48 object-cover"
+                  className="w-full h-44 object-cover"
                 />
-                <div className="absolute top-4 left-4 bg-primary text-primary-foreground px-3 py-1 rounded-full text-xs font-semibold">
+                <div className="absolute top-3 left-3 bg-primary text-primary-foreground px-2 py-1 rounded-full text-xs font-semibold">
                   {pkg.tag}
                 </div>
-                <div className="absolute top-4 right-4 w-12 h-12 bg-white/90 backdrop-blur-sm rounded-full flex items-center justify-center">
-                  <pkg.icon className="w-6 h-6 text-primary" />
+                <div className="absolute top-3 right-3 w-10 h-10 bg-white/90 backdrop-blur-sm rounded-full flex items-center justify-center">
+                  <pkg.icon className="w-5 h-5 text-primary" />
                 </div>
               </div>
               
-              <div className="p-6">
-                <h3 className="text-xl font-semibold text-foreground mb-2">{pkg.title}</h3>
-                <p className="text-muted-foreground mb-4 leading-relaxed">{pkg.description}</p>
+              <div className="p-5">
+                <h3 className="text-lg font-semibold text-foreground mb-2">{pkg.title}</h3>
+                <p className="text-muted-foreground mb-4 leading-relaxed text-sm">{pkg.description}</p>
                 
                 <div className="flex items-center justify-between">
-                  <span className="text-primary font-bold text-lg">{pkg.price}</span>
+                  <span className="text-primary font-bold text-base">{pkg.price}</span>
                   <Button 
                     variant="outline" 
                     size="sm"
-                    className="border-primary text-primary hover:bg-primary hover:text-primary-foreground transition-all duration-300"
+                    className="border-primary text-primary hover:bg-primary hover:text-primary-foreground transition-all duration-300 text-sm px-3 py-2"
                   >
                     Explore Package
-                    <ArrowRight className="ml-2 h-4 w-4" />
+                    <ArrowRight className="ml-2 h-3 w-3" />
                   </Button>
                 </div>
               </div>

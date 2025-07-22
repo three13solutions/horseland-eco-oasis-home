@@ -37,17 +37,17 @@ const WhyMatheranV5 = () => {
           </p>
         </div>
 
-        <div className="flex overflow-x-auto md:grid md:grid-cols-4 gap-6 pb-4 md:pb-0">
+        <div className="flex overflow-x-auto md:grid md:grid-cols-4 gap-4 pb-4 md:pb-0" style={{maxWidth: '100vw'}}>
           {features.map((feature, index) => (
             <div 
               key={index}
-              className="flex-shrink-0 w-64 md:w-auto text-center p-6 rounded-2xl bg-white/80 backdrop-blur-sm border border-border/20 hover:shadow-lg transition-all duration-300 hover:scale-105"
+              className="flex-shrink-0 w-56 md:w-auto text-center p-5 rounded-2xl bg-white/80 backdrop-blur-sm border border-border/20 hover:shadow-lg transition-all duration-300 hover:scale-105"
             >
-              <div className="w-16 h-16 mx-auto mb-4 bg-gradient-to-br from-primary to-accent rounded-full flex items-center justify-center">
-                <feature.icon className="w-8 h-8 text-white" />
+              <div className="w-14 h-14 mx-auto mb-3 bg-gradient-to-br from-primary to-accent rounded-full flex items-center justify-center">
+                <feature.icon className="w-7 h-7 text-white" />
               </div>
-              <h3 className="font-semibold text-foreground mb-2">{feature.title}</h3>
-              <p className="text-sm text-muted-foreground">{feature.description}</p>
+              <h3 className="font-semibold text-foreground mb-2 text-sm">{feature.title}</h3>
+              <p className="text-xs text-muted-foreground">{feature.description}</p>
             </div>
           ))}
         </div>

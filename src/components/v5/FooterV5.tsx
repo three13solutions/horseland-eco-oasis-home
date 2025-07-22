@@ -72,81 +72,64 @@ const FooterV5 = () => {
             </div>
 
             {/* Quick Links */}
-            <div className="space-y-6">
-              <h4 className="text-xl font-semibold">Quick Links</h4>
-              <ul className="space-y-3">
+            <div className="space-y-4">
+              <h4 className="text-lg font-semibold">Quick Links</h4>
+              <ul className="space-y-2">
                 {quickLinks.map((link, index) => (
                   <li key={index}>
                     <a 
                       href={`#${link.toLowerCase()}`}
-                      className="text-background/80 hover:text-primary transition-colors hover:translate-x-1 transform duration-200 inline-block"
+                      className="text-background/80 hover:text-primary transition-colors hover:translate-x-1 transform duration-200 inline-block text-sm"
                     >
                       {link}
                     </a>
                   </li>
                 ))}
               </ul>
-              
-              <div className="pt-4">
-                <h5 className="font-semibold mb-3">Policies</h5>
-                <ul className="space-y-2">
-                  {policies.map((policy, index) => (
-                    <li key={index}>
-                      <a
-                        href={`#${policy.toLowerCase().replace(' ', '-')}`}
-                        className="text-background/60 hover:text-primary transition-colors text-sm"
-                      >
-                        {policy}
-                      </a>
-                    </li>
-                  ))}
-                </ul>
-              </div>
             </div>
 
             {/* Contact & Social */}
-            <div className="space-y-6">
-              <h4 className="text-xl font-semibold">Connect</h4>
+            <div className="space-y-4">
+              <h4 className="text-lg font-semibold">Connect</h4>
               
-              {/* Contact Info */}
-              <div className="space-y-4">
-                <div className="flex items-start space-x-3">
-                  <Phone className="w-5 h-5 text-primary mt-1 flex-shrink-0" />
-                  <div>
-                    <p className="text-background/80 text-sm">24/7 Reservations</p>
-                    <p className="font-medium">+91 98765 43210</p>
-                  </div>
+              {/* Compact Contact & Social */}
+              <div className="space-y-3">
+                <div className="flex items-center space-x-2">
+                  <Phone className="w-4 h-4 text-primary flex-shrink-0" />
+                  <p className="font-medium text-sm">+91 98765 43210</p>
                 </div>
                 
-                <div className="flex items-start space-x-3">
-                  <Mail className="w-5 h-5 text-primary mt-1 flex-shrink-0" />
-                  <div>
-                    <p className="text-background/80 text-sm">Email Us</p>
-                    <p className="font-medium">hello@horselandresort.com</p>
-                  </div>
+                <div className="flex items-center space-x-2">
+                  <Mail className="w-4 h-4 text-primary flex-shrink-0" />
+                  <p className="font-medium text-sm">hello@horselandresort.com</p>
                 </div>
                 
-                <div className="flex items-start space-x-3">
-                  <MapPin className="w-5 h-5 text-primary mt-1 flex-shrink-0" />
-                  <div>
-                    <p className="text-background/80 text-sm">Visit Us</p>
-                    <p className="font-medium">Matheran Hill Station<br />Maharashtra, India</p>
-                  </div>
-                </div>
+                <details className="text-sm">
+                  <summary className="cursor-pointer text-background/80 hover:text-primary">Emergency Contact</summary>
+                  <p className="mt-1 text-background/60">+91 98765 43210 (24/7)</p>
+                </details>
               </div>
 
-              {/* Social Links */}
+              {/* Newsletter & Social Combined */}
               <div className="space-y-3">
-                <p className="text-background/80 text-sm">Follow Our Journey</p>
-                <div className="flex space-x-4">
+                <div className="flex space-x-3">
+                  <Input 
+                    placeholder="Your email" 
+                    className="bg-background/10 border-background/20 text-background placeholder:text-background/50 rounded-lg text-sm h-9"
+                  />
+                  <Button className="bg-primary hover:bg-primary/90 text-primary-foreground rounded-lg px-4 text-sm h-9">
+                    Subscribe
+                  </Button>
+                </div>
+                <div className="flex space-x-3">
                   {socialLinks.map((social, index) => (
                     <a
                       key={index}
                       href={social.href}
                       aria-label={social.label}
-                      className={`p-3 bg-background/10 rounded-full hover:bg-background/20 transition-all duration-300 transform hover:scale-110 ${social.color}`}
+                      className={`p-2 bg-background/10 rounded-full hover:bg-background/20 transition-all duration-300 transform hover:scale-110 ${social.color}`}
                     >
-                      <social.icon className="w-5 h-5" />
+                      <social.icon className="w-4 h-4" />
                     </a>
                   ))}
                 </div>
@@ -156,20 +139,31 @@ const FooterV5 = () => {
         </div>
 
         {/* Bottom Bar */}
-        <div className="border-t border-background/20 py-8">
-          <div className="flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
-            <div className="text-center md:text-left">
-              <p className="text-background/60 text-sm">
-                © 2024 Horseland Resort. All rights reserved.
-              </p>
-              <p className="text-background/60 text-sm">
-                Crafted with ❤️ for sustainable luxury
-              </p>
+        <div className="border-t border-background/20 py-6">
+          <div className="flex flex-col md:flex-row justify-between items-center space-y-3 md:space-y-0">
+            <div className="flex flex-wrap items-center justify-center md:justify-start space-x-4 text-xs">
+              <details className="cursor-pointer">
+                <summary className="text-background/60 hover:text-primary">Policies</summary>
+                <div className="mt-2 space-y-1">
+                  {policies.map((policy, index) => (
+                    <a
+                      key={index}
+                      href={`#${policy.toLowerCase().replace(' ', '-')}`}
+                      className="block text-background/60 hover:text-primary transition-colors"
+                    >
+                      {policy}
+                    </a>
+                  ))}
+                </div>
+              </details>
             </div>
             
             <div className="text-center md:text-right">
-              <p className="text-background/60 text-sm">
-                Emergency Contact: +91 98765 43210
+              <p className="text-background/60 text-xs">
+                © 2024 Horseland Resort. All rights reserved.
+              </p>
+              <p className="text-background/60 text-xs">
+                Crafted with ❤️ for sustainable luxury
               </p>
             </div>
           </div>
