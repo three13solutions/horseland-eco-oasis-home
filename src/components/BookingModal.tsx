@@ -11,33 +11,36 @@ const BookingModal: React.FC<BookingModalProps> = ({ isOpen, onClose }) => {
 
   return (
     <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm" style={{ margin: 0, padding: '1rem' }}>
-      <div className="bg-background/80 backdrop-blur-lg rounded-2xl p-6 w-full max-w-md shadow-2xl border border-border/20 max-h-[90vh] overflow-y-auto mx-auto my-auto animate-scale-in">
+      <div className="relative rounded-2xl p-6 w-full max-w-md shadow-2xl border border-border/20 max-h-[90vh] overflow-y-auto mx-auto my-auto animate-scale-in overflow-hidden">
+        {/* Background Image */}
+        <div className="absolute inset-0 z-0">
+          <img 
+            src="https://images.unsplash.com/photo-1566665797739-1674de7a421a" 
+            alt="Luxury hotel bedroom in Matheran" 
+            className="w-full h-full object-cover animate-pulse"
+          />
+          <div className="absolute inset-0 bg-black/60"></div>
+        </div>
+        
+        {/* Content Overlay */}
+        <div className="relative z-10 text-white">
+
         {/* Header */}
         <div className="flex items-center justify-between mb-6">
-          <h3 className="text-xl font-bold text-foreground">Quick Booking</h3>
+          <h3 className="text-xl font-bold text-white">Quick Booking</h3>
           <button
             onClick={onClose}
-            className="p-2 hover:bg-muted rounded-lg transition-colors"
+            className="p-2 hover:bg-white/20 rounded-lg transition-colors text-white"
           >
             <X className="w-5 h-5" />
           </button>
         </div>
 
-        {/* Booking Image with Price Overlay */}
-        <div className="mb-4 rounded-xl overflow-hidden relative">
-          <img 
-            src="https://images.unsplash.com/photo-1566665797739-1674de7a421a" 
-            alt="Luxury hotel bedroom in Matheran" 
-            className="w-full h-40 object-cover animate-pulse"
-          />
-          {/* Price Overlay */}
-          <div className="absolute inset-0 bg-black/30 flex items-center justify-center">
-            <div className="text-center text-white">
-              <div className="text-2xl font-bold drop-shadow-lg text-primary">₹1,500</div>
-              <div className="text-sm drop-shadow-md">per night • Starting price</div>
-              <div className="text-xs font-medium mt-1 drop-shadow-md">✓ No hidden charges</div>
-            </div>
-          </div>
+        {/* Price Highlight */}
+        <div className="bg-black/40 backdrop-blur-sm rounded-xl p-3 mb-4 text-center border border-white/20">
+          <div className="text-2xl font-bold drop-shadow-lg text-primary">₹1,500</div>
+          <div className="text-sm drop-shadow-md text-white">per night • Starting price</div>
+          <div className="text-xs font-medium mt-1 drop-shadow-md text-white">✓ No hidden charges</div>
         </div>
 
         {/* Contact Options - Single Row */}
@@ -75,21 +78,23 @@ const BookingModal: React.FC<BookingModalProps> = ({ isOpen, onClose }) => {
         </div>
 
         {/* Trust Indicators - Compact */}
-        <div className="pt-3 border-t border-border/20">
+        <div className="pt-3 border-t border-white/20">
           <div className="grid grid-cols-3 gap-2 text-center">
             <div>
-              <div className="text-base font-bold text-primary">4.3★</div>
-              <div className="text-xs text-muted-foreground">Rating</div>
+              <div className="text-base font-bold text-primary drop-shadow-md">4.3★</div>
+              <div className="text-xs text-white/80 drop-shadow-sm">Rating</div>
             </div>
             <div>
-              <div className="text-base font-bold text-primary">500+</div>
-              <div className="text-xs text-muted-foreground">Guests</div>
+              <div className="text-base font-bold text-primary drop-shadow-md">500+</div>
+              <div className="text-xs text-white/80 drop-shadow-sm">Guests</div>
             </div>
             <div>
-              <div className="text-base font-bold text-primary">24/7</div>
-              <div className="text-xs text-muted-foreground">Support</div>
+              <div className="text-base font-bold text-primary drop-shadow-md">24/7</div>
+              <div className="text-xs text-white/80 drop-shadow-sm">Support</div>
             </div>
           </div>
+        </div>
+        
         </div>
       </div>
     </div>
