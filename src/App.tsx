@@ -20,6 +20,9 @@ import Journal from "./pages/Journal";
 import FAQ from "./pages/FAQ";
 import RoomDetail from "./pages/RoomDetail";
 import NotFound from "./pages/NotFound";
+import AdminLogin from "./pages/AdminLogin";
+import AdminDashboard from "./pages/AdminDashboard";
+import RoomManagement from "./pages/admin/RoomManagement";
 
 const queryClient = new QueryClient();
 
@@ -46,6 +49,9 @@ const App = () => (
           <Route path="/packages" element={<Packages />} />
           <Route path="/journal" element={<Journal />} />
           <Route path="/faq" element={<FAQ />} />
+          <Route path="/admin/login" element={<AdminLogin />} />
+          <Route path="/admin" element={<AdminDashboard />} />
+          <Route path="/admin/rooms" element={<RoomManagement />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
