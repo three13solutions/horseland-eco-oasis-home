@@ -51,34 +51,71 @@ const SiteSettings = () => {
     loadData();
   }, []);
 
+  const safeParseJSON = (value: any) => {
+    if (typeof value === 'string') {
+      try {
+        return JSON.parse(value);
+      } catch {
+        return value; // Return as string if parsing fails
+      }
+    }
+    return value; // Already an object or other type
+  };
+
+  const safePrepareValue = (value: any) => {
+    if (typeof value === 'string') {
+      return value; // Keep strings as strings
+    }
+    return JSON.stringify(value); // Only stringify non-string values
+  };
+
   const loadData = async () => {
     try {
+      console.log('Loading site settings data...');
+      
       // Load navigation items
-      const { data: navData } = await supabase
+      const { data: navData, error: navError } = await supabase
         .from('navigation_items')
         .select('*')
         .order('sort_order');
 
+      if (navError) {
+        console.error('Error loading navigation items:', navError);
+      } else {
+        console.log('Navigation items loaded:', navData);
+        setNavigationItems(navData || []);
+      }
+
       // Load footer sections
-      const { data: footerData } = await supabase
+      const { data: footerData, error: footerError } = await supabase
         .from('footer_sections')
         .select('*')
         .order('sort_order');
 
+      if (footerError) {
+        console.error('Error loading footer sections:', footerError);
+      } else {
+        console.log('Footer sections loaded:', footerData);
+        setFooterSections(footerData || []);
+      }
+
       // Load site settings
-      const { data: settingsData } = await supabase
+      const { data: settingsData, error: settingsError } = await supabase
         .from('site_settings')
         .select('*');
 
-      if (navData) setNavigationItems(navData);
-      if (footerData) setFooterSections(footerData);
-      
-      if (settingsData) {
+      if (settingsError) {
+        console.error('Error loading site settings:', settingsError);
+      } else if (settingsData) {
+        console.log('Site settings raw data:', settingsData);
         const settings: any = {};
+        
         settingsData.forEach(setting => {
-          settings[setting.setting_key] = JSON.parse(setting.setting_value as string);
+          settings[setting.setting_key] = safeParseJSON(setting.setting_value);
         });
-        setSiteSettings(settings);
+        
+        console.log('Processed site settings:', settings);
+        setSiteSettings(prev => ({ ...prev, ...settings }));
       }
     } catch (error) {
       console.error('Error loading data:', error);
@@ -164,19 +201,32 @@ const SiteSettings = () => {
   const saveSiteSettings = async () => {
     setSaving(true);
     try {
-      const updates = Object.entries(siteSettings).map(([key, value]) => ({
-        setting_key: key,
-        setting_value: JSON.stringify(value)
-      }));
+      console.log('Saving site settings:', siteSettings);
+      
+      const updates = Object.entries(siteSettings).map(([key, value]) => {
+        const preparedValue = safePrepareValue(value);
+        console.log(`Preparing ${key}:`, { original: value, prepared: preparedValue });
+        
+        return {
+          setting_key: key,
+          setting_value: preparedValue
+        };
+      });
+
+      console.log('Final updates to save:', updates);
 
       for (const update of updates) {
         const { error } = await supabase
           .from('site_settings')
           .upsert(update);
 
-        if (error) throw error;
+        if (error) {
+          console.error('Error saving setting:', update.setting_key, error);
+          throw error;
+        }
       }
 
+      console.log('Site settings saved successfully');
       toast({
         title: "Success",
         description: "Site settings saved successfully"
