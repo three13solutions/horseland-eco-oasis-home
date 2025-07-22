@@ -28,12 +28,12 @@ const BookingModal: React.FC<BookingModalProps> = ({ isOpen, onClose }) => {
           <img 
             src="https://images.unsplash.com/photo-1566665797739-1674de7a421a" 
             alt="Luxury hotel bedroom in Matheran" 
-            className="w-full h-32 object-cover animate-pulse"
+            className="w-full h-40 object-cover animate-pulse"
           />
           {/* Price Overlay */}
           <div className="absolute inset-0 bg-black/30 flex items-center justify-center">
             <div className="text-center text-white">
-              <div className="text-2xl font-bold drop-shadow-lg">₹1,500</div>
+              <div className="text-2xl font-bold drop-shadow-lg text-primary">₹1,500</div>
               <div className="text-sm drop-shadow-md">per night • Starting price</div>
               <div className="text-xs font-medium mt-1 drop-shadow-md">✓ No hidden charges</div>
             </div>
@@ -70,7 +70,7 @@ const BookingModal: React.FC<BookingModalProps> = ({ isOpen, onClose }) => {
             <svg className="w-4 h-4 inline mr-1" fill="currentColor" viewBox="0 0 20 20">
               <path fillRule="evenodd" d="M3 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V4zm0 4a1 1 0 011-1h6a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h6a1 1 0 110 2H4a1 1 0 01-1-1zm10-4a1 1 0 00-1 1v4a1 1 0 001 1h3a1 1 0 001-1v-4a1 1 0 00-1-1h-3z" clipRule="evenodd" />
             </svg>
-            Reserve
+            Online
           </button>
         </div>
 
