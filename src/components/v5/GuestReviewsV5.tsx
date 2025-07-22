@@ -28,14 +28,6 @@ const GuestReviewsV5 = () => {
       avatar: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=100&h=100&fit=crop&crop=face'
     },
     {
-      name: 'Vikram Singh',
-      location: 'Ahmedabad',
-      rating: 4,
-      text: 'Honest pricing, no hidden charges. What you see is what you pay. Room was exactly as shown in photos. Good value stay.',
-      date: '1 week ago',
-      avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&h=100&fit=crop&crop=face'
-    },
-    {
       name: 'Kavita Joshi',
       location: 'Surat',
       rating: 5,
