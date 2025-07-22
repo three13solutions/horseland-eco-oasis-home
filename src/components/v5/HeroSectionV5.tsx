@@ -17,8 +17,8 @@ const HeroSectionV5 = () => {
     },
     {
       type: 'video',
-      content: "https://videos.pexels.com/video-files/3571264/3571264-uhd_2560_1440_30fps.mp4",
-      alt: "Matheran mountain driving experience"
+      content: "https://videos.pexels.com/video-files/5752729/5752729-uhd_2560_1440_25fps.mp4",
+      alt: "Matheran toy train and mountain roads"
     },
     {
       type: 'image',
