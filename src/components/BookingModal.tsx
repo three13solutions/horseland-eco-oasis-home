@@ -44,7 +44,7 @@ const BookingModal: React.FC<BookingModalProps> = ({ isOpen, onClose }) => {
         <div className="flex items-center justify-center space-x-2 mb-4">
           <a
             href="tel:+919876543210"
-            className="flex-1 bg-gradient-to-r from-primary to-accent text-white py-2 px-3 rounded-lg font-medium text-center text-sm hover:shadow-lg transform hover:scale-105 transition-all"
+            className="flex-1 bg-primary hover:bg-primary/90 text-primary-foreground py-2 px-3 rounded-lg font-medium text-center text-sm hover:shadow-lg transform hover:scale-105 transition-all"
           >
             <Phone className="w-4 h-4 inline mr-1" />
             Call
@@ -54,7 +54,7 @@ const BookingModal: React.FC<BookingModalProps> = ({ isOpen, onClose }) => {
             href="https://wa.me/919876543210?text=Hi! I'd like to book a room at Horseland Hotel. Can you help me with availability and pricing?"
             target="_blank"
             rel="noopener noreferrer"
-            className="flex-1 bg-green-500 text-white py-2 px-3 rounded-lg font-medium text-center text-sm hover:shadow-lg transform hover:scale-105 transition-all"
+            className="flex-1 bg-accent hover:bg-accent/90 text-accent-foreground py-2 px-3 rounded-lg font-medium text-center text-sm hover:shadow-lg transform hover:scale-105 transition-all"
           >
             <MessageCircle className="w-4 h-4 inline mr-1" />
             WhatsApp
@@ -65,7 +65,7 @@ const BookingModal: React.FC<BookingModalProps> = ({ isOpen, onClose }) => {
               // You can replace this with your actual booking system URL
               window.open('https://booking.example.com', '_blank');
             }}
-            className="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-2 px-3 rounded-lg font-medium text-center text-sm hover:shadow-lg transform hover:scale-105 transition-all"
+            className="flex-1 bg-secondary hover:bg-secondary/90 text-secondary-foreground py-2 px-3 rounded-lg font-medium text-center text-sm hover:shadow-lg transform hover:scale-105 transition-all"
           >
             <svg className="w-4 h-4 inline mr-1" fill="currentColor" viewBox="0 0 20 20">
               <path fillRule="evenodd" d="M3 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V4zm0 4a1 1 0 011-1h6a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h6a1 1 0 110 2H4a1 1 0 01-1-1zm10-4a1 1 0 00-1 1v4a1 1 0 001 1h3a1 1 0 001-1v-4a1 1 0 00-1-1h-3z" clipRule="evenodd" />
