@@ -11,6 +11,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Progress } from '@/components/ui/progress';
 import { Loader2, Save, RefreshCw, Copy, Languages, Upload, Download, Globe, Zap, FileDown } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { MigrationControls } from '@/components/admin/MigrationControls';
 
 interface Translation {
   id: string;
@@ -414,6 +415,9 @@ const ContentManagement = () => {
             </Button>
           </div>
         </div>
+
+        {/* Migration Controls */}
+        <MigrationControls />
 
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
           {/* Sidebar */}
