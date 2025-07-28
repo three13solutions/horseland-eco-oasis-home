@@ -1,0 +1,52 @@
+{
+  "navigation": {
+    "stay": "Séjourner",
+    "experiences": "Expériences",
+    "dining": "Restauration",
+    "wellness": "Bien-être",
+    "about": "À propos",
+    "journal": "Journal",
+    "contact": "Contact",
+    "bookNow": "Réserver Maintenant"
+  },
+  "hero": {
+    "title": "Découvrez la Magie de Matheran",
+    "subtitle": "Où Chaque Moment Devient un Souvenir Précieux",
+    "description": "Vivez le luxe au cœur des Ghats occidentaux au Horseland Hotel & Mountain Spa. Votre escapade parfaite en montagne vous attend.",
+    "checkIn": "Arrivée",
+    "checkOut": "Départ",
+    "guests": "Invités",
+    "search": "Rechercher des Chambres"
+  },
+  "packages": {
+    "title": "Expériences Sélectionnées",
+    "subtitle": "Choisissez Votre Escapade Parfaite en Montagne",
+    "romantic": {
+      "tag": "ROMANTIQUE",
+      "title": "Retraite Romantique",
+      "description": "Escapades intimes avec dîners aux chandelles, soins spa pour couples et vues panoramiques"
+    },
+    "family": {
+      "tag": "FAMILLE",
+      "title": "Aventure Familiale",
+      "description": "Activités amusantes pour tous les âges avec hébergements spacieux et commodités adaptées aux enfants"
+    },
+    "corporate": {
+      "tag": "ENTREPRISE",
+      "title": "Retraite d'Entreprise",
+      "description": "Activités de team building et installations de conférence dans un cadre montagneux serein"
+    },
+    "adventure": {
+      "tag": "AVENTURE",
+      "title": "Chercheur d'Aventure",
+      "description": "Itinéraire rempli d'action pour les passionnés d'aventure avec des activités de plein air palpitantes"
+    }
+  },
+  "footer": {
+    "description": "Vivez le luxe au cœur des Ghats occidentaux au Horseland Hotel & Mountain Spa.",
+    "quickLinks": "Liens Rapides",
+    "contact": "Contact",
+    "followUs": "Suivez-nous",
+    "rights": "Tous droits réservés."
+  }
+}

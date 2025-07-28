@@ -1,0 +1,52 @@
+{
+  "navigation": {
+    "stay": "住宿",
+    "experiences": "体验",
+    "dining": "餐饮",
+    "wellness": "健康",
+    "about": "关于",
+    "journal": "期刊",
+    "contact": "联系",
+    "bookNow": "立即预订"
+  },
+  "hero": {
+    "title": "探索马泰兰的魅力",
+    "subtitle": "让每一刻都成为珍贵的回忆",
+    "description": "在霍斯兰酒店及山地水疗中心体验西高止山脉中的奢华。您完美的山地度假等待着您。",
+    "checkIn": "入住",
+    "checkOut": "退房",
+    "guests": "客人",
+    "search": "搜索客房"
+  },
+  "packages": {
+    "title": "精选体验",
+    "subtitle": "选择您完美的山地度假",
+    "romantic": {
+      "tag": "浪漫",
+      "title": "浪漫静修",
+      "description": "烛光晚餐、情侣水疗护理和风景如画的美景，享受亲密的逃离"
+    },
+    "family": {
+      "tag": "家庭",
+      "title": "家庭冒险",
+      "description": "为所有年龄段提供有趣的活动，宽敞的住宿和儿童友好的设施"
+    },
+    "corporate": {
+      "tag": "企业",
+      "title": "企业度假",
+      "description": "在宁静的山地环境中进行团队建设活动和会议设施"
+    },
+    "adventure": {
+      "tag": "冒险",
+      "title": "冒险寻求者",
+      "description": "为冒险爱好者提供充满刺激的户外活动的行动计划"
+    }
+  },
+  "footer": {
+    "description": "在霍斯兰酒店及山地水疗中心体验西高止山脉中的奢华。",
+    "quickLinks": "快速链接",
+    "contact": "联系",
+    "followUs": "关注我们",
+    "rights": "版权所有。"
+  }
+}
