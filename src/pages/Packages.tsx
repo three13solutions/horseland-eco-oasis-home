@@ -70,26 +70,6 @@ const Packages = () => {
       bestFor: 'Corporate groups 10-50 people'
     },
     {
-      id: 'relaxation-package',
-      name: 'Wellness Escape',
-      icon: Sparkles,
-      image: 'https://images.unsplash.com/photo-1544161515-4ab6ce6db874?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
-      duration: '4 Days / 3 Nights',
-      price: '₹24,000',
-      originalPrice: '₹28,500',
-      description: 'Complete wellness journey focused on rejuvenation, spa treatments, and mindful living.',
-      highlights: [
-        'Daily spa treatments',
-        'Yoga & meditation sessions',
-        'Wellness consultation',
-        'Detox meal plans',
-        'Forest therapy walks',
-        'Ayurvedic treatments'
-      ],
-      includes: 'Accommodation, spa treatments, wellness activities, healthy meals',
-      bestFor: 'Wellness enthusiasts & solo travelers'
-    },
-    {
       id: 'adventure-package',
       name: 'Adventure Seeker',
       icon: TreePine,
@@ -108,26 +88,6 @@ const Packages = () => {
       ],
       includes: 'Accommodation, adventure activities, equipment, guides, meals',
       bestFor: 'Adventure lovers & outdoor enthusiasts'
-    },
-    {
-      id: 'membership-package',
-      name: 'Annual Membership',
-      icon: Crown,
-      image: 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
-      duration: 'Year-round',
-      price: '₹85,000',
-      originalPrice: '₹1,20,000',
-      description: 'Exclusive membership with unlimited access and premium benefits throughout the year.',
-      highlights: [
-        '10 complimentary nights',
-        'Priority booking',
-        '30% discount on additional nights',
-        'Free spa credits worth ₹15,000',
-        'Exclusive member events',
-        'Concierge services'
-      ],
-      includes: 'Annual accommodation credits, dining discounts, spa benefits',
-      bestFor: 'Frequent visitors & luxury seekers'
     }
   ];
 
