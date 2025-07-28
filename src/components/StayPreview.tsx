@@ -75,12 +75,17 @@ const StayPreview = () => {
                         {room.description}
                       </p>
                       <div className="flex items-center justify-between">
-                        <span className="text-2xl font-bold text-primary">
-                          {room.price}
-                          <span className="text-sm font-normal text-muted-foreground">
-                            /night
+                        <div>
+                          <div className="text-xs text-muted-foreground mb-1">
+                            Starting from
+                          </div>
+                          <span className="text-2xl font-bold text-primary">
+                            {room.price}
+                            <span className="text-sm font-normal text-muted-foreground">
+                              /night
+                            </span>
                           </span>
-                        </span>
+                        </div>
                         <Button variant="outline" size="sm">
                           View Details
                         </Button>
