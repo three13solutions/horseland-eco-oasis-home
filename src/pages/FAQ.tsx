@@ -93,7 +93,7 @@ const FAQ = () => {
         },
         {
           question: 'Do you accommodate special dietary requirements?',
-          answer: 'Absolutely! We cater to vegetarian, vegan, gluten-free, Jain, and other dietary preferences. Please inform us of any food allergies or special requirements during booking or upon arrival. Our chefs are experienced in preparing customized meals.'
+          answer: 'Absolutely! We cater to vegetarian, Jain, and other dietary preferences. Please inform us of any food allergies or special requirements during booking or upon arrival. Our chefs are experienced in preparing customized meals.'
         },
         {
           question: 'What safety measures do you have in place?',

@@ -189,9 +189,8 @@ const Dining = () => {
             Special Dietary Needs
           </h2>
           <p className="text-lg text-muted-foreground font-body mb-8 leading-relaxed">
-            We cater to various dietary preferences including vegetarian, vegan, gluten-free, 
-            and Jain meal options. Please inform us of any allergies or specific requirements 
-            during your booking or upon arrival.
+            We cater to various dietary preferences including vegetarian and Jain meal options. 
+            Please inform us of any allergies or specific requirements during your booking or upon arrival.
           </p>
           <Button size="lg" className="font-body">
             Inform About Dietary Needs

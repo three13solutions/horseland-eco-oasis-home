@@ -14,23 +14,23 @@ const HeroSectionV5 = () => {
   const slides = [
     {
       type: 'image',
-      content: "/lovable-uploads/1c90ed68-942a-4c4c-8ec9-b6962d7d5248.png",
-      alt: "Scenic mountain viewpoint in Matheran"
+      content: "/lovable-uploads/9699e81e-78aa-4ce4-b652-cf46c4bd7075.png",
+      alt: "Horse riding on red mud trails in Matheran"
     },
     {
       type: 'image',
-      content: "/lovable-uploads/11ec8802-2ca9-4b77-bfc6-a8c0e23527e4.png",
-      alt: "Matheran toy train crossing waterfall"
+      content: "/lovable-uploads/d4df921c-30f4-4f92-92f2-c84dbcd5b591.png",
+      alt: "Beautiful lake with red earth shores in Matheran"
     },
     {
       type: 'image',
-      content: "/lovable-uploads/c5804249-2e50-49d1-b8da-6c999d32f326.png",
-      alt: "I Love Matheran train station"
+      content: "/lovable-uploads/b7049d8c-bd59-4733-b040-30b3f79f881c.png",
+      alt: "Winding mountain roads leading to Matheran"
     },
     {
       type: 'image',
-      content: "/lovable-uploads/1c90ed68-942a-4c4c-8ec9-b6962d7d5248.png",
-      alt: "Mountain landscape view from Matheran"
+      content: "/lovable-uploads/6df7505d-8906-4590-b67e-a18c9f9da7f5.png",
+      alt: "Matheran toy train through misty mountains"
     }
   ];
 
