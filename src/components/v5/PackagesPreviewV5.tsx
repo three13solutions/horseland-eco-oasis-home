@@ -1,8 +1,24 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
-import { Heart, Users, Briefcase, Leaf, ArrowRight } from 'lucide-react';
+import { Heart, Users, Briefcase, Leaf, ArrowRight, ChevronLeft, ChevronRight } from 'lucide-react';
+import useEmblaCarousel from 'embla-carousel-react';
 
 const PackagesPreviewV5 = () => {
+  const [emblaRef, emblaApi] = useEmblaCarousel({ 
+    loop: true,
+    align: 'start',
+    skipSnaps: false,
+    dragFree: true
+  });
+
+  const scrollPrev = React.useCallback(() => {
+    if (emblaApi) emblaApi.scrollPrev();
+  }, [emblaApi]);
+
+  const scrollNext = React.useCallback(() => {
+    if (emblaApi) emblaApi.scrollNext();
+  }, [emblaApi]);
+
   const packages = [
     {
       icon: Heart,
@@ -50,44 +66,66 @@ const PackagesPreviewV5 = () => {
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-5xl mx-auto hover:overflow-hidden" style={{maxWidth: '100vw'}}>
-          {packages.map((pkg, index) => (
-            <div 
-              key={index}
-              className="bg-white/80 backdrop-blur-sm rounded-2xl border border-border/20 overflow-hidden hover:shadow-xl transition-all duration-300 hover:scale-105"
-            >
-              <div className="relative">
-                <img
-                  src={pkg.image}
-                  alt={pkg.title}
-                  className="w-full h-44 object-cover"
-                />
-                <div className="absolute top-3 left-3 bg-primary text-primary-foreground px-2 py-1 rounded-full text-xs font-semibold">
-                  {pkg.tag}
+        {/* Carousel Container */}
+        <div className="relative max-w-6xl mx-auto">
+          {/* Navigation Buttons */}
+          <button
+            className="absolute left-4 top-1/2 -translate-y-1/2 z-10 w-12 h-12 bg-white/90 backdrop-blur-sm rounded-full flex items-center justify-center shadow-lg hover:bg-white transition-all duration-300"
+            onClick={scrollPrev}
+          >
+            <ChevronLeft className="w-6 h-6 text-foreground" />
+          </button>
+          <button
+            className="absolute right-4 top-1/2 -translate-y-1/2 z-10 w-12 h-12 bg-white/90 backdrop-blur-sm rounded-full flex items-center justify-center shadow-lg hover:bg-white transition-all duration-300"
+            onClick={scrollNext}
+          >
+            <ChevronRight className="w-6 h-6 text-foreground" />
+          </button>
+
+          {/* Carousel */}
+          <div className="overflow-hidden" ref={emblaRef}>
+            <div className="flex">
+              {packages.map((pkg, index) => (
+                <div 
+                  key={index}
+                  className="flex-[0_0_100%] md:flex-[0_0_50%] lg:flex-[0_0_33.333%] px-3"
+                >
+                  <div className="bg-white/80 backdrop-blur-sm rounded-2xl border border-border/20 overflow-hidden hover:shadow-xl transition-all duration-300 hover:scale-105 h-full">
+                    <div className="relative">
+                      <img
+                        src={pkg.image}
+                        alt={pkg.title}
+                        className="w-full h-44 object-cover"
+                      />
+                      <div className="absolute top-3 left-3 bg-primary text-primary-foreground px-2 py-1 rounded-full text-xs font-semibold">
+                        {pkg.tag}
+                      </div>
+                      <div className="absolute top-3 right-3 w-10 h-10 bg-white/90 backdrop-blur-sm rounded-full flex items-center justify-center">
+                        <pkg.icon className="w-5 h-5 text-primary" />
+                      </div>
+                    </div>
+                    
+                    <div className="p-5">
+                      <h3 className="text-lg font-semibold text-foreground mb-2">{pkg.title}</h3>
+                      <p className="text-muted-foreground mb-4 leading-relaxed text-sm">{pkg.description}</p>
+                      
+                      <div className="flex items-center justify-between">
+                        <span className="text-primary font-bold text-base">{pkg.price}</span>
+                        <Button 
+                          variant="outline" 
+                          size="sm"
+                          className="border-primary text-primary hover:bg-primary hover:text-primary-foreground transition-all duration-300 text-sm px-3 py-2"
+                        >
+                          Explore Package
+                          <ArrowRight className="ml-2 h-3 w-3" />
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
                 </div>
-                <div className="absolute top-3 right-3 w-10 h-10 bg-white/90 backdrop-blur-sm rounded-full flex items-center justify-center">
-                  <pkg.icon className="w-5 h-5 text-primary" />
-                </div>
-              </div>
-              
-              <div className="p-5">
-                <h3 className="text-lg font-semibold text-foreground mb-2">{pkg.title}</h3>
-                <p className="text-muted-foreground mb-4 leading-relaxed text-sm">{pkg.description}</p>
-                
-                <div className="flex items-center justify-between">
-                  <span className="text-primary font-bold text-base">{pkg.price}</span>
-                  <Button 
-                    variant="outline" 
-                    size="sm"
-                    className="border-primary text-primary hover:bg-primary hover:text-primary-foreground transition-all duration-300 text-sm px-3 py-2"
-                  >
-                    Explore Package
-                    <ArrowRight className="ml-2 h-3 w-3" />
-                  </Button>
-                </div>
-              </div>
+              ))}
             </div>
-          ))}
+          </div>
         </div>
 
         <div className="text-center mt-12">

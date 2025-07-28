@@ -1,7 +1,23 @@
 import React from 'react';
-import { Star, Quote, MapPin } from 'lucide-react';
+import { Star, Quote, MapPin, ChevronLeft, ChevronRight } from 'lucide-react';
+import useEmblaCarousel from 'embla-carousel-react';
 
 const GuestReviewsV5 = () => {
+  const [emblaRef, emblaApi] = useEmblaCarousel({ 
+    loop: true,
+    align: 'start',
+    skipSnaps: false,
+    dragFree: true
+  });
+
+  const scrollPrev = React.useCallback(() => {
+    if (emblaApi) emblaApi.scrollPrev();
+  }, [emblaApi]);
+
+  const scrollNext = React.useCallback(() => {
+    if (emblaApi) emblaApi.scrollNext();
+  }, [emblaApi]);
+
   const testimonials = [
     {
       name: 'Priya Sharma',
@@ -98,46 +114,67 @@ const GuestReviewsV5 = () => {
             </div>
           </div>
 
-          {/* Testimonials Grid - Mobile Optimized */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
-            {testimonials.map((testimonial, index) => (
-              <div
-                key={index}
-                className="bg-card rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 relative"
-              >
-                {/* Quote Icon */}
-                <Quote className="absolute top-4 right-4 w-6 h-6 text-primary/20" />
-                
-                {/* Header */}
-                <div className="flex items-center space-x-4 mb-4">
-                  <img
-                    src={testimonial.avatar}
-                    alt={testimonial.name}
-                    className="w-12 h-12 rounded-full object-cover"
-                  />
-                  <div className="flex-1">
-                    <h4 className="font-semibold text-foreground">{testimonial.name}</h4>
-                    <div className="flex items-center text-sm text-muted-foreground">
-                      <MapPin className="w-3 h-3 mr-1" />
-                      {testimonial.location}
+          {/* Testimonials Carousel */}
+          <div className="relative">
+            {/* Navigation Buttons */}
+            <button
+              className="absolute left-4 top-1/2 -translate-y-1/2 z-10 w-12 h-12 bg-white/90 backdrop-blur-sm rounded-full flex items-center justify-center shadow-lg hover:bg-white transition-all duration-300"
+              onClick={scrollPrev}
+            >
+              <ChevronLeft className="w-6 h-6 text-foreground" />
+            </button>
+            <button
+              className="absolute right-4 top-1/2 -translate-y-1/2 z-10 w-12 h-12 bg-white/90 backdrop-blur-sm rounded-full flex items-center justify-center shadow-lg hover:bg-white transition-all duration-300"
+              onClick={scrollNext}
+            >
+              <ChevronRight className="w-6 h-6 text-foreground" />
+            </button>
+
+            {/* Carousel */}
+            <div className="overflow-hidden" ref={emblaRef}>
+              <div className="flex">
+                {testimonials.map((testimonial, index) => (
+                  <div 
+                    key={index}
+                    className="flex-[0_0_100%] md:flex-[0_0_50%] lg:flex-[0_0_33.333%] px-3"
+                  >
+                    <div className="bg-card rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 relative h-full">
+                      {/* Quote Icon */}
+                      <Quote className="absolute top-4 right-4 w-6 h-6 text-primary/20" />
+                      
+                      {/* Header */}
+                      <div className="flex items-center space-x-4 mb-4">
+                        <img
+                          src={testimonial.avatar}
+                          alt={testimonial.name}
+                          className="w-12 h-12 rounded-full object-cover"
+                        />
+                        <div className="flex-1">
+                          <h4 className="font-semibold text-foreground">{testimonial.name}</h4>
+                          <div className="flex items-center text-sm text-muted-foreground">
+                            <MapPin className="w-3 h-3 mr-1" />
+                            {testimonial.location}
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Rating */}
+                      <div className="flex items-center space-x-2 mb-4">
+                        <div className="flex space-x-1">
+                          {renderStars(testimonial.rating)}
+                        </div>
+                        <span className="text-sm text-muted-foreground">{testimonial.date}</span>
+                      </div>
+
+                      {/* Review Text */}
+                      <p className="text-muted-foreground leading-relaxed text-sm md:text-base">
+                        "{testimonial.text}"
+                      </p>
                     </div>
                   </div>
-                </div>
-
-                {/* Rating */}
-                <div className="flex items-center space-x-2 mb-4">
-                  <div className="flex space-x-1">
-                    {renderStars(testimonial.rating)}
-                  </div>
-                  <span className="text-sm text-muted-foreground">{testimonial.date}</span>
-                </div>
-
-                {/* Review Text */}
-                <p className="text-muted-foreground leading-relaxed text-sm md:text-base">
-                  "{testimonial.text}"
-                </p>
+                ))}
               </div>
-            ))}
+            </div>
           </div>
 
           {/* Bottom CTA */}
