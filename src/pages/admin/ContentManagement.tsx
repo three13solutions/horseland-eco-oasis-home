@@ -578,8 +578,22 @@ const ContentManagement = () => {
                   )}
                 </>
               ) : (
-                <div className="text-center py-8 text-muted-foreground">
-                  <p>Select a section to start managing content</p>
+                <div className="text-center py-8 text-muted-foreground space-y-4">
+                  <div className="max-w-md mx-auto">
+                    <h3 className="text-lg font-medium text-foreground mb-2">Content Management</h3>
+                    <p className="mb-4">Select a section from the left sidebar to view and edit content keys.</p>
+                    <div className="bg-muted p-4 rounded-lg text-left space-y-2">
+                      <p className="font-medium text-foreground">Current Status:</p>
+                      <p>📁 {sections.length} sections available</p>
+                      <p>🌐 {translations.length} total translations</p>
+                      <p>🔤 {languages.length} languages supported</p>
+                    </div>
+                    {sections.length > 0 && (
+                      <p className="mt-4 text-sm">
+                        👈 Click on a section like <strong>"{sections[0]?.section_name}"</strong> to get started
+                      </p>
+                    )}
+                  </div>
                 </div>
               )}
             </CardContent>
