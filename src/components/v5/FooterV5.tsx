@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { 
@@ -15,15 +16,8 @@ import {
 } from 'lucide-react';
 
 const FooterV5 = () => {
+  const { t } = useTranslation();
   const [isPoliciesOpen, setIsPoliciesOpen] = useState(false);
-
-  const quickLinks = [
-    'Stay', 'Experiences', 'Packages', 'Journal', 'Contact'
-  ];
-
-  const policies = [
-    'Privacy Policy', 'Booking Terms', 'Cancellation', 'Terms of Service'
-  ];
 
   const socialLinks = [
     { icon: Instagram, href: '#', label: 'Instagram', color: 'hover:text-pink-500' },
@@ -54,26 +48,25 @@ const FooterV5 = () => {
                 />
                 
                 <p className="text-primary-foreground/80 leading-relaxed max-w-lg text-sm font-body">
-                  Where the forest whispers you awake. Experience mindful luxury in Matheran's 
-                  pristine car-free sanctuary.
+                  {t('footer.description')}
                 </p>
 
                 {/* Newsletter Section */}
                 <div className="bg-primary-foreground/10 rounded-xl p-4 space-y-3 w-full max-w-lg">
                   <h4 className="text-sm font-heading font-semibold flex items-center">
                     <Sparkles className="w-4 h-4 mr-2 text-accent" />
-                    Mountain Mailers
+                    {t('footer.newsletter.title')}
                   </h4>
                   <p className="text-xs text-primary-foreground/70 mb-2">
-                    Musings from the mountains, delivered monthly
+                    {t('footer.newsletter.subtitle')}
                   </p>
                   <div className="flex flex-col sm:flex-row gap-3">
                     <Input 
-                      placeholder="Enter your email" 
+                      placeholder={t('footer.newsletter.placeholder')}
                       className="bg-primary-foreground/10 border-primary-foreground/20 text-primary-foreground placeholder:text-primary-foreground/50 rounded-lg text-sm h-9"
                     />
                     <Button className="bg-accent hover:bg-accent/90 text-accent-foreground rounded-lg px-4 py-2 text-sm whitespace-nowrap h-9">
-                      Subscribe
+                      {t('footer.newsletter.subscribe')}
                     </Button>
                   </div>
                 </div>
@@ -82,38 +75,38 @@ const FooterV5 = () => {
 
             {/* Contact & Links */}
             <div className="space-y-4">
-              <h4 className="text-lg font-heading font-semibold">Connect</h4>
+              <h4 className="text-lg font-heading font-semibold">{t('footer.connect')}</h4>
               
               {/* Contact Info */}
               <div className="space-y-3">
                 <div className="flex items-start space-x-3">
                   <Phone className="w-4 h-4 text-accent mt-1 flex-shrink-0" />
                   <div>
-                    <p className="text-primary-foreground/80 text-xs">24/7 Reservations</p>
-                    <p className="font-medium text-sm">+91 98765 43210</p>
+                    <p className="text-primary-foreground/80 text-xs">{t('footer.contact.reservations')}</p>
+                    <p className="font-medium text-sm">{t('footer.contact.phone')}</p>
                   </div>
                 </div>
                 
                 <div className="flex items-start space-x-3">
                   <Mail className="w-4 h-4 text-accent mt-1 flex-shrink-0" />
                   <div>
-                    <p className="text-primary-foreground/80 text-xs">Email Us</p>
-                    <p className="font-medium text-sm">hello@horselandresort.com</p>
+                    <p className="text-primary-foreground/80 text-xs">{t('footer.contact.emailLabel')}</p>
+                    <p className="font-medium text-sm">{t('footer.contact.email')}</p>
                   </div>
                 </div>
                 
                 <div className="flex items-start space-x-3">
                   <MapPin className="w-4 h-4 text-accent mt-1 flex-shrink-0" />
                   <div>
-                    <p className="text-primary-foreground/80 text-xs">Visit Us</p>
-                    <p className="font-medium text-sm">Matheran, Maharashtra</p>
+                    <p className="text-primary-foreground/80 text-xs">{t('footer.contact.visitLabel')}</p>
+                    <p className="font-medium text-sm">{t('footer.contact.address')}</p>
                   </div>
                 </div>
               </div>
 
               {/* Social Links */}
               <div className="space-y-2">
-                <h5 className="text-sm font-medium text-primary-foreground/90">Follow Us</h5>
+                <h5 className="text-sm font-medium text-primary-foreground/90">{t('footer.followUs')}</h5>
                 <div className="flex space-x-3">
                   {socialLinks.map((social, index) => (
                     <a
@@ -130,17 +123,23 @@ const FooterV5 = () => {
 
               {/* Quick Links */}
               <div className="space-y-2">
-                <h5 className="text-sm font-medium text-primary-foreground/90">Quick Links</h5>
+                <h5 className="text-sm font-medium text-primary-foreground/90">{t('footer.quickLinks')}</h5>
                 <div className="space-y-1">
-                  {quickLinks.map((link, index) => (
-                    <a 
-                      key={index}
-                      href={`#${link.toLowerCase()}`}
-                      className="block text-primary-foreground/70 hover:text-accent transition-colors text-xs font-body"
-                    >
-                      {link}
-                    </a>
-                  ))}
+                  <a href="#stay" className="block text-primary-foreground/70 hover:text-accent transition-colors text-xs font-body">
+                    {t('navigation.stay')}
+                  </a>
+                  <a href="#experiences" className="block text-primary-foreground/70 hover:text-accent transition-colors text-xs font-body">
+                    {t('navigation.experiences')}
+                  </a>
+                  <a href="#packages" className="block text-primary-foreground/70 hover:text-accent transition-colors text-xs font-body">
+                    {t('packages.title')}
+                  </a>
+                  <a href="#journal" className="block text-primary-foreground/70 hover:text-accent transition-colors text-xs font-body">
+                    {t('navigation.journal')}
+                  </a>
+                  <a href="#contact" className="block text-primary-foreground/70 hover:text-accent transition-colors text-xs font-body">
+                    {t('navigation.contact')}
+                  </a>
                 </div>
               </div>
             </div>
@@ -155,31 +154,34 @@ const FooterV5 = () => {
               onClick={() => setIsPoliciesOpen(!isPoliciesOpen)}
               className="flex items-center justify-between bg-primary-foreground/10 rounded-lg p-3 hover:bg-primary-foreground/20 transition-colors md:hidden"
             >
-              <span className="text-sm font-medium">Policies & Legal</span>
+              <span className="text-sm font-medium">{t('footer.policies')}</span>
               {isPoliciesOpen ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
             </button>
             
             {/* Show policies on desktop, or when expanded on mobile */}
             <div className={`${isPoliciesOpen ? 'block' : 'hidden'} md:block`}>
               <div className="flex flex-wrap items-center justify-center md:justify-start gap-4 text-sm">
-                {policies.map((policy, index) => (
-                  <a
-                    key={index}
-                    href={`#${policy.toLowerCase().replace(' ', '-')}`}
-                    className="text-primary-foreground/60 hover:text-accent transition-colors font-body"
-                  >
-                    {policy}
-                  </a>
-                ))}
+                <a href="#privacy-policy" className="text-primary-foreground/60 hover:text-accent transition-colors font-body">
+                  {t('footer.privacyPolicy')}
+                </a>
+                <a href="#booking-terms" className="text-primary-foreground/60 hover:text-accent transition-colors font-body">
+                  {t('footer.bookingTerms')}
+                </a>
+                <a href="#cancellation" className="text-primary-foreground/60 hover:text-accent transition-colors font-body">
+                  {t('footer.cancellation')}
+                </a>
+                <a href="#terms-of-service" className="text-primary-foreground/60 hover:text-accent transition-colors font-body">
+                  {t('footer.termsOfService')}
+                </a>
               </div>
             </div>
             
             <div className="text-center">
               <p className="text-primary-foreground/60 text-xs font-body">
-                © 2024 Horseland Resort. All rights reserved.
+                {t('footer.rights')}
               </p>
               <p className="text-primary-foreground/60 text-xs font-body">
-                Crafted with ❤️ for sustainable luxury
+                {t('footer.crafted')}
               </p>
             </div>
           </div>

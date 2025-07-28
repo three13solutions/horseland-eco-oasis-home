@@ -1,8 +1,10 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
 import { ArrowRight, Mountain, Utensils, Flower2, Activity } from 'lucide-react';
 
 const ExperiencesTeaserV5 = () => {
+  const { t } = useTranslation();
   const [activeIndex, setActiveIndex] = useState(0);
   const [isAutoplay, setIsAutoplay] = useState(true);
   const autoplayRef = useRef(null);
@@ -69,11 +71,11 @@ const ExperiencesTeaserV5 = () => {
         {/* Section Header */}
         <div className="text-center mb-16">
           <h2 className="text-4xl md:text-6xl font-bold text-foreground mb-6">
-            Curated
-            <span className="block text-primary italic">Experiences</span>
+            {t('experiences.title')}
+            <span className="block text-primary italic">{t('experiences.titleHighlight')}</span>
           </h2>
           <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
-            Every moment at Horseland is thoughtfully designed to create lasting memories
+            {t('experiences.subtitle')}
           </p>
         </div>
 
@@ -91,7 +93,7 @@ const ExperiencesTeaserV5 = () => {
                 }`}
               >
                 <exp.icon className="w-5 h-5" />
-                <span className="font-medium">{exp.title}</span>
+                <span className="font-medium">{t(`experiences.${exp.id}.title`)}</span>
               </button>
             ))}
           </div>
@@ -112,16 +114,16 @@ const ExperiencesTeaserV5 = () => {
                   <div className="flex items-center space-x-3 mb-4">
                     <exp.icon className="w-8 h-8 text-primary" />
                     <span className="text-primary font-medium tracking-wider uppercase text-sm">
-                      {exp.subtitle}
+                      {t(`experiences.${exp.id}.subtitle`)}
                     </span>
                   </div>
                   
                   <h3 className="text-4xl md:text-5xl font-bold text-foreground mb-6">
-                    {exp.title}
+                    {t(`experiences.${exp.id}.title`)}
                   </h3>
                   
                   <p className="text-lg text-muted-foreground leading-relaxed mb-8">
-                    {exp.description}
+                    {t(`experiences.${exp.id}.description`)}
                   </p>
                 </div>
 
@@ -136,7 +138,7 @@ const ExperiencesTeaserV5 = () => {
                 </div>
 
                 <Button className="bg-gradient-to-r from-primary to-accent hover:shadow-xl transform hover:scale-105 transition-all duration-300 text-lg px-8 py-3">
-                  Explore {exp.title}
+                  {t('experiences.explore')} {t(`experiences.${exp.id}.title`)}
                   <ArrowRight className="ml-2 h-5 w-5" />
                 </Button>
               </div>
@@ -157,8 +159,8 @@ const ExperiencesTeaserV5 = () => {
                   <div className="flex items-center space-x-3">
                     <exp.icon className="w-6 h-6 text-primary" />
                     <div>
-                      <div className="font-bold text-foreground">{exp.title}</div>
-                      <div className="text-sm text-muted-foreground">Premium Experience</div>
+                      <div className="font-bold text-foreground">{t(`experiences.${exp.id}.title`)}</div>
+                      <div className="text-sm text-muted-foreground">{t('experiences.premiumExperience')}</div>
                     </div>
                   </div>
                 </div>

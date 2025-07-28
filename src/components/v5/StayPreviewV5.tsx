@@ -1,8 +1,10 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
 import { ArrowRight, Sparkles } from 'lucide-react';
 
 const StayPreviewV5 = () => {
+  const { t } = useTranslation();
   const rooms = [
     {
       id: 1,
@@ -39,10 +41,10 @@ const StayPreviewV5 = () => {
         {/* Section Header */}
         <div className="text-center mb-16">
           <h2 className="text-3xl md:text-4xl font-serif font-bold text-foreground mb-6">
-            Your Perfect Stay <span className="text-primary">Awaits</span>
+            {t('stay.title')} <span className="text-primary">{t('stay.titleHighlight')}</span>
           </h2>
           <p className="text-lg text-muted-foreground max-w-3xl mx-auto">
-            Thoughtfully designed accommodations that blend comfort with nature's tranquility. Each room tells a story of comfort, elegance, and natural beauty - find accommodation that matches your mountain getaway dreams
+            {t('stay.description')}
           </p>
         </div>
 
@@ -59,7 +61,7 @@ const StayPreviewV5 = () => {
               {index === 1 && (
                 <div className="absolute top-4 left-4 z-20 bg-primary text-primary-foreground px-3 py-1 rounded-full text-sm font-medium flex items-center">
                   <Sparkles className="w-4 h-4 mr-1" />
-                  Most Popular
+                  {t('stay.mostPopular')}
                 </div>
               )}
 
@@ -74,9 +76,9 @@ const StayPreviewV5 = () => {
                 
                 {/* Price Badge */}
                 <div className="absolute top-4 right-4 bg-white/90 backdrop-blur-sm rounded-full px-4 py-2 text-left">
-                  <div className="text-xs text-muted-foreground mb-1">Starting from</div>
+                  <div className="text-xs text-muted-foreground mb-1">{t('stay.startingFrom')}</div>
                   <span className="text-2xl font-bold text-foreground">{room.price}</span>
-                  <span className="text-sm text-muted-foreground">/night</span>
+                  <span className="text-sm text-muted-foreground">/{t('stay.perNight')}</span>
                 </div>
               </div>
 
@@ -112,7 +114,7 @@ const StayPreviewV5 = () => {
                       : 'bg-foreground hover:bg-foreground/90'
                   } hover:shadow-lg transform hover:scale-105 transition-all duration-300`}
                 >
-                  View Details
+                  {t('stay.viewDetails')}
                   <ArrowRight className="ml-2 h-4 w-4" />
                 </Button>
               </div>
@@ -123,21 +125,21 @@ const StayPreviewV5 = () => {
         {/* Can't decide? CTA Box */}
         <div className="text-center mt-12 p-6 md:p-8 bg-gradient-to-r from-primary/10 to-accent/10 rounded-2xl border border-primary/20">
           <h3 className="text-xl md:text-2xl font-bold text-foreground mb-4">
-            Can't decide? We'll help you choose!
+            {t('stay.undecided.title')}
           </h3>
           <p className="text-muted-foreground mb-6">
-            Call us for personalized recommendations based on your needs and budget.
+            {t('stay.undecided.description')}
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
             <Button className="bg-gradient-to-r from-primary to-accent">
-              Call: +91 98765 43210
+              {t('stay.undecided.call')}
             </Button>
             <Button variant="outline">
-              WhatsApp us
+              {t('stay.undecided.whatsapp')}
             </Button>
             <a href="/stay">
               <Button variant="outline" className="hover:bg-primary hover:text-primary-foreground transition-all duration-300">
-                View All Accommodations
+                {t('stay.undecided.viewAll')}
                 <ArrowRight className="ml-2 h-4 w-4" />
               </Button>
             </a>

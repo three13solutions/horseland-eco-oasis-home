@@ -71,7 +71,12 @@
     "startingFrom": "Starting from",
     "perNight": "/night",
     "viewDetails": "View Details",
-    "cantDecide": {
+    "titleHighlight": "Awaits",
+    "mostPopular": "Most Popular",
+    "startingFrom": "Starting from",
+    "perNight": "/night",
+    "viewDetails": "View Details",
+    "undecided": {
       "title": "Can't decide? We'll help you choose!",
       "description": "Call us for personalized recommendations based on your needs and budget.",
       "call": "Call: +91 98765 43210",
@@ -103,23 +108,70 @@
       "description": "Action-packed itinerary for adventure enthusiasts with thrilling outdoor activities"
     }
   },
+  "experiences": {
+    "title": "Curated",
+    "titleHighlight": "Experiences",
+    "subtitle": "Every moment at Horseland is thoughtfully designed to create lasting memories",
+    "explore": "Explore",
+    "premiumExperience": "Premium Experience",
+    "activities": {
+      "title": "Mountain Adventures",
+      "subtitle": "Embrace the Wild",
+      "description": "From horseback rides along red-earth trails to guided forest walks and heritage toy train journeys, discover Matheran's natural wonders through curated adventures."
+    },
+    "dining": {
+      "title": "Culinary Excellence",
+      "subtitle": "Buffet Only, Cooked with Purpose",
+      "description": "Our zero-waste kitchen philosophy meets gourmet excellence. Savor locally-sourced ingredients transformed into memorable dining experiences with panoramic mountain views."
+    },
+    "wellness": {
+      "title": "Spa & Wellness",
+      "subtitle": "Rejuvenate Your Soul",
+      "description": "Ancient Ayurvedic traditions meet modern wellness techniques in our mountain spa. Experience therapeutic treatments designed to restore balance and vitality."
+    }
+  },
+  "reviews": {
+    "title": "What Our",
+    "titleHighlight": "Guests",
+    "titleSuffix": "Say",
+    "subtitle": "See why families and couples choose Horseland for their Matheran stay and hear from travelers who found their perfect mountain escape at Horseland",
+    "stats": {
+      "averageRating": "Average Rating",
+      "happyGuests": "Happy Guests",
+      "wouldReturn": "Would Return",
+      "startingPrice": "Starting Price"
+    },
+    "cta": {
+      "title": "Join Our Happy Guests",
+      "description": "Continue to read more stories on TripAdvisor 4.8/5 and Google Reviews 4.9/5 or Book your stay today and create your own memorable experience in Matheran.",
+      "bookStay": "Book Your Stay",
+      "viewAllReviews": "View All Reviews"
+    }
+  },
   "footer": {
     "description": "Where the forest whispers you awake. Experience mindful luxury in Matheran's pristine car-free sanctuary.",
     "newsletter": {
       "title": "Mountain Mailers",
-      "description": "Musings from the mountains, delivered monthly",
+      "subtitle": "Musings from the mountains, delivered monthly",
       "placeholder": "Enter your email",
       "subscribe": "Subscribe"
     },
     "connect": "Connect",
     "contact": {
       "reservations": "24/7 Reservations",
-      "email": "Email Us",
-      "visit": "Visit Us"
+      "phone": "+91 98765 43210",
+      "emailLabel": "Email Us",
+      "email": "hello@horselandresort.com",
+      "visitLabel": "Visit Us",
+      "address": "Matheran, Maharashtra"
     },
     "followUs": "Follow Us",
     "quickLinks": "Quick Links",
     "policies": "Policies & Legal",
+    "privacyPolicy": "Privacy Policy",
+    "bookingTerms": "Booking Terms",
+    "cancellation": "Cancellation",
+    "termsOfService": "Terms of Service",
     "rights": "© 2024 Horseland Resort. All rights reserved.",
     "crafted": "Crafted with ❤️ for sustainable luxury"
   }
