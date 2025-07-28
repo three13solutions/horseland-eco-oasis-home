@@ -142,58 +142,41 @@ const DynamicFooter = () => {
             </div>
           )}
 
-          {/* Packages & Policies - Third Column */}
-          <div className="md:col-span-2 lg:col-span-2 space-y-6">
-            {/* Packages Section */}
-            <div className="space-y-3">
-              <h3 className="text-lg font-semibold text-background flex items-center">
-                <Package className="w-4 h-4 mr-2 text-primary" />
-                Explore Our Packages
-              </h3>
-              <ul className="space-y-2">
-                <li>
-                  <Link to="/packages" className="text-background/80 hover:text-primary transition-colors hover:translate-x-1 transform duration-200 inline-block text-sm">
-                    Family Adventure Package
-                  </Link>
-                </li>
-                <li>
-                  <Link to="/packages" className="text-background/80 hover:text-primary transition-colors hover:translate-x-1 transform duration-200 inline-block text-sm">
-                    Romantic Getaway
-                  </Link>
-                </li>
-                <li>
-                  <Link to="/packages" className="text-background/80 hover:text-primary transition-colors hover:translate-x-1 transform duration-200 inline-block text-sm">
-                    Wellness Escape
-                  </Link>
-                </li>
-              </ul>
-              <Link 
-                to="/packages" 
-                className="inline-flex items-center text-primary hover:text-primary/80 text-sm font-medium transition-colors"
-              >
-                View All Packages
-                <ExternalLink className="w-3 h-3 ml-1" />
-              </Link>
-            </div>
-
-            {/* Visual Separator */}
-            <div className="border-t border-background/20"></div>
-
-            {/* Policies Section */}
-            <div className="space-y-3">
-              <h3 className="text-lg font-semibold text-background">Policies</h3>
-              {policiesSection && policiesSection.content.links && (
-                <ul className="space-y-2">
-                  {policiesSection.content.links.map((link: any, index: number) => (
-                    <li key={index}>
-                      <Link to={link.href} className="text-background/80 hover:text-primary transition-colors hover:translate-x-1 transform duration-200 inline-block text-sm">
-                        {link.title}
-                      </Link>
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </div>
+          {/* Packages - Third Column */}
+          <div className="md:col-span-2 lg:col-span-2 space-y-4">
+            <h3 className="text-lg font-semibold text-background flex items-center">
+              <Package className="w-4 h-4 mr-2 text-primary" />
+              Explore Our Packages
+            </h3>
+            <ul className="space-y-2">
+              <li>
+                <Link to="/packages" className="text-background/80 hover:text-primary transition-colors hover:translate-x-1 transform duration-200 inline-block text-sm">
+                  Family Adventure Package
+                </Link>
+              </li>
+              <li>
+                <Link to="/packages" className="text-background/80 hover:text-primary transition-colors hover:translate-x-1 transform duration-200 inline-block text-sm">
+                  Romantic Getaway
+                </Link>
+              </li>
+              <li>
+                <Link to="/packages" className="text-background/80 hover:text-primary transition-colors hover:translate-x-1 transform duration-200 inline-block text-sm">
+                  Corporate Retreat
+                </Link>
+              </li>
+              <li>
+                <Link to="/packages" className="text-background/80 hover:text-primary transition-colors hover:translate-x-1 transform duration-200 inline-block text-sm">
+                  Adventure Seeker
+                </Link>
+              </li>
+            </ul>
+            <Link 
+              to="/packages" 
+              className="inline-flex items-center text-primary hover:text-primary/80 text-sm font-medium transition-colors"
+            >
+              View All Packages
+              <ExternalLink className="w-3 h-3 ml-1" />
+            </Link>
           </div>
 
           {/* Connect Section - Fourth Column */}
@@ -251,7 +234,29 @@ const DynamicFooter = () => {
         </div>
 
         {/* Bottom Section */}
-        <div className="border-t border-background/20 mt-12 pt-8">
+        <div className="border-t border-background/20 mt-12 pt-8 space-y-4">
+          {/* Policies Row */}
+          {policiesSection && policiesSection.content.links && (
+            <div className="flex justify-center">
+              <div className="flex flex-wrap gap-1 text-sm text-background/60">
+                {policiesSection.content.links.map((link: any, index: number) => (
+                  <React.Fragment key={index}>
+                    <Link 
+                      to={link.href} 
+                      className="hover:text-primary transition-colors"
+                    >
+                      {link.title}
+                    </Link>
+                    {index < policiesSection.content.links.length - 1 && (
+                      <span className="text-background/40">|</span>
+                    )}
+                  </React.Fragment>
+                ))}
+              </div>
+            </div>
+          )}
+          
+          {/* Copyright Row */}
           <div className="flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
             <p className="text-sm text-background/60">
               {siteSettings.copyright_text}
