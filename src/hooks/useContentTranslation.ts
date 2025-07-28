@@ -1,29 +1,18 @@
 import { useState, useEffect } from 'react';
-import { useTranslation } from 'react-i18next';
 import { supabase } from '@/integrations/supabase/client';
-
-interface Translation {
-  language_code: string;
-  section: string;
-  key: string;
-  value: string;
-}
+import { useTranslation } from 'react-i18next';
 
 export const useContentTranslation = (section?: string) => {
-  const { i18n } = useTranslation();
-  const [dbTranslations, setDbTranslations] = useState<Translation[]>([]);
-  const [loading, setLoading] = useState(false);
-
-  useEffect(() => {
-    loadTranslations();
-  }, [i18n.language]);
+  const { i18n, t } = useTranslation();
+  const [translations, setTranslations] = useState<{ [key: string]: string }>({});
+  const [loading, setLoading] = useState(true);
 
   const loadTranslations = async () => {
-    setLoading(true);
     try {
+      setLoading(true);
       let query = supabase
         .from('translations')
-        .select('*')
+        .select('key, value')
         .eq('language_code', i18n.language);
 
       if (section) {
@@ -32,35 +21,55 @@ export const useContentTranslation = (section?: string) => {
 
       const { data, error } = await query;
 
-      if (error) throw error;
-      setDbTranslations(data || []);
+      if (error) {
+        console.error('Error loading translations:', error);
+        // Fallback to i18next translations
+        setTranslations({});
+        return;
+      }
+
+      const translationMap: { [key: string]: string } = {};
+      data?.forEach((item) => {
+        translationMap[item.key] = item.value;
+      });
+
+      setTranslations(translationMap);
     } catch (error) {
-      console.error('Failed to load translations:', error);
+      console.error('Error in loadTranslations:', error);
+      // Fallback to empty translations
+      setTranslations({});
     } finally {
       setLoading(false);
     }
   };
 
-  // Get translation with fallback to JSON files
+  useEffect(() => {
+    loadTranslations();
+  }, [i18n.language, section]);
+
   const getTranslation = (key: string, fallback?: string) => {
     // First try database translations
-    const dbTranslation = dbTranslations.find(t => t.key === key);
-    if (dbTranslation) {
-      return dbTranslation.value;
+    if (translations[key]) {
+      return translations[key];
     }
+    
+    // Fallback to i18next translations (JSON files)
+    const i18nextValue = t(key, { defaultValue: null });
+    if (i18nextValue && i18nextValue !== key) {
+      return i18nextValue;
+    }
+    
+    // Final fallback
+    return fallback || key;
+  };
 
-    // Fallback to i18n (JSON files)
-    try {
-      return i18n.t(key, { defaultValue: fallback || key });
-    } catch {
-      return fallback || key;
-    }
+  const refreshTranslations = async () => {
+    await loadTranslations();
   };
 
   return {
     getTranslation,
     loading,
-    dbTranslations,
-    refreshTranslations: loadTranslations
+    refreshTranslations,
   };
 };
