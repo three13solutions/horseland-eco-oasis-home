@@ -207,12 +207,12 @@ const DynamicFooter = () => {
                     <div>
                       <p className="text-background/80 text-xs">Visit Us</p>
                       <a 
-                        href="https://maps.google.com/?q=Horseland+Hotel+Matheran+Maharashtra+India"
+                        href="https://maps.google.com/?q=Horseland+Hotel+Matheran+Hill+Station+Maharashtra+India"
                         target="_blank"
                         rel="noopener noreferrer"
                         className="font-medium text-background text-sm hover:text-primary transition-colors cursor-pointer"
                       >
-                        Near Railway Station, Matheran<br />Maharashtra, India 410102
+                        Matheran Hill Station<br />Maharashtra, India 410102
                       </a>
                     </div>
                   </div>
@@ -229,7 +229,7 @@ const DynamicFooter = () => {
             {policiesSection && policiesSection.content.links && (
               <div className="md:col-span-2 lg:col-span-2">
                 <h4 className="text-sm font-semibold text-background mb-3">Policies</h4>
-                <div className="flex flex-wrap gap-1 text-sm text-background/60">
+                <div className="flex flex-nowrap gap-1 text-sm text-background/60 whitespace-nowrap">
                   {policiesSection.content.links.map((link: any, index: number) => (
                     <React.Fragment key={index}>
                       <Link 
