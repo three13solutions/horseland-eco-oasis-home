@@ -52,7 +52,7 @@ const FooterV4 = () => {
               />
               <div>
                 <h3 className="text-xl font-bold">HORSELAND</h3>
-                <p className="text-sm text-background/70 uppercase tracking-wider">Mountain Spa & Hotel</p>
+                <p className="text-sm text-background/70 uppercase tracking-wider">Hotel</p>
               </div>
             </div>
             
@@ -167,7 +167,7 @@ const FooterV4 = () => {
         {/* Copyright */}
         <div className="border-t border-background/20 pt-6 mt-6 text-center">
           <p className="text-sm text-background/60">
-            © 2024 Horseland Hotel & Mountain Spa. All rights reserved. | 
+            © 2024 Horseland Hotel. All rights reserved. | 
             <span className="text-background/40"> Crafted with ♡ for mountain lovers</span>
           </p>
         </div>

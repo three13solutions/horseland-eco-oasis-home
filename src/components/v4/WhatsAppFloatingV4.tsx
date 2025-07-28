@@ -5,7 +5,7 @@ const WhatsAppFloatingV4 = () => {
   const [isOpen, setIsOpen] = useState(false);
 
   const whatsappNumber = "+919876543210";
-  const defaultMessage = "Hi! I'm interested in booking a stay at Horseland Hotel & Mountain Spa. Could you please help me with availability and rates?";
+  const defaultMessage = "Hi! I'm interested in booking a stay at Horseland Hotel. Could you please help me with availability and rates?";
 
   const handleWhatsAppClick = () => {
     if (isOpen) {

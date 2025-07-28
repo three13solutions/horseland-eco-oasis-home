@@ -42,7 +42,7 @@ const FooterV2 = () => {
                 />
                 <div>
                   <h3 className="text-3xl font-bold">HORSELAND</h3>
-                  <p className="text-background/80 text-sm uppercase tracking-wider">Mountain Spa Resort</p>
+                  <p className="text-background/80 text-sm uppercase tracking-wider">Hotel</p>
                 </div>
               </div>
               

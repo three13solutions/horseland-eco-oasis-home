@@ -18,7 +18,7 @@ const Policies = () => {
               Our <span className="text-primary">Policies</span>
             </h1>
             <p className="text-lg text-muted-foreground">
-              Clear, transparent policies to ensure you have the best possible experience at Horseland Hotel & Mountain Spa.
+              Clear, transparent policies to ensure you have the best possible experience at Horseland Hotel.
             </p>
           </div>
         </div>

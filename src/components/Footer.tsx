@@ -36,7 +36,7 @@ const Footer = () => {
             <div className="flex items-center space-x-3 mb-4">
               <img 
                 src="/lovable-uploads/24f5ee9b-ce5a-4b86-a2d8-7ca42e0a78cf.png" 
-                alt="Horseland Hotel & Mountain Spa Logo" 
+                alt="Horseland Hotel Logo" 
                 className="h-10 w-10"
               />
               <h3 className="text-xl font-bold">Horseland</h3>
@@ -144,7 +144,7 @@ const Footer = () => {
         <div className="border-t border-background/20 pt-8">
           <div className="flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
             <p className="text-background/60 text-sm">
-              © 2024 Horseland Hotel & Mountain Spa. All rights reserved.
+              © 2024 Horseland Hotel. All rights reserved.
             </p>
             <p className="text-background/60 text-sm">
               Crafted with care for sustainable luxury

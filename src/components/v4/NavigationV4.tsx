@@ -48,7 +48,7 @@ const NavigationV4 = () => {
             />
             <div>
               <h1 className="text-xl md:text-2xl font-bold text-foreground tracking-wide">HORSELAND</h1>
-              <p className="text-xs text-muted-foreground uppercase tracking-wider hidden sm:block">Mountain Spa & Hotel</p>
+              <p className="text-xs text-muted-foreground uppercase tracking-wider hidden sm:block">Hotel</p>
             </div>
           </div>
 

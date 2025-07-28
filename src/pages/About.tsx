@@ -27,7 +27,7 @@ const About = () => {
           </h1>
           <p className="text-lg md:text-xl font-body opacity-90 max-w-2xl mx-auto">
             Where time slows down and nature whispers its ancient secrets. 
-            Welcome to Horseland Hotel & Mountain Spa.
+            Welcome to Horseland Hotel.
           </p>
         </div>
       </section>

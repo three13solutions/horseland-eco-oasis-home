@@ -39,7 +39,7 @@ const Navigation = () => {
           <a href="/" className="flex items-center space-x-3">
             <img 
               src="/lovable-uploads/24f5ee9b-ce5a-4b86-a2d8-7ca42e0a78cf.png" 
-              alt="Horseland Hotel & Mountain Spa Logo" 
+              alt="Horseland Hotel Logo" 
               className="h-12 w-12"
             />
             <span className="text-xl font-bold text-primary hidden sm:block">

@@ -94,7 +94,7 @@ const Contact = () => {
                 </h2>
                 <p className="text-muted-foreground mb-8">
                   Our team is available to assist you with your booking and answer any questions 
-                  about your stay at Horseland Hotel & Mountain Spa.
+                  about your stay at Horseland Hotel.
                 </p>
               </div>
 
@@ -108,7 +108,7 @@ const Contact = () => {
                       <div>
                         <h3 className="font-semibold text-foreground mb-2">Address</h3>
                         <p className="text-muted-foreground">
-                          Horseland Hotel & Mountain Spa<br />
+                          Horseland Hotel<br />
                           Near Dasturi Point, Matheran<br />
                           Maharashtra 410102, India
                         </p>

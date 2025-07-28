@@ -182,7 +182,7 @@ const NavigationV5 = () => {
                 {siteSettings.site_title}
               </h1>
               <p className="text-xs text-muted-foreground uppercase tracking-wider hidden sm:block">
-                Mountain Spa & Hotel
+                Hotel
               </p>
             </div>
           </Link>
