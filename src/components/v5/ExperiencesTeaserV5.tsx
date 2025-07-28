@@ -1,10 +1,10 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { useTranslation } from 'react-i18next';
+import { useTranslationContext } from '@/components/admin/TranslationProvider';
 import { Button } from '@/components/ui/button';
 import { ArrowRight, Mountain, Utensils, Flower2, Activity } from 'lucide-react';
 
 const ExperiencesTeaserV5 = () => {
-  const { t } = useTranslation();
+  const { getTranslation } = useTranslationContext();
   const [activeIndex, setActiveIndex] = useState(0);
   const [isAutoplay, setIsAutoplay] = useState(true);
   const autoplayRef = useRef(null);
@@ -71,11 +71,11 @@ const ExperiencesTeaserV5 = () => {
         {/* Section Header */}
         <div className="text-center mb-16">
           <h2 className="text-4xl md:text-6xl font-bold text-foreground mb-6">
-            {t('experiences.title')}
-            <span className="block text-primary italic">{t('experiences.titleHighlight')}</span>
+            {getTranslation('experiences.title', 'Curated')}
+            <span className="block text-primary italic">{getTranslation('experiences.titleHighlight', 'Experiences')}</span>
           </h2>
           <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
-            {t('experiences.subtitle')}
+            {getTranslation('experiences.subtitle', 'Discover the essence of Matheran through thoughtfully designed experiences that connect you with nature, culture, and wellness.')}
           </p>
         </div>
 
@@ -93,7 +93,7 @@ const ExperiencesTeaserV5 = () => {
                 }`}
               >
                 <exp.icon className="w-5 h-5" />
-                <span className="font-medium">{t(`experiences.${exp.id}.title`)}</span>
+                <span className="font-medium">{getTranslation(`experiences.${exp.id}.title`, exp.title)}</span>
               </button>
             ))}
           </div>
@@ -114,16 +114,16 @@ const ExperiencesTeaserV5 = () => {
                   <div className="flex items-center space-x-3 mb-4">
                     <exp.icon className="w-8 h-8 text-primary" />
                     <span className="text-primary font-medium tracking-wider uppercase text-sm">
-                      {t(`experiences.${exp.id}.subtitle`)}
+                      {getTranslation(`experiences.${exp.id}.subtitle`, exp.subtitle)}
                     </span>
                   </div>
                   
                   <h3 className="text-4xl md:text-5xl font-bold text-foreground mb-6">
-                    {t(`experiences.${exp.id}.title`)}
+                    {getTranslation(`experiences.${exp.id}.title`, exp.title)}
                   </h3>
                   
                   <p className="text-lg text-muted-foreground leading-relaxed mb-8">
-                    {t(`experiences.${exp.id}.description`)}
+                    {getTranslation(`experiences.${exp.id}.description`, exp.description)}
                   </p>
                 </div>
 
@@ -138,7 +138,7 @@ const ExperiencesTeaserV5 = () => {
                 </div>
 
                 <Button className="bg-gradient-to-r from-primary to-accent hover:shadow-xl transform hover:scale-105 transition-all duration-300 text-lg px-8 py-3">
-                  {t('experiences.explore')} {t(`experiences.${exp.id}.title`)}
+                  {getTranslation('experiences.explore', 'Explore')} {getTranslation(`experiences.${exp.id}.title`, exp.title)}
                   <ArrowRight className="ml-2 h-5 w-5" />
                 </Button>
               </div>
@@ -159,8 +159,8 @@ const ExperiencesTeaserV5 = () => {
                   <div className="flex items-center space-x-3">
                     <exp.icon className="w-6 h-6 text-primary" />
                     <div>
-                      <div className="font-bold text-foreground">{t(`experiences.${exp.id}.title`)}</div>
-                      <div className="text-sm text-muted-foreground">{t('experiences.premiumExperience')}</div>
+                      <div className="font-bold text-foreground">{getTranslation(`experiences.${exp.id}.title`, exp.title)}</div>
+                      <div className="text-sm text-muted-foreground">{getTranslation('experiences.premiumExperience', 'Premium Experience')}</div>
                     </div>
                   </div>
                 </div>

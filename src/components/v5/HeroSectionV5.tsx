@@ -14,23 +14,23 @@ const HeroSectionV5 = () => {
   const slides = [
     {
       type: 'image',
-      content: "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80",
-      alt: "Mountain sunrise view from Horseland"
+      content: "/lovable-uploads/1c90ed68-942a-4c4c-8ec9-b6962d7d5248.png",
+      alt: "Scenic mountain viewpoint in Matheran"
     },
     {
       type: 'image',
-      content: "https://images.unsplash.com/photo-1441974231531-c6227db76b6e?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2071&q=80",
-      alt: "Forest trail in Matheran"
+      content: "/lovable-uploads/11ec8802-2ca9-4b77-bfc6-a8c0e23527e4.png",
+      alt: "Matheran toy train crossing waterfall"
     },
     {
       type: 'image',
-      content: "https://images.unsplash.com/photo-1469474968028-56623f02e42e?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2069&q=80",
-      alt: "Peaceful mountain landscape"
+      content: "/lovable-uploads/c5804249-2e50-49d1-b8da-6c999d32f326.png",
+      alt: "I Love Matheran train station"
     },
     {
       type: 'image',
-      content: "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80",
-      alt: "Roadway to Matheran"
+      content: "/lovable-uploads/1c90ed68-942a-4c4c-8ec9-b6962d7d5248.png",
+      alt: "Mountain landscape view from Matheran"
     }
   ];
 

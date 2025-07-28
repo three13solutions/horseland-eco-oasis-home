@@ -2,10 +2,10 @@ import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Heart, Users, Briefcase, TreePine, ArrowRight, ChevronLeft, ChevronRight } from 'lucide-react';
 import useEmblaCarousel from 'embla-carousel-react';
-import { useTranslation } from 'react-i18next';
+import { useTranslationContext } from '@/components/admin/TranslationProvider';
 
 const PackagesPreviewV5 = () => {
-  const { t } = useTranslation();
+  const { getTranslation } = useTranslationContext();
   const [emblaRef, emblaApi] = useEmblaCarousel({ 
     loop: true,
     align: 'start',
@@ -24,33 +24,33 @@ const PackagesPreviewV5 = () => {
   const packages = [
     {
       icon: Heart,
-      tag: t('packages.romantic.tag'),
-      title: t('packages.romantic.title'),
-      description: t('packages.romantic.description'),
+      tag: getTranslation('packages.romantic.tag', 'Romantic'),
+      title: getTranslation('packages.romantic.title', 'Romantic Getaway'),
+      description: getTranslation('packages.romantic.description', 'Perfect for couples seeking intimate moments amidst breathtaking mountain landscapes.'),
       price: "Starting ₹8,500",
       image: "https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=400&h=250&fit=crop"
     },
     {
       icon: Users,
-      tag: t('packages.family.tag'),
-      title: t('packages.family.title'),
-      description: t('packages.family.description'),
+      tag: getTranslation('packages.family.tag', 'Family'),
+      title: getTranslation('packages.family.title', 'Family Adventure'),
+      description: getTranslation('packages.family.description', 'Create lasting memories with activities designed for every member of your family.'),
       price: "Starting ₹12,000",
       image: "https://images.unsplash.com/photo-1511895426328-dc8714191300?w=400&h=250&fit=crop"
     },
     {
       icon: Briefcase,
-      tag: t('packages.corporate.tag'),
-      title: t('packages.corporate.title'),
-      description: t('packages.corporate.description'),
+      tag: getTranslation('packages.corporate.tag', 'Corporate'),
+      title: getTranslation('packages.corporate.title', 'Corporate Retreat'),
+      description: getTranslation('packages.corporate.description', 'Inspire your team with unique team-building experiences in nature\'s tranquil setting.'),
       price: "Starting ₹15,000",
       image: "https://images.unsplash.com/photo-1515187029135-18ee286d815b?w=400&h=250&fit=crop"
     },
     {
       icon: TreePine,
-      tag: t('packages.adventure.tag'),
-      title: t('packages.adventure.title'),
-      description: t('packages.adventure.description'),
+      tag: getTranslation('packages.adventure.tag', 'Adventure'),
+      title: getTranslation('packages.adventure.title', 'Adventure Package'),
+      description: getTranslation('packages.adventure.description', 'For thrill-seekers who want to explore Matheran\'s wilderness through exciting outdoor activities.'),
       price: "Starting ₹16,500",
       image: "https://images.unsplash.com/photo-1551632811-561732d1e306?w=400&h=250&fit=crop"
     }
@@ -61,10 +61,10 @@ const PackagesPreviewV5 = () => {
       <div className="container mx-auto px-4">
         <div className="text-center mb-12">
           <h2 className="text-3xl md:text-4xl font-serif font-bold text-foreground mb-4">
-            {t('packages.title')}
+            {getTranslation('packages.title', 'Tailored Experiences for Every Journey')}
           </h2>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-            {t('packages.subtitle')}
+            {getTranslation('packages.subtitle', 'Choose from our thoughtfully curated packages designed to create unforgettable memories in Matheran\'s pristine wilderness.')}
           </p>
         </div>
 
