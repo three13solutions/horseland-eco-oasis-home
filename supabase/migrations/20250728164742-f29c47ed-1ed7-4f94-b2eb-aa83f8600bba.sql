@@ -1,0 +1,1 @@
+UPDATE navigation_items SET is_active = false WHERE title = 'Packages';
