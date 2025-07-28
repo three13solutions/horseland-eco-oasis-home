@@ -5,6 +5,8 @@ import { Menu, X, Calendar, ChevronDown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
 import BookingModal from '@/components/BookingModal';
+import { useTranslation } from 'react-i18next';
+import LanguageSelector from '@/components/LanguageSelector';
 
 interface NavigationItem {
   id: string;
@@ -21,6 +23,7 @@ interface SiteSettings {
 }
 
 const NavigationV5 = () => {
+  const { t } = useTranslation();
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [navigationItems, setNavigationItems] = useState<NavigationItem[]>([]);
@@ -213,15 +216,18 @@ const NavigationV5 = () => {
             })}
           </div>
 
-          {/* Mobile Menu Button */}
+          {/* Desktop Actions */}
           <div className="flex items-center space-x-3">
+            <div className="hidden lg:block">
+              <LanguageSelector />
+            </div>
             <Button 
               size="sm" 
               className="hidden md:flex bg-primary hover:bg-primary/90 text-primary-foreground"
               onClick={() => setShowBookingModal(true)}
             >
               <Calendar className="w-4 h-4 mr-2" />
-              Book Now
+              {t('navigation.bookNow')}
             </Button>
             
             <button
@@ -267,12 +273,15 @@ const NavigationV5 = () => {
                     </div>
                   );
                 })}
+                <div className="lg:hidden mt-4 mb-2">
+                  <LanguageSelector />
+                </div>
                 <Button 
-                  className="mt-4 w-full bg-primary hover:bg-primary/90 text-primary-foreground"
+                  className="mt-2 w-full bg-primary hover:bg-primary/90 text-primary-foreground"
                   onClick={() => setShowBookingModal(true)}
                 >
                   <Calendar className="w-4 h-4 mr-2" />
-                  Book Now
+                  {t('navigation.bookNow')}
                 </Button>
               </div>
             </div>

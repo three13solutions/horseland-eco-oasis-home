@@ -1,0 +1,52 @@
+{
+  "navigation": {
+    "stay": "Stay",
+    "experiences": "Experiences",
+    "dining": "Dining",
+    "wellness": "Wellness",
+    "about": "About",
+    "journal": "Journal",
+    "contact": "Contact",
+    "bookNow": "Book Now"
+  },
+  "hero": {
+    "title": "Discover Matheran's Magic",
+    "subtitle": "Where Every Moment Becomes a Cherished Memory",
+    "description": "Experience luxury amidst the Western Ghats at Horseland Hotel & Mountain Spa. Your perfect mountain getaway awaits.",
+    "checkIn": "Check In",
+    "checkOut": "Check Out",
+    "guests": "Guests",
+    "search": "Search Rooms"
+  },
+  "packages": {
+    "title": "Curated Experiences",
+    "subtitle": "Choose Your Perfect Mountain Getaway",
+    "romantic": {
+      "tag": "ROMANTIC",
+      "title": "Romantic Retreat",
+      "description": "Intimate escapes with candlelit dinners, couple spa treatments, and scenic views"
+    },
+    "family": {
+      "tag": "FAMILY",
+      "title": "Family Adventure",
+      "description": "Fun-filled activities for all ages with spacious accommodations and kid-friendly amenities"
+    },
+    "corporate": {
+      "tag": "CORPORATE",
+      "title": "Corporate Getaway",
+      "description": "Team building activities and conference facilities in a serene mountain setting"
+    },
+    "adventure": {
+      "tag": "ADVENTURE",
+      "title": "Adventure Seeker",
+      "description": "Action-packed itinerary for adventure enthusiasts with thrilling outdoor activities"
+    }
+  },
+  "footer": {
+    "description": "Experience luxury amidst the Western Ghats at Horseland Hotel & Mountain Spa.",
+    "quickLinks": "Quick Links",
+    "contact": "Contact",
+    "followUs": "Follow Us",
+    "rights": "All rights reserved."
+  }
+}

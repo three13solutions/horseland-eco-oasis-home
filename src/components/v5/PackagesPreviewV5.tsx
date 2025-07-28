@@ -2,8 +2,10 @@ import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Heart, Users, Briefcase, TreePine, ArrowRight, ChevronLeft, ChevronRight } from 'lucide-react';
 import useEmblaCarousel from 'embla-carousel-react';
+import { useTranslation } from 'react-i18next';
 
 const PackagesPreviewV5 = () => {
+  const { t } = useTranslation();
   const [emblaRef, emblaApi] = useEmblaCarousel({ 
     loop: true,
     align: 'start',
@@ -22,33 +24,33 @@ const PackagesPreviewV5 = () => {
   const packages = [
     {
       icon: Heart,
-      tag: "ROMANTIC",
-      title: "Couple Getaway",
-      description: "Intimate forest dinners, spa treatments, and private sunset views",
+      tag: t('packages.romantic.tag'),
+      title: t('packages.romantic.title'),
+      description: t('packages.romantic.description'),
       price: "Starting ₹8,500",
       image: "https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=400&h=250&fit=crop"
     },
     {
       icon: Users,
-      tag: "FAMILY",
-      title: "Family Escape",
-      description: "Adventure activities, family rooms, and memories to cherish forever",
+      tag: t('packages.family.tag'),
+      title: t('packages.family.title'),
+      description: t('packages.family.description'),
       price: "Starting ₹12,000",
       image: "https://images.unsplash.com/photo-1511895426328-dc8714191300?w=400&h=250&fit=crop"
     },
     {
       icon: Briefcase,
-      tag: "CORPORATE",
-      title: "Corporate Offsite",
-      description: "Team building activities, conference facilities, and productive retreats",
+      tag: t('packages.corporate.tag'),
+      title: t('packages.corporate.title'),
+      description: t('packages.corporate.description'),
       price: "Starting ₹15,000",
       image: "https://images.unsplash.com/photo-1515187029135-18ee286d815b?w=400&h=250&fit=crop"
     },
     {
       icon: TreePine,
-      tag: "ADVENTURE",
-      title: "Adventure Seeker",
-      description: "Action-packed itinerary for adventure enthusiasts with thrilling outdoor activities",
+      tag: t('packages.adventure.tag'),
+      title: t('packages.adventure.title'),
+      description: t('packages.adventure.description'),
       price: "Starting ₹16,500",
       image: "https://images.unsplash.com/photo-1551632811-561732d1e306?w=400&h=250&fit=crop"
     }
@@ -59,10 +61,10 @@ const PackagesPreviewV5 = () => {
       <div className="container mx-auto px-4">
         <div className="text-center mb-12">
           <h2 className="text-3xl md:text-4xl font-serif font-bold text-foreground mb-4">
-            Special Packages for Every Kind of <span className="text-primary">Guest</span>
+            {t('packages.title')}
           </h2>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-            Thoughtfully curated experiences designed for different travel styles and group dynamics
+            {t('packages.subtitle')}
           </p>
         </div>
 
