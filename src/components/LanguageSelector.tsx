@@ -13,6 +13,11 @@ const languages = [
   { code: 'en', name: 'English', flag: '🇺🇸' },
   { code: 'hi', name: 'हिंदी', flag: '🇮🇳' },
   { code: 'mr', name: 'मराठी', flag: '🇮🇳' },
+  { code: 'gu', name: 'ગુજરાતી', flag: '🇮🇳' },
+  { code: 'ta', name: 'தமிழ்', flag: '🇮🇳' },
+  { code: 'te', name: 'తెలుగు', flag: '🇮🇳' },
+  { code: 'bn', name: 'বাংলা', flag: '🇮🇳' },
+  { code: 'pa', name: 'ਪੰਜਾਬੀ', flag: '🇮🇳' },
 ];
 
 const LanguageSelector = () => {
@@ -29,21 +34,21 @@ const LanguageSelector = () => {
       <DropdownMenuTrigger asChild>
         <Button variant="ghost" size="sm" className="gap-2">
           <Globe className="h-4 w-4" />
-          <span className="hidden sm:inline">{currentLanguage.flag}</span>
-          <span className="text-xs font-medium">{currentLanguage.code.toUpperCase()}</span>
+          <span className="hidden sm:inline text-sm font-medium">{currentLanguage.name}</span>
+          <span className="sm:hidden text-sm font-medium">{currentLanguage.code.toUpperCase()}</span>
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="bg-background border border-border/20 shadow-lg min-w-[160px]">
+      <DropdownMenuContent align="end" className="bg-background/95 backdrop-blur-sm border border-border/20 shadow-xl min-w-[180px] z-50">
         {languages.map((language) => (
           <DropdownMenuItem
             key={language.code}
             onClick={() => handleLanguageChange(language.code)}
-            className={`flex items-center gap-3 px-3 py-2 cursor-pointer hover:bg-muted ${
-              i18n.language === language.code ? 'bg-muted text-primary font-medium' : ''
+            className={`flex items-center gap-3 px-4 py-3 cursor-pointer transition-colors hover:bg-muted/50 ${
+              i18n.language === language.code ? 'bg-primary/10 text-primary font-medium border-l-2 border-primary' : ''
             }`}
           >
-            <span className="text-lg">{language.flag}</span>
-            <span className="text-sm">{language.name}</span>
+            <span className="text-base">{language.flag}</span>
+            <span className="text-sm font-medium">{language.name}</span>
           </DropdownMenuItem>
         ))}
       </DropdownMenuContent>
