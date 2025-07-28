@@ -24,7 +24,7 @@ const StayPreview = () => {
       name: 'Valley Suite',
       price: '₹12,000',
       image: 'https://images.unsplash.com/photo-1513836279014-a89f7a76ae86?w=400&h=300&fit=crop',
-      description: 'Luxury suite overlooking the valley'
+      description: 'Comfortable suite overlooking the valley'
     },
     {
       id: 3,

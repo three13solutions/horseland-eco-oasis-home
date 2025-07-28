@@ -16,7 +16,7 @@ const BookingModal: React.FC<BookingModalProps> = ({ isOpen, onClose }) => {
         <div className="absolute inset-0 z-0">
           <img 
             src="https://images.unsplash.com/photo-1566665797739-1674de7a421a" 
-            alt="Luxury hotel bedroom in Matheran" 
+            alt="Comfortable hotel bedroom in Matheran" 
             className="w-full h-full object-cover animate-pulse"
           />
           <div className="absolute inset-0 bg-black/70"></div>

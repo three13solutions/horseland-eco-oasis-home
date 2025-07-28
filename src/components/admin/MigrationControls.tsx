@@ -38,7 +38,7 @@ export const MigrationControls = () => {
               },
               welcome: {
                 title: "Welcome to Horseland",
-                description: "Nestled in the heart of Matheran's car-free paradise, Horseland represents more than luxury accommodation—it's a sanctuary where sustainable elegance meets authentic mountain hospitality."
+                description: "Nestled in the heart of Matheran's car-free paradise, Horseland represents more than comfortable accommodation—it's a sanctuary where sustainable elegance meets authentic mountain hospitality."
               },
               packages: {
                 title: "Curated Experiences",
@@ -62,7 +62,7 @@ export const MigrationControls = () => {
                 subtitle: "See why families and couples choose Horseland for their Matheran stay"
               },
               footer: {
-                description: "Where the forest whispers you awake. Experience mindful luxury in Matheran's pristine car-free sanctuary.",
+                description: "Where the forest whispers you awake. Experience mindful comfort in Matheran's pristine car-free sanctuary.",
                 quickLinks: "Quick Links",
                 contact: "Contact",
                 followUs: "Follow Us",

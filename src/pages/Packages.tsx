@@ -46,7 +46,7 @@ const Packages = () => {
         'Champagne on arrival',
         'Late checkout'
       ],
-      includes: 'Luxury accommodation, spa session, romantic dining, activities',
+      includes: 'Comfortable accommodation, spa session, romantic dining, activities',
       bestFor: 'Couples & honeymooners'
     },
     {

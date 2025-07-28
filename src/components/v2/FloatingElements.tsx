@@ -16,7 +16,7 @@ const FloatingElements = () => {
 
   const handleWhatsAppClick = () => {
     const phoneNumber = "+919876543210";
-    const message = "Hi! I'm interested in booking a luxury stay at Horseland Hotel.";
+    const message = "Hi! I'm interested in booking a comfortable stay at Horseland Hotel.";
     const whatsappUrl = `https://wa.me/${phoneNumber}?text=${encodeURIComponent(message)}`;
     window.open(whatsappUrl, '_blank');
   };

@@ -42,8 +42,8 @@ const Footer = () => {
               <h3 className="text-xl font-bold">Horseland</h3>
             </div>
             <p className="text-background/80 mb-6 leading-relaxed">
-              A luxury eco-retreat nestled in Matheran's pristine hills, offering 
-              sustainable hospitality and unforgettable mountain experiences.
+              An affordable eco-retreat nestled in Matheran's pristine hills, offering 
+              comfortable accommodations with experiential mountain experiences.
             </p>
             
             {/* Emergency Contact */}
@@ -147,7 +147,7 @@ const Footer = () => {
               © 2024 Horseland Hotel. All rights reserved.
             </p>
             <p className="text-background/60 text-sm">
-              Crafted with care for sustainable luxury
+              Crafted with care for sustainable comfort
             </p>
           </div>
         </div>

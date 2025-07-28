@@ -29,7 +29,7 @@ const WelcomeStrip = () => {
             Welcome to Horseland
           </h2>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-            Where luxury meets sustainability in Matheran's embrace
+            Where comfort meets sustainability in Matheran's embrace
           </p>
         </div>
         

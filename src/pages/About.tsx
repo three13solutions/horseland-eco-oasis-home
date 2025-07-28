@@ -93,7 +93,7 @@ const About = () => {
                 His passion for eco-conscious hospitality and deep respect for Matheran's 
                 natural heritage has shaped every aspect of Horseland's philosophy. Under 
                 his leadership, the hotel has become a pioneering example of sustainable 
-                luxury in India's hospitality industry.
+                comfort in India's hospitality industry.
               </p>
               <blockquote className="border-l-4 border-primary pl-4 italic text-muted-foreground">
                 "Hospitality is not just about providing comfort—it's about creating memories 
@@ -287,7 +287,7 @@ const About = () => {
 
           <div className="mt-12">
             <p className="text-muted-foreground font-body italic">
-              "A perfect blend of luxury and sustainability in the heart of nature." 
+              "A perfect blend of comfort and sustainability in the heart of nature." 
               <br />— Travel + Leisure India
             </p>
           </div>

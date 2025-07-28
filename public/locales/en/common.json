@@ -19,7 +19,7 @@
   },
   "welcome": {
     "title": "Welcome to Horseland",
-    "description": "Nestled in the heart of Matheran's car-free paradise, Horseland represents more than luxury accommodation—it's a sanctuary where sustainable elegance meets authentic mountain hospitality.",
+    "description": "Nestled in the heart of Matheran's car-free paradise, Horseland represents more than comfortable accommodation—it's a sanctuary where sustainable elegance meets authentic mountain hospitality.",
     "features": {
       "noiseEscape": {
         "title": "Zero-noise hill station escape",
@@ -150,7 +150,7 @@
     }
   },
   "footer": {
-    "description": "Where the forest whispers you awake. Experience mindful luxury in Matheran's pristine car-free sanctuary.",
+    "description": "Where the forest whispers you awake. Experience mindful comfort in Matheran's pristine car-free sanctuary.",
     "newsletter": {
       "title": "Mountain Mailers",
       "subtitle": "Musings from the mountains, delivered monthly",
@@ -174,6 +174,6 @@
     "cancellation": "Cancellation",
     "termsOfService": "Terms of Service",
     "rights": "© 2024 Horseland Resort. All rights reserved.",
-    "crafted": "Crafted with ❤️ for sustainable luxury"
+    "crafted": "Crafted with ❤️ for sustainable comfort"
   }
 }

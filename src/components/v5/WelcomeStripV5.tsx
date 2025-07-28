@@ -33,11 +33,11 @@ const WelcomeStripV5 = () => {
               </h2>
               
               <p className="text-lg text-muted-foreground leading-relaxed">
-                Nestled in the heart of Matheran's car-free paradise, Horseland represents more than luxury accommodation—it's a sanctuary where sustainable elegance meets authentic mountain hospitality.
+                Nestled in the heart of Matheran's car-free paradise, Horseland represents more than comfortable accommodation—it's a sanctuary where sustainable elegance meets authentic mountain hospitality.
               </p>
               
               <p className="text-lg text-muted-foreground leading-relaxed">
-                Where sustainable luxury meets the pristine embrace of Matheran's car-free sanctuary. Experience mindful hospitality in India's first eco-conscious hill station.
+                Where sustainable comfort meets the pristine embrace of Matheran's car-free sanctuary. Experience mindful hospitality in India's first eco-conscious hill station.
               </p>
             </div>
 

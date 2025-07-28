@@ -47,8 +47,8 @@ const FooterV2 = () => {
               </div>
               
               <p className="text-background/80 leading-relaxed max-w-lg">
-                Where luxury meets sustainability in Matheran's pristine embrace. 
-                Experience India's first car-free hill station through our eco-conscious 
+                Where comfort meets sustainability in Matheran's pristine embrace. 
+                Experience affordable elegance in India's first car-free hill station through our eco-conscious 
                 hospitality and personalized mountain experiences.
               </p>
 
@@ -161,7 +161,7 @@ const FooterV2 = () => {
                 © 2024 Horseland Resort. All rights reserved.
               </p>
               <p className="text-background/60 text-sm">
-                Crafted with ❤️ for sustainable luxury
+                Crafted with ❤️ for sustainable comfort
               </p>
             </div>
           </div>

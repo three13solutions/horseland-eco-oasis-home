@@ -56,13 +56,13 @@ const HeroSectionV2 = () => {
             
             <h1 className="text-6xl md:text-8xl font-bold text-white mb-6 leading-tight">
               Where
-              <span className="block text-primary italic font-light">Luxury</span>
+              <span className="block text-primary italic font-light">Comfort</span>
               Meets
               <span className="block text-accent">Nature</span>
             </h1>
             
             <p className="text-xl md:text-2xl text-white/90 max-w-3xl mx-auto leading-relaxed">
-              Discover serenity in India's first car-free hill station, where sustainable luxury creates unforgettable moments
+              Discover serenity in India's first car-free hill station, where sustainable comfort creates unforgettable moments
             </p>
           </div>
 

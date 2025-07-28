@@ -15,7 +15,7 @@ const TrustedByV5 = () => {
     {
       name: "Times Travel",
       logo: "https://images.unsplash.com/photo-1504711434969-e33886168f5c?w=120&h=60&fit=crop&crop=center",
-      description: "Eco-Luxury Winner"
+      description: "Eco-Comfort Winner"
     },
     {
       name: "Conde Nast",
@@ -32,7 +32,7 @@ const TrustedByV5 = () => {
             Trusted by <span className="text-primary">Travellers & Leading Publications</span>
           </h2>
           <p className="text-muted-foreground">
-            Recognized for excellence in sustainable luxury hospitality
+            Recognized for excellence in sustainable and affordable hospitality
           </p>
         </div>
 

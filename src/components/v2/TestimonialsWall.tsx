@@ -9,7 +9,7 @@ const TestimonialsWall = () => {
       name: 'Arjun & Priya Mehta',
       location: 'Mumbai',
       rating: 5,
-      text: 'Horseland redefined luxury for us. The zero-noise environment and forest-backed views created the perfect romantic getaway. Every detail was thoughtfully curated.',
+      text: 'Horseland redefined comfort for us. The zero-noise environment and forest-backed views created the perfect romantic getaway. Every detail was thoughtfully curated.',
       image: 'https://images.unsplash.com/photo-1472396961693-142e6e269027?w=100&h=100&fit=crop&crop=face',
       highlight: 'Perfect romantic getaway'
     },
@@ -45,7 +45,7 @@ const TestimonialsWall = () => {
       name: 'Michael Chen',
       location: 'Singapore',
       rating: 5,
-      text: 'Perfect blend of luxury and nature. The wellness programs helped me disconnect from city stress. I left feeling completely rejuvenated and inspired.',
+      text: 'Perfect blend of comfort and nature. The wellness programs helped me disconnect from city stress. I left feeling completely rejuvenated and inspired.',
       image: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&h=100&fit=crop&crop=face',
       highlight: 'Completely rejuvenated'
     },

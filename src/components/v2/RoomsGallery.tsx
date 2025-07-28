@@ -21,7 +21,7 @@ const RoomsGallery = () => {
       price: '₹12,000',
       image: 'https://images.unsplash.com/photo-1513836279014-a89f7a76ae86?w=600&h=400&fit=crop',
       amenities: ['Valley Views', 'Separate Living', 'Jacuzzi', 'Butler Service'],
-      description: 'Spacious luxury with breathtaking valley vistas and premium amenities'
+      description: 'Spacious comfort with breathtaking valley vistas and premium amenities'
     },
     {
       id: 3,
@@ -40,7 +40,7 @@ const RoomsGallery = () => {
         {/* Section Header */}
         <div className="text-center mb-16">
           <h2 className="text-4xl md:text-6xl font-bold text-foreground mb-6">
-            Luxury
+            Comfort
             <span className="block text-primary italic">Accommodations</span>
           </h2>
           <p className="text-xl text-muted-foreground max-w-3xl mx-auto">

@@ -22,7 +22,7 @@ const StayPreviewV5 = () => {
       price: '₹12,000',
       image: 'https://images.unsplash.com/photo-1513836279014-a89f7a76ae86?w=600&h=400&fit=crop',
       amenities: ['Valley Views', 'Separate Living', 'Jacuzzi', 'Butler Service'],
-      description: 'Spacious luxury with breathtaking valley vistas and premium amenities'
+      description: 'Spacious comfort with breathtaking valley vistas and premium amenities'
     },
     {
       id: 3,

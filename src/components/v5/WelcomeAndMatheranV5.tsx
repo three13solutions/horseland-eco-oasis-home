@@ -56,7 +56,7 @@ const WelcomeAndMatheranV5 = () => {
               {getTranslation('welcome.title', 'Welcome to Horseland')}
             </h2>
             <p className="text-lg text-muted-foreground max-w-3xl mx-auto leading-relaxed">
-              {getTranslation('welcome.description', 'Nestled in the heart of Matheran\'s car-free paradise, Horseland represents more than luxury accommodation—it\'s a sanctuary where sustainable elegance meets authentic mountain hospitality.')}
+              {getTranslation('welcome.description', 'Nestled in the heart of Matheran\'s car-free paradise, Horseland represents more than comfortable accommodation—it\'s a sanctuary where sustainable elegance meets authentic mountain hospitality.')}
             </p>
           </div>
           

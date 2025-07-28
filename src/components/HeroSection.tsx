@@ -51,7 +51,7 @@ const HeroSection = () => {
             Escape to Nature's Embrace
           </h1>
           <p className="text-xl md:text-2xl mb-8 opacity-90">
-            Luxury eco-retreat in the heart of Matheran's pristine hills
+            Comfortable eco-retreat in the heart of Matheran's pristine hills
           </p>
           
           {/* Booking Widget */}

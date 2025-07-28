@@ -16,7 +16,7 @@ const BrandStorySection = () => {
     },
     {
       icon: Star,
-      title: 'Unparalleled Luxury',
+      title: 'Unparalleled Comfort',
       description: 'Premium amenities in pristine natural settings'
     },
     {
@@ -50,11 +50,11 @@ const BrandStorySection = () => {
               </div>
               
               <p className="text-lg text-muted-foreground leading-relaxed">
-                Nestled in the heart of Matheran's car-free paradise, Horseland represents more than luxury accommodation—it's a sanctuary where sustainable elegance meets authentic mountain hospitality.
+                Nestled in the heart of Matheran's car-free paradise, Horseland represents more than comfortable accommodation—it's a sanctuary where sustainable elegance meets authentic mountain hospitality.
               </p>
               
               <p className="text-lg text-muted-foreground leading-relaxed">
-                Our commitment to preserving the pristine beauty of the Western Ghats while providing world-class experiences has made us a beacon of responsible luxury tourism.
+                Our commitment to preserving the pristine beauty of the Western Ghats while providing world-class experiences has made us a beacon of responsible and affordable tourism.
               </p>
             </div>
 
