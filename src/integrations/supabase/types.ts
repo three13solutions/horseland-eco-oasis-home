@@ -341,41 +341,109 @@ export type Database = {
         }
         Relationships: []
       }
+      gallery_categories: {
+        Row: {
+          created_at: string | null
+          description: string | null
+          id: string
+          is_active: boolean | null
+          name: string
+          slug: string
+          sort_order: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          name: string
+          slug: string
+          sort_order?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          name?: string
+          slug?: string
+          sort_order?: number | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       gallery_images: {
         Row: {
           alt_text: string | null
+          caption: string | null
           category: string
+          category_id: string | null
           created_at: string
+          guest_handle: string | null
+          guest_name: string | null
+          hardcoded_key: string | null
           id: string
           image_url: string
           is_featured: boolean
+          is_hardcoded: boolean | null
+          likes_count: number | null
+          location: string | null
+          sort_order: number | null
           tags: Json | null
           title: string
           updated_at: string
         }
         Insert: {
           alt_text?: string | null
+          caption?: string | null
           category: string
+          category_id?: string | null
           created_at?: string
+          guest_handle?: string | null
+          guest_name?: string | null
+          hardcoded_key?: string | null
           id?: string
           image_url: string
           is_featured?: boolean
+          is_hardcoded?: boolean | null
+          likes_count?: number | null
+          location?: string | null
+          sort_order?: number | null
           tags?: Json | null
           title: string
           updated_at?: string
         }
         Update: {
           alt_text?: string | null
+          caption?: string | null
           category?: string
+          category_id?: string | null
           created_at?: string
+          guest_handle?: string | null
+          guest_name?: string | null
+          hardcoded_key?: string | null
           id?: string
           image_url?: string
           is_featured?: boolean
+          is_hardcoded?: boolean | null
+          likes_count?: number | null
+          location?: string | null
+          sort_order?: number | null
           tags?: Json | null
           title?: string
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "gallery_images_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "gallery_categories"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       guest_reviews: {
         Row: {

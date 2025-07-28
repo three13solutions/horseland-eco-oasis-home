@@ -1,35 +1,91 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { Camera, Heart, MapPin, Eye, ArrowRight, Share } from 'lucide-react';
+import { Dialog, DialogContent, DialogTrigger } from '@/components/ui/dialog';
+import { Camera, Heart, MapPin, Eye, ArrowRight, Share, ChevronLeft, ChevronRight, X } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
 
 const GalleryV5 = () => {
   const [activeTab, setActiveTab] = useState('hotel');
+  const [galleryImages, setGalleryImages] = useState([]);
+  const [lightboxOpen, setLightboxOpen] = useState(false);
+  const [selectedImageIndex, setSelectedImageIndex] = useState(0);
+  const [loading, setLoading] = useState(true);
 
-  const hotelImages = [
-    { url: "https://images.unsplash.com/photo-1566073771259-6a8506099945?w=800&h=400&fit=crop", caption: "Swimming Pool Paradise", location: "Main Pool Area" },
-    { url: "https://images.unsplash.com/photo-1631049307264-da0ec9d70304?w=600&h=400&fit=crop", caption: "Deluxe Mountain Suite", location: "Premium Wing" },
-    { url: "https://images.unsplash.com/photo-1555939594-58d7cb561ad1?w=600&h=400&fit=crop", caption: "Grand Buffet Dining", location: "Main Restaurant" },
-    { url: "https://images.unsplash.com/photo-1571896349842-33c89424de2d?w=600&h=400&fit=crop", caption: "Executive Bedroom", location: "Heritage Block" },
-    { url: "https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?w=600&h=400&fit=crop", caption: "Spa & Wellness Center", location: "Wellness Wing" },
-    { url: "https://images.unsplash.com/photo-1551632811-561732d1e306?w=600&h=400&fit=crop", caption: "Horse Riding Arena", location: "Adventure Zone" },
-    { url: "https://images.unsplash.com/photo-1520250497591-112f2f40a3f4?w=600&h=400&fit=crop", caption: "Reception & Lobby", location: "Main Building" },
-    { url: "https://images.unsplash.com/photo-1541971875076-8f970d573be6?w=600&h=400&fit=crop", caption: "Valley View Lounge", location: "Central Lobby" },
-    { url: "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=600&h=400&fit=crop", caption: "Mountain Sunset", location: "Panorama Point" }
-  ];
+  // Fetch gallery images from database
+  useEffect(() => {
+    fetchGalleryImages();
+  }, []);
 
-  const guestImages = [
-    { url: "https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=800&h=400&fit=crop", caption: "Perfect honeymoon at Horseland! 💕", likes: 234, guest: "@priya_travels" },
-    { url: "https://images.unsplash.com/photo-1511895426328-dc8714191300?w=600&h=400&fit=crop", caption: "Family time by the pool 👨‍👩‍👧‍👦", likes: 189, guest: "@sharma_family" },
-    { url: "https://images.unsplash.com/photo-1544161515-4ab6ce6db874?w=600&h=400&fit=crop", caption: "Couple enjoying breakfast buffet ✨", likes: 156, guest: "@wellness_seeker" },
-    { url: "https://images.unsplash.com/photo-1472396961693-142e6e269027?w=600&h=400&fit=crop", caption: "Morning horse ride adventure 🐎", likes: 298, guest: "@mountain_lover" },
-    { url: "https://images.unsplash.com/photo-1506744038136-46273834b3fb?w=600&h=400&fit=crop", caption: "Friends at the spa retreat 🧘‍♀️", likes: 167, guest: "@adventure_duo" },
-    { url: "https://images.unsplash.com/photo-1524230572899-a752b3835840?w=600&h=400&fit=crop", caption: "Swimming pool selfie time! 🏊‍♀️", likes: 203, guest: "@zen_traveler" },
-    { url: "https://images.unsplash.com/photo-1514315384763-ba401779410f?w=600&h=400&fit=crop", caption: "Group dining experience 🍽️", likes: 178, guest: "@equestrian_life" },
-    { url: "https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=600&h=400&fit=crop", caption: "Sunset view from our room 🌅", likes: 245, guest: "@nature_healer" },
-    { url: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=600&h=400&fit=crop", caption: "Best vacation memories made! 📸", likes: 267, guest: "@early_bird_explorer" }
-  ];
+  const fetchGalleryImages = async () => {
+    try {
+      setLoading(true);
+      const { data, error } = await supabase
+        .from('gallery_images')
+        .select(`
+          *,
+          gallery_categories!inner(slug)
+        `)
+        .order('sort_order', { ascending: true });
+      
+      if (error) {
+        console.error('Error fetching gallery images:', error);
+        // Fallback to hardcoded images
+        setGalleryImages(getHardcodedImages());
+      } else {
+        setGalleryImages(data);
+      }
+    } catch (error) {
+      console.error('Error fetching gallery images:', error);
+      setGalleryImages(getHardcodedImages());
+    } finally {
+      setLoading(false);
+    }
+  };
 
-  const currentImages = activeTab === 'hotel' ? hotelImages : guestImages;
+  // Fallback hardcoded images in case database is empty
+  const getHardcodedImages = () => {
+    return [
+      // Hotel images
+      { id: '1', title: "Swimming Pool Paradise", image_url: "https://images.unsplash.com/photo-1566073771259-6a8506099945?w=800&h=400&fit=crop", caption: "Swimming Pool Paradise", location: "Main Pool Area", gallery_categories: { slug: 'hotel' } },
+      { id: '2', title: "Deluxe Mountain Suite", image_url: "https://images.unsplash.com/photo-1631049307264-da0ec9d70304?w=600&h=400&fit=crop", caption: "Deluxe Mountain Suite", location: "Premium Wing", gallery_categories: { slug: 'hotel' } },
+      { id: '3', title: "Grand Buffet Dining", image_url: "https://images.unsplash.com/photo-1555939594-58d7cb561ad1?w=600&h=400&fit=crop", caption: "Grand Buffet Dining", location: "Main Restaurant", gallery_categories: { slug: 'hotel' } },
+      { id: '4', title: "Executive Bedroom", image_url: "https://images.unsplash.com/photo-1571896349842-33c89424de2d?w=600&h=400&fit=crop", caption: "Executive Bedroom", location: "Heritage Block", gallery_categories: { slug: 'hotel' } },
+      { id: '5', title: "Spa & Wellness Center", image_url: "https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?w=600&h=400&fit=crop", caption: "Spa & Wellness Center", location: "Wellness Wing", gallery_categories: { slug: 'hotel' } },
+      { id: '6', title: "Horse Riding Arena", image_url: "https://images.unsplash.com/photo-1551632811-561732d1e306?w=600&h=400&fit=crop", caption: "Horse Riding Arena", location: "Adventure Zone", gallery_categories: { slug: 'hotel' } },
+      { id: '7', title: "Reception & Lobby", image_url: "https://images.unsplash.com/photo-1520250497591-112f2f40a3f4?w=600&h=400&fit=crop", caption: "Reception & Lobby", location: "Main Building", gallery_categories: { slug: 'hotel' } },
+      { id: '8', title: "Valley View Lounge", image_url: "https://images.unsplash.com/photo-1541971875076-8f970d573be6?w=600&h=400&fit=crop", caption: "Valley View Lounge", location: "Central Lobby", gallery_categories: { slug: 'hotel' } },
+      { id: '9', title: "Mountain Sunset", image_url: "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=600&h=400&fit=crop", caption: "Mountain Sunset", location: "Panorama Point", gallery_categories: { slug: 'hotel' } },
+      // Guest images
+      { id: '10', title: "Perfect honeymoon", image_url: "https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=800&h=400&fit=crop", caption: "Perfect honeymoon at Horseland! 💕", likes_count: 234, guest_handle: "@priya_travels", gallery_categories: { slug: 'guests' } },
+      { id: '11', title: "Family time", image_url: "https://images.unsplash.com/photo-1511895426328-dc8714191300?w=600&h=400&fit=crop", caption: "Family time by the pool 👨‍👩‍👧‍👦", likes_count: 189, guest_handle: "@sharma_family", gallery_categories: { slug: 'guests' } },
+      { id: '12', title: "Breakfast buffet", image_url: "https://images.unsplash.com/photo-1544161515-4ab6ce6db874?w=600&h=400&fit=crop", caption: "Couple enjoying breakfast buffet ✨", likes_count: 156, guest_handle: "@wellness_seeker", gallery_categories: { slug: 'guests' } },
+      { id: '13', title: "Horse ride", image_url: "https://images.unsplash.com/photo-1472396961693-142e6e269027?w=600&h=400&fit=crop", caption: "Morning horse ride adventure 🐎", likes_count: 298, guest_handle: "@mountain_lover", gallery_categories: { slug: 'guests' } },
+      { id: '14', title: "Spa retreat", image_url: "https://images.unsplash.com/photo-1506744038136-46273834b3fb?w=600&h=400&fit=crop", caption: "Friends at the spa retreat 🧘‍♀️", likes_count: 167, guest_handle: "@adventure_duo", gallery_categories: { slug: 'guests' } },
+      { id: '15', title: "Pool selfie", image_url: "https://images.unsplash.com/photo-1524230572899-a752b3835840?w=600&h=400&fit=crop", caption: "Swimming pool selfie time! 🏊‍♀️", likes_count: 203, guest_handle: "@zen_traveler", gallery_categories: { slug: 'guests' } },
+      { id: '16', title: "Group dining", image_url: "https://images.unsplash.com/photo-1514315384763-ba401779410f?w=600&h=400&fit=crop", caption: "Group dining experience 🍽️", likes_count: 178, guest_handle: "@equestrian_life", gallery_categories: { slug: 'guests' } },
+      { id: '17', title: "Room sunset", image_url: "https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=600&h=400&fit=crop", caption: "Sunset view from our room 🌅", likes_count: 245, guest_handle: "@nature_healer", gallery_categories: { slug: 'guests' } },
+      { id: '18', title: "Vacation memories", image_url: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=600&h=400&fit=crop", caption: "Best vacation memories made! 📸", likes_count: 267, guest_handle: "@early_bird_explorer", gallery_categories: { slug: 'guests' } }
+    ];
+  };
+
+  const currentImages = galleryImages.filter(img => img.gallery_categories?.slug === activeTab).slice(0, 9);
+
+  const handleImageClick = (index) => {
+    setSelectedImageIndex(index);
+    setLightboxOpen(true);
+  };
+
+  const navigateImage = (direction) => {
+    if (direction === 'next') {
+      setSelectedImageIndex((prev) => (prev + 1) % currentImages.length);
+    } else {
+      setSelectedImageIndex((prev) => (prev - 1 + currentImages.length) % currentImages.length);
+    }
+  };
+
+  const openInstagram = () => {
+    window.open('https://www.instagram.com/horselandresort/', '_blank');
+  };
 
   return (
     <section className="py-16 md:py-20 bg-gradient-to-b from-background to-muted/20">
@@ -69,44 +125,41 @@ const GalleryV5 = () => {
           </div>
         </div>
 
-        {/* Gallery Grid - V4 Layout */}
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-4 mb-8">
+        {/* 3x3 Gallery Grid */}
+        <div className="grid grid-cols-3 gap-3 md:gap-4 mb-8">
           {currentImages.map((image, index) => (
             <div
-              key={index}
-              className={`group relative overflow-hidden rounded-lg cursor-pointer shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 ${
-                index === 0 ? 'md:col-span-2 md:row-span-2' : ''
-              }`}
+              key={image.id || index}
+              className="group relative overflow-hidden rounded-lg cursor-pointer shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1"
+              onClick={() => handleImageClick(index)}
             >
-              <div className={`w-full overflow-hidden ${
-                index === 0 ? 'aspect-[2/1] md:aspect-[2/1]' : 'aspect-[3/2]'
-              }`}>
+              <div className="w-full aspect-video overflow-hidden">
                 <img
-                  src={image.url}
-                  alt={activeTab === 'hotel' ? (image as any).caption : (image as any).caption}
+                  src={image.image_url}
+                  alt={image.caption || image.title}
                   className="w-full h-full object-cover object-center group-hover:scale-110 transition-transform duration-500"
                 />
               </div>
               
-              {/* V3-style Overlay with V2 location info */}
+              {/* Overlay with info */}
               <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300">
                 <div className="absolute bottom-4 left-4 right-4">
                   {activeTab === 'hotel' ? (
                     <div className="space-y-1">
                       <div className="flex items-center space-x-2">
                         <MapPin className="w-4 h-4 text-white" />
-                        <span className="text-white text-sm font-medium">{(image as any).caption}</span>
+                        <span className="text-white text-sm font-medium">{image.caption}</span>
                       </div>
-                      <span className="text-white/80 text-xs">{(image as any).location}</span>
+                      <span className="text-white/80 text-xs">{image.location}</span>
                     </div>
                   ) : (
                     <div className="space-y-2">
-                      <p className="text-white text-sm font-medium">{(image as any).caption}</p>
+                      <p className="text-white text-sm font-medium">{image.caption}</p>
                       <div className="flex items-center justify-between">
-                        <span className="text-white/80 text-xs">{(image as any).guest}</span>
+                        <span className="text-white/80 text-xs">{image.guest_handle}</span>
                         <div className="flex items-center space-x-1">
                           <Heart className="w-4 h-4 text-red-400 fill-current" />
-                          <span className="text-white text-sm">{(image as any).likes}</span>
+                          <span className="text-white text-sm">{image.likes_count}</span>
                         </div>
                       </div>
                     </div>
@@ -114,7 +167,7 @@ const GalleryV5 = () => {
                 </div>
               </div>
 
-              {/* V4-style Eye icon */}
+              {/* Eye icon */}
               <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
                 <div className="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center">
                   <Eye className="w-5 h-5 text-white" />
@@ -123,6 +176,74 @@ const GalleryV5 = () => {
             </div>
           ))}
         </div>
+
+        {/* Lightbox */}
+        <Dialog open={lightboxOpen} onOpenChange={setLightboxOpen}>
+          <DialogContent className="max-w-4xl w-full h-[90vh] p-0 bg-black/95">
+            <div className="relative w-full h-full flex items-center justify-center">
+              {/* Close button */}
+              <button
+                onClick={() => setLightboxOpen(false)}
+                className="absolute top-4 right-4 z-50 p-2 rounded-full bg-black/50 text-white hover:bg-black/70 transition-colors"
+              >
+                <X className="w-6 h-6" />
+              </button>
+
+              {/* Previous button */}
+              <button
+                onClick={() => navigateImage('prev')}
+                className="absolute left-4 z-50 p-2 rounded-full bg-black/50 text-white hover:bg-black/70 transition-colors"
+              >
+                <ChevronLeft className="w-6 h-6" />
+              </button>
+
+              {/* Next button */}
+              <button
+                onClick={() => navigateImage('next')}
+                className="absolute right-4 z-50 p-2 rounded-full bg-black/50 text-white hover:bg-black/70 transition-colors"
+              >
+                <ChevronRight className="w-6 h-6" />
+              </button>
+
+              {/* Image */}
+              {currentImages[selectedImageIndex] && (
+                <div className="relative w-full h-full flex flex-col">
+                  <div className="flex-1 flex items-center justify-center p-8">
+                    <img
+                      src={currentImages[selectedImageIndex].image_url}
+                      alt={currentImages[selectedImageIndex].caption}
+                      className="max-w-full max-h-full object-contain"
+                    />
+                  </div>
+                  
+                  {/* Image info */}
+                  <div className="p-6 bg-gradient-to-t from-black/80 to-transparent text-white">
+                    {activeTab === 'hotel' ? (
+                      <div className="space-y-2">
+                        <div className="flex items-center space-x-2">
+                          <MapPin className="w-5 h-5" />
+                          <span className="text-lg font-medium">{currentImages[selectedImageIndex].caption}</span>
+                        </div>
+                        <span className="text-white/80">{currentImages[selectedImageIndex].location}</span>
+                      </div>
+                    ) : (
+                      <div className="space-y-2">
+                        <p className="text-lg font-medium">{currentImages[selectedImageIndex].caption}</p>
+                        <div className="flex items-center justify-between">
+                          <span className="text-white/80">{currentImages[selectedImageIndex].guest_handle}</span>
+                          <div className="flex items-center space-x-2">
+                            <Heart className="w-5 h-5 text-red-400 fill-current" />
+                            <span className="text-lg">{currentImages[selectedImageIndex].likes_count}</span>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
+          </DialogContent>
+        </Dialog>
 
         {/* Share Your Horseland Moments - V2 style with V3 buttons */}
         <div className="text-center mt-12 p-6 md:p-8 bg-gradient-to-r from-primary/10 to-accent/10 rounded-2xl border border-primary/20">
@@ -137,7 +258,10 @@ const GalleryV5 = () => {
               <Camera className="w-4 h-4 mr-2" />
               View Full Gallery
             </button>
-            <button className="border border-primary text-primary px-6 py-3 rounded-xl font-semibold hover:bg-primary/10 transition-all flex items-center justify-center">
+            <button 
+              onClick={openInstagram}
+              className="border border-primary text-primary px-6 py-3 rounded-xl font-semibold hover:bg-primary/10 transition-all flex items-center justify-center"
+            >
               Follow @horselandresort
               <ArrowRight className="ml-2 h-4 w-4" />
             </button>

@@ -27,6 +27,7 @@ import AdminDashboard from "./pages/AdminDashboard";
 import RoomManagement from "./pages/admin/RoomManagement";
 import UserManagement from "./pages/admin/UserManagement";
 import SiteSettings from "./pages/admin/SiteSettings";
+import MediaManagement from "./pages/admin/MediaManagement";
 
 const queryClient = new QueryClient();
 
@@ -59,6 +60,7 @@ const App = () => (
           <Route path="/admin" element={<AdminDashboard />} />
           <Route path="/admin/rooms" element={<RoomManagement />} />
           <Route path="/admin/users" element={<UserManagement />} />
+          <Route path="/admin/media" element={<MediaManagement />} />
           <Route path="/admin/settings" element={<SiteSettings />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />

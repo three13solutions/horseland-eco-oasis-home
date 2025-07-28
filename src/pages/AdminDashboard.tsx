@@ -19,7 +19,8 @@ import {
   Users,
   TrendingUp,
   DollarSign,
-  UserCog
+  UserCog,
+  Image as ImageIcon
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
@@ -218,6 +219,13 @@ const AdminDashboard = () => {
       icon: MessageSquare, 
       path: '/admin/messages',
       color: 'bg-cyan-500'
+    },
+    { 
+      title: 'Media Management', 
+      description: 'Manage gallery images and media',
+      icon: ImageIcon, 
+      path: '/admin/media',
+      color: 'bg-emerald-500'
     },
     { 
       title: 'Settings', 
