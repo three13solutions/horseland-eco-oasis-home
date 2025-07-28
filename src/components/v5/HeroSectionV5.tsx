@@ -2,10 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Calendar, Users, ArrowRight, ChevronLeft, ChevronRight } from 'lucide-react';
-import { useTranslation } from 'react-i18next';
+import { useTranslationContext } from '@/components/admin/TranslationProvider';
 
 const HeroSectionV5 = () => {
-  const { t } = useTranslation();
+  const { getTranslation } = useTranslationContext();
   const [currentSlide, setCurrentSlide] = useState(0);
   const [checkIn, setCheckIn] = useState('');
   const [checkOut, setCheckOut] = useState('');
@@ -73,17 +73,17 @@ const HeroSectionV5 = () => {
         <div className="container mx-auto px-4">
           <div className="max-w-4xl mx-auto text-center text-white">
             <h1 className="text-4xl md:text-6xl lg:text-7xl font-heading font-bold mb-6 leading-tight">
-              {t('hero.title')}
+              {getTranslation('hero.title', 'Escape to Nature\'s Embrace')}
             </h1>
             <p className="text-lg md:text-xl mb-12 text-white/90 font-body font-light max-w-2xl mx-auto">
-              {t('hero.subtitle')}
+              {getTranslation('hero.subtitle', 'A mindful retreat in Matheran\'s no-car eco zone')}
             </p>
 
             {/* Glassmorphism Booking Widget - Inside Hero */}
             <div className="bg-white/10 backdrop-blur-xl rounded-3xl p-6 md:p-8 border border-white/20 max-w-4xl mx-auto">
               <div className="grid grid-cols-1 md:grid-cols-4 gap-4 md:gap-6 items-end">
                 <div className="space-y-2">
-                  <label className="text-white/80 text-sm font-medium block text-left">{t('hero.checkIn')}</label>
+                  <label className="text-white/80 text-sm font-medium block text-left">{getTranslation('hero.checkIn', 'Check-in')}</label>
                   <div className="relative">
                     <Input
                       type="date"
@@ -96,7 +96,7 @@ const HeroSectionV5 = () => {
                 </div>
                 
                 <div className="space-y-2">
-                  <label className="text-white/80 text-sm font-medium block text-left">{t('hero.checkOut')}</label>
+                  <label className="text-white/80 text-sm font-medium block text-left">{getTranslation('hero.checkOut', 'Check-out')}</label>
                   <div className="relative">
                     <Input
                       type="date"
@@ -109,7 +109,7 @@ const HeroSectionV5 = () => {
                 </div>
                 
                 <div className="space-y-2">
-                  <label className="text-white/80 text-sm font-medium block text-left">{t('hero.guests')}</label>
+                  <label className="text-white/80 text-sm font-medium block text-left">{getTranslation('hero.guests', 'Guests')}</label>
                   <div className="relative">
                     <Input
                       type="number"
@@ -124,7 +124,7 @@ const HeroSectionV5 = () => {
                 </div>
                 
                 <Button className="h-12 bg-gradient-to-r from-primary to-accent hover:shadow-2xl transform hover:scale-105 transition-all duration-300 rounded-xl text-lg font-semibold px-6">
-                  {t('hero.exploreStay')}
+                  {getTranslation('hero.exploreStay', 'Explore Stay')}
                   <ArrowRight className="ml-2 h-5 w-5" />
                 </Button>
               </div>

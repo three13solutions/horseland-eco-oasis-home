@@ -5,7 +5,7 @@ import { Menu, X, Calendar, ChevronDown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
 import BookingModal from '@/components/BookingModal';
-import { useTranslation } from 'react-i18next';
+import { useTranslationContext } from '@/components/admin/TranslationProvider';
 import LanguageSelector from '@/components/LanguageSelector';
 
 interface NavigationItem {
@@ -23,7 +23,7 @@ interface SiteSettings {
 }
 
 const NavigationV5 = () => {
-  const { t } = useTranslation();
+  const { getTranslation } = useTranslationContext();
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [navigationItems, setNavigationItems] = useState<NavigationItem[]>([]);
@@ -227,7 +227,7 @@ const NavigationV5 = () => {
               onClick={() => setShowBookingModal(true)}
             >
               <Calendar className="w-4 h-4 mr-2" />
-              {t('navigation.bookNow')}
+              {getTranslation('navigation.bookNow', 'Book Now')}
             </Button>
             
             <button
@@ -281,7 +281,7 @@ const NavigationV5 = () => {
                   onClick={() => setShowBookingModal(true)}
                 >
                   <Calendar className="w-4 h-4 mr-2" />
-                  {t('navigation.bookNow')}
+                  {getTranslation('navigation.bookNow', 'Book Now')}
                 </Button>
               </div>
             </div>

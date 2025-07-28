@@ -1,6 +1,7 @@
 import React from 'react';
 import { Globe } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import { useTranslationContext } from '@/components/admin/TranslationProvider';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -28,11 +29,14 @@ const languages = [
 
 const LanguageSelector = () => {
   const { i18n } = useTranslation();
+  const { refreshTranslations } = useTranslationContext();
   
   const currentLanguage = languages.find(lang => lang.code === i18n.language) || languages[0];
   
-  const handleLanguageChange = (languageCode: string) => {
-    i18n.changeLanguage(languageCode);
+  const handleLanguageChange = async (languageCode: string) => {
+    await i18n.changeLanguage(languageCode);
+    // Refresh database translations for the new language
+    await refreshTranslations();
   };
 
   return (
