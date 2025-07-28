@@ -1,9 +1,9 @@
 import React from 'react';
 import { Leaf, Heart, Coffee, Car, Mountain, Activity, Train } from 'lucide-react';
-import { useTranslation } from 'react-i18next';
+import { useTranslationContext } from '@/components/admin/TranslationProvider';
 
 const WelcomeAndMatheranV5 = () => {
-  const { t } = useTranslation();
+  const { getTranslation } = useTranslationContext();
   
   const welcomeFeatures = [
     {
@@ -53,10 +53,10 @@ const WelcomeAndMatheranV5 = () => {
         <div className="container mx-auto px-4">
           <div className="text-center mb-12">
             <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
-              {t('welcome.title')}
+              {getTranslation('welcome.title', 'Welcome to Horseland')}
             </h2>
             <p className="text-lg text-muted-foreground max-w-3xl mx-auto leading-relaxed">
-              {t('welcome.description')}
+              {getTranslation('welcome.description', 'Nestled in the heart of Matheran\'s car-free paradise, Horseland represents more than luxury accommodation—it\'s a sanctuary where sustainable elegance meets authentic mountain hospitality.')}
             </p>
           </div>
           
@@ -64,19 +64,19 @@ const WelcomeAndMatheranV5 = () => {
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6 max-w-2xl mx-auto mb-12">
             <div className="text-center">
               <div className="text-2xl md:text-3xl font-bold text-primary">25+</div>
-              <div className="text-sm text-muted-foreground">{t('welcome.stats.years')}</div>
+              <div className="text-sm text-muted-foreground">{getTranslation('welcome.stats.years', 'Years of Excellence')}</div>
             </div>
             <div className="text-center">
               <div className="text-2xl md:text-3xl font-bold text-primary">5000+</div>
-              <div className="text-sm text-muted-foreground">{t('welcome.stats.guests')}</div>
+              <div className="text-sm text-muted-foreground">{getTranslation('welcome.stats.guests', 'Happy Guests')}</div>
             </div>
             <div className="text-center">
               <div className="text-2xl md:text-3xl font-bold text-primary">100%</div>
-              <div className="text-sm text-muted-foreground">{t('welcome.stats.ecoFriendly')}</div>
+              <div className="text-sm text-muted-foreground">{getTranslation('welcome.stats.ecoFriendly', 'Eco-Friendly')}</div>
             </div>
             <div className="text-center">
               <div className="text-2xl md:text-3xl font-bold text-primary">4.9★</div>
-              <div className="text-sm text-muted-foreground">{t('welcome.stats.rating')}</div>
+              <div className="text-sm text-muted-foreground">{getTranslation('welcome.stats.rating', 'Guest Rating')}</div>
             </div>
           </div>
           
@@ -89,10 +89,10 @@ const WelcomeAndMatheranV5 = () => {
                   </div>
                 </div>
                 <h3 className="text-xl font-semibold mb-2 text-foreground">
-                  {t(feature.titleKey)}
+                  {getTranslation(feature.titleKey, 'Feature Title')}
                 </h3>
                 <p className="text-muted-foreground">
-                  {t(feature.descriptionKey)}
+                  {getTranslation(feature.descriptionKey, 'Feature Description')}
                 </p>
               </div>
             ))}
@@ -105,10 +105,10 @@ const WelcomeAndMatheranV5 = () => {
         <div className="container mx-auto px-4">
           <div className="text-center mb-8">
             <h2 className="text-2xl md:text-3xl font-bold text-foreground mb-4">
-              {t('matheran.title')}
+              {getTranslation('matheran.title', 'Why Matheran?')}
             </h2>
             <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-              {t('matheran.description')}
+              {getTranslation('matheran.description', 'India\'s first eco-sensitive hill station offers a unique blend of heritage and nature, creating an unparalleled mountain escape experience.')}
             </p>
           </div>
           
@@ -121,10 +121,10 @@ const WelcomeAndMatheranV5 = () => {
                   </div>
                 </div>
                 <h3 className="font-semibold mb-1 text-foreground text-sm md:text-base">
-                  {t(feature.titleKey)}
+                  {getTranslation(feature.titleKey, 'Matheran Feature')}
                 </h3>
                 <p className="text-xs md:text-sm text-muted-foreground">
-                  {t(feature.descriptionKey)}
+                  {getTranslation(feature.descriptionKey, 'Matheran Description')}
                 </p>
               </div>
             ))}
@@ -133,7 +133,7 @@ const WelcomeAndMatheranV5 = () => {
           {/* Learn More Section */}
           <div className="text-center">
             <button className="bg-primary hover:bg-primary/90 text-primary-foreground px-6 py-3 rounded-lg font-medium transition-colors">
-              {t('matheran.learnMore')}
+              {getTranslation('matheran.learnMore', 'Learn About Matheran')}
             </button>
           </div>
         </div>
