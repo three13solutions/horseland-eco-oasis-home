@@ -61,7 +61,6 @@ const NavigationV4 = () => {
                   className="text-sm font-medium text-foreground/80 hover:text-primary transition-all duration-300 flex items-center"
                 >
                   {item.name}
-                  {item.dropdown && <ChevronDown className="w-3 h-3 ml-1" />}
                 </a>
                 {item.dropdown && (
                   <div className="absolute top-full left-0 mt-1 bg-background/95 backdrop-blur-lg border border-border/20 rounded-lg shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 min-w-[160px]">

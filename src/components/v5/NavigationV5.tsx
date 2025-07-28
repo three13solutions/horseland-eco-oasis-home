@@ -197,7 +197,6 @@ const NavigationV5 = () => {
                 <div key={item.id} className="relative group">
                   <div className="flex items-center">
                     {renderNavigationLink(item)}
-                    {hasChildren && <ChevronDown className="w-3 h-3 ml-1" />}
                   </div>
                   
                   {hasChildren && (

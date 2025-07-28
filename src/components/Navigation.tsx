@@ -56,7 +56,7 @@ const Navigation = () => {
                 <NavigationMenuItem key={item.title}>
                   {item.dropdown ? (
                     <>
-                      <NavigationMenuTrigger className="text-foreground hover:text-primary transition-colors">
+                      <NavigationMenuTrigger className="text-foreground hover:text-primary transition-colors [&>svg]:hidden">
                         {item.title}
                       </NavigationMenuTrigger>
                       <NavigationMenuContent>
