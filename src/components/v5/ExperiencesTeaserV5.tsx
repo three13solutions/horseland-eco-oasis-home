@@ -1,9 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { ArrowRight, Mountain, Utensils, Flower2, Activity } from 'lucide-react';
 
 const ExperiencesTeaserV5 = () => {
   const [activeIndex, setActiveIndex] = useState(0);
+  const [isAutoplay, setIsAutoplay] = useState(true);
+  const autoplayRef = useRef(null);
 
   const experiences = [
     {
@@ -35,6 +37,32 @@ const ExperiencesTeaserV5 = () => {
     }
   ];
 
+  // Autoplay functionality
+  useEffect(() => {
+    if (isAutoplay) {
+      autoplayRef.current = setInterval(() => {
+        setActiveIndex((prev) => (prev + 1) % experiences.length);
+      }, 3000);
+    }
+
+    return () => {
+      if (autoplayRef.current) {
+        clearInterval(autoplayRef.current);
+      }
+    };
+  }, [isAutoplay, experiences.length]);
+
+  // Handle manual tab selection
+  const handleTabClick = (index) => {
+    setActiveIndex(index);
+    setIsAutoplay(false); // Stop autoplay when user manually interacts
+    
+    // Clear existing interval
+    if (autoplayRef.current) {
+      clearInterval(autoplayRef.current);
+    }
+  };
+
   return (
     <section className="py-24 bg-background relative">
       <div className="container mx-auto px-6">
@@ -55,7 +83,7 @@ const ExperiencesTeaserV5 = () => {
             {experiences.map((exp, index) => (
               <button
                 key={exp.id}
-                onClick={() => setActiveIndex(index)}
+                onClick={() => handleTabClick(index)}
                 className={`flex items-center space-x-2 px-6 py-3 rounded-full transition-all duration-300 ${
                   activeIndex === index
                     ? 'bg-primary text-primary-foreground shadow-lg'
