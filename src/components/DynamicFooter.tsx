@@ -144,8 +144,7 @@ const DynamicFooter = () => {
 
           {/* Packages - Third Column */}
           <div className="md:col-span-2 lg:col-span-2 space-y-4">
-            <h3 className="text-lg font-semibold text-background flex items-center">
-              <Package className="w-4 h-4 mr-2 text-primary" />
+            <h3 className="text-lg font-semibold text-background">
               Explore Packages
             </h3>
             <ul className="space-y-2">
@@ -207,7 +206,14 @@ const DynamicFooter = () => {
                     <MapPin className="w-4 h-4 text-primary mt-1 flex-shrink-0" />
                     <div>
                       <p className="text-background/80 text-xs">Visit Us</p>
-                      <p className="font-medium text-background text-sm">{contactSection.content.address}</p>
+                      <a 
+                        href="https://maps.google.com/?q=Horseland+Hotel+Matheran+Maharashtra+India"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="font-medium text-background text-sm hover:text-primary transition-colors cursor-pointer"
+                      >
+                        Near Railway Station, Matheran<br />Maharashtra, India 410102
+                      </a>
                     </div>
                   </div>
                 )}
@@ -217,31 +223,34 @@ const DynamicFooter = () => {
         </div>
 
         {/* Policies and Social Row */}
-        <div className="border-t border-background/20 mt-8 pt-6">
-          <div className="flex flex-col md:flex-row justify-between items-start md:items-center space-y-4 md:space-y-0">
+        <div className="mt-8 pt-6">
+          <div className="flex flex-col md:flex-row justify-between items-start space-y-6 md:space-y-0">
             {/* Policies - Left Side */}
             {policiesSection && policiesSection.content.links && (
-              <div className="flex flex-wrap gap-1 text-sm text-background/60">
-                {policiesSection.content.links.map((link: any, index: number) => (
-                  <React.Fragment key={index}>
-                    <Link 
-                      to={link.href} 
-                      className="hover:text-primary transition-colors"
-                    >
-                      {link.title}
-                    </Link>
-                    {index < policiesSection.content.links.length - 1 && (
-                      <span className="text-background/40 mx-1">|</span>
-                    )}
-                  </React.Fragment>
-                ))}
+              <div>
+                <h4 className="text-sm font-semibold text-background mb-3">Policies</h4>
+                <div className="flex flex-wrap gap-1 text-sm text-background/60">
+                  {policiesSection.content.links.map((link: any, index: number) => (
+                    <React.Fragment key={index}>
+                      <Link 
+                        to={link.href} 
+                        className="hover:text-primary transition-colors"
+                      >
+                        {link.title}
+                      </Link>
+                      {index < policiesSection.content.links.length - 1 && (
+                        <span className="text-background/40 mx-1">|</span>
+                      )}
+                    </React.Fragment>
+                  ))}
+                </div>
               </div>
             )}
             
             {/* Social Icons - Right Side */}
             {socialSection && (
-              <div className="flex items-center space-x-4">
-                <span className="text-background/80 text-sm">Follow Our Journey</span>
+              <div className="space-y-3">
+                <p className="text-background/80 text-sm">Follow Our Journey</p>
                 <div className="flex space-x-3">
                   {Object.entries(socialSection.content).map(([platform, url]) => (
                     <Link
