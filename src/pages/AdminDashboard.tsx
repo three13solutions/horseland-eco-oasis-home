@@ -20,7 +20,8 @@ import {
   TrendingUp,
   DollarSign,
   UserCog,
-  Image as ImageIcon
+  Image as ImageIcon,
+  Languages
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
@@ -226,6 +227,13 @@ const AdminDashboard = () => {
       icon: ImageIcon, 
       path: '/admin/media',
       color: 'bg-emerald-500'
+    },
+    { 
+      title: 'Content Management', 
+      description: 'Manage translations and website content',
+      icon: Languages, 
+      path: '/admin/content',
+      color: 'bg-teal-500'
     },
     { 
       title: 'Settings', 
