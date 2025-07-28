@@ -1,6 +1,7 @@
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import translate from 'https://esm.sh/@vitalets/google-translate-api@9.2.0';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -13,11 +14,6 @@ serve(async (req) => {
   }
 
   try {
-    const googleApiKey = Deno.env.get('GOOGLE_TRANSLATE_API_KEY');
-    if (!googleApiKey) {
-      throw new Error('Google Translate API key not configured');
-    }
-
     const supabaseClient = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
@@ -25,29 +21,13 @@ serve(async (req) => {
 
     const { text, targetLanguage, sourceLanguage = 'en' } = await req.json();
 
-    // Call Google Translate API
-    const response = await fetch(
-      `https://translation.googleapis.com/language/translate/v2?key=${googleApiKey}`,
-      {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          q: text,
-          source: sourceLanguage,
-          target: targetLanguage,
-          format: 'text'
-        }),
-      }
-    );
+    // Use free Google Translate npm package
+    const result = await translate(text, { 
+      from: sourceLanguage, 
+      to: targetLanguage 
+    });
 
-    if (!response.ok) {
-      throw new Error(`Google Translate API error: ${response.statusText}`);
-    }
-
-    const data = await response.json();
-    const translatedText = data.data.translations[0].translatedText;
+    const translatedText = result.text;
 
     return new Response(
       JSON.stringify({ 
