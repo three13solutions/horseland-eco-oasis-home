@@ -118,27 +118,6 @@ const DynamicFooter = () => {
                 {brandSection.content.description}
               </p>
             )}
-            
-            {/* Policies Section - Spanning Two Columns */}
-            {policiesSection && policiesSection.content.links && (
-              <div className="md:col-span-4 lg:col-span-4 border-t border-background/20 pt-4 mt-4">
-                <div className="flex flex-wrap gap-1 text-sm text-background/60">
-                  {policiesSection.content.links.map((link: any, index: number) => (
-                    <React.Fragment key={index}>
-                      <Link 
-                        to={link.href} 
-                        className="hover:text-primary transition-colors"
-                      >
-                        {link.title}
-                      </Link>
-                      {index < policiesSection.content.links.length - 1 && (
-                        <span className="text-background/40 mx-1">|</span>
-                      )}
-                    </React.Fragment>
-                  ))}
-                </div>
-              </div>
-            )}
           </div>
 
           {/* Newsletter Section - Second Column */}
@@ -233,29 +212,54 @@ const DynamicFooter = () => {
                   </div>
                 )}
               </div>
-              {/* Social Icons */}
-              {socialSection && (
-                <div className="space-y-3">
-                  <p className="text-background/80 text-xs">Follow Our Journey</p>
-                  <div className="flex space-x-3">
-                    {Object.entries(socialSection.content).map(([platform, url]) => (
-                      <Link
-                        key={platform}
-                        to={url as string}
-                        className="p-2 bg-background/10 rounded-full hover:bg-background/20 transition-all duration-300 transform hover:scale-110 text-background/80 hover:text-primary"
-                      >
-                        {getSocialIcon(platform)}
-                      </Link>
-                    ))}
-                  </div>
-                </div>
-              )}
             </div>
           )}
         </div>
 
+        {/* Policies and Social Row */}
+        <div className="border-t border-background/20 mt-8 pt-6">
+          <div className="flex flex-col md:flex-row justify-between items-start md:items-center space-y-4 md:space-y-0">
+            {/* Policies - Left Side */}
+            {policiesSection && policiesSection.content.links && (
+              <div className="flex flex-wrap gap-1 text-sm text-background/60">
+                {policiesSection.content.links.map((link: any, index: number) => (
+                  <React.Fragment key={index}>
+                    <Link 
+                      to={link.href} 
+                      className="hover:text-primary transition-colors"
+                    >
+                      {link.title}
+                    </Link>
+                    {index < policiesSection.content.links.length - 1 && (
+                      <span className="text-background/40 mx-1">|</span>
+                    )}
+                  </React.Fragment>
+                ))}
+              </div>
+            )}
+            
+            {/* Social Icons - Right Side */}
+            {socialSection && (
+              <div className="flex items-center space-x-4">
+                <span className="text-background/80 text-sm">Follow Our Journey</span>
+                <div className="flex space-x-3">
+                  {Object.entries(socialSection.content).map(([platform, url]) => (
+                    <Link
+                      key={platform}
+                      to={url as string}
+                      className="p-2 bg-background/10 rounded-full hover:bg-background/20 transition-all duration-300 transform hover:scale-110 text-background/80 hover:text-primary"
+                    >
+                      {getSocialIcon(platform)}
+                    </Link>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+
         {/* Bottom Section */}
-        <div className="border-t border-background/20 mt-12 pt-8">
+        <div className="border-t border-background/20 mt-8 pt-6">
           {/* Copyright Row */}
           <div className="flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
             <p className="text-sm text-background/60">
