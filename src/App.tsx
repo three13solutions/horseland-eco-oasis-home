@@ -4,6 +4,7 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { TranslationProvider } from "./components/admin/TranslationProvider";
 import "./lib/i18n";
 import Index from "./pages/Index";
 import IndexV2 from "./pages/IndexV2";
@@ -36,9 +37,10 @@ const queryClient = new QueryClient();
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <BrowserRouter>
+      <TranslationProvider>
+        <Toaster />
+        <Sonner />
+        <BrowserRouter>
         <Routes>
           <Route path="/" element={<IndexV5 />} />
           <Route path="/v1" element={<Index />} />
@@ -69,6 +71,7 @@ const App = () => (
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
+      </TranslationProvider>
     </TooltipProvider>
   </QueryClientProvider>
 );
