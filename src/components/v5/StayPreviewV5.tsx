@@ -73,7 +73,8 @@ const StayPreviewV5 = () => {
                 <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent"></div>
                 
                 {/* Price Badge */}
-                <div className="absolute top-4 right-4 bg-white/90 backdrop-blur-sm rounded-full px-4 py-2">
+                <div className="absolute top-4 right-4 bg-white/90 backdrop-blur-sm rounded-full px-4 py-2 text-center">
+                  <div className="text-xs text-muted-foreground mb-1">Starting from</div>
                   <span className="text-2xl font-bold text-foreground">{room.price}</span>
                   <span className="text-sm text-muted-foreground">/night</span>
                 </div>
