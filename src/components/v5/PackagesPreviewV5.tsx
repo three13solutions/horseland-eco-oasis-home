@@ -1,6 +1,6 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
-import { Heart, Users, Briefcase, Leaf, ArrowRight, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Heart, Users, Briefcase, TreePine, ArrowRight, ChevronLeft, ChevronRight } from 'lucide-react';
 import useEmblaCarousel from 'embla-carousel-react';
 
 const PackagesPreviewV5 = () => {
@@ -45,12 +45,12 @@ const PackagesPreviewV5 = () => {
       image: "https://images.unsplash.com/photo-1515187029135-18ee286d815b?w=400&h=250&fit=crop"
     },
     {
-      icon: Leaf,
-      tag: "MEMBERSHIP",
-      title: "Membership Plan",
-      description: "Exclusive benefits, priority bookings, and year-round mountain access",
-      price: "Starting ₹25,000",
-      image: "https://images.unsplash.com/photo-1571896349842-33c89424de2d?w=400&h=250&fit=crop"
+      icon: TreePine,
+      tag: "ADVENTURE",
+      title: "Adventure Seeker",
+      description: "Action-packed itinerary for adventure enthusiasts with thrilling outdoor activities",
+      price: "Starting ₹16,500",
+      image: "https://images.unsplash.com/photo-1551632811-561732d1e306?w=400&h=250&fit=crop"
     }
   ];
 
