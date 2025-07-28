@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Facebook, Instagram, Twitter, Youtube, Mail, Phone, MapPin } from 'lucide-react';
+import { Facebook, Instagram, Twitter, Youtube, Mail, Phone, MapPin, Package, ExternalLink } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 
 interface FooterSection {
@@ -142,20 +142,58 @@ const DynamicFooter = () => {
             </div>
           )}
 
-          {/* Policies - Third Column (Narrower) */}
-          <div className="md:col-span-2 lg:col-span-2 space-y-4">
-            <h3 className="text-xl font-semibold text-background">Policies</h3>
-            {policiesSection && policiesSection.content.links && (
-              <ul className="space-y-3">
-                {policiesSection.content.links.map((link: any, index: number) => (
-                  <li key={index}>
-                    <Link to={link.href} className="text-background/80 hover:text-primary transition-colors hover:translate-x-1 transform duration-200 inline-block text-sm">
-                      {link.title}
-                    </Link>
-                  </li>
-                ))}
+          {/* Packages & Policies - Third Column */}
+          <div className="md:col-span-2 lg:col-span-2 space-y-6">
+            {/* Packages Section */}
+            <div className="space-y-3">
+              <h3 className="text-lg font-semibold text-background flex items-center">
+                <Package className="w-4 h-4 mr-2 text-primary" />
+                Explore Our Packages
+              </h3>
+              <ul className="space-y-2">
+                <li>
+                  <Link to="/packages" className="text-background/80 hover:text-primary transition-colors hover:translate-x-1 transform duration-200 inline-block text-sm">
+                    Family Adventure Package
+                  </Link>
+                </li>
+                <li>
+                  <Link to="/packages" className="text-background/80 hover:text-primary transition-colors hover:translate-x-1 transform duration-200 inline-block text-sm">
+                    Romantic Getaway
+                  </Link>
+                </li>
+                <li>
+                  <Link to="/packages" className="text-background/80 hover:text-primary transition-colors hover:translate-x-1 transform duration-200 inline-block text-sm">
+                    Wellness Escape
+                  </Link>
+                </li>
               </ul>
-            )}
+              <Link 
+                to="/packages" 
+                className="inline-flex items-center text-primary hover:text-primary/80 text-sm font-medium transition-colors"
+              >
+                View All Packages
+                <ExternalLink className="w-3 h-3 ml-1" />
+              </Link>
+            </div>
+
+            {/* Visual Separator */}
+            <div className="border-t border-background/20"></div>
+
+            {/* Policies Section */}
+            <div className="space-y-3">
+              <h3 className="text-lg font-semibold text-background">Policies</h3>
+              {policiesSection && policiesSection.content.links && (
+                <ul className="space-y-2">
+                  {policiesSection.content.links.map((link: any, index: number) => (
+                    <li key={index}>
+                      <Link to={link.href} className="text-background/80 hover:text-primary transition-colors hover:translate-x-1 transform duration-200 inline-block text-sm">
+                        {link.title}
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
           </div>
 
           {/* Connect Section - Fourth Column */}
