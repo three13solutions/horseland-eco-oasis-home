@@ -182,6 +182,7 @@ const Stay = () => {
 
                   <div className="flex items-center justify-between">
                     <div>
+                      <div className="text-xs text-muted-foreground mb-1">Starting from</div>
                       <span className="text-2xl font-heading font-bold text-primary">{room.price}</span>
                       <span className="text-sm text-muted-foreground ml-1">/night</span>
                     </div>
