@@ -26,7 +26,7 @@ const DynamicFooter = () => {
   const [siteSettings, setSiteSettings] = useState<SiteSettings>({
     site_title: 'Horseland Hotel',
     site_logo: '/lovable-uploads/24f5ee9b-ce5a-4b86-a2d8-7ca42e0a78cf.png',
-    copyright_text: '© 2024 Horseland Hotel & Mountain Spa. All rights reserved.',
+    copyright_text: '© 2024 Horseland Hotel. All rights reserved.',
     tagline: 'Crafted with care for sustainable luxury'
   });
 
@@ -109,7 +109,7 @@ const DynamicFooter = () => {
                   HORSELAND
                 </span>
                 <span className="text-background/80 text-sm">
-                  Mountain Spa & Hotel
+                  Hotel
                 </span>
               </div>
             </div>
