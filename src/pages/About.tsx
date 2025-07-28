@@ -72,7 +72,7 @@ const About = () => {
             <div className="relative">
               <img 
                 src="https://images.unsplash.com/photo-1581092795360-fd1ca04f0952?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80"
-                alt="Rajesh Sharma, Founder of Horseland Hotel"
+                alt="Adi Bharucha, Founder of Horseland Hotel"
                 className="rounded-lg shadow-lg w-full"
               />
               <div className="absolute -bottom-4 -right-4 w-20 h-20 bg-primary/10 rounded-full flex items-center justify-center">
@@ -83,10 +83,10 @@ const About = () => {
               <h2 className="text-3xl md:text-4xl font-heading font-bold mb-6 text-foreground">
                 Meet Our Founder
               </h2>
-              <h3 className="text-xl font-semibold text-primary mb-4">Rajesh Sharma</h3>
+              <h3 className="text-xl font-semibold text-primary mb-4">Adi Bharucha</h3>
               <p className="text-muted-foreground font-body mb-6 leading-relaxed">
                 A visionary hotelier with over 30 years of experience in sustainable tourism, 
-                Rajesh founded Horseland in 1987 with a simple dream: to create a sanctuary 
+                Adi founded Horseland in 1987 with a simple dream: to create a sanctuary 
                 where guests could reconnect with nature without compromising on comfort.
               </p>
               <p className="text-muted-foreground font-body mb-6 leading-relaxed">
@@ -122,20 +122,44 @@ const About = () => {
 
           <div className="grid md:grid-cols-3 gap-8 mb-12">
             <div className="text-center">
-              <div className="w-24 h-24 bg-gradient-to-br from-primary/20 to-accent/20 rounded-full mx-auto mb-4 flex items-center justify-center">
-                <span className="text-2xl font-bold text-primary">PS</span>
+              <div className="w-24 h-24 rounded-full mx-auto mb-4 overflow-hidden">
+                <img 
+                  src="https://images.unsplash.com/photo-1488590528505-98d2b5aba04b?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80"
+                  alt="Mahesh"
+                  className="w-full h-full object-cover"
+                />
               </div>
-              <h3 className="text-xl font-heading font-semibold mb-2">Priya Sharma</h3>
+              <h3 className="text-xl font-heading font-semibold mb-2">Mahesh</h3>
               <p className="text-primary font-medium mb-3">General Manager</p>
               <p className="text-muted-foreground font-body text-sm">
                 15 years of hospitality excellence, ensuring every guest feels like family. 
-                Priya's attention to detail and warm leadership style sets the tone for our service culture.
+                Mahesh's attention to detail and warm leadership style sets the tone for our service culture.
               </p>
             </div>
 
             <div className="text-center">
-              <div className="w-24 h-24 bg-gradient-to-br from-primary/20 to-accent/20 rounded-full mx-auto mb-4 flex items-center justify-center">
-                <span className="text-2xl font-bold text-primary">AK</span>
+              <div className="w-24 h-24 rounded-full mx-auto mb-4 overflow-hidden">
+                <img 
+                  src="https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80"
+                  alt="Anai Bharucha"
+                  className="w-full h-full object-cover"
+                />
+              </div>
+              <h3 className="text-xl font-heading font-semibold mb-2">Anai Bharucha</h3>
+              <p className="text-primary font-medium mb-3">Marketing Director</p>
+              <p className="text-muted-foreground font-body text-sm">
+                Creative marketing strategist with a passion for storytelling. Anai brings Horseland's 
+                unique experiences to life through compelling campaigns and authentic brand connections.
+              </p>
+            </div>
+
+            <div className="text-center">
+              <div className="w-24 h-24 rounded-full mx-auto mb-4 overflow-hidden">
+                <img 
+                  src="https://images.unsplash.com/photo-1486312338219-ce68d2c6f44d?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80"
+                  alt="Arjun Kulkarni"
+                  className="w-full h-full object-cover"
+                />
               </div>
               <h3 className="text-xl font-heading font-semibold mb-2">Arjun Kulkarni</h3>
               <p className="text-primary font-medium mb-3">Executive Chef</p>
@@ -144,24 +168,16 @@ const About = () => {
                 local ingredients. His innovative approach celebrates traditional flavors with a modern twist.
               </p>
             </div>
-
-            <div className="text-center">
-              <div className="w-24 h-24 bg-gradient-to-br from-primary/20 to-accent/20 rounded-full mx-auto mb-4 flex items-center justify-center">
-                <span className="text-2xl font-bold text-primary">SJ</span>
-              </div>
-              <h3 className="text-xl font-heading font-semibold mb-2">Sunita Joshi</h3>
-              <p className="text-primary font-medium mb-3">Spa & Wellness Director</p>
-              <p className="text-muted-foreground font-body text-sm">
-                Certified wellness expert with deep knowledge of Ayurvedic traditions. 
-                Sunita curates transformative spa experiences that heal both body and spirit.
-              </p>
-            </div>
           </div>
 
           <div className="grid md:grid-cols-2 gap-8">
             <div className="text-center">
-              <div className="w-24 h-24 bg-gradient-to-br from-primary/20 to-accent/20 rounded-full mx-auto mb-4 flex items-center justify-center">
-                <span className="text-2xl font-bold text-primary">VT</span>
+              <div className="w-24 h-24 rounded-full mx-auto mb-4 overflow-hidden">
+                <img 
+                  src="https://images.unsplash.com/photo-1487058792275-0ad4aaf24ca7?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80"
+                  alt="Vikram Thakur"
+                  className="w-full h-full object-cover"
+                />
               </div>
               <h3 className="text-xl font-heading font-semibold mb-2">Vikram Thakur</h3>
               <p className="text-primary font-medium mb-3">Adventure Activities Coordinator</p>
@@ -172,8 +188,12 @@ const About = () => {
             </div>
 
             <div className="text-center">
-              <div className="w-24 h-24 bg-gradient-to-br from-primary/20 to-accent/20 rounded-full mx-auto mb-4 flex items-center justify-center">
-                <span className="text-2xl font-bold text-primary">RD</span>
+              <div className="w-24 h-24 rounded-full mx-auto mb-4 overflow-hidden">
+                <img 
+                  src="https://images.unsplash.com/photo-1519389950473-47ba0277781c?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80"
+                  alt="Ravi Desai"
+                  className="w-full h-full object-cover"
+                />
               </div>
               <h3 className="text-xl font-heading font-semibold mb-2">Ravi Desai</h3>
               <p className="text-primary font-medium mb-3">Sustainability Manager</p>
