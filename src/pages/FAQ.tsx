@@ -89,7 +89,7 @@ const FAQ = () => {
       faqs: [
         {
           question: 'What is your policy on smoking and alcohol?',
-          answer: 'Smoking is prohibited in all indoor areas and rooms. Designated outdoor smoking areas are available. Alcohol consumption is permitted in rooms and designated areas. We maintain a peaceful environment and request guests to be mindful of noise levels.'
+          answer: 'Smoking is prohibited in all indoor areas and rooms. Designated outdoor smoking areas are available. Alcohol consumption is not permitted in rooms. We maintain a peaceful environment and request guests to be mindful of noise levels.'
         },
         {
           question: 'Do you accommodate special dietary requirements?',

@@ -61,6 +61,33 @@ const Spa = () => {
       price: '₹2,500',
       description: 'Personalized yoga practice designed to address specific physical and mental wellness goals.',
       benefits: ['Flexibility', 'Strength Building', 'Posture Improvement', 'Mind-Body Balance']
+    },
+    {
+      id: 'head-massage',
+      name: 'Head Massage',
+      image: 'https://images.unsplash.com/photo-1519823551278-64ac92734fb1?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
+      duration: '45 minutes',
+      price: '₹2,000',
+      description: 'Relaxing head massage using traditional techniques to relieve stress and improve circulation.',
+      benefits: ['Stress Relief', 'Improved Sleep', 'Hair Health', 'Mental Clarity']
+    },
+    {
+      id: 'foot-massage',
+      name: 'Foot Massage',
+      image: 'https://images.unsplash.com/photo-1544161515-4ab6ce6db874?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
+      duration: '45 minutes',
+      price: '₹1,800',
+      description: 'Therapeutic foot massage targeting pressure points to restore energy flow and reduce fatigue.',
+      benefits: ['Foot Relief', 'Better Circulation', 'Energy Boost', 'Stress Reduction']
+    },
+    {
+      id: 'poolside-massage',
+      name: 'Outdoor Poolside Body Massage',
+      image: 'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
+      duration: '90 minutes',
+      price: '₹4,200',
+      description: 'Full-body massage in our outdoor poolside cabana surrounded by mountain views and fresh air.',
+      benefits: ['Nature Connection', 'Deep Relaxation', 'Fresh Air Therapy', 'Mountain Views']
     }
   ];
 
@@ -209,46 +236,6 @@ const Spa = () => {
         </div>
       </section>
 
-      {/* Wellness Packages */}
-      <section className="py-16">
-        <div className="max-w-4xl mx-auto px-4">
-          <h2 className="text-3xl md:text-4xl font-heading font-bold text-center mb-12 text-foreground">
-            Wellness Packages
-          </h2>
-          
-          <div className="grid md:grid-cols-2 gap-8">
-            {packages.map((pkg, index) => (
-              <div key={index} className="bg-card border rounded-lg p-8">
-                <h3 className="text-2xl font-heading font-bold mb-3 text-foreground">{pkg.name}</h3>
-                
-                <div className="flex items-center gap-4 mb-4">
-                  <div className="flex items-center gap-2 text-muted-foreground">
-                    <Clock className="w-4 h-4" />
-                    <span className="font-body">{pkg.duration}</span>
-                  </div>
-                  <div className="text-2xl font-heading font-bold text-primary">{pkg.price}</div>
-                </div>
-                
-                <div className="mb-6">
-                  <h4 className="font-body font-semibold mb-3 text-foreground">Package Includes:</h4>
-                  <ul className="space-y-2">
-                    {pkg.includes.map((item, idx) => (
-                      <li key={idx} className="font-body text-muted-foreground text-sm flex items-start gap-2">
-                        <span className="text-primary mt-1">•</span>
-                        {item}
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-                
-                <Button className="w-full font-body">
-                  Book Package
-                </Button>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
 
       {/* Booking Info */}
       <section className="py-16 bg-muted/30">
@@ -260,12 +247,9 @@ const Spa = () => {
             Book your spa treatments in advance to ensure availability. 
             Our wellness concierge can help design a personalized experience for your stay.
           </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+          <div className="flex justify-center">
             <Button size="lg" className="font-body">
               Book Spa Treatments
-            </Button>
-            <Button variant="outline" size="lg" className="font-body">
-              Wellness Consultation
             </Button>
           </div>
         </div>

@@ -81,6 +81,18 @@ const Activities = () => {
       price: '₹2,500',
       description: 'Beginner-friendly rock climbing with certified instructors and equipment.',
       rating: 4.8
+    },
+    {
+      id: 'forest-bathing',
+      name: 'Forest Bathing',
+      image: 'https://images.unsplash.com/photo-1441974231531-c6227db76b6e?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
+      duration: '2 hours',
+      location: 'Near Property',
+      category: 'nature',
+      age: 'family',
+      price: '₹700',
+      description: 'Mindful immersion in nature using Japanese Shinrin-yoku techniques for wellness and relaxation.',
+      rating: 4.7
     }
   ];
 
