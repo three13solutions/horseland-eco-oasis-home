@@ -84,7 +84,7 @@ const GalleryV5 = () => {
   };
 
   const openInstagram = () => {
-    window.open('https://www.instagram.com/horselandresort/', '_blank');
+    window.open('https://www.instagram.com/horseland_matheran/', '_blank');
   };
 
   return (
