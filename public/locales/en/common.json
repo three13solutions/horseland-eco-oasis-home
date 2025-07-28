@@ -10,13 +10,74 @@
     "bookNow": "Book Now"
   },
   "hero": {
-    "title": "Discover Matheran's Magic",
-    "subtitle": "Where Every Moment Becomes a Cherished Memory",
-    "description": "Experience luxury amidst the Western Ghats at Horseland Hotel & Mountain Spa. Your perfect mountain getaway awaits.",
-    "checkIn": "Check In",
-    "checkOut": "Check Out",
+    "title": "Escape to Nature's Embrace",
+    "subtitle": "A mindful retreat in Matheran's no-car eco zone",
+    "checkIn": "Check-in",
+    "checkOut": "Check-out",
     "guests": "Guests",
-    "search": "Search Rooms"
+    "exploreStay": "Explore Stay"
+  },
+  "welcome": {
+    "title": "Welcome to Horseland",
+    "description": "Nestled in the heart of Matheran's car-free paradise, Horseland represents more than luxury accommodation—it's a sanctuary where sustainable elegance meets authentic mountain hospitality.",
+    "features": {
+      "noiseEscape": {
+        "title": "Zero-noise hill station escape",
+        "description": "Complete tranquility away from city chaos"
+      },
+      "forestViews": {
+        "title": "Forest-backed views & soulfully curated stays",
+        "description": "Panoramic vistas with thoughtful hospitality"
+      },
+      "wholesome": {
+        "title": "Wholesome buffets, thoughtfully prepared to avoid waste",
+        "description": "Sustainable dining with locally sourced ingredients"
+      }
+    },
+    "stats": {
+      "years": "Years of Excellence",
+      "guests": "Happy Guests",
+      "ecoFriendly": "Eco-Friendly",
+      "rating": "Guest Rating"
+    }
+  },
+  "matheran": {
+    "title": "Why Matheran?",
+    "description": "India's first eco-sensitive hill station offers a unique blend of heritage and nature, creating an unparalleled mountain escape experience.",
+    "features": {
+      "noVehicles": {
+        "title": "No Vehicles",
+        "description": "Car-free zone"
+      },
+      "redEarth": {
+        "title": "Red Earth Trails",
+        "description": "Ancient pathways"
+      },
+      "horseRides": {
+        "title": "Horse Rides",
+        "description": "Traditional transport"
+      },
+      "toyTrain": {
+        "title": "Toy Train",
+        "description": "Heritage railway"
+      }
+    },
+    "learnMore": "Learn About Matheran"
+  },
+  "stay": {
+    "title": "Your Perfect Stay Awaits",
+    "description": "Thoughtfully designed accommodations that blend comfort with nature's tranquility. Each room tells a story of comfort, elegance, and natural beauty - find accommodation that matches your mountain getaway dreams",
+    "mostPopular": "Most Popular",
+    "startingFrom": "Starting from",
+    "perNight": "/night",
+    "viewDetails": "View Details",
+    "cantDecide": {
+      "title": "Can't decide? We'll help you choose!",
+      "description": "Call us for personalized recommendations based on your needs and budget.",
+      "call": "Call: +91 98765 43210",
+      "whatsapp": "WhatsApp us",
+      "viewAll": "View All Accommodations"
+    }
   },
   "packages": {
     "title": "Curated Experiences",
@@ -43,10 +104,23 @@
     }
   },
   "footer": {
-    "description": "Experience luxury amidst the Western Ghats at Horseland Hotel & Mountain Spa.",
-    "quickLinks": "Quick Links",
-    "contact": "Contact",
+    "description": "Where the forest whispers you awake. Experience mindful luxury in Matheran's pristine car-free sanctuary.",
+    "newsletter": {
+      "title": "Mountain Mailers",
+      "description": "Musings from the mountains, delivered monthly",
+      "placeholder": "Enter your email",
+      "subscribe": "Subscribe"
+    },
+    "connect": "Connect",
+    "contact": {
+      "reservations": "24/7 Reservations",
+      "email": "Email Us",
+      "visit": "Visit Us"
+    },
     "followUs": "Follow Us",
-    "rights": "All rights reserved."
+    "quickLinks": "Quick Links",
+    "policies": "Policies & Legal",
+    "rights": "© 2024 Horseland Resort. All rights reserved.",
+    "crafted": "Crafted with ❤️ for sustainable luxury"
   }
 }

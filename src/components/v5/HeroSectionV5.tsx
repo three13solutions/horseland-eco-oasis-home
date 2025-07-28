@@ -2,8 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Calendar, Users, ArrowRight, ChevronLeft, ChevronRight } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 const HeroSectionV5 = () => {
+  const { t } = useTranslation();
   const [currentSlide, setCurrentSlide] = useState(0);
   const [checkIn, setCheckIn] = useState('');
   const [checkOut, setCheckOut] = useState('');
@@ -71,18 +73,17 @@ const HeroSectionV5 = () => {
         <div className="container mx-auto px-4">
           <div className="max-w-4xl mx-auto text-center text-white">
             <h1 className="text-4xl md:text-6xl lg:text-7xl font-heading font-bold mb-6 leading-tight">
-              Escape to <br />
-              <span className="text-primary">Nature's Embrace</span>
+              {t('hero.title')}
             </h1>
             <p className="text-lg md:text-xl mb-12 text-white/90 font-body font-light max-w-2xl mx-auto">
-              A mindful retreat in Matheran's no-car eco zone
+              {t('hero.subtitle')}
             </p>
 
             {/* Glassmorphism Booking Widget - Inside Hero */}
             <div className="bg-white/10 backdrop-blur-xl rounded-3xl p-6 md:p-8 border border-white/20 max-w-4xl mx-auto">
               <div className="grid grid-cols-1 md:grid-cols-4 gap-4 md:gap-6 items-end">
                 <div className="space-y-2">
-                  <label className="text-white/80 text-sm font-medium block text-left">Check-in</label>
+                  <label className="text-white/80 text-sm font-medium block text-left">{t('hero.checkIn')}</label>
                   <div className="relative">
                     <Input
                       type="date"
@@ -95,7 +96,7 @@ const HeroSectionV5 = () => {
                 </div>
                 
                 <div className="space-y-2">
-                  <label className="text-white/80 text-sm font-medium block text-left">Check-out</label>
+                  <label className="text-white/80 text-sm font-medium block text-left">{t('hero.checkOut')}</label>
                   <div className="relative">
                     <Input
                       type="date"
@@ -108,7 +109,7 @@ const HeroSectionV5 = () => {
                 </div>
                 
                 <div className="space-y-2">
-                  <label className="text-white/80 text-sm font-medium block text-left">Guests</label>
+                  <label className="text-white/80 text-sm font-medium block text-left">{t('hero.guests')}</label>
                   <div className="relative">
                     <Input
                       type="number"
@@ -123,7 +124,7 @@ const HeroSectionV5 = () => {
                 </div>
                 
                 <Button className="h-12 bg-gradient-to-r from-primary to-accent hover:shadow-2xl transform hover:scale-105 transition-all duration-300 rounded-xl text-lg font-semibold px-6">
-                  Explore Stay
+                  {t('hero.exploreStay')}
                   <ArrowRight className="ml-2 h-5 w-5" />
                 </Button>
               </div>

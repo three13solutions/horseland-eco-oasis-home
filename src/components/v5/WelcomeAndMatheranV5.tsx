@@ -1,45 +1,48 @@
 import React from 'react';
 import { Leaf, Heart, Coffee, Car, Mountain, Activity, Train } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 const WelcomeAndMatheranV5 = () => {
+  const { t } = useTranslation();
+  
   const welcomeFeatures = [
     {
       icon: Leaf,
-      title: "Zero-noise hill station escape",
-      description: "Complete tranquility away from city chaos"
+      titleKey: "welcome.features.noiseEscape.title",
+      descriptionKey: "welcome.features.noiseEscape.description"
     },
     {
       icon: Heart,
-      title: "Forest-backed views & soulfully curated stays",
-      description: "Panoramic vistas with thoughtful hospitality"
+      titleKey: "welcome.features.forestViews.title",
+      descriptionKey: "welcome.features.forestViews.description"
     },
     {
       icon: Coffee,
-      title: "Wholesome buffets, thoughtfully prepared to avoid waste",
-      description: "Sustainable dining with locally sourced ingredients"
+      titleKey: "welcome.features.wholesome.title",
+      descriptionKey: "welcome.features.wholesome.description"
     }
   ];
 
   const matheranFeatures = [
     {
       icon: Car,
-      title: "No Vehicles",
-      description: "Car-free zone"
+      titleKey: "matheran.features.noVehicles.title",
+      descriptionKey: "matheran.features.noVehicles.description"
     },
     {
       icon: Mountain,
-      title: "Red Earth Trails",
-      description: "Ancient pathways"
+      titleKey: "matheran.features.redEarth.title",
+      descriptionKey: "matheran.features.redEarth.description"
     },
     {
       icon: Activity,
-      title: "Horse Rides",
-      description: "Traditional transport"
+      titleKey: "matheran.features.horseRides.title",
+      descriptionKey: "matheran.features.horseRides.description"
     },
     {
       icon: Train,
-      title: "Toy Train",
-      description: "Heritage railway"
+      titleKey: "matheran.features.toyTrain.title",
+      descriptionKey: "matheran.features.toyTrain.description"
     }
   ];
 
@@ -50,10 +53,10 @@ const WelcomeAndMatheranV5 = () => {
         <div className="container mx-auto px-4">
           <div className="text-center mb-12">
             <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
-              Welcome to <span className="text-primary italic">Horseland</span>
+              {t('welcome.title')}
             </h2>
             <p className="text-lg text-muted-foreground max-w-3xl mx-auto leading-relaxed">
-              Nestled in the heart of Matheran's car-free paradise, Horseland represents more than luxury accommodation—it's a sanctuary where sustainable elegance meets authentic mountain hospitality.
+              {t('welcome.description')}
             </p>
           </div>
           
@@ -61,19 +64,19 @@ const WelcomeAndMatheranV5 = () => {
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6 max-w-2xl mx-auto mb-12">
             <div className="text-center">
               <div className="text-2xl md:text-3xl font-bold text-primary">25+</div>
-              <div className="text-sm text-muted-foreground">Years of Excellence</div>
+              <div className="text-sm text-muted-foreground">{t('welcome.stats.years')}</div>
             </div>
             <div className="text-center">
               <div className="text-2xl md:text-3xl font-bold text-primary">5000+</div>
-              <div className="text-sm text-muted-foreground">Happy Guests</div>
+              <div className="text-sm text-muted-foreground">{t('welcome.stats.guests')}</div>
             </div>
             <div className="text-center">
               <div className="text-2xl md:text-3xl font-bold text-primary">100%</div>
-              <div className="text-sm text-muted-foreground">Eco-Friendly</div>
+              <div className="text-sm text-muted-foreground">{t('welcome.stats.ecoFriendly')}</div>
             </div>
             <div className="text-center">
               <div className="text-2xl md:text-3xl font-bold text-primary">4.9★</div>
-              <div className="text-sm text-muted-foreground">Guest Rating</div>
+              <div className="text-sm text-muted-foreground">{t('welcome.stats.rating')}</div>
             </div>
           </div>
           
@@ -86,10 +89,10 @@ const WelcomeAndMatheranV5 = () => {
                   </div>
                 </div>
                 <h3 className="text-xl font-semibold mb-2 text-foreground">
-                  {feature.title}
+                  {t(feature.titleKey)}
                 </h3>
                 <p className="text-muted-foreground">
-                  {feature.description}
+                  {t(feature.descriptionKey)}
                 </p>
               </div>
             ))}
@@ -102,10 +105,10 @@ const WelcomeAndMatheranV5 = () => {
         <div className="container mx-auto px-4">
           <div className="text-center mb-8">
             <h2 className="text-2xl md:text-3xl font-bold text-foreground mb-4">
-              Why <span className="text-primary">Matheran</span>?
+              {t('matheran.title')}
             </h2>
             <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-              India's first eco-sensitive hill station offers a unique blend of heritage and nature, creating an unparalleled mountain escape experience.
+              {t('matheran.description')}
             </p>
           </div>
           
@@ -118,10 +121,10 @@ const WelcomeAndMatheranV5 = () => {
                   </div>
                 </div>
                 <h3 className="font-semibold mb-1 text-foreground text-sm md:text-base">
-                  {feature.title}
+                  {t(feature.titleKey)}
                 </h3>
                 <p className="text-xs md:text-sm text-muted-foreground">
-                  {feature.description}
+                  {t(feature.descriptionKey)}
                 </p>
               </div>
             ))}
@@ -130,7 +133,7 @@ const WelcomeAndMatheranV5 = () => {
           {/* Learn More Section */}
           <div className="text-center">
             <button className="bg-primary hover:bg-primary/90 text-primary-foreground px-6 py-3 rounded-lg font-medium transition-colors">
-              Learn About Matheran
+              {t('matheran.learnMore')}
             </button>
           </div>
         </div>
