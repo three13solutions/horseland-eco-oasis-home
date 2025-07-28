@@ -1,10 +1,10 @@
 import React from 'react';
-import { useTranslation } from 'react-i18next';
+import { useTranslationContext } from '@/components/admin/TranslationProvider';
 import { Button } from '@/components/ui/button';
 import { ArrowRight, Sparkles } from 'lucide-react';
 
 const StayPreviewV5 = () => {
-  const { t } = useTranslation();
+  const { getTranslation } = useTranslationContext();
   const rooms = [
     {
       id: 1,
@@ -41,10 +41,10 @@ const StayPreviewV5 = () => {
         {/* Section Header */}
         <div className="text-center mb-16">
           <h2 className="text-3xl md:text-4xl font-serif font-bold text-foreground mb-6">
-            {t('stay.title')} <span className="text-primary">{t('stay.titleHighlight')}</span>
+            {getTranslation('stay.title', 'Your Perfect Stay')} <span className="text-primary">{getTranslation('stay.titleHighlight', 'Awaits')}</span>
           </h2>
           <p className="text-lg text-muted-foreground max-w-3xl mx-auto">
-            {t('stay.description')}
+            {getTranslation('stay.description', 'Thoughtfully designed accommodations that blend comfort with nature\'s tranquility.')}
           </p>
         </div>
 
@@ -61,7 +61,7 @@ const StayPreviewV5 = () => {
               {index === 1 && (
                 <div className="absolute top-4 left-4 z-20 bg-primary text-primary-foreground px-3 py-1 rounded-full text-sm font-medium flex items-center">
                   <Sparkles className="w-4 h-4 mr-1" />
-                  {t('stay.mostPopular')}
+                  {getTranslation('stay.mostPopular', 'Most Popular')}
                 </div>
               )}
 
@@ -76,9 +76,9 @@ const StayPreviewV5 = () => {
                 
                 {/* Price Badge */}
                 <div className="absolute top-4 right-4 bg-white/90 backdrop-blur-sm rounded-full px-4 py-2 text-left">
-                  <div className="text-xs text-muted-foreground mb-1">{t('stay.startingFrom')}</div>
+                  <div className="text-xs text-muted-foreground mb-1">{getTranslation('stay.startingFrom', 'Starting from')}</div>
                   <span className="text-2xl font-bold text-foreground">{room.price}</span>
-                  <span className="text-sm text-muted-foreground">/{t('stay.perNight')}</span>
+                  <span className="text-sm text-muted-foreground">/{getTranslation('stay.perNight', '/night')}</span>
                 </div>
               </div>
 
@@ -114,7 +114,7 @@ const StayPreviewV5 = () => {
                       : 'bg-foreground hover:bg-foreground/90'
                   } hover:shadow-lg transform hover:scale-105 transition-all duration-300`}
                 >
-                  {t('stay.viewDetails')}
+                  {getTranslation('stay.viewDetails', 'View Details')}
                   <ArrowRight className="ml-2 h-4 w-4" />
                 </Button>
               </div>
@@ -125,21 +125,21 @@ const StayPreviewV5 = () => {
         {/* Can't decide? CTA Box */}
         <div className="text-center mt-12 p-6 md:p-8 bg-gradient-to-r from-primary/10 to-accent/10 rounded-2xl border border-primary/20">
           <h3 className="text-xl md:text-2xl font-bold text-foreground mb-4">
-            {t('stay.undecided.title')}
+            {getTranslation('stay.undecided.title', 'Can\'t decide? We\'ll help you choose!')}
           </h3>
           <p className="text-muted-foreground mb-6">
-            {t('stay.undecided.description')}
+            {getTranslation('stay.undecided.description', 'Call us for personalized recommendations based on your needs and budget.')}
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
             <Button className="bg-gradient-to-r from-primary to-accent">
-              {t('stay.undecided.call')}
+              {getTranslation('stay.undecided.call', 'Call: +91 98765 43210')}
             </Button>
             <Button variant="outline">
-              {t('stay.undecided.whatsapp')}
+              {getTranslation('stay.undecided.whatsapp', 'WhatsApp us')}
             </Button>
             <a href="/stay">
               <Button variant="outline" className="hover:bg-primary hover:text-primary-foreground transition-all duration-300">
-                {t('stay.undecided.viewAll')}
+                {getTranslation('stay.undecided.viewAll', 'View All Accommodations')}
                 <ArrowRight className="ml-2 h-4 w-4" />
               </Button>
             </a>

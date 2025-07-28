@@ -1,10 +1,10 @@
 import React from 'react';
-import { useTranslation } from 'react-i18next';
+import { useTranslationContext } from '@/components/admin/TranslationProvider';
 import { Star, Quote, MapPin, ChevronLeft, ChevronRight } from 'lucide-react';
 import useEmblaCarousel from 'embla-carousel-react';
 
 const GuestReviewsV5 = () => {
-  const { t } = useTranslation();
+  const { getTranslation } = useTranslationContext();
   const [emblaRef, emblaApi] = useEmblaCarousel({ 
     loop: true,
     align: 'start',
@@ -89,10 +89,10 @@ const GuestReviewsV5 = () => {
           {/* Header - Keep v5 styling */}
           <div className="text-center mb-10 md:mb-16">
             <h2 className="text-3xl md:text-4xl font-serif font-bold text-foreground mb-4">
-              {t('reviews.title')} <span className="text-primary">{t('reviews.titleHighlight')}</span> {t('reviews.titleSuffix')}
+              {getTranslation('reviews.title', 'What Our')} <span className="text-primary">{getTranslation('reviews.titleHighlight', 'Guests')}</span> {getTranslation('reviews.titleSuffix', 'Say')}
             </h2>
             <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-              {t('reviews.subtitle')}
+              {getTranslation('reviews.subtitle', 'See why families and couples choose Horseland for their Matheran stay')}
             </p>
           </div>
 
@@ -100,19 +100,19 @@ const GuestReviewsV5 = () => {
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-8 mb-12 md:mb-16">
             <div className="text-center p-4 bg-card rounded-xl">
               <div className="text-2xl md:text-3xl font-bold text-primary">4.3</div>
-              <div className="text-sm text-muted-foreground">{t('reviews.stats.averageRating')}</div>
+              <div className="text-sm text-muted-foreground">{getTranslation('reviews.stats.averageRating', 'Average Rating')}</div>
             </div>
             <div className="text-center p-4 bg-card rounded-xl">
               <div className="text-2xl md:text-3xl font-bold text-primary">500+</div>
-              <div className="text-sm text-muted-foreground">{t('reviews.stats.happyGuests')}</div>
+              <div className="text-sm text-muted-foreground">{getTranslation('reviews.stats.happyGuests', 'Happy Guests')}</div>
             </div>
             <div className="text-center p-4 bg-card rounded-xl">
               <div className="text-2xl md:text-3xl font-bold text-primary">94%</div>
-              <div className="text-sm text-muted-foreground">{t('reviews.stats.wouldReturn')}</div>
+              <div className="text-sm text-muted-foreground">{getTranslation('reviews.stats.wouldReturn', 'Would Return')}</div>
             </div>
             <div className="text-center p-4 bg-card rounded-xl">
               <div className="text-2xl md:text-3xl font-bold text-primary">₹1,500</div>
-              <div className="text-sm text-muted-foreground">{t('reviews.stats.startingPrice')}</div>
+              <div className="text-sm text-muted-foreground">{getTranslation('reviews.stats.startingPrice', 'Starting Price')}</div>
             </div>
           </div>
 
@@ -182,17 +182,17 @@ const GuestReviewsV5 = () => {
           {/* Bottom CTA */}
           <div className="text-center mt-12 p-6 md:p-8 bg-gradient-to-r from-primary/10 to-accent/10 rounded-2xl border border-primary/20">
             <h3 className="text-xl md:text-2xl font-bold text-foreground mb-4">
-              {t('reviews.cta.title')}
+              {getTranslation('reviews.cta.title', 'Join Our Happy Guests')}
             </h3>
             <p className="text-muted-foreground mb-6">
-              {t('reviews.cta.description')}
+              {getTranslation('reviews.cta.description', 'Continue to read more stories on TripAdvisor 4.8/5 and Google Reviews 4.9/5 or Book your stay today and create your own memorable experience in Matheran.')}
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <button className="bg-gradient-to-r from-primary to-accent text-white px-6 py-3 rounded-xl font-semibold hover:shadow-lg transform hover:scale-105 transition-all">
-                {t('reviews.cta.bookStay')}
+                {getTranslation('reviews.cta.bookStay', 'Book Your Stay')}
               </button>
               <button className="border border-primary text-primary px-6 py-3 rounded-xl font-semibold hover:bg-primary/10 transition-all">
-                {t('reviews.cta.viewAllReviews')}
+                {getTranslation('reviews.cta.viewAllReviews', 'View All Reviews')}
               </button>
             </div>
           </div>
