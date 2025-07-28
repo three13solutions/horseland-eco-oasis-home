@@ -27,7 +27,7 @@ const NavigationV4 = () => {
         { name: 'Spa & Wellness', href: '#spa' }
       ]
     },
-    { name: 'Packages', href: '#packages' },
+    
     { name: 'Journal', href: '#journal' },
     { name: 'FAQs', href: '#faqs' },
     { name: 'Contact', href: '#contact' }

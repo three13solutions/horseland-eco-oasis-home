@@ -26,7 +26,7 @@ const Navigation = () => {
         { title: 'Dining', href: '#dining' },
       ]
     },
-    { title: 'Packages', href: '#packages' },
+    
     { title: 'Journal', href: '#journal' },
     { title: 'Contact', href: '#contact' },
   ];

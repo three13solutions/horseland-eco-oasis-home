@@ -62,7 +62,7 @@ const DynamicNavigation = () => {
         { id: '1', title: 'About', href: '/about', sort_order: 1, is_active: true },
         { id: '2', title: 'Stay', href: '/stay', sort_order: 2, is_active: true },
         { id: '3', title: 'Experiences', href: '/experiences', sort_order: 3, is_active: true },
-        { id: '4', title: 'Packages', href: '/packages', sort_order: 4, is_active: true },
+        
         { id: '5', title: 'Journal', href: '/journal', sort_order: 5, is_active: true },
       ]);
     }
