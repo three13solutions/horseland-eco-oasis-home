@@ -143,7 +143,7 @@ const DynamicFooter = () => {
           )}
 
           {/* Packages - Third Column */}
-          <div className="md:col-span-2 lg:col-span-2 space-y-4">
+          <div className="md:col-span-2 lg:col-span-2 space-y-4 md:pl-6 lg:pl-8">
             <h3 className="text-lg font-semibold text-background">
               Explore Packages
             </h3>
@@ -224,10 +224,10 @@ const DynamicFooter = () => {
 
         {/* Policies and Social Row */}
         <div className="mt-8 pt-6">
-          <div className="flex flex-col md:flex-row justify-between items-start space-y-6 md:space-y-0">
-            {/* Policies - Left Side */}
+          <div className="grid grid-cols-1 md:grid-cols-6 lg:grid-cols-8 gap-8">
+            {/* Policies - Left Side - Spans 2 columns like brand section */}
             {policiesSection && policiesSection.content.links && (
-              <div>
+              <div className="md:col-span-2 lg:col-span-2">
                 <h4 className="text-sm font-semibold text-background mb-3">Policies</h4>
                 <div className="flex flex-wrap gap-1 text-sm text-background/60">
                   {policiesSection.content.links.map((link: any, index: number) => (
@@ -247,9 +247,12 @@ const DynamicFooter = () => {
               </div>
             )}
             
-            {/* Social Icons - Right Side */}
+            {/* Empty spaces to align with Connect column */}
+            <div className="md:col-span-2 lg:col-span-4"></div>
+            
+            {/* Social Icons - Right Side - Aligned with Connect column */}
             {socialSection && (
-              <div className="space-y-3">
+              <div className="md:col-span-2 lg:col-span-2 space-y-3">
                 <p className="text-background/80 text-sm">Follow Our Journey</p>
                 <div className="flex space-x-3">
                   {Object.entries(socialSection.content).map(([platform, url]) => (
