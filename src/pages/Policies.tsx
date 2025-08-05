@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import NavigationV5 from '@/components/v5/NavigationV5';
 import DynamicFooter from '@/components/DynamicFooter';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -6,6 +6,15 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Shield, CreditCard, Eye, FileText, Clock, Users } from 'lucide-react';
 
 const Policies = () => {
+  const [activeTab, setActiveTab] = React.useState('booking');
+
+  useEffect(() => {
+    const hash = window.location.hash.replace('#', '');
+    if (hash && ['booking', 'cancellation', 'payment', 'privacy', 'terms', 'guest'].includes(hash)) {
+      setActiveTab(hash);
+    }
+  }, []);
+
   return (
     <div className="min-h-screen bg-background">
       <NavigationV5 />
@@ -27,7 +36,7 @@ const Policies = () => {
       {/* Policies Content */}
       <section className="py-16">
         <div className="container mx-auto px-6">
-          <Tabs defaultValue="booking" className="max-w-4xl mx-auto">
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="max-w-4xl mx-auto">
             <TabsList className="grid w-full grid-cols-3 md:grid-cols-6">
               <TabsTrigger value="booking">Booking</TabsTrigger>
               <TabsTrigger value="cancellation">Cancellation</TabsTrigger>

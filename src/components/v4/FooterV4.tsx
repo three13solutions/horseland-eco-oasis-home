@@ -25,9 +25,9 @@ const FooterV4 = () => {
   ];
 
   const policies = [
-    { name: 'Privacy Policy', href: '#privacy' },
-    { name: 'Cancellation Policy', href: '#cancellation' },
-    { name: 'Terms & Conditions', href: '#terms' },
+    { name: 'Privacy Policy', href: '/policies#privacy' },
+    { name: 'Cancellation Policy', href: '/policies#cancellation' },
+    { name: 'Terms & Conditions', href: '/policies#terms' },
     { name: 'Guest Reviews', href: '#reviews' }
   ];
 

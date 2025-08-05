@@ -14,10 +14,10 @@ const Footer = () => {
   ];
 
   const policyLinks = [
-    { title: 'Privacy Policy', href: '#privacy' },
-    { title: 'Refund Policy', href: '#refund' },
-    { title: 'Terms & Conditions', href: '#terms' },
-    { title: 'Cancellation Policy', href: '#cancellation' }
+    { title: 'Privacy Policy', href: '/policies#privacy' },
+    { title: 'Refund Policy', href: '/policies#payment' },
+    { title: 'Terms & Conditions', href: '/policies#terms' },
+    { title: 'Cancellation Policy', href: '/policies#cancellation' }
   ];
 
   const socialLinks = [
