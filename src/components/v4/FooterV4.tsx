@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { MapPin, Phone, Mail, Instagram, Facebook, Twitter, Send } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -100,12 +101,12 @@ const FooterV4 = () => {
             <ul className="space-y-2 mb-6">
               {policies.map((policy) => (
                 <li key={policy.name}>
-                  <a 
-                    href={policy.href}
+                  <Link 
+                    to={policy.href}
                     className="text-sm text-background/70 hover:text-primary transition-colors"
                   >
                     {policy.name}
-                  </a>
+                  </Link>
                 </li>
               ))}
             </ul>

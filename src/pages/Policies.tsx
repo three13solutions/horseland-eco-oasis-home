@@ -9,10 +9,22 @@ const Policies = () => {
   const [activeTab, setActiveTab] = React.useState('booking');
 
   useEffect(() => {
-    const hash = window.location.hash.replace('#', '');
-    if (hash && ['booking', 'cancellation', 'payment', 'privacy', 'terms', 'guest'].includes(hash)) {
-      setActiveTab(hash);
-    }
+    const handleHashChange = () => {
+      const hash = window.location.hash.replace('#', '');
+      if (hash && ['booking', 'cancellation', 'payment', 'privacy', 'terms', 'guest'].includes(hash)) {
+        setActiveTab(hash);
+      }
+    };
+
+    // Set initial tab from hash
+    handleHashChange();
+
+    // Listen for hash changes
+    window.addEventListener('hashchange', handleHashChange);
+    
+    return () => {
+      window.removeEventListener('hashchange', handleHashChange);
+    };
   }, []);
 
   return (

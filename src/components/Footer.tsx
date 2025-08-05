@@ -1,5 +1,6 @@
 
 import React from 'react';
+import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Facebook, Instagram, Twitter, Youtube, Phone, Mail, MapPin } from 'lucide-react';
@@ -79,12 +80,12 @@ const Footer = () => {
             <ul className="space-y-2">
               {policyLinks.map((link, index) => (
                 <li key={index}>
-                  <a 
-                    href={link.href} 
+                  <Link 
+                    to={link.href} 
                     className="text-background/80 hover:text-background transition-colors"
                   >
                     {link.title}
-                  </a>
+                  </Link>
                 </li>
               ))}
             </ul>
