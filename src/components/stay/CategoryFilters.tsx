@@ -107,6 +107,20 @@ const CategoryFilters: React.FC<Props> = ({ filters, setFilters }) => {
           />
           
           <FilterPill
+            label="Bed Type"
+            value={filters.bed}
+            options={['1 double', '2 doubles', 'double + sofa‑cum‑bed', 'loft bed present']}
+            onChange={(v) => setFilters({ ...filters, bed: v as any })}
+          />
+          
+          <FilterPill
+            label="Location"
+            value={filters.view}
+            options={['Balcony', 'Pool view', 'Near pool', 'Near playground', 'Highest point', 'Private']}
+            onChange={(v) => setFilters({ ...filters, view: v as any })}
+          />
+          
+          <FilterPill
             label="Noise"
             value={filters.noise}
             options={['Quiet', 'Moderate', 'Lively zone']}
