@@ -24,6 +24,7 @@ import FAQ from "./pages/FAQ";
 import Contact from "./pages/Contact";
 import Policies from "./pages/Policies";
 import RoomDetail from "./pages/RoomDetail";
+import CategoryDetail from "./pages/CategoryDetail";
 import NotFound from "./pages/NotFound";
 import AdminLogin from "./pages/AdminLogin";
 import AdminDashboard from "./pages/AdminDashboard";
@@ -52,7 +53,8 @@ const App = () => (
           <Route path="/v5" element={<IndexV5 />} />
           <Route path="/about" element={<About />} />
           <Route path="/stay" element={<Stay />} />
-          <Route path="/stay/:roomId" element={<RoomDetail />} />
+          <Route path="/stay/:categoryId" element={<CategoryDetail />} />
+          <Route path="/room/:roomId" element={<RoomDetail />} />
           <Route path="/experiences" element={<Experiences />} />
           <Route path="/experiences/activities" element={<Activities />} />
           <Route path="/experiences/dining" element={<Dining />} />

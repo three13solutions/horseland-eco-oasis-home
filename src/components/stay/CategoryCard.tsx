@@ -3,6 +3,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Users, MapPin } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
 export type Category = {
   id: string;
@@ -21,9 +22,10 @@ export type Category = {
 type Props = {
   category: Category;
   onViewDetails: (category: Category) => void;
+  onBookNow: (category: Category) => void;
 };
 
-const CategoryCard: React.FC<Props> = ({ category, onViewDetails }) => (
+const CategoryCard: React.FC<Props> = ({ category, onViewDetails, onBookNow }) => (
   <div className="bg-card border rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-all duration-300">
     <div className="relative">
       <img 
@@ -72,9 +74,16 @@ const CategoryCard: React.FC<Props> = ({ category, onViewDetails }) => (
           <span className="text-2xl font-heading font-bold text-primary">₹8,500</span>
           <span className="text-sm text-muted-foreground ml-1">/night</span>
         </div>
-        <Button variant="outline" size="sm" className="font-body" onClick={() => onViewDetails(category)}>
-          View Details
-        </Button>
+        <div className="flex gap-2">
+          <Link to={`/stay/${category.id}`}>
+            <Button variant="outline" size="sm" className="font-body">
+              View Details
+            </Button>
+          </Link>
+          <Button size="sm" className="font-body" onClick={() => onBookNow(category)}>
+            Book Now
+          </Button>
+        </div>
       </div>
     </div>
   </div>

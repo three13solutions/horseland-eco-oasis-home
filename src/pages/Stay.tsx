@@ -117,7 +117,7 @@ const Stay = () => {
       id: 'playside-nooks',
       name: 'Playside Nooks',
       tagline: 'Family-friendly spaces near the playground',
-      image: 'https://images.unsplash.com/photo-1590490360238-c33d57733427?auto=format&fit=crop&w=800&q=80',
+      image: 'https://images.unsplash.com/photo-1566665797739-1674de7a421a?auto=format&fit=crop&w=800&q=80',
       maxGuests: 4,
       bedConfigurations: ['double + sofa‑cum‑bed'],
       audiences: ['Family with kids'],
@@ -199,6 +199,9 @@ const Stay = () => {
                 key={cat.id}
                 category={cat}
                 onViewDetails={(c) => {
+                  // View Details is now handled by Link in CategoryCard
+                }}
+                onBookNow={(c) => {
                   setSelectedCategory(c);
                   setBookingOpen(true);
                 }}
