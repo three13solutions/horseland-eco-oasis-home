@@ -68,19 +68,19 @@ const CategoryCard: React.FC<Props> = ({ category, onViewDetails, onBookNow }) =
         </div>
       </div>
 
-      <div className="flex items-center justify-between">
+      <div className="space-y-3">
         <div>
           <div className="text-xs text-muted-foreground mb-1">Starting from</div>
           <span className="text-2xl font-heading font-bold text-primary">₹8,500</span>
           <span className="text-sm text-muted-foreground ml-1">/night</span>
         </div>
-        <div className="flex gap-2">
-          <Link to={`/stay/${category.id}`}>
-            <Button variant="outline" size="sm" className="font-body">
+        <div className="flex gap-2 w-full">
+          <Link to={`/stay/${category.id}`} className="flex-1">
+            <Button variant="outline" size="sm" className="font-body w-full">
               View Details
             </Button>
           </Link>
-          <Button size="sm" className="font-body" onClick={() => onBookNow(category)}>
+          <Button size="sm" className="font-body flex-1" onClick={() => onBookNow(category)}>
             Book Now
           </Button>
         </div>
