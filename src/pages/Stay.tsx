@@ -1,83 +1,164 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import NavigationV5 from '../components/v5/NavigationV5';
 import DynamicFooter from '../components/DynamicFooter';
 import FloatingElementsV5 from '../components/v5/FloatingElementsV5';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Users, Wifi, Coffee, Bath, Mountain, Star } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import CategoryFilters, { Filters } from '@/components/stay/CategoryFilters';
+import CategoryCard, { Category } from '@/components/stay/CategoryCard';
+import CategoryBookingModal from '@/components/stay/CategoryBookingModal';
 
 const Stay = () => {
-  const [filter, setFilter] = useState('all');
-
-  const rooms = [
+  // New category-first experience
+  const categories: Category[] = [
     {
-      id: 'deluxe-valley',
-      name: 'Deluxe Valley View',
-      image: 'https://images.unsplash.com/photo-1631049307264-da0ec9d70304?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
-      guests: 2,
-      view: 'Valley',
-      price: '₹8,500',
-      amenities: ['Mountain View', 'Private Balcony', 'Wifi', 'Mini Bar'],
-      rating: 4.8
+      id: 'cave-hideouts',
+      name: 'Cave Hideouts',
+      tagline: 'Naturally cool rooms tucked below ground',
+      image: 'https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?auto=format&fit=crop&w=1200&q=80',
+      maxGuests: 3,
+      bedConfigurations: ['1 double', 'double + sofa‑cum‑bed'],
+      audiences: ['Couple', 'Family with kids', 'Friends / Group'],
+      budget: 'Budget',
+      viewLocations: ['No view / private and snug', 'Near entrance'],
+      features: ['Basement/cave style', 'Windowless/private', 'Air‑conditioned'],
+      noise: 'Quiet',
     },
     {
-      id: 'family-suite',
-      name: 'Family Suite',
-      image: 'https://images.unsplash.com/photo-1566665797739-1674de7a421a?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
-      guests: 4,
-      view: 'Garden',
-      price: '₹12,500',
-      amenities: ['Connecting Rooms', 'Living Area', 'Kitchenette', 'Wifi'],
-      rating: 4.9
+      id: 'bamboo-heights',
+      name: 'Bamboo Heights Cabins',
+      tagline: 'Cozy cabins with elevated views',
+      image: 'https://images.unsplash.com/photo-1519710164239-da123dc03ef4?auto=format&fit=crop&w=1200&q=80',
+      maxGuests: 4,
+      bedConfigurations: ['2 doubles'],
+      audiences: ['Family with kids', 'Friends / Group'],
+      budget: 'Mid-range',
+      viewLocations: ['Balcony', 'Highest point'],
+      features: ['Cabin/cottage style', 'Air‑conditioned', 'Interconnected'],
+      noise: 'Moderate',
     },
     {
-      id: 'premium-forest',
-      name: 'Premium Forest View',
-      image: 'https://images.unsplash.com/photo-1578683010236-d716f9a3f461?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
-      guests: 2,
-      view: 'Forest',
-      price: '₹10,500',
-      amenities: ['Forest View', 'Fireplace', 'Jacuzzi', 'Room Service'],
-      rating: 4.7
+      id: 'pool-deck',
+      name: 'Pool Deck Rooms',
+      tagline: 'Steps from a refreshing dip',
+      image: 'https://images.unsplash.com/photo-1512453979798-5ea266f8880c?auto=format&fit=crop&w=1200&q=80',
+      maxGuests: 3,
+      bedConfigurations: ['1 double', 'double + sofa‑cum‑bed'],
+      audiences: ['Couple', 'Family with kids'],
+      budget: 'Mid-range',
+      viewLocations: ['Near pool', 'Pool view (window)'],
+      features: ['Air‑conditioned'],
+      noise: 'Lively zone',
     },
     {
-      id: 'honeymoon-cottage',
-      name: 'Honeymoon Cottage',
-      image: 'https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
-      guests: 2,
-      view: 'Private',
-      price: '₹15,000',
-      amenities: ['Private Garden', 'Hot Tub', 'Champagne Service', 'Butler Service'],
-      rating: 5.0
+      id: 'balcony-bliss',
+      name: 'Balcony Bliss',
+      tagline: 'Open-air balconies for fresh forest breezes',
+      image: 'https://images.unsplash.com/photo-1505693416388-ac5ce068fe85?auto=format&fit=crop&w=1200&q=80',
+      maxGuests: 3,
+      bedConfigurations: ['1 double'],
+      audiences: ['Couple'],
+      budget: 'Premium',
+      viewLocations: ['Balcony', 'Highest point'],
+      features: ['Air‑conditioned'],
+      noise: 'Moderate',
     },
     {
-      id: 'executive-room',
-      name: 'Executive Room',
-      image: 'https://images.unsplash.com/photo-1564501049412-61c2a3083791?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
-      guests: 2,
-      view: 'Valley',
-      price: '₹9,500',
-      amenities: ['Work Desk', 'Express Laundry', 'Welcome Drinks', 'Wifi'],
-      rating: 4.6
+      id: 'loftscapes',
+      name: 'Loftscapes Rooms',
+      tagline: 'Smart loft layouts with extra sleeping space',
+      image: 'https://images.unsplash.com/photo-1505692794403-34d4982f88aa?auto=format&fit=crop&w=1200&q=80',
+      maxGuests: 5,
+      bedConfigurations: ['loft bed present', '2 doubles'],
+      audiences: ['Family with kids', 'Friends / Group'],
+      budget: 'Mid-range',
+      viewLocations: ['Balcony'],
+      features: ['Loft layout', 'Interconnected', 'Air‑conditioned'],
+      noise: 'Moderate',
     },
     {
-      id: 'budget-twin',
-      name: 'Budget Twin Room',
-      image: 'https://images.unsplash.com/photo-1586023492125-27b2c045efd7?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
-      guests: 2,
-      view: 'Garden',
-      price: '₹6,500',
-      amenities: ['Twin Beds', 'Shared Balcony', 'Basic Wifi', 'Daily Housekeeping'],
-      rating: 4.4
-    }
+      id: 'poolside-peeks',
+      name: 'Poolside Peeks',
+      tagline: 'Cheerful rooms close to pool fun',
+      image: 'https://images.unsplash.com/photo-1516979187457-637abb4f9353?auto=format&fit=crop&w=1200&q=80',
+      maxGuests: 4,
+      bedConfigurations: ['2 doubles'],
+      audiences: ['Friends / Group', 'Family with kids'],
+      budget: 'Budget',
+      viewLocations: ['Near pool', 'Pool view (window)'],
+      features: ['Air‑conditioned'],
+      noise: 'Lively zone',
+    },
+    {
+      id: 'plateau-pods',
+      name: 'Plateau Pods',
+      tagline: 'Calm, elevated pods with privacy',
+      image: 'https://images.unsplash.com/photo-1519710164239-da123dc03ef4?auto=format&fit=crop&w=1200&q=80',
+      maxGuests: 2,
+      bedConfigurations: ['1 double'],
+      audiences: ['Couple'],
+      budget: 'Budget',
+      viewLocations: ['Highest point'],
+      features: ['Non‑AC', 'Windowless/private'],
+      noise: 'Quiet',
+    },
+    {
+      id: 'courtside-quarters',
+      name: 'Courtside Quarters',
+      tagline: 'Stay by the action near sports courts',
+      image: 'https://images.unsplash.com/photo-1505692794403-34d4982f88aa?auto=format&fit=crop&w=1200&q=80',
+      maxGuests: 4,
+      bedConfigurations: ['2 doubles'],
+      audiences: ['Friends / Group', 'Family with kids'],
+      budget: 'Budget',
+      viewLocations: ['Near sports courts'],
+      features: ['Air‑conditioned'],
+      noise: 'Lively zone',
+    },
+    {
+      id: 'playside-nooks',
+      name: 'Playside Nooks',
+      tagline: 'Family-friendly spaces near the playground',
+      image: 'https://images.unsplash.com/photo-1590490360238-c33d57733427?auto=format&fit=crop&w=1200&q=80',
+      maxGuests: 4,
+      bedConfigurations: ['double + sofa‑cum‑bed'],
+      audiences: ['Family with kids'],
+      budget: 'Budget',
+      viewLocations: ['Near playground', 'Near entrance'],
+      features: ['Air‑conditioned', 'Interconnected'],
+      noise: 'Moderate',
+    },
   ];
 
-  const filteredRooms = filter === 'all' ? rooms : rooms.filter(room => {
-    if (filter === '2') return room.guests <= 2;
-    if (filter === '4+') return room.guests >= 4;
-    return true;
+  const [filters, setFilters] = useState<Filters>({
+    guests: null,
+    bed: null,
+    audience: null,
+    budget: null,
+    view: null,
+    features: [],
+    noise: null,
   });
+
+  const [selectedCategory, setSelectedCategory] = useState<Category | null>(null);
+  const [bookingOpen, setBookingOpen] = useState(false);
+
+  const filteredCategories = useMemo(() => {
+    return categories.filter((c) => {
+      if (filters.guests) {
+        const g = filters.guests;
+        if (g === '1-2' && c.maxGuests < 2) return false;
+        if (g === '3' && c.maxGuests < 3) return false;
+        if (g === '4-6' && c.maxGuests < 4) return false;
+        if (g === '6+' && c.maxGuests < 6) return false;
+      }
+      if (filters.bed && !c.bedConfigurations.includes(filters.bed)) return false;
+      if (filters.audience && !c.audiences.includes(filters.audience)) return false;
+      if (filters.budget && c.budget !== filters.budget) return false;
+      if (filters.view && !c.viewLocations.includes(filters.view)) return false;
+      if (filters.features.length > 0 && !filters.features.every((f) => c.features.includes(f))) return false;
+      if (filters.noise && c.noise !== filters.noise) return false;
+      return true;
+    });
+  }, [categories, filters]);
 
   return (
     <div className="min-h-screen bg-background overflow-x-hidden">
@@ -104,105 +185,34 @@ const Stay = () => {
         </div>
       </section>
 
-      {/* Filter Section */}
+      {/* Filters */}
       <section className="py-8 bg-muted/30">
-        <div className="max-w-6xl mx-auto px-4">
-          <div className="flex flex-wrap gap-4 justify-center">
-            <Button 
-              variant={filter === 'all' ? 'default' : 'outline'}
-              onClick={() => setFilter('all')}
-              className="font-body"
-            >
-              All Rooms
-            </Button>
-            <Button 
-              variant={filter === '2' ? 'default' : 'outline'}
-              onClick={() => setFilter('2')}
-              className="font-body"
-            >
-              Up to 2 Guests
-            </Button>
-            <Button 
-              variant={filter === '4+' ? 'default' : 'outline'}
-              onClick={() => setFilter('4+')}
-              className="font-body"
-            >
-              4+ Guests
-            </Button>
-          </div>
-        </div>
+        <CategoryFilters filters={filters} setFilters={setFilters} />
       </section>
 
-      {/* Rooms Grid */}
+      {/* Categories Grid */}
       <section className="py-16">
         <div className="max-w-6xl mx-auto px-4">
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {filteredRooms.map((room) => (
-              <div key={room.id} className="bg-card border rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-all duration-300">
-                <div className="relative">
-                  <img 
-                    src={room.image}
-                    alt={room.name}
-                    className="w-full h-48 object-cover"
-                  />
-                  <Badge className="absolute top-3 right-3 bg-white/90 text-foreground">
-                    <Star className="w-3 h-3 mr-1 fill-current" />
-                    {room.rating}
-                  </Badge>
-                </div>
-                
-                <div className="p-6">
-                  <h3 className="text-xl font-heading font-semibold mb-2">{room.name}</h3>
-                  
-                  <div className="flex items-center gap-4 mb-4 text-sm text-muted-foreground">
-                    <div className="flex items-center gap-1">
-                      <Users className="w-4 h-4" />
-                      {room.guests} Guests
-                    </div>
-                    <div className="flex items-center gap-1">
-                      <Mountain className="w-4 h-4" />
-                      {room.view} View
-                    </div>
-                  </div>
-
-                  <div className="mb-4">
-                    <div className="flex flex-wrap gap-1">
-                      {room.amenities.slice(0, 2).map((amenity, index) => (
-                        <Badge key={index} variant="secondary" className="text-xs">
-                          {amenity}
-                        </Badge>
-                      ))}
-                      {room.amenities.length > 2 && (
-                        <Badge variant="secondary" className="text-xs">
-                          +{room.amenities.length - 2} more
-                        </Badge>
-                      )}
-                    </div>
-                  </div>
-
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <div className="text-xs text-muted-foreground mb-1">Starting from</div>
-                      <span className="text-2xl font-heading font-bold text-primary">{room.price}</span>
-                      <span className="text-sm text-muted-foreground ml-1">/night</span>
-                    </div>
-                    <div className="flex gap-2">
-                      <Link to={`/stay/${room.id}`}>
-                        <Button variant="outline" size="sm" className="font-body">
-                          View Details
-                        </Button>
-                      </Link>
-                      <Button size="sm" className="font-body">
-                        Book Now
-                      </Button>
-                    </div>
-                  </div>
-                </div>
-              </div>
+            {filteredCategories.map((cat) => (
+              <CategoryCard
+                key={cat.id}
+                category={cat}
+                onViewDetails={(c) => {
+                  setSelectedCategory(c);
+                  setBookingOpen(true);
+                }}
+              />
             ))}
           </div>
         </div>
       </section>
+
+      <CategoryBookingModal
+        open={bookingOpen}
+        onOpenChange={setBookingOpen}
+        category={selectedCategory}
+      />
 
       <DynamicFooter />
       <FloatingElementsV5 />
