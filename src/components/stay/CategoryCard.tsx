@@ -1,6 +1,8 @@
 import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Users, MapPin } from 'lucide-react';
 
 export type Category = {
   id: string;
@@ -22,30 +24,60 @@ type Props = {
 };
 
 const CategoryCard: React.FC<Props> = ({ category, onViewDetails }) => (
-  <Card className="overflow-hidden hover:shadow-lg transition-shadow">
-    <div className="aspect-[4/3] overflow-hidden bg-muted">
-      {category.image ? (
-        <img
-          src={category.image}
-          alt={`${category.name} - ${category.tagline}`}
-          loading="lazy"
-          className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
-        />
-      ) : (
-        <div className="w-full h-full" />
-      )}
+  <div className="bg-card border rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-all duration-300">
+    <div className="relative">
+      <img 
+        src={category.image || 'https://images.unsplash.com/photo-1590490360238-c33d57733427?auto=format&fit=crop&w=800&q=80'}
+        alt={`${category.name} accommodation - ${category.tagline}`}
+        className="w-full h-48 object-cover"
+      />
+      <Badge className="absolute top-3 right-3 bg-white/90 text-foreground">
+        {category.budget}
+      </Badge>
     </div>
-    <CardContent className="p-6">
-      <h3 className="text-xl font-semibold mb-2 text-foreground">{category.name}</h3>
+    
+    <div className="p-6">
+      <h3 className="text-xl font-heading font-semibold mb-2">{category.name}</h3>
       <p className="text-muted-foreground mb-4 text-sm">{category.tagline}</p>
-      <div className="flex justify-between items-center">
-        <div className="text-xs text-muted-foreground">{category.budget}</div>
-        <Button variant="outline" size="sm" onClick={() => onViewDetails(category)}>
+      
+      <div className="flex items-center gap-4 mb-4 text-sm text-muted-foreground">
+        <div className="flex items-center gap-1">
+          <Users className="w-4 h-4" />
+          Up to {category.maxGuests} Guests
+        </div>
+        <div className="flex items-center gap-1">
+          <MapPin className="w-4 h-4" />
+          {category.viewLocations[0]}
+        </div>
+      </div>
+
+      <div className="mb-4">
+        <div className="flex flex-wrap gap-1">
+          {category.features.slice(0, 2).map((feature, index) => (
+            <Badge key={index} variant="secondary" className="text-xs">
+              {feature}
+            </Badge>
+          ))}
+          {category.features.length > 2 && (
+            <Badge variant="secondary" className="text-xs">
+              +{category.features.length - 2} more
+            </Badge>
+          )}
+        </div>
+      </div>
+
+      <div className="flex items-center justify-between">
+        <div>
+          <div className="text-xs text-muted-foreground mb-1">Starting from</div>
+          <span className="text-2xl font-heading font-bold text-primary">₹8,500</span>
+          <span className="text-sm text-muted-foreground ml-1">/night</span>
+        </div>
+        <Button variant="outline" size="sm" className="font-body" onClick={() => onViewDetails(category)}>
           View Details
         </Button>
       </div>
-    </CardContent>
-  </Card>
+    </div>
+  </div>
 );
 
 export default CategoryCard;
