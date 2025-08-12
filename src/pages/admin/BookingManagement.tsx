@@ -449,7 +449,19 @@ export default function BookingManagement() {
 
     return (
       <div className="mt-2 space-y-1">
-        {/* Package info first - above other addons */}
+        {/* Extra bedding first - highest priority */}
+        {booking.selected_bedding && booking.selected_bedding.length > 0 && (
+          <div className="text-xs">
+            <span className="font-medium text-blue-600">🛏️ Extra Bedding:</span>
+            <span className="text-muted-foreground ml-1">
+              {booking.selected_bedding.map((bedding: any) => 
+                `${bedding.name} (${bedding.quantity})`
+              ).join(', ')}
+            </span>
+          </div>
+        )}
+        
+        {/* Package info second - above regular addons */}
         {booking.packages && (
           <div className="text-xs">
             <span className="font-medium text-indigo-600">📦 Package:</span>
@@ -459,7 +471,7 @@ export default function BookingManagement() {
           </div>
         )}
         
-        {/* Regular addon services below package */}
+        {/* Regular addon services below */}
         {booking.selected_meals && booking.selected_meals.length > 0 && (
           <div className="text-xs">
             <span className="font-medium text-orange-600">🍽️ Meals:</span>
@@ -486,16 +498,6 @@ export default function BookingManagement() {
             <span className="text-muted-foreground ml-1">
               {booking.selected_spa_services.map((spa: any) => 
                 `${spa.name} (${spa.quantity})`
-              ).join(', ')}
-            </span>
-          </div>
-        )}
-        {booking.selected_bedding && booking.selected_bedding.length > 0 && (
-          <div className="text-xs">
-            <span className="font-medium text-blue-600">🛏️ Extra Bedding:</span>
-            <span className="text-muted-foreground ml-1">
-              {booking.selected_bedding.map((bedding: any) => 
-                `${bedding.name} (${bedding.quantity})`
               ).join(', ')}
             </span>
           </div>
