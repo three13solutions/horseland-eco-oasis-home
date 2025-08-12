@@ -37,7 +37,7 @@ interface RoomAvailabilityGridProps {
   bookings: Booking[];
 }
 
-type TimeframeOption = 'week' | 'nextweek' | '14days' | '30days' | 'prevmonth' | 'nextmonth';
+type TimeframeOption = 'week' | 'nextweek' | '14days' | '30days';
 
 export const RoomAvailabilityGrid: React.FC<RoomAvailabilityGridProps> = ({
   roomUnits,
@@ -61,22 +61,6 @@ export const RoomAvailabilityGrid: React.FC<RoomAvailabilityGridProps> = ({
         return Array.from({ length: 7 }, (_, i) => addDays(nextMonday, i));
       case '30days':
         return Array.from({ length: 30 }, (_, i) => addDays(startDate, i));
-      case 'prevmonth':
-        const prevMonthStart = new Date(startDate.getFullYear(), startDate.getMonth() - 1, 1);
-        const prevMonthEnd = new Date(startDate.getFullYear(), startDate.getMonth(), 0);
-        const prevMonthDays = [];
-        for (let d = new Date(prevMonthStart); d <= prevMonthEnd; d = addDays(d, 1)) {
-          prevMonthDays.push(new Date(d));
-        }
-        return prevMonthDays;
-      case 'nextmonth':
-        const nextMonthStart = new Date(startDate.getFullYear(), startDate.getMonth() + 1, 1);
-        const nextMonthEnd = new Date(startDate.getFullYear(), startDate.getMonth() + 2, 0);
-        const nextMonthDays = [];
-        for (let d = new Date(nextMonthStart); d <= nextMonthEnd; d = addDays(d, 1)) {
-          nextMonthDays.push(new Date(d));
-        }
-        return nextMonthDays;
       case '14days':
       default:
         return Array.from({ length: 14 }, (_, i) => addDays(startDate, i));
@@ -91,9 +75,6 @@ export const RoomAvailabilityGrid: React.FC<RoomAvailabilityGridProps> = ({
         return { min: -90, max: 90 }; // 3 months before/after
       case '30days':
         return { min: -180, max: 180 }; // 6 months before/after
-      case 'prevmonth':
-      case 'nextmonth':
-        return { min: -365, max: 365 }; // 1 year before/after
       default:
         return { min: -90, max: 90 };
     }
@@ -181,8 +162,6 @@ export const RoomAvailabilityGrid: React.FC<RoomAvailabilityGridProps> = ({
     { value: 'nextweek' as TimeframeOption, label: 'Next Week' },
     { value: '14days' as TimeframeOption, label: '14 Days' },
     { value: '30days' as TimeframeOption, label: '30 Days' },
-    { value: 'prevmonth' as TimeframeOption, label: 'Previous Month' },
-    { value: 'nextmonth' as TimeframeOption, label: 'Next Month' },
   ];
 
   return (
