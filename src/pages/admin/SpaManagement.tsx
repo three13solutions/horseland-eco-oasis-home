@@ -1,17 +1,23 @@
 import React, { useState, useEffect } from 'react';
-import { supabase } from '@/integrations/supabase/client';
+import { Link, useNavigate } from 'react-router-dom';
+import { ArrowLeft, Plus, Search, Edit, Trash2, ToggleLeft, ToggleRight, Grid, List, Upload, X, Check, ChevronsUpDown, Eye } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
-import { Card, CardContent } from '@/components/ui/card';
-import { useToast } from '@/hooks/use-toast';
-import { ArrowLeft, Search, Grid, List, Plus, Eye, Edit, Trash2, X } from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Toggle } from '@/components/ui/toggle';
-import { useNavigate } from 'react-router-dom';
+import { cn } from '@/lib/utils';
+import { supabase } from '@/integrations/supabase/client';
+import { useToast } from '@/hooks/use-toast';
 import ImageUpload from '@/components/ImageUpload';
 
 interface SpaService {
@@ -29,6 +35,19 @@ interface SpaService {
   media_urls?: any;
 }
 
+interface MediaFile {
+  url: string;
+  name: string;
+  isFeatured: boolean;
+}
+
+// Available benefits/tags for spa services
+const AVAILABLE_BENEFITS = [
+  'beauty', 'wellness', 'relaxation', 'rejuvenation', 'therapeutic', 
+  'anti-aging', 'detox', 'stress-relief', 'skin-care', 'body-care',
+  'facial', 'massage', 'aromatherapy', 'deep-cleansing', 'moisturizing'
+];
+
 const SpaManagement = () => {
   const [services, setServices] = useState<SpaService[]>([]);
   const [loading, setLoading] = useState(true);
@@ -36,8 +55,10 @@ const SpaManagement = () => {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'inactive'>('all');
-  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+  const [viewMode, setViewMode] = useState<'card' | 'list'>('card');
+  const [categoryFilter, setCategoryFilter] = useState<'all' | 'beauty' | 'wellness'>('all');
   const [showInactive, setShowInactive] = useState(false);
+  const [uploading, setUploading] = useState(false);
   
   const [formData, setFormData] = useState({
     title: '',
@@ -46,9 +67,11 @@ const SpaManagement = () => {
     duration: '',
     price: '',
     tags: [] as string[],
-    media_urls: [] as string[],
+    media_files: [] as MediaFile[],
     featured_image_index: 0
   });
+
+  const [benefitsOpen, setBenefitsOpen] = useState(false);
 
   const { toast } = useToast();
   const navigate = useNavigate();
@@ -91,7 +114,7 @@ const SpaManagement = () => {
       duration: '',
       price: '',
       tags: [],
-      media_urls: [],
+      media_files: [],
       featured_image_index: 0
     });
     setEditingId(null);
@@ -101,16 +124,18 @@ const SpaManagement = () => {
     e.preventDefault();
     
     try {
+      const mediaUrls = formData.media_files.map(file => file.url);
+      
       const serviceData = {
         title: formData.title,
-        image: formData.media_urls.length > 0 ? formData.media_urls[formData.featured_image_index] : null,
+        image: formData.media_files.length > 0 ? formData.media_files.find(f => f.isFeatured)?.url || formData.media_files[0].url : null,
         description: formData.description || null,
         duration: formData.duration ? parseInt(formData.duration) : null,
         price: parseFloat(formData.price),
         tags: formData.tags,
         booking_required: true,
         is_active: true,
-        media_urls: formData.media_urls
+        media_urls: mediaUrls
       };
 
       if (editingId) {
@@ -144,6 +169,14 @@ const SpaManagement = () => {
   };
 
   const handleEdit = (service: SpaService) => {
+    const mediaFiles = Array.isArray(service.media_urls) 
+      ? service.media_urls.map((url: string, index: number) => ({
+          url,
+          name: `media-${index}`,
+          isFeatured: url === service.image
+        }))
+      : [];
+    
     setFormData({
       title: service.title,
       image: service.image || '',
@@ -151,7 +184,7 @@ const SpaManagement = () => {
       duration: service.duration?.toString() || '',
       price: service.price.toString(),
       tags: service.tags || [],
-      media_urls: Array.isArray(service.media_urls) ? service.media_urls : [],
+      media_files: mediaFiles,
       featured_image_index: 0
     });
     setEditingId(service.id);
@@ -210,10 +243,14 @@ const SpaManagement = () => {
     const matchesStatus = statusFilter === 'all' || 
                          (statusFilter === 'active' && service.is_active) ||
                          (statusFilter === 'inactive' && !service.is_active);
+                         
+    const matchesCategory = categoryFilter === 'all' ||
+                           (categoryFilter === 'beauty' && service.tags?.includes('beauty')) ||
+                           (categoryFilter === 'wellness' && service.tags?.includes('wellness'));
     
     const matchesToggle = showInactive || service.is_active;
     
-    return matchesSearch && matchesStatus && matchesToggle;
+    return matchesSearch && matchesStatus && matchesCategory && matchesToggle;
   });
 
   if (loading) {
@@ -279,12 +316,14 @@ const SpaManagement = () => {
                         accept="image/*,video/*"
                         onChange={(e) => {
                           const files = Array.from(e.target.files || []);
-                          // For demo purposes, we'll use placeholder URLs
-                          // In a real implementation, you'd upload these files to storage
-                          const newUrls = files.map(file => URL.createObjectURL(file));
+                          const newMediaFiles = files.map(file => ({
+                            url: URL.createObjectURL(file),
+                            name: file.name,
+                            isFeatured: formData.media_files.length === 0 // First file is featured by default
+                          }));
                           setFormData({ 
                             ...formData, 
-                            media_urls: [...formData.media_urls, ...newUrls] 
+                            media_files: [...formData.media_files, ...newMediaFiles] 
                           });
                         }}
                         className="w-full"
@@ -294,15 +333,15 @@ const SpaManagement = () => {
                       </p>
                     </div>
                     
-                    {formData.media_urls.length > 0 && (
+                    {formData.media_files.length > 0 && (
                       <div className="space-y-2">
                         <Label>Uploaded Media</Label>
                         <div className="grid grid-cols-3 gap-2">
-                          {formData.media_urls.map((url, index) => (
+                          {formData.media_files.map((media, index) => (
                             <div key={index} className="relative group">
                               <img 
-                                src={url} 
-                                alt={`Media ${index + 1}`}
+                                src={media.url} 
+                                alt={media.name}
                                 className="w-full h-20 object-cover rounded border"
                               />
                               <Button
@@ -311,11 +350,10 @@ const SpaManagement = () => {
                                 size="sm"
                                 className="absolute -top-1 -right-1 h-6 w-6 rounded-full p-0 opacity-0 group-hover:opacity-100"
                                 onClick={() => {
-                                  const newUrls = formData.media_urls.filter((_, i) => i !== index);
+                                  const newFiles = formData.media_files.filter((_, i) => i !== index);
                                   setFormData({ 
                                     ...formData, 
-                                    media_urls: newUrls,
-                                    featured_image_index: formData.featured_image_index >= newUrls.length ? 0 : formData.featured_image_index
+                                    media_files: newFiles
                                   });
                                 }}
                               >
@@ -323,12 +361,18 @@ const SpaManagement = () => {
                               </Button>
                               <Button
                                 type="button"
-                                variant={formData.featured_image_index === index ? "default" : "secondary"}
+                                variant={media.isFeatured ? "default" : "secondary"}
                                 size="sm"
                                 className="absolute -bottom-1 left-1 h-5 text-xs px-2"
-                                onClick={() => setFormData({ ...formData, featured_image_index: index })}
+                                onClick={() => {
+                                  const updatedFiles = formData.media_files.map((file, i) => ({
+                                    ...file,
+                                    isFeatured: i === index
+                                  }));
+                                  setFormData({ ...formData, media_files: updatedFiles });
+                                }}
                               >
-                                {formData.featured_image_index === index ? "Featured" : "Set Featured"}
+                                {media.isFeatured ? "Featured" : "Set Featured"}
                               </Button>
                             </div>
                           ))}
@@ -372,16 +416,68 @@ const SpaManagement = () => {
                 </div>
 
                 <div>
-                  <Label htmlFor="tags">Benefits/Tags (comma-separated)</Label>
-                  <Input
-                    id="tags"
-                    value={formData.tags.join(', ')}
-                    onChange={(e) => setFormData({ 
-                      ...formData, 
-                      tags: e.target.value.split(',').map(tag => tag.trim()).filter(tag => tag)
-                    })}
-                    placeholder="Stress Relief, Muscle Relaxation, etc."
-                  />
+                  <Label>Benefits/Tags</Label>
+                  <Popover open={benefitsOpen} onOpenChange={setBenefitsOpen}>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="outline"
+                        role="combobox"
+                        aria-expanded={benefitsOpen}
+                        className="w-full justify-between"
+                      >
+                        {formData.tags.length > 0
+                          ? `${formData.tags.length} benefit${formData.tags.length > 1 ? 's' : ''} selected`
+                          : "Select benefits..."}
+                        <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-full p-0">
+                      <Command>
+                        <CommandInput placeholder="Search benefits..." />
+                        <CommandEmpty>No benefit found.</CommandEmpty>
+                        <CommandGroup className="max-h-64 overflow-y-auto">
+                          {AVAILABLE_BENEFITS.map((benefit) => (
+                            <CommandItem
+                              key={benefit}
+                              onSelect={() => {
+                                const isSelected = formData.tags.includes(benefit);
+                                setFormData({
+                                  ...formData,
+                                  tags: isSelected
+                                    ? formData.tags.filter(tag => tag !== benefit)
+                                    : [...formData.tags, benefit]
+                                });
+                              }}
+                            >
+                              <Check
+                                className={cn(
+                                  "mr-2 h-4 w-4",
+                                  formData.tags.includes(benefit) ? "opacity-100" : "opacity-0"
+                                )}
+                              />
+                              {benefit}
+                            </CommandItem>
+                          ))}
+                        </CommandGroup>
+                      </Command>
+                    </PopoverContent>
+                  </Popover>
+                  {formData.tags.length > 0 && (
+                    <div className="flex flex-wrap gap-1 mt-2">
+                      {formData.tags.map((tag) => (
+                        <Badge key={tag} variant="secondary" className="text-xs">
+                          {tag}
+                          <X 
+                            className="h-3 w-3 ml-1 cursor-pointer" 
+                            onClick={() => setFormData({
+                              ...formData,
+                              tags: formData.tags.filter(t => t !== tag)
+                            })}
+                          />
+                        </Badge>
+                      ))}
+                    </div>
+                  )}
                 </div>
 
                 <div className="flex justify-end gap-2 pt-4">
@@ -401,18 +497,22 @@ const SpaManagement = () => {
         <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between mb-6 p-4 bg-muted/30 rounded-lg">
           <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center flex-1">
             <div className="flex items-center gap-2">
-              <Toggle
-                pressed={viewMode === 'grid'}
-                onPressedChange={(pressed) => setViewMode(pressed ? 'grid' : 'list')}
+              <Button
+                variant={viewMode === 'card' ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => setViewMode('card')}
+                className="h-8"
               >
                 <Grid className="w-4 h-4" />
-              </Toggle>
-              <Toggle
-                pressed={viewMode === 'list'}
-                onPressedChange={(pressed) => setViewMode(pressed ? 'list' : 'grid')}
+              </Button>
+              <Button
+                variant={viewMode === 'list' ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => setViewMode('list')}
+                className="h-8"
               >
                 <List className="w-4 h-4" />
-              </Toggle>
+              </Button>
             </div>
 
             <div className="flex items-center gap-2">
@@ -435,15 +535,45 @@ const SpaManagement = () => {
                 <SelectItem value="inactive">Inactive</SelectItem>
               </SelectContent>
             </Select>
+
+            <div className="flex items-center gap-2">
+              <Button
+                variant={categoryFilter === 'beauty' ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => setCategoryFilter('beauty')}
+                className="h-8"
+              >
+                Beauty
+              </Button>
+              <Button
+                variant={categoryFilter === 'wellness' ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => setCategoryFilter('wellness')}
+                className="h-8"
+              >
+                Wellness
+              </Button>
+              <Button
+                variant={categoryFilter === 'all' ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => setCategoryFilter('all')}
+                className="h-8"
+              >
+                All
+              </Button>
+            </div>
           </div>
 
           <div className="flex items-center gap-2">
-            <Toggle
-              pressed={showInactive}
-              onPressedChange={setShowInactive}
+            <Button
+              variant={showInactive ? 'default' : 'outline'}
+              size="sm"
+              onClick={() => setShowInactive(!showInactive)}
+              className="h-8"
             >
-              <Eye className="w-4 h-4" />
-            </Toggle>
+              <Eye className="w-4 h-4 mr-1" />
+              {showInactive ? 'Hide Inactive' : 'Show Inactive'}
+            </Button>
           </div>
         </div>
 
@@ -457,11 +587,11 @@ const SpaManagement = () => {
             </Button>
           </div>
         ) : (
-          <div className={viewMode === 'grid' ? 'grid md:grid-cols-2 lg:grid-cols-3 gap-6' : 'space-y-4'}>
+          <div className={viewMode === 'card' ? 'grid md:grid-cols-2 lg:grid-cols-3 gap-6' : 'space-y-4'}>
             {filteredServices.map((service) => (
               <Card key={service.id} className={`${viewMode === 'list' ? 'p-4' : ''}`}>
-                <CardContent className={viewMode === 'grid' ? 'p-0' : 'p-0'}>
-                  {viewMode === 'grid' ? (
+                <CardContent className={viewMode === 'card' ? 'p-0' : 'p-0'}>
+                  {viewMode === 'card' ? (
                     <div className="space-y-4">
                       {service.image && (
                         <div className="relative">
