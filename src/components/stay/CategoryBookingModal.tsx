@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
@@ -7,6 +7,8 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { cn } from '@/lib/utils';
 import { DateRange } from 'react-day-picker';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
 
 import type { Category } from './CategoryCard';
 
@@ -21,6 +23,37 @@ const CategoryBookingModal: React.FC<Props> = ({ open, onOpenChange, category })
   const [guests, setGuests] = React.useState<number>(2);
   const [extraMattress, setExtraMattress] = React.useState<number>(0);
   const [notes, setNotes] = React.useState<string>('');
+  const [availableUnits, setAvailableUnits] = useState(0);
+  const [loading, setLoading] = useState(false);
+
+  const checkAvailability = async () => {
+    if (!category?.id || !date?.from || !date?.to) {
+      setAvailableUnits(0);
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const { data, error } = await supabase.rpc('check_room_availability', {
+        p_room_type_id: category.id,
+        p_check_in: date.from.toISOString().split('T')[0],
+        p_check_out: date.to.toISOString().split('T')[0]
+      });
+
+      if (error) throw error;
+      
+      setAvailableUnits(data?.[0]?.available_units || 0);
+    } catch (error) {
+      toast.error("Failed to check availability");
+      setAvailableUnits(0);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    checkAvailability();
+  }, [category?.id, date?.from, date?.to]);
 
   if (!category) return null;
 
@@ -59,6 +92,23 @@ const CategoryBookingModal: React.FC<Props> = ({ open, onOpenChange, category })
                 <div className="font-medium">{category.viewLocations.join(' · ')}</div>
               </div>
             </div>
+            {date?.from && date?.to && (
+              <div className="mt-3 p-3 bg-blue-50 rounded-lg">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm font-medium">
+                    Available Units:
+                  </span>
+                  <span className={`text-sm font-bold ${availableUnits > 0 ? 'text-green-600' : 'text-red-600'}`}>
+                    {loading ? "Checking..." : availableUnits}
+                  </span>
+                </div>
+                {availableUnits === 0 && !loading && (
+                  <p className="text-xs text-red-600 mt-1">
+                    No units available for selected dates
+                  </p>
+                )}
+              </div>
+            )}
           </div>
 
           {/* Guest Selection */}
@@ -135,7 +185,11 @@ const CategoryBookingModal: React.FC<Props> = ({ open, onOpenChange, category })
             <Button variant="outline" onClick={() => onOpenChange(false)} className="sm:w-auto">
               Cancel
             </Button>
-            <Button onClick={() => onOpenChange(false)} className="sm:flex-1">
+            <Button 
+              onClick={() => onOpenChange(false)} 
+              className="sm:flex-1"
+              disabled={!date?.from || !date?.to || availableUnits === 0 || loading}
+            >
               Continue to Booking
             </Button>
           </div>

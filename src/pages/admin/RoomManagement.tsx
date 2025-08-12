@@ -9,7 +9,7 @@ import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Plus, Edit, Trash2, Upload, ArrowLeft, Users, IndianRupee } from 'lucide-react';
+import { Plus, Edit, Trash2, Upload, ArrowLeft, Users, IndianRupee, Home } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Link } from 'react-router-dom';
 
@@ -443,6 +443,14 @@ const RoomManagement = () => {
                 )}
 
                 <div className="flex justify-between space-x-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => window.open(`/admin/room-units/${room.id}`, '_blank')}
+                    title="Manage Units"
+                  >
+                    <Home className="w-4 h-4" />
+                  </Button>
                   <Button variant="outline" size="sm" onClick={() => handleEdit(room)}>
                     <Edit className="w-4 h-4 mr-1" />
                     Edit
