@@ -152,7 +152,7 @@ const PackageManagement = () => {
       setActivities(activitiesData || []);
 
       // Load meals
-      const { data: mealsData, error: mealsError } = await supabase
+      const { data: mealsData, error: mealsError } = await (supabase as any)
         .from('meals')
         .select('id, title, price')
         .eq('is_active', true);
