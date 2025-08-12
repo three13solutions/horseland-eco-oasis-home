@@ -46,6 +46,8 @@ export const ManualBookingModal: React.FC<ManualBookingModalProps> = ({
   const [isSubmitting, setIsSubmitting] = useState(false);
   
   // Addon services state
+  const [availablePackages, setAvailablePackages] = useState<any[]>([]);
+  const [selectedPackage, setSelectedPackage] = useState<string>('');
   const [availableMeals, setAvailableMeals] = useState<any[]>([]);
   const [availableActivities, setAvailableActivities] = useState<any[]>([]);
   const [availableSpaServices, setAvailableSpaServices] = useState<any[]>([]);
@@ -55,28 +57,80 @@ export const ManualBookingModal: React.FC<ManualBookingModalProps> = ({
   
   const { toast } = useToast();
 
-  // Load addon services
+  // Load addon services and packages
   useEffect(() => {
-    const loadAddonServices = async () => {
+    const loadData = async () => {
       try {
-        const [mealsRes, activitiesRes, spaRes] = await Promise.all([
+        const [packagesRes, mealsRes, activitiesRes, spaRes] = await Promise.all([
+          supabase.from('packages').select('*').eq('is_active', true),
           supabase.from('meals').select('*').eq('is_active', true),
           supabase.from('activities').select('*').eq('is_active', true),
           supabase.from('spa_services').select('*').eq('is_active', true)
         ]);
 
+        if (packagesRes.data) setAvailablePackages(packagesRes.data);
         if (mealsRes.data) setAvailableMeals(mealsRes.data);
         if (activitiesRes.data) setAvailableActivities(activitiesRes.data);
         if (spaRes.data) setAvailableSpaServices(spaRes.data);
       } catch (error) {
-        console.error('Error loading addon services:', error);
+        console.error('Error loading data:', error);
       }
     };
 
     if (isOpen) {
-      loadAddonServices();
+      loadData();
     }
   }, [isOpen]);
+
+  const handlePackageChange = (packageId: string) => {
+    setSelectedPackage(packageId);
+    
+    if (!packageId) {
+      // Clear all selections if no package is selected
+      setSelectedMeals([]);
+      setSelectedActivities([]);
+      setSelectedSpaServices([]);
+      return;
+    }
+
+    // Find the selected package
+    const selectedPkg = availablePackages.find(pkg => pkg.id === packageId);
+    if (!selectedPkg?.components) return;
+
+    const components = selectedPkg.components;
+    
+    // Auto-populate meals
+    if (components.meals && Array.isArray(components.meals)) {
+      const packageMeals = components.meals.map((mealId: string) => {
+        const meal = availableMeals.find(m => m.id === mealId);
+        return meal ? { ...meal, quantity: 1, name: meal.title } : null;
+      }).filter(Boolean);
+      setSelectedMeals(packageMeals);
+    }
+
+    // Auto-populate activities
+    if (components.activities && Array.isArray(components.activities)) {
+      const packageActivities = components.activities.map((activityId: string) => {
+        const activity = availableActivities.find(a => a.id === activityId);
+        return activity ? { ...activity, quantity: 1, name: activity.title, price: activity.price_amount || 0 } : null;
+      }).filter(Boolean);
+      setSelectedActivities(packageActivities);
+    }
+
+    // Auto-populate spa services
+    if (components.spa_services && Array.isArray(components.spa_services)) {
+      const packageSpaServices = components.spa_services.map((spaId: string) => {
+        const spa = availableSpaServices.find(s => s.id === spaId);
+        return spa ? { ...spa, quantity: 1, name: spa.title } : null;
+      }).filter(Boolean);
+      setSelectedSpaServices(packageSpaServices);
+    }
+
+    // Update total amount based on package price
+    if (selectedPkg.weekday_price) {
+      setTotalAmount(selectedPkg.weekday_price);
+    }
+  };
 
   const generateBookingId = () => {
     const prefix = 'BK';
@@ -156,6 +210,7 @@ export const ManualBookingModal: React.FC<ManualBookingModalProps> = ({
       const bookingData = {
         booking_id: generateBookingId(),
         room_unit_id: roomUnitId,
+        package_id: selectedPackage || null,
         guest_name: guestName.trim(),
         guest_email: guestEmail.trim() || null,
         guest_phone: guestPhone.trim() || null,
@@ -165,6 +220,9 @@ export const ManualBookingModal: React.FC<ManualBookingModalProps> = ({
         payment_status: paymentStatus,
         total_amount: totalAmount,
         notes: notes.trim() || null,
+        selected_meals: selectedMeals,
+        selected_activities: selectedActivities,
+        selected_spa_services: selectedSpaServices,
       };
 
       const { error } = await supabase
@@ -188,6 +246,7 @@ export const ManualBookingModal: React.FC<ManualBookingModalProps> = ({
       setPaymentStatus('pending');
       setTotalAmount(0);
       setNotes('');
+      setSelectedPackage('');
       setSelectedMeals([]);
       setSelectedActivities([]);
       setSelectedSpaServices([]);
@@ -343,6 +402,26 @@ export const ManualBookingModal: React.FC<ManualBookingModalProps> = ({
               </div>
 
               <div className="space-y-2">
+                <Label htmlFor="packageSelect">Package (Optional)</Label>
+                <Select value={selectedPackage} onValueChange={handlePackageChange}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select a package" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="">No Package</SelectItem>
+                    {availablePackages.map((pkg) => (
+                      <SelectItem key={pkg.id} value={pkg.id}>
+                        {pkg.title} - ₹{pkg.weekday_price}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+
+              <div className="space-y-2">
                 <Label htmlFor="totalAmount">Total Amount (₹)</Label>
                 <div className="relative">
                   <CreditCard className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
@@ -387,7 +466,14 @@ export const ManualBookingModal: React.FC<ManualBookingModalProps> = ({
 
           {/* Add-on Services */}
           <div className="space-y-4">
-            <h3 className="text-lg font-medium">Add-on Services (Optional)</h3>
+            <div className="flex items-center justify-between">
+              <h3 className="text-lg font-medium">Add-on Services</h3>
+              {selectedPackage && (
+                <Badge variant="secondary" className="text-xs">
+                  Auto-populated from package
+                </Badge>
+              )}
+            </div>
             
             {/* Meals */}
             <div className="space-y-2">
