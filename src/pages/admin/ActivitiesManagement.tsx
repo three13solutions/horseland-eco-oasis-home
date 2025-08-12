@@ -316,7 +316,7 @@ const ActivitiesManagement = () => {
 
       {!showForm && (
         <>
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mt-6 mb-6">
+          <div className="flex justify-between items-center mb-6">
             <div className="flex items-center gap-4">
               <div className="flex items-center gap-2">
                 <Button
