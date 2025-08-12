@@ -1,108 +1,77 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import NavigationV5 from '../components/v5/NavigationV5';
 import DynamicFooter from '../components/DynamicFooter';
 import FloatingElementsV5 from '../components/v5/FloatingElementsV5';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Clock, MapPin, Users, Star } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
+
+interface Activity {
+  id: string;
+  name: string;
+  description?: string;
+  duration?: string;
+  location?: string;
+  price?: number;
+  rating?: number;
+  image_url?: string;
+  age_group?: string;
+  activity_type?: {
+    name: string;
+  };
+}
 
 const Activities = () => {
   const [filter, setFilter] = useState('all');
+  const [activities, setActivities] = useState<Activity[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const activities = [
-    {
-      id: 'horse-riding',
-      name: 'Horse Riding Trails',
-      image: 'https://images.unsplash.com/photo-1544568100-847a948585b9?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
-      duration: '2 hours',
-      location: 'On Property',
-      category: 'adventure',
-      age: 'family',
-      price: '₹1,500',
-      description: 'Explore Matheran\'s red mud trails on horseback with experienced guides.',
-      rating: 4.8
-    },
-    {
-      id: 'forest-walk',
-      name: 'Guided Forest Walks',
-      image: 'https://images.unsplash.com/photo-1441974231531-c6227db76b6e?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
-      duration: '3 hours',
-      location: 'Near Property',
-      category: 'nature',
-      age: 'family',
-      price: '₹800',
-      description: 'Discover hidden waterfalls and endemic flora with our naturalist guides.',
-      rating: 4.9
-    },
-    {
-      id: 'sunset-point',
-      name: 'Sunset Point Trek',
-      image: 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
-      duration: '4 hours',
-      location: '2 km away',
-      category: 'adventure',
-      age: 'adult',
-      price: '₹1,200',
-      description: 'Trek to panoramic viewpoints for breathtaking sunset vistas.',
-      rating: 4.7
-    },
-    {
-      id: 'bonfire-night',
-      name: 'Bonfire & Stargazing',
-      image: 'https://images.unsplash.com/photo-1520637836862-4d197d17c86a?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
-      duration: '2 hours',
-      location: 'On Property',
-      category: 'relaxation',
-      age: 'family',
-      price: '₹600',
-      description: 'Evening bonfire with traditional stories and stargazing sessions.',
-      rating: 4.6
-    },
-    {
-      id: 'bird-watching',
-      name: 'Bird Watching Tour',
-      image: 'https://images.unsplash.com/photo-1444927714506-8492d94b5ba0?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
-      duration: '3 hours',
-      location: 'Near Property',
-      category: 'nature',
-      age: 'family',
-      price: '₹900',
-      description: 'Early morning birding sessions to spot endemic Western Ghats species.',
-      rating: 4.5
-    },
-    {
-      id: 'rock-climbing',
-      name: 'Rock Climbing',
-      image: 'https://images.unsplash.com/photo-1522163182402-834f871fd851?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
-      duration: '4 hours',
-      location: '5 km away',
-      category: 'adventure',
-      age: 'adult',
-      price: '₹2,500',
-      description: 'Beginner-friendly rock climbing with certified instructors and equipment.',
-      rating: 4.8
-    },
-    {
-      id: 'forest-bathing',
-      name: 'Forest Bathing',
-      image: 'https://images.unsplash.com/photo-1441974231531-c6227db76b6e?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
-      duration: '2 hours',
-      location: 'Near Property',
-      category: 'nature',
-      age: 'family',
-      price: '₹700',
-      description: 'Mindful immersion in nature using Japanese Shinrin-yoku techniques for wellness and relaxation.',
-      rating: 4.7
+  useEffect(() => {
+    loadActivities();
+  }, []);
+
+  const loadActivities = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('activities')
+        .select(`
+          *,
+          activity_type:activity_types(name)
+        `)
+        .eq('is_published', true)
+        .order('name');
+      
+      if (error) throw error;
+      setActivities(data || []);
+    } catch (error) {
+      console.error('Error loading activities:', error);
+    } finally {
+      setLoading(false);
     }
-  ];
+  };
 
   const filteredActivities = activities.filter(activity => {
     if (filter === 'all') return true;
-    if (filter === 'adventure') return activity.category === 'adventure';
-    if (filter === 'nature') return activity.category === 'nature';
-    if (filter === 'family') return activity.age === 'family';
+    if (filter === 'adventure') return activity.activity_type?.name.toLowerCase() === 'adventure';
+    if (filter === 'nature') return activity.activity_type?.name.toLowerCase() === 'nature';
+    if (filter === 'family') return activity.age_group === 'family';
     return true;
   });
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-background overflow-x-hidden">
+        <NavigationV5 />
+        <div className="flex items-center justify-center min-h-[50vh]">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+            <p>Loading activities...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background overflow-x-hidden">
@@ -173,17 +142,21 @@ const Activities = () => {
               <div key={activity.id} className="bg-card border rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-all duration-300">
                 <div className="relative">
                   <img 
-                    src={activity.image}
+                    src={activity.image_url || 'https://images.unsplash.com/photo-1544568100-847a948585b9?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80'}
                     alt={activity.name}
                     className="w-full h-48 object-cover"
                   />
-                  <Badge className="absolute top-3 right-3 bg-white/90 text-foreground">
-                    <Star className="w-3 h-3 mr-1 fill-current" />
-                    {activity.rating}
-                  </Badge>
-                  <Badge className="absolute top-3 left-3 bg-primary text-primary-foreground">
-                    {activity.price}
-                  </Badge>
+                  {activity.rating && (
+                    <Badge className="absolute top-3 right-3 bg-white/90 text-foreground">
+                      <Star className="w-3 h-3 mr-1 fill-current" />
+                      {activity.rating}
+                    </Badge>
+                  )}
+                  {activity.price && (
+                    <Badge className="absolute top-3 left-3 bg-primary text-primary-foreground">
+                      ₹{activity.price}
+                    </Badge>
+                  )}
                 </div>
                 
                 <div className="p-6">
@@ -193,18 +166,24 @@ const Activities = () => {
                   </p>
                   
                   <div className="space-y-2 mb-4 text-sm text-muted-foreground">
-                    <div className="flex items-center gap-2">
-                      <Clock className="w-4 h-4" />
-                      {activity.duration}
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <MapPin className="w-4 h-4" />
-                      {activity.location}
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <Users className="w-4 h-4" />
-                      {activity.age === 'family' ? 'Family Friendly' : 'Adults Only'}
-                    </div>
+                    {activity.duration && (
+                      <div className="flex items-center gap-2">
+                        <Clock className="w-4 h-4" />
+                        {activity.duration}
+                      </div>
+                    )}
+                    {activity.location && (
+                      <div className="flex items-center gap-2">
+                        <MapPin className="w-4 h-4" />
+                        {activity.location}
+                      </div>
+                    )}
+                    {activity.age_group && (
+                      <div className="flex items-center gap-2">
+                        <Users className="w-4 h-4" />
+                        {activity.age_group === 'family' ? 'Family Friendly' : activity.age_group === 'adult' ? 'Adults Only' : activity.age_group}
+                      </div>
+                    )}
                   </div>
 
                   <div className="flex gap-2">
