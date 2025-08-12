@@ -109,7 +109,7 @@ export const RoomAvailabilityGrid: React.FC<RoomAvailabilityGridProps> = ({
       return { status: 'maintenance', booking: null };
     }
 
-    // Check for booking on this date - must have active room assignment and confirmed payment
+    // Check for booking on this date - must have active room assignment
     const booking = bookings.find(b => {
       if (b.room_unit_id !== roomId) return false;
       if (b.payment_status === 'cancelled') return false; // Don't show cancelled bookings
@@ -197,6 +197,11 @@ export const RoomAvailabilityGrid: React.FC<RoomAvailabilityGridProps> = ({
                   {timelinePosition === 0 ? 'Today' : 
                    timelinePosition > 0 ? `${timelinePosition} days ahead` : 
                    `${Math.abs(timelinePosition)} days ago`}
+                  {bookings.length > 0 && (
+                    <span className="ml-2 text-blue-600">
+                      • {bookings.filter(b => b.room_unit_id && b.payment_status !== 'cancelled').length} active bookings
+                    </span>
+                  )}
                 </div>
               </div>
               <div className="px-3">
