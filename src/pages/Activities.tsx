@@ -9,17 +9,13 @@ import { supabase } from '@/integrations/supabase/client';
 
 interface Activity {
   id: string;
-  name: string;
+  title: string;
   description?: string;
-  duration?: string;
-  location?: string;
-  price?: number;
-  rating?: number;
-  image_url?: string;
-  age_group?: string;
-  activity_type?: {
-    name: string;
-  };
+  distance?: string;
+  image?: string;
+  is_active: boolean;
+  booking_required: boolean;
+  tags?: any;
 }
 
 const Activities = () => {
@@ -35,12 +31,9 @@ const Activities = () => {
     try {
       const { data, error } = await supabase
         .from('activities')
-        .select(`
-          *,
-          activity_type:activity_types(name)
-        `)
-        .eq('is_published', true)
-        .order('name');
+        .select('*')
+        .eq('is_active', true)
+        .order('title');
       
       if (error) throw error;
       setActivities(data || []);
@@ -53,9 +46,11 @@ const Activities = () => {
 
   const filteredActivities = activities.filter(activity => {
     if (filter === 'all') return true;
-    if (filter === 'adventure') return activity.activity_type?.name.toLowerCase() === 'adventure';
-    if (filter === 'nature') return activity.activity_type?.name.toLowerCase() === 'nature';
-    if (filter === 'family') return activity.age_group === 'family';
+    // For now, filter by tags array until we have proper activity types
+    const tags = activity.tags || [];
+    if (filter === 'adventure') return tags.includes('adventure');
+    if (filter === 'nature') return tags.includes('nature');
+    if (filter === 'family') return tags.includes('family');
     return true;
   });
 
@@ -142,48 +137,42 @@ const Activities = () => {
               <div key={activity.id} className="bg-card border rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-all duration-300">
                 <div className="relative">
                   <img 
-                    src={activity.image_url || 'https://images.unsplash.com/photo-1544568100-847a948585b9?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80'}
-                    alt={activity.name}
+                    src={activity.image || 'https://images.unsplash.com/photo-1544568100-847a948585b9?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80'}
+                    alt={activity.title}
                     className="w-full h-48 object-cover"
                   />
-                  {activity.rating && (
-                    <Badge className="absolute top-3 right-3 bg-white/90 text-foreground">
-                      <Star className="w-3 h-3 mr-1 fill-current" />
-                      {activity.rating}
-                    </Badge>
-                  )}
-                  {activity.price && (
-                    <Badge className="absolute top-3 left-3 bg-primary text-primary-foreground">
-                      ₹{activity.price}
-                    </Badge>
-                  )}
+                  <Badge className="absolute top-3 right-3 bg-white/90 text-foreground">
+                    <Star className="w-3 h-3 mr-1 fill-current" />
+                    4.5
+                  </Badge>
+                  <Badge className="absolute top-3 left-3 bg-primary text-primary-foreground">
+                    Book Now
+                  </Badge>
                 </div>
                 
                 <div className="p-6">
-                  <h3 className="text-xl font-heading font-semibold mb-2">{activity.name}</h3>
+                  <h3 className="text-xl font-heading font-semibold mb-2">{activity.title}</h3>
                   <p className="text-muted-foreground font-body text-sm mb-4 leading-relaxed">
-                    {activity.description}
+                    {activity.description || 'An exciting activity to enhance your stay at Matheran.'}
                   </p>
                   
                   <div className="space-y-2 mb-4 text-sm text-muted-foreground">
-                    {activity.duration && (
-                      <div className="flex items-center gap-2">
-                        <Clock className="w-4 h-4" />
-                        {activity.duration}
-                      </div>
-                    )}
-                    {activity.location && (
+                    {activity.distance && (
                       <div className="flex items-center gap-2">
                         <MapPin className="w-4 h-4" />
-                        {activity.location}
+                        {activity.distance}
                       </div>
                     )}
-                    {activity.age_group && (
+                    {activity.booking_required && (
                       <div className="flex items-center gap-2">
-                        <Users className="w-4 h-4" />
-                        {activity.age_group === 'family' ? 'Family Friendly' : activity.age_group === 'adult' ? 'Adults Only' : activity.age_group}
+                        <Clock className="w-4 h-4" />
+                        Booking Required
                       </div>
                     )}
+                    <div className="flex items-center gap-2">
+                      <Users className="w-4 h-4" />
+                      Suitable for All Ages
+                    </div>
                   </div>
 
                   <div className="flex gap-2">
