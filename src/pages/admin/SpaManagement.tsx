@@ -491,218 +491,166 @@ const SpaManagement = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background">
-      <div className="max-w-7xl mx-auto px-4 py-6">
-        {/* Header */}
-        <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 mb-8">
-          <div>
-            <h1 className="text-3xl font-bold text-foreground mb-2">Spa Services Management</h1>
-            <p className="text-muted-foreground">Manage your spa and wellness services</p>
+    <div className="container mx-auto p-6">
+      <div className="flex items-center justify-between mb-6">
+        <div className="flex items-center gap-4">
+          <Link 
+            to="/admin"
+            className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            Back to Dashboard
+          </Link>
+          <div className="h-6 w-px bg-border" />
+          <h1 className="text-3xl font-bold">Spa Services Management</h1>
+        </div>
+        
+        {!showForm && (
+          <Button onClick={() => setShowForm(true)} className="flex items-center gap-2">
+            <Plus className="h-4 w-4" />
+            Add Spa Service
+          </Button>
+        )}
+      </div>
+
+      {/* Controls */}
+      <div className="flex justify-between items-center mb-6">
+        <div></div>
+        
+        <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2">
+            <Button
+              variant={viewMode === 'card' ? 'default' : 'outline'}
+              size="sm"
+              onClick={() => setViewMode('card')}
+            >
+              <Grid className="h-4 w-4" />
+            </Button>
+            <Button
+              variant={viewMode === 'list' ? 'default' : 'outline'}
+              size="sm"
+              onClick={() => setViewMode('list')}
+            >
+              <List className="h-4 w-4" />
+            </Button>
           </div>
           
-          <div className="flex flex-col sm:flex-row gap-3">
-            <Button 
-              onClick={() => setShowForm(true)}
-              className="flex items-center gap-2"
+          <div className="relative">
+            <Search className="w-4 h-4 absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground" />
+            <Input
+              placeholder="Search spa services..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pl-9 w-64"
+            />
+          </div>
+          
+          <select
+            value={statusFilter}
+            onChange={(e) => setStatusFilter(e.target.value as any)}
+            className="px-3 py-2 border border-input bg-background rounded-md text-sm"
+          >
+            <option value="all">All Status</option>
+            <option value="active">Active</option>
+            <option value="inactive">Inactive</option>
+          </select>
+
+          <div className="flex items-center gap-2">
+            <Button
+              variant={categoryFilter === 'beauty' ? 'default' : 'outline'}
+              size="sm"
+              onClick={() => setCategoryFilter('beauty')}
+              className="h-8"
             >
-              <Plus className="w-4 h-4" />
-              Add Spa Service
+              Beauty
+            </Button>
+            <Button
+              variant={categoryFilter === 'wellness' ? 'default' : 'outline'}
+              size="sm"
+              onClick={() => setCategoryFilter('wellness')}
+              className="h-8"
+            >
+              Wellness
+            </Button>
+            <Button
+              variant={categoryFilter === 'all' ? 'default' : 'outline'}
+              size="sm"
+              onClick={() => setCategoryFilter('all')}
+              className="h-8"
+            >
+              All
             </Button>
           </div>
         </div>
+      </div>
 
-        {/* Controls */}
-        <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between mb-6 p-4 bg-muted/30 rounded-lg">
-          <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center flex-1">
-            <div className="flex items-center gap-2">
-              <Button
-                variant={viewMode === 'card' ? 'default' : 'outline'}
-                size="sm"
-                onClick={() => setViewMode('card')}
-                className="h-8"
-              >
-                <Grid className="w-4 h-4" />
-              </Button>
-              <Button
-                variant={viewMode === 'list' ? 'default' : 'outline'}
-                size="sm"
-                onClick={() => setViewMode('list')}
-                className="h-8"
-              >
-                <List className="w-4 h-4" />
-              </Button>
-            </div>
-
-            <div className="flex items-center gap-2">
-              <Search className="w-4 h-4 text-muted-foreground" />
-              <Input
-                placeholder="Search spa services..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-64"
-              />
-            </div>
-
-            <Select value={statusFilter} onValueChange={(value: any) => setStatusFilter(value)}>
-              <SelectTrigger className="w-32">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All</SelectItem>
-                <SelectItem value="active">Active</SelectItem>
-                <SelectItem value="inactive">Inactive</SelectItem>
-              </SelectContent>
-            </Select>
-
-            <div className="flex items-center gap-2">
-              <Button
-                variant={categoryFilter === 'beauty' ? 'default' : 'outline'}
-                size="sm"
-                onClick={() => setCategoryFilter('beauty')}
-                className="h-8"
-              >
-                Beauty
-              </Button>
-              <Button
-                variant={categoryFilter === 'wellness' ? 'default' : 'outline'}
-                size="sm"
-                onClick={() => setCategoryFilter('wellness')}
-                className="h-8"
-              >
-                Wellness
-              </Button>
-              <Button
-                variant={categoryFilter === 'all' ? 'default' : 'outline'}
-                size="sm"
-                onClick={() => setCategoryFilter('all')}
-                className="h-8"
-              >
-                All
-              </Button>
-            </div>
-          </div>
+      {/* Services Grid/List */}
+      {filteredServices.length === 0 ? (
+        <div className="text-center py-12">
+          <p className="text-muted-foreground mb-4">No spa services found.</p>
+          <Button onClick={() => setShowForm(true)}>
+            <Plus className="w-4 h-4 mr-2" />
+            Add Your First Spa Service
+          </Button>
         </div>
-
-        {/* Services Grid/List */}
-        {filteredServices.length === 0 ? (
-          <div className="text-center py-12">
-            <p className="text-muted-foreground mb-4">No spa services found.</p>
-            <Button onClick={() => setShowForm(true)}>
-              <Plus className="w-4 h-4 mr-2" />
-              Add Your First Spa Service
-            </Button>
-          </div>
-        ) : (
-          <div className={viewMode === 'card' ? 'grid md:grid-cols-2 lg:grid-cols-3 gap-6' : 'space-y-4'}>
-            {filteredServices.map((service) => (
-              <Card key={service.id} className={`${viewMode === 'list' ? 'p-4' : ''}`}>
-                <CardContent className={viewMode === 'card' ? 'p-0' : 'p-0'}>
-                  {viewMode === 'card' ? (
-                    <div className="space-y-4">
-                      {service.image && (
-                        <div className="relative">
-                          <img 
-                            src={service.image} 
-                            alt={service.title}
-                            className="w-full h-48 object-cover rounded-t-lg"
-                          />
-                          <Badge 
-                            variant={service.is_active ? "default" : "secondary"}
-                            className="absolute top-2 right-2"
-                          >
-                            {service.is_active ? 'Active' : 'Inactive'}
-                          </Badge>
-                        </div>
-                      )}
-                      <div className="p-4">
-                        <h3 className="font-heading font-semibold text-lg mb-2">{service.title}</h3>
-                        <p className="text-muted-foreground text-sm mb-3 line-clamp-2">
-                          {service.description}
-                        </p>
-                        <div className="flex items-center gap-4 mb-3 text-sm">
-                          {service.duration && (
-                            <span className="text-muted-foreground">
-                              {service.duration} min
-                            </span>
-                          )}
-                          <span className="font-semibold text-primary">₹{service.price}</span>
-                        </div>
-                        {service.tags && service.tags.length > 0 && (
-                          <div className="flex flex-wrap gap-1 mb-4">
-                            {service.tags.slice(0, 3).map((tag: string, index: number) => (
-                              <Badge key={index} variant="secondary" className="text-xs">
-                                {tag}
-                              </Badge>
-                            ))}
-                            {service.tags.length > 3 && (
-                              <Badge variant="secondary" className="text-xs">
-                                +{service.tags.length - 3}
-                              </Badge>
-                            )}
-                          </div>
-                        )}
-                        <div className="flex gap-2">
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => handleEdit(service)}
-                            className="flex-1"
-                          >
-                            <Edit className="w-3 h-3 mr-1" />
-                            Edit
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant={service.is_active ? "secondary" : "default"}
-                            onClick={() => toggleStatus(service.id, service.is_active)}
-                          >
-                            {service.is_active ? 'Deactivate' : 'Activate'}
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="destructive"
-                            onClick={() => handleDelete(service.id)}
-                          >
-                            <Trash2 className="w-3 h-3" />
-                          </Button>
-                        </div>
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="flex items-center gap-4 p-4">
-                      {service.image && (
+      ) : (
+        <div className={viewMode === 'card' ? 'grid md:grid-cols-2 lg:grid-cols-3 gap-6' : 'space-y-4'}>
+          {filteredServices.map((service) => (
+            <Card key={service.id} className={`${viewMode === 'list' ? 'p-4' : ''}`}>
+              <CardContent className={viewMode === 'card' ? 'p-0' : 'p-0'}>
+                {viewMode === 'card' ? (
+                  <div className="space-y-4">
+                    {service.image && (
+                      <div className="relative">
                         <img 
                           src={service.image} 
                           alt={service.title}
-                          className="w-16 h-16 object-cover rounded"
+                          className="w-full h-48 object-cover rounded-t-lg"
                         />
-                      )}
-                      <div className="flex-1">
-                        <div className="flex items-center gap-2 mb-1">
-                          <h3 className="font-heading font-semibold">{service.title}</h3>
-                          <Badge variant={service.is_active ? "default" : "secondary"}>
-                            {service.is_active ? 'Active' : 'Inactive'}
-                          </Badge>
-                        </div>
-                        <p className="text-muted-foreground text-sm mb-1 line-clamp-1">
-                          {service.description}
-                        </p>
-                        <div className="flex items-center gap-4 text-sm">
-                          {service.duration && (
-                            <span className="text-muted-foreground">
-                              {service.duration} min
-                            </span>
-                          )}
-                          <span className="font-semibold text-primary">₹{service.price}</span>
-                        </div>
+                        <Badge 
+                          variant={service.is_active ? "default" : "secondary"}
+                          className="absolute top-2 right-2"
+                        >
+                          {service.is_active ? 'Active' : 'Inactive'}
+                        </Badge>
                       </div>
+                    )}
+                    <div className="p-4">
+                      <h3 className="font-heading font-semibold text-lg mb-2">{service.title}</h3>
+                      <p className="text-muted-foreground text-sm mb-3 line-clamp-2">
+                        {service.description}
+                      </p>
+                      <div className="flex items-center gap-4 mb-3 text-sm">
+                        {service.duration && (
+                          <span className="text-muted-foreground">
+                            {service.duration} min
+                          </span>
+                        )}
+                        <span className="font-semibold text-primary">₹{service.price}</span>
+                      </div>
+                      {service.tags && service.tags.length > 0 && (
+                        <div className="flex flex-wrap gap-1 mb-4">
+                          {service.tags.slice(0, 3).map((tag: string, index: number) => (
+                            <Badge key={index} variant="secondary" className="text-xs">
+                              {tag}
+                            </Badge>
+                          ))}
+                          {service.tags.length > 3 && (
+                            <Badge variant="secondary" className="text-xs">
+                              +{service.tags.length - 3}
+                            </Badge>
+                          )}
+                        </div>
+                      )}
                       <div className="flex gap-2">
                         <Button
                           size="sm"
                           variant="outline"
                           onClick={() => handleEdit(service)}
+                          className="flex-1"
                         >
-                          <Edit className="w-3 h-3" />
+                          <Edit className="w-3 h-3 mr-1" />
+                          Edit
                         </Button>
                         <Button
                           size="sm"
@@ -720,13 +668,65 @@ const SpaManagement = () => {
                         </Button>
                       </div>
                     </div>
-                  )}
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        )}
-      </div>
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-4 p-4">
+                    {service.image && (
+                      <img 
+                        src={service.image} 
+                        alt={service.title}
+                        className="w-16 h-16 object-cover rounded"
+                      />
+                    )}
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2 mb-1">
+                        <h3 className="font-heading font-semibold">{service.title}</h3>
+                        <Badge variant={service.is_active ? "default" : "secondary"}>
+                          {service.is_active ? 'Active' : 'Inactive'}
+                        </Badge>
+                      </div>
+                      <p className="text-muted-foreground text-sm mb-1 line-clamp-1">
+                        {service.description}
+                      </p>
+                      <div className="flex items-center gap-4 text-sm">
+                        {service.duration && (
+                          <span className="text-muted-foreground">
+                            {service.duration} min
+                          </span>
+                        )}
+                        <span className="font-semibold text-primary">₹{service.price}</span>
+                      </div>
+                    </div>
+                    <div className="flex gap-2">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => handleEdit(service)}
+                      >
+                        <Edit className="w-3 h-3" />
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant={service.is_active ? "secondary" : "default"}
+                        onClick={() => toggleStatus(service.id, service.is_active)}
+                      >
+                        {service.is_active ? 'Deactivate' : 'Activate'}
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="destructive"
+                        onClick={() => handleDelete(service.id)}
+                      >
+                        <Trash2 className="w-3 h-3" />
+                      </Button>
+                    </div>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      )}
     </div>
   );
 };
