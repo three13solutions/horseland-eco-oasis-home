@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
@@ -24,11 +25,16 @@ import {
   AlertTriangle,
   Eye,
   History,
-  Wallet
+  Wallet,
+  ArrowLeft,
+  Grid,
+  List,
+  Trash2
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
+import ImageUpload from '@/components/ImageUpload';
 
 interface Guest {
   id: string;
@@ -88,11 +94,22 @@ export default function GuestManagement() {
   const [guestBookings, setGuestBookings] = useState<GuestBooking[]>([]);
   const [creditNotes, setCreditNotes] = useState<CreditNote[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
+  const [viewMode, setViewMode] = useState<'card' | 'list'>('card');
   const [showGuestDialog, setShowGuestDialog] = useState(false);
   const [showCreditDialog, setShowCreditDialog] = useState(false);
+  const [showDocumentDialog, setShowDocumentDialog] = useState(false);
   const [loading, setLoading] = useState(false);
   const [activeTab, setActiveTab] = useState('list');
   const { toast } = useToast();
+
+  // Document form state
+  const [documentForm, setDocumentForm] = useState({
+    document_type: '',
+    document_number: '',
+    expiry_date: '',
+    document_image_url: '',
+    notes: ''
+  });
 
   // Load guests
   useEffect(() => {
@@ -136,7 +153,7 @@ export default function GuestManagement() {
         .eq('guest_id', guestId)
         .order('created_at', { ascending: false });
 
-      // Load credit notes
+      // Load credit notes for this specific guest
       const { data: credits } = await supabase
         .from('guest_credit_notes')
         .select('*')
@@ -180,7 +197,7 @@ export default function GuestManagement() {
         description: `₹${amount} credit added to guest wallet`,
       });
 
-      // Reload credit notes
+      // Reload credit notes for the selected guest
       if (selectedGuest) {
         await loadGuestDetails(selectedGuest.id);
       }
@@ -195,12 +212,55 @@ export default function GuestManagement() {
     }
   };
 
+  const createDocument = async () => {
+    if (!selectedGuest) return;
+
+    try {
+      const { error } = await supabase
+        .from('guest_identity_documents')
+        .insert({
+          guest_id: selectedGuest.id,
+          document_type: documentForm.document_type,
+          document_number: documentForm.document_number,
+          expiry_date: documentForm.expiry_date || null,
+          document_image_url: documentForm.document_image_url || null,
+          notes: documentForm.notes || null,
+        });
+
+      if (error) throw error;
+
+      toast({
+        title: "Document Added",
+        description: "Identity document has been added successfully.",
+      });
+
+      // Reload guest details
+      await loadGuestDetails(selectedGuest.id);
+      setShowDocumentDialog(false);
+      setDocumentForm({
+        document_type: '',
+        document_number: '',
+        expiry_date: '',
+        document_image_url: '',
+        notes: ''
+      });
+    } catch (error: any) {
+      console.error('Error creating document:', error);
+      toast({
+        title: "Error",
+        description: "Failed to add document",
+        variant: "destructive",
+      });
+    }
+  };
+
   const filteredGuests = guests.filter(guest =>
     `${guest.first_name} ${guest.last_name}`.toLowerCase().includes(searchTerm.toLowerCase()) ||
     guest.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
     guest.phone?.includes(searchTerm)
   );
 
+  // Calculate available credit for the currently selected guest only
   const getAvailableCredit = (creditNotes: CreditNote[]) => {
     return creditNotes
       .filter(note => !note.is_redeemed && new Date(note.expires_at) > new Date())
@@ -223,8 +283,21 @@ export default function GuestManagement() {
   };
 
   return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-center">
+    <div className="container mx-auto py-8 px-4">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+        <div className="flex items-center gap-4">
+          <Link
+            to="/admin"
+            className="inline-flex items-center text-sm text-muted-foreground hover:text-foreground"
+          >
+            <ArrowLeft className="w-4 h-4 mr-2" />
+            Back to Dashboard
+          </Link>
+        </div>
+      </div>
+
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Guest Management</h1>
           <p className="text-muted-foreground">
@@ -241,130 +314,170 @@ export default function GuestManagement() {
         <TabsList>
           <TabsTrigger value="list">Guest List</TabsTrigger>
           {selectedGuest && (
-            <TabsTrigger value="details">Guest Details</TabsTrigger>
+            <TabsTrigger value="details">
+              Guest Details ({selectedGuest.first_name} {selectedGuest.last_name})
+            </TabsTrigger>
           )}
         </TabsList>
 
         <TabsContent value="list" className="space-y-4">
-          {/* Search and Filters */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Search className="h-5 w-5" />
-                Search Guests
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="flex gap-4">
-                <div className="flex-1">
-                  <Input
-                    placeholder="Search by name, email, or phone..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                  />
-                </div>
+          {/* Search and View Controls */}
+          <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
+            <div className="flex items-center gap-4 flex-1">
+              <div className="relative flex-1 max-w-md">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+                <Input
+                  placeholder="Search by name, email, or phone..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-10"
+                />
               </div>
-            </CardContent>
-          </Card>
+            </div>
+            
+            <div className="flex items-center gap-2">
+              <Button
+                variant={viewMode === 'card' ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => setViewMode('card')}
+              >
+                <Grid className="w-4 h-4" />
+              </Button>
+              <Button
+                variant={viewMode === 'list' ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => setViewMode('list')}
+              >
+                <List className="w-4 h-4" />
+              </Button>
+            </div>
+          </div>
 
-          {/* Guests Table */}
-          <Card>
-            <CardHeader>
-              <CardTitle>All Guests ({filteredGuests.length})</CardTitle>
-              <CardDescription>
-                Click on a guest to view their complete profile and booking history
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
+          {/* Guest List Content */}
+          {viewMode === 'card' ? (
+            <div className="grid gap-4">
+              {filteredGuests.map((guest) => (
+                <Card key={guest.id} className="p-4">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-4">
+                      <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center">
+                        <User className="h-6 w-6 text-primary" />
+                      </div>
+                      <div>
+                        <h3 className="font-semibold">{guest.first_name} {guest.last_name}</h3>
+                        <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                          {guest.email && (
+                            <div className="flex items-center gap-1">
+                              <Mail className="h-3 w-3" />
+                              {guest.email}
+                            </div>
+                          )}
+                          {guest.phone && (
+                            <div className="flex items-center gap-1">
+                              <Phone className="h-3 w-3" />
+                              {guest.phone}
+                            </div>
+                          )}
+                        </div>
+                        <div className="text-xs text-muted-foreground mt-1">
+                          Joined {format(new Date(guest.created_at), 'MMM yyyy')}
+                        </div>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      {guest.is_blacklisted && (
+                        <Badge variant="destructive">
+                          <AlertTriangle className="h-3 w-3 mr-1" />
+                          Blacklisted
+                        </Badge>
+                      )}
+                      <Button onClick={() => handleGuestSelect(guest)}>
+                        View Details
+                      </Button>
+                    </div>
+                  </div>
+                </Card>
+              ))}
+            </div>
+          ) : (
+            <div className="border rounded-lg">
               <Table>
                 <TableHeader>
                   <TableRow>
                     <TableHead>Name</TableHead>
                     <TableHead>Contact</TableHead>
-                    <TableHead>Documents</TableHead>
-                    <TableHead>Total Bookings</TableHead>
-                    <TableHead>Credit Balance</TableHead>
+                    <TableHead>Joined</TableHead>
                     <TableHead>Status</TableHead>
                     <TableHead>Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {filteredGuests.map((guest) => {
-                    const guestBookingCount = guestBookings.length; // This would need to be calculated per guest
-                    const creditBalance = getAvailableCredit(creditNotes); // This would need to be calculated per guest
-                    
-                    return (
-                      <TableRow
-                        key={guest.id}
-                        className="cursor-pointer hover:bg-muted/50"
-                        onClick={() => handleGuestSelect(guest)}
-                      >
-                        <TableCell>
-                          <div className="font-medium">
-                            {guest.first_name} {guest.last_name}
-                          </div>
-                          <div className="text-sm text-muted-foreground">
-                            Joined {format(new Date(guest.created_at), 'MMM yyyy')}
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          <div className="space-y-1">
-                            {guest.email && (
-                              <div className="flex items-center gap-1 text-sm">
-                                <Mail className="h-3 w-3" />
-                                {guest.email}
-                              </div>
-                            )}
-                            {guest.phone && (
-                              <div className="flex items-center gap-1 text-sm">
-                                <Phone className="h-3 w-3" />
-                                {guest.phone}
-                              </div>
-                            )}
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          {getDocumentStatusBadge(guestDocuments)}
-                        </TableCell>
-                        <TableCell>
-                          <Badge variant="outline">{guestBookingCount}</Badge>
-                        </TableCell>
-                        <TableCell>
-                          {creditBalance > 0 && (
-                            <Badge variant="secondary">
-                              ₹{creditBalance.toLocaleString()}
-                            </Badge>
+                  {filteredGuests.map((guest) => (
+                    <TableRow key={guest.id}>
+                      <TableCell className="font-medium">
+                        {guest.first_name} {guest.last_name}
+                      </TableCell>
+                      <TableCell>
+                        <div className="space-y-1">
+                          {guest.email && (
+                            <div className="flex items-center gap-1 text-sm">
+                              <Mail className="h-3 w-3" />
+                              {guest.email}
+                            </div>
                           )}
-                        </TableCell>
-                        <TableCell>
-                          {guest.is_blacklisted ? (
-                            <Badge variant="destructive">
-                              <AlertTriangle className="h-3 w-3 mr-1" />
-                              Blacklisted
-                            </Badge>
-                          ) : (
-                            <Badge variant="default">Active</Badge>
+                          {guest.phone && (
+                            <div className="flex items-center gap-1 text-sm">
+                              <Phone className="h-3 w-3" />
+                              {guest.phone}
+                            </div>
                           )}
-                        </TableCell>
-                        <TableCell>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleGuestSelect(guest);
-                            }}
-                          >
-                            <Eye className="h-4 w-4" />
-                          </Button>
-                        </TableCell>
-                      </TableRow>
-                    );
-                  })}
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        {format(new Date(guest.created_at), 'MMM yyyy')}
+                      </TableCell>
+                      <TableCell>
+                        {guest.is_blacklisted ? (
+                          <Badge variant="destructive">
+                            <AlertTriangle className="h-3 w-3 mr-1" />
+                            Blacklisted
+                          </Badge>
+                        ) : (
+                          <Badge variant="default">Active</Badge>
+                        )}
+                      </TableCell>
+                      <TableCell>
+                        <Button
+                          size="sm"
+                          onClick={() => handleGuestSelect(guest)}
+                        >
+                          <Eye className="h-4 w-4" />
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  ))}
                 </TableBody>
               </Table>
-            </CardContent>
-          </Card>
+            </div>
+          )}
+
+          {filteredGuests.length === 0 && (
+            <Card className="py-12">
+              <CardContent className="text-center">
+                <User className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+                <h3 className="text-lg font-medium mb-2">No guests found</h3>
+                <p className="text-muted-foreground mb-4">
+                  {searchTerm ? 'No guests match your search criteria.' : 'Start by adding your first guest.'}
+                </p>
+                {!searchTerm && (
+                  <Button onClick={() => setShowGuestDialog(true)}>
+                    <Plus className="h-4 w-4 mr-2" />
+                    Add First Guest
+                  </Button>
+                )}
+              </CardContent>
+            </Card>
+          )}
         </TabsContent>
 
         {selectedGuest && (
@@ -441,10 +554,19 @@ export default function GuestManagement() {
               {/* Documents */}
               <Card className="md:col-span-1">
                 <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <IdCard className="h-5 w-5" />
-                    Identity Documents
-                  </CardTitle>
+                  <div className="flex justify-between items-center">
+                    <CardTitle className="flex items-center gap-2">
+                      <IdCard className="h-5 w-5" />
+                      Identity Documents
+                    </CardTitle>
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      onClick={() => setShowDocumentDialog(true)}
+                    >
+                      <Plus className="h-4 w-4" />
+                    </Button>
+                  </div>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-3">
@@ -463,18 +585,33 @@ export default function GuestManagement() {
                                 Expires: {format(new Date(doc.expiry_date), 'PPP')}
                               </p>
                             )}
+                            {doc.notes && (
+                              <p className="text-xs text-muted-foreground mt-1">
+                                {doc.notes}
+                              </p>
+                            )}
                           </div>
                           <Badge variant={doc.is_verified ? 'default' : 'secondary'}>
                             {doc.is_verified ? 'Verified' : 'Pending'}
                           </Badge>
                         </div>
+                        {doc.document_image_url && (
+                          <div className="mt-2">
+                            <img 
+                              src={doc.document_image_url} 
+                              alt="Document" 
+                              className="w-full h-20 object-cover rounded border"
+                            />
+                          </div>
+                        )}
                       </div>
                     ))}
                     
                     {guestDocuments.length === 0 && (
-                      <p className="text-sm text-muted-foreground text-center py-4">
-                        No documents uploaded
-                      </p>
+                      <div className="text-center py-4">
+                        <FileText className="h-8 w-8 mx-auto text-muted-foreground mb-2" />
+                        <p className="text-sm text-muted-foreground">No documents uploaded</p>
+                      </div>
                     )}
                   </div>
                 </CardContent>
@@ -512,6 +649,12 @@ export default function GuestManagement() {
                           </p>
                         </div>
                       ))}
+                      
+                      {creditNotes.length === 0 && (
+                        <p className="text-sm text-muted-foreground text-center py-4">
+                          No credit notes found
+                        </p>
+                      )}
                     </div>
                   </div>
                 </CardContent>
@@ -579,6 +722,9 @@ export default function GuestManagement() {
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Add Credit Note</DialogTitle>
+            <DialogDescription>
+              Add a credit note to {selectedGuest?.first_name} {selectedGuest?.last_name}'s account
+            </DialogDescription>
           </DialogHeader>
           <form
             onSubmit={(e) => {
@@ -635,6 +781,87 @@ export default function GuestManagement() {
               </Button>
             </div>
           </form>
+        </DialogContent>
+      </Dialog>
+
+      {/* Document Dialog */}
+      <Dialog open={showDocumentDialog} onOpenChange={setShowDocumentDialog}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Add Identity Document</DialogTitle>
+            <DialogDescription>
+              Add a new identity document for {selectedGuest?.first_name} {selectedGuest?.last_name}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="document_type">Document Type</Label>
+                <Select 
+                  value={documentForm.document_type} 
+                  onValueChange={(value) => 
+                    setDocumentForm(prev => ({ ...prev, document_type: value }))
+                  }
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select document type" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="passport">Passport</SelectItem>
+                    <SelectItem value="aadhar">Aadhar Card</SelectItem>
+                    <SelectItem value="pan">PAN Card</SelectItem>
+                    <SelectItem value="driving_license">Driving License</SelectItem>
+                    <SelectItem value="voter_id">Voter ID</SelectItem>
+                    <SelectItem value="other">Other</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label htmlFor="document_number">Document Number</Label>
+                <Input
+                  id="document_number"
+                  value={documentForm.document_number}
+                  onChange={(e) => setDocumentForm(prev => ({ ...prev, document_number: e.target.value }))}
+                  placeholder="Enter document number"
+                />
+              </div>
+            </div>
+            <div>
+              <Label htmlFor="expiry_date">Expiry Date (Optional)</Label>
+              <Input
+                id="expiry_date"
+                type="date"
+                value={documentForm.expiry_date}
+                onChange={(e) => setDocumentForm(prev => ({ ...prev, expiry_date: e.target.value }))}
+              />
+            </div>
+            <div>
+              <ImageUpload
+                label="Document Image"
+                value={documentForm.document_image_url}
+                onChange={(url) => setDocumentForm(prev => ({ ...prev, document_image_url: url }))}
+                bucketName="uploads"
+                folder="documents"
+              />
+            </div>
+            <div>
+              <Label htmlFor="notes">Notes (Optional)</Label>
+              <Textarea
+                id="notes"
+                value={documentForm.notes}
+                onChange={(e) => setDocumentForm(prev => ({ ...prev, notes: e.target.value }))}
+                placeholder="Additional notes about this document"
+              />
+            </div>
+            <div className="flex justify-end gap-2">
+              <Button variant="outline" onClick={() => setShowDocumentDialog(false)}>
+                Cancel
+              </Button>
+              <Button onClick={createDocument}>
+                Add Document
+              </Button>
+            </div>
+          </div>
         </DialogContent>
       </Dialog>
     </div>
