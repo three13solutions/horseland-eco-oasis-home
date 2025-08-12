@@ -13,7 +13,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Plus, Edit, Trash2, Upload, ArrowLeft, Users, IndianRupee, Home, LayoutGrid, List, Search, Filter } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 
 interface RoomType {
   id: string;
@@ -62,6 +62,7 @@ const RoomManagement = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const { toast } = useToast();
+  const navigate = useNavigate();
 
   const [formData, setFormData] = useState({
     name: '',
@@ -592,7 +593,7 @@ const RoomManagement = () => {
                   <Button
                     variant="outline"
                     size="sm"
-                    onClick={() => window.open(`/admin/room-units/${room.id}`, '_blank')}
+                    onClick={() => navigate(`/admin/room-units/${room.id}`)}
                     title="Manage Units"
                   >
                     <Home className="w-4 h-4" />
@@ -662,7 +663,7 @@ const RoomManagement = () => {
                             <Button
                               variant="outline"
                               size="sm"
-                              onClick={() => window.open(`/admin/room-units/${room.id}`, '_blank')}
+                              onClick={() => navigate(`/admin/room-units/${room.id}`)}
                             >
                               <Home className="w-4 h-4" />
                             </Button>
@@ -726,7 +727,7 @@ const RoomManagement = () => {
                           <Button
                             variant="outline"
                             size="sm"
-                            onClick={() => window.open(`/admin/room-units/${unit.room_type_id}`, '_blank')}
+                            onClick={() => navigate(`/admin/room-units/${unit.room_type_id}`)}
                           >
                             <Edit className="w-4 h-4" />
                           </Button>

@@ -248,25 +248,6 @@ export default function RoomUnitsManagement() {
         </div>
         
         <div className="flex items-center space-x-2">
-          <div className="flex items-center space-x-1 border rounded-md">
-            <Button
-              variant={viewMode === 'card' ? 'default' : 'ghost'}
-              size="sm"
-              onClick={() => setViewMode('card')}
-              className="rounded-r-none"
-            >
-              <LayoutGrid className="w-4 h-4" />
-            </Button>
-            <Button
-              variant={viewMode === 'table' ? 'default' : 'ghost'}
-              size="sm"
-              onClick={() => setViewMode('table')}
-              className="rounded-l-none"
-            >
-              <List className="w-4 h-4" />
-            </Button>
-          </div>
-          
           <Button
             variant="outline"
             onClick={() => setIsBulkDialogOpen(true)}
@@ -413,6 +394,25 @@ export default function RoomUnitsManagement() {
             <option value="out_of_order">Out of Order</option>
             <option value="occupied">Occupied</option>
           </select>
+        </div>
+        
+        <div className="flex items-center space-x-1 border rounded-md">
+          <Button
+            variant={viewMode === 'card' ? 'default' : 'ghost'}
+            size="sm"
+            onClick={() => setViewMode('card')}
+            className="rounded-r-none"
+          >
+            <LayoutGrid className="w-4 h-4" />
+          </Button>
+          <Button
+            variant={viewMode === 'table' ? 'default' : 'ghost'}
+            size="sm"
+            onClick={() => setViewMode('table')}
+            className="rounded-l-none"
+          >
+            <List className="w-4 h-4" />
+          </Button>
         </div>
       </div>
 
