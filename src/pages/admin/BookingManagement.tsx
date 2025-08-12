@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Calendar, Eye, Search, Filter, Users, IndianRupee, ArrowLeft, Clock, CheckCircle, XCircle, AlertCircle, Bot, RefreshCw, Edit } from 'lucide-react';
+import { Calendar, Eye, Search, Filter, Users, IndianRupee, ArrowLeft, Clock, CheckCircle, XCircle, AlertCircle, Bot, RefreshCw, Edit, Plus, Phone, CalendarIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
@@ -9,6 +9,10 @@ import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Textarea } from '@/components/ui/textarea';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Calendar as CalendarComponent } from '@/components/ui/calendar';
+import { cn } from '@/lib/utils';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { Link, useNavigate } from 'react-router-dom';
@@ -67,6 +71,7 @@ interface BookingStats {
 export default function BookingManagement() {
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [roomUnits, setRoomUnits] = useState<RoomUnit[]>([]);
+  const [roomTypes, setRoomTypes] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
@@ -74,18 +79,35 @@ export default function BookingManagement() {
   const [autoAssigning, setAutoAssigning] = useState<string | null>(null);
   const [selectedRoomOverride, setSelectedRoomOverride] = useState<string>('');
   const [overrideBookingId, setOverrideBookingId] = useState<string | null>(null);
+  const [showCreateForm, setShowCreateForm] = useState(false);
   const [stats, setStats] = useState<BookingStats>({
     totalBookings: 0,
     totalRevenue: 0,
     occupancyRate: 0,
     pendingPayments: 0,
   });
+
+  // Create booking form state
+  const [createFormData, setCreateFormData] = useState({
+    guest_name: '',
+    guest_email: '',
+    guest_phone: '',
+    check_in: undefined as Date | undefined,
+    check_out: undefined as Date | undefined,
+    guests_count: 2,
+    room_type_id: '',
+    total_amount: 0,
+    payment_status: 'pending',
+    notes: '',
+  });
+
   const { toast } = useToast();
   const navigate = useNavigate();
 
   useEffect(() => {
     loadBookings();
     loadRoomUnits();
+    loadRoomTypes();
   }, []);
 
   const loadBookings = async () => {
@@ -135,6 +157,21 @@ export default function BookingManagement() {
       });
     } finally {
       setLoading(false);
+    }
+  };
+
+  const loadRoomTypes = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('room_types')
+        .select('*')
+        .eq('is_published', true)
+        .order('name');
+
+      if (error) throw error;
+      setRoomTypes(data || []);
+    } catch (error) {
+      console.error('Error loading room types:', error);
     }
   };
 
@@ -345,6 +382,87 @@ export default function BookingManagement() {
     };
   };
 
+  const resetCreateForm = () => {
+    setCreateFormData({
+      guest_name: '',
+      guest_email: '',
+      guest_phone: '',
+      check_in: undefined,
+      check_out: undefined,
+      guests_count: 2,
+      room_type_id: '',
+      total_amount: 0,
+      payment_status: 'pending',
+      notes: '',
+    });
+  };
+
+  const handleCreateBooking = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (!createFormData.guest_name || !createFormData.check_in || !createFormData.check_out) {
+      toast({
+        title: "Validation Error",
+        description: "Please fill in guest name, check-in, and check-out dates",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      // Generate booking ID
+      const bookingId = `BK${Date.now().toString().slice(-6)}`;
+
+      const bookingData = {
+        booking_id: bookingId,
+        guest_name: createFormData.guest_name,
+        guest_email: createFormData.guest_email || null,
+        guest_phone: createFormData.guest_phone || null,
+        check_in: format(createFormData.check_in, 'yyyy-MM-dd'),
+        check_out: format(createFormData.check_out, 'yyyy-MM-dd'),
+        guests_count: createFormData.guests_count,
+        room_type_id: createFormData.room_type_id || null,
+        total_amount: createFormData.total_amount,
+        payment_status: createFormData.payment_status,
+        notes: createFormData.notes || null,
+      };
+
+      const { data: newBooking, error } = await supabase
+        .from('bookings')
+        .insert([bookingData])
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      toast({
+        title: "Booking Created",
+        description: `Booking ${bookingId} created successfully for ${createFormData.guest_name}`,
+      });
+
+      // Auto-assign room if room type is selected
+      if (createFormData.room_type_id && newBooking) {
+        await handleAutoAssign({
+          ...newBooking,
+          room_type_id: createFormData.room_type_id,
+          room_types: { name: roomTypes.find(rt => rt.id === createFormData.room_type_id)?.name || '' }
+        });
+      }
+
+      setShowCreateForm(false);
+      resetCreateForm();
+      loadBookings();
+
+    } catch (error: any) {
+      console.error('Error creating booking:', error);
+      toast({
+        title: "Error",
+        description: "Failed to create booking",
+        variant: "destructive",
+      });
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -376,6 +494,15 @@ export default function BookingManagement() {
               Manage reservations, room availability, and guest information
             </p>
           </div>
+        </div>
+        <div className="flex gap-2">
+          <Button
+            onClick={() => setShowCreateForm(true)}
+            className="flex items-center gap-2"
+          >
+            <Phone className="h-4 w-4" />
+            Create Phone Booking
+          </Button>
         </div>
       </div>
 
@@ -771,6 +898,205 @@ export default function BookingManagement() {
           </Card>
         </TabsContent>
       </Tabs>
+
+      {/* Create Booking Dialog */}
+      <Dialog open={showCreateForm} onOpenChange={setShowCreateForm}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Phone className="h-5 w-5" />
+              Create Phone Booking
+            </DialogTitle>
+          </DialogHeader>
+
+          <form onSubmit={handleCreateBooking} className="space-y-6">
+            {/* Guest Information */}
+            <div className="space-y-4">
+              <h3 className="text-lg font-medium">Guest Information</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="guest_name">Guest Name *</Label>
+                  <Input
+                    id="guest_name"
+                    value={createFormData.guest_name}
+                    onChange={(e) => setCreateFormData(prev => ({ ...prev, guest_name: e.target.value }))}
+                    placeholder="Enter guest name"
+                    required
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="guest_email">Email</Label>
+                  <Input
+                    id="guest_email"
+                    type="email"
+                    value={createFormData.guest_email}
+                    onChange={(e) => setCreateFormData(prev => ({ ...prev, guest_email: e.target.value }))}
+                    placeholder="guest@example.com"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="guest_phone">Phone Number</Label>
+                  <Input
+                    id="guest_phone"
+                    value={createFormData.guest_phone}
+                    onChange={(e) => setCreateFormData(prev => ({ ...prev, guest_phone: e.target.value }))}
+                    placeholder="+91-9876543210"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="guests_count">Number of Guests</Label>
+                  <Input
+                    id="guests_count"
+                    type="number"
+                    min="1"
+                    max="10"
+                    value={createFormData.guests_count}
+                    onChange={(e) => setCreateFormData(prev => ({ ...prev, guests_count: parseInt(e.target.value) || 1 }))}
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Booking Details */}
+            <div className="space-y-4">
+              <h3 className="text-lg font-medium">Booking Details</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <Label>Check-in Date *</Label>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="outline"
+                        className={cn(
+                          "w-full justify-start text-left font-normal",
+                          !createFormData.check_in && "text-muted-foreground"
+                        )}
+                      >
+                        <CalendarIcon className="mr-2 h-4 w-4" />
+                        {createFormData.check_in ? format(createFormData.check_in, "PPP") : "Select check-in date"}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <CalendarComponent
+                        mode="single"
+                        selected={createFormData.check_in}
+                        onSelect={(date) => setCreateFormData(prev => ({ ...prev, check_in: date }))}
+                        disabled={(date) => date < new Date()}
+                        initialFocus
+                        className="p-3 pointer-events-auto"
+                      />
+                    </PopoverContent>
+                  </Popover>
+                </div>
+
+                <div>
+                  <Label>Check-out Date *</Label>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="outline"
+                        className={cn(
+                          "w-full justify-start text-left font-normal",
+                          !createFormData.check_out && "text-muted-foreground"
+                        )}
+                      >
+                        <CalendarIcon className="mr-2 h-4 w-4" />
+                        {createFormData.check_out ? format(createFormData.check_out, "PPP") : "Select check-out date"}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <CalendarComponent
+                        mode="single"
+                        selected={createFormData.check_out}
+                        onSelect={(date) => setCreateFormData(prev => ({ ...prev, check_out: date }))}
+                        disabled={(date) => date <= (createFormData.check_in || new Date())}
+                        initialFocus
+                        className="p-3 pointer-events-auto"
+                      />
+                    </PopoverContent>
+                  </Popover>
+                </div>
+
+                <div>
+                  <Label htmlFor="room_type">Room Type</Label>
+                  <Select
+                    value={createFormData.room_type_id}
+                    onValueChange={(value) => setCreateFormData(prev => ({ ...prev, room_type_id: value }))}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select room type" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {roomTypes.map((roomType) => (
+                        <SelectItem key={roomType.id} value={roomType.id}>
+                          {roomType.name} - ₹{roomType.base_price}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div>
+                  <Label htmlFor="total_amount">Total Amount (₹)</Label>
+                  <Input
+                    id="total_amount"
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    value={createFormData.total_amount}
+                    onChange={(e) => setCreateFormData(prev => ({ ...prev, total_amount: parseFloat(e.target.value) || 0 }))}
+                    placeholder="0.00"
+                  />
+                </div>
+
+                <div>
+                  <Label htmlFor="payment_status">Payment Status</Label>
+                  <Select
+                    value={createFormData.payment_status}
+                    onValueChange={(value) => setCreateFormData(prev => ({ ...prev, payment_status: value }))}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="pending">Pending</SelectItem>
+                      <SelectItem value="confirmed">Confirmed</SelectItem>
+                      <SelectItem value="cancelled">Cancelled</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
+              <div>
+                <Label htmlFor="notes">Notes</Label>
+                <Textarea
+                  id="notes"
+                  value={createFormData.notes}
+                  onChange={(e) => setCreateFormData(prev => ({ ...prev, notes: e.target.value }))}
+                  placeholder="Special requests, preferences, etc."
+                  rows={3}
+                />
+              </div>
+            </div>
+
+            <div className="flex justify-end gap-3">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => {
+                  setShowCreateForm(false);
+                  resetCreateForm();
+                }}
+              >
+                Cancel
+              </Button>
+              <Button type="submit">
+                Create Booking
+              </Button>
+            </div>
+          </form>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
