@@ -491,12 +491,9 @@ export default function BookingManagement() {
         )}
         {booking.packages && (
           <div className="text-xs">
-            <span className="font-medium text-blue-600">📦 Package:</span>
+            <span className="font-medium text-indigo-600">📦 Package:</span>
             <span className="text-muted-foreground ml-1">
               {booking.packages.title}
-              {booking.packages.inclusions && booking.packages.inclusions.length > 0 && 
-                ` - Includes: ${booking.packages.inclusions.slice(0, 3).join(', ')}${booking.packages.inclusions.length > 3 ? '...' : ''}`
-              }
             </span>
           </div>
         )}
