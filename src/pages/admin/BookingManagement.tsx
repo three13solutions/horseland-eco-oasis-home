@@ -106,7 +106,15 @@ export default function BookingManagement() {
     total_amount: 0,
     payment_status: 'pending',
     notes: '',
+    selected_meals: [] as any[],
+    selected_activities: [] as any[],
+    selected_spa_services: [] as any[],
   });
+
+  // Available services for addon selection
+  const [availableMeals, setAvailableMeals] = useState<any[]>([]);
+  const [availableActivities, setAvailableActivities] = useState<any[]>([]);
+  const [availableSpaServices, setAvailableSpaServices] = useState<any[]>([]);
 
   const { toast } = useToast();
   const navigate = useNavigate();
@@ -115,6 +123,7 @@ export default function BookingManagement() {
     loadBookings();
     loadRoomUnits();
     loadRoomTypes();
+    loadAddonServices();
   }, []);
 
   const loadBookings = async () => {
@@ -164,6 +173,42 @@ export default function BookingManagement() {
       });
     } finally {
       setLoading(false);
+    }
+  };
+
+  const loadAddonServices = async () => {
+    try {
+      // Load meals using any type to bypass TypeScript error
+      const { data: mealsData, error: mealsError } = await (supabase as any)
+        .from('meals')
+        .select('*')
+        .eq('is_active', true);
+      
+      if (!mealsError) {
+        setAvailableMeals(mealsData || []);
+      }
+
+      // Load activities
+      const { data: activitiesData, error: activitiesError } = await supabase
+        .from('activities')
+        .select('*')
+        .eq('is_active', true);
+      
+      if (!activitiesError) {
+        setAvailableActivities(activitiesData || []);
+      }
+
+      // Load spa services
+      const { data: spaData, error: spaError } = await supabase
+        .from('spa_services')
+        .select('*')
+        .eq('is_active', true);
+      
+      if (!spaError) {
+        setAvailableSpaServices(spaData || []);
+      }
+    } catch (error) {
+      console.error('Error loading addon services:', error);
     }
   };
 
@@ -506,6 +551,43 @@ export default function BookingManagement() {
     }
   };
 
+  const addAddonToBooking = (type: 'meals' | 'activities' | 'spa_services', service: any) => {
+    const addonItem = {
+      id: service.id,
+      name: service.title,
+      price: Number(service.price || service.price_amount || 0),
+      quantity: 1
+    };
+
+    setCreateFormData(prev => ({
+      ...prev,
+      [`selected_${type}`]: [...prev[`selected_${type}` as keyof typeof prev] as any[], addonItem]
+    }));
+  };
+
+  const removeAddonFromBooking = (type: 'meals' | 'activities' | 'spa_services', index: number) => {
+    setCreateFormData(prev => ({
+      ...prev,
+      [`selected_${type}`]: (prev[`selected_${type}` as keyof typeof prev] as any[]).filter((_, i) => i !== index)
+    }));
+  };
+
+  const updateAddonQuantity = (type: 'meals' | 'activities' | 'spa_services', index: number, quantity: number) => {
+    setCreateFormData(prev => ({
+      ...prev,
+      [`selected_${type}`]: (prev[`selected_${type}` as keyof typeof prev] as any[]).map((item, i) => 
+        i === index ? { ...item, quantity: Math.max(1, quantity) } : item
+      )
+    }));
+  };
+
+  const calculateAddonTotal = () => {
+    const mealsTotal = createFormData.selected_meals.reduce((sum, meal) => sum + (meal.price * meal.quantity), 0);
+    const activitiesTotal = createFormData.selected_activities.reduce((sum, activity) => sum + (activity.price * activity.quantity), 0);
+    const spaTotal = createFormData.selected_spa_services.reduce((sum, spa) => sum + (spa.price * spa.quantity), 0);
+    return mealsTotal + activitiesTotal + spaTotal;
+  };
+
   const resetCreateForm = () => {
     setCreateFormData({
       guest_name: '',
@@ -518,6 +600,9 @@ export default function BookingManagement() {
       total_amount: 0,
       payment_status: 'pending',
       notes: '',
+      selected_meals: [],
+      selected_activities: [],
+      selected_spa_services: [],
     });
   };
 
@@ -549,6 +634,9 @@ export default function BookingManagement() {
         total_amount: createFormData.total_amount,
         payment_status: createFormData.payment_status,
         notes: createFormData.notes || null,
+        selected_meals: createFormData.selected_meals,
+        selected_activities: createFormData.selected_activities,
+        selected_spa_services: createFormData.selected_spa_services,
       };
 
       const { data: newBooking, error } = await supabase
@@ -1254,6 +1342,153 @@ export default function BookingManagement() {
                   rows={3}
                 />
               </div>
+            </div>
+
+            {/* Add-on Services */}
+            <div className="space-y-4">
+              <h3 className="text-lg font-medium">Add-on Services (Optional)</h3>
+              
+              {/* Meals */}
+              <div className="space-y-2">
+                <Label className="text-sm font-medium text-orange-600">🍽️ Meals</Label>
+                {createFormData.selected_meals.length > 0 && (
+                  <div className="space-y-2 mb-3">
+                    {createFormData.selected_meals.map((meal, index) => (
+                      <div key={index} className="flex items-center gap-2 p-2 bg-orange-50 rounded-md">
+                        <span className="flex-1 text-sm">{meal.name}</span>
+                        <Input
+                          type="number"
+                          min="1"
+                          value={meal.quantity}
+                          onChange={(e) => updateAddonQuantity('meals', index, parseInt(e.target.value) || 1)}
+                          className="w-16 h-8"
+                        />
+                        <span className="text-sm">₹{(meal.price * meal.quantity).toLocaleString()}</span>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => removeAddonFromBooking('meals', index)}
+                        >
+                          ×
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+                <Select onValueChange={(value) => {
+                  const meal = availableMeals.find(m => m.id === value);
+                  if (meal) addAddonToBooking('meals', meal);
+                }}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Add meals" />
+                  </SelectTrigger>
+                  <SelectContent className="bg-white z-50">
+                    {availableMeals.map((meal) => (
+                      <SelectItem key={meal.id} value={meal.id}>
+                        {meal.title} - ₹{meal.price}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Activities */}
+              <div className="space-y-2">
+                <Label className="text-sm font-medium text-green-600">🏃 Activities</Label>
+                {createFormData.selected_activities.length > 0 && (
+                  <div className="space-y-2 mb-3">
+                    {createFormData.selected_activities.map((activity, index) => (
+                      <div key={index} className="flex items-center gap-2 p-2 bg-green-50 rounded-md">
+                        <span className="flex-1 text-sm">{activity.name}</span>
+                        <Input
+                          type="number"
+                          min="1"
+                          value={activity.quantity}
+                          onChange={(e) => updateAddonQuantity('activities', index, parseInt(e.target.value) || 1)}
+                          className="w-16 h-8"
+                        />
+                        <span className="text-sm">₹{(activity.price * activity.quantity).toLocaleString()}</span>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => removeAddonFromBooking('activities', index)}
+                        >
+                          ×
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+                <Select onValueChange={(value) => {
+                  const activity = availableActivities.find(a => a.id === value);
+                  if (activity) addAddonToBooking('activities', activity);
+                }}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Add activities" />
+                  </SelectTrigger>
+                  <SelectContent className="bg-white z-50">
+                    {availableActivities.map((activity) => (
+                      <SelectItem key={activity.id} value={activity.id}>
+                        {activity.title} - ₹{activity.price_amount || 0}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Spa Services */}
+              <div className="space-y-2">
+                <Label className="text-sm font-medium text-purple-600">🧘 Spa Services</Label>
+                {createFormData.selected_spa_services.length > 0 && (
+                  <div className="space-y-2 mb-3">
+                    {createFormData.selected_spa_services.map((spa, index) => (
+                      <div key={index} className="flex items-center gap-2 p-2 bg-purple-50 rounded-md">
+                        <span className="flex-1 text-sm">{spa.name}</span>
+                        <Input
+                          type="number"
+                          min="1"
+                          value={spa.quantity}
+                          onChange={(e) => updateAddonQuantity('spa_services', index, parseInt(e.target.value) || 1)}
+                          className="w-16 h-8"
+                        />
+                        <span className="text-sm">₹{(spa.price * spa.quantity).toLocaleString()}</span>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => removeAddonFromBooking('spa_services', index)}
+                        >
+                          ×
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+                <Select onValueChange={(value) => {
+                  const spa = availableSpaServices.find(s => s.id === value);
+                  if (spa) addAddonToBooking('spa_services', spa);
+                }}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Add spa services" />
+                  </SelectTrigger>
+                  <SelectContent className="bg-white z-50">
+                    {availableSpaServices.map((spa) => (
+                      <SelectItem key={spa.id} value={spa.id}>
+                        {spa.title} - ₹{spa.price}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Addon Total */}
+              {calculateAddonTotal() > 0 && (
+                <div className="p-3 bg-gray-100 rounded-md">
+                  <div className="flex justify-between items-center">
+                    <span className="font-medium">Add-ons Total:</span>
+                    <span className="font-bold">₹{calculateAddonTotal().toLocaleString()}</span>
+                  </div>
+                </div>
+              )}
             </div>
 
             <div className="flex justify-end gap-3">
