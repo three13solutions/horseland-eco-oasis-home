@@ -96,15 +96,17 @@ export const RoomAvailabilityGrid: React.FC<RoomAvailabilityGridProps> = ({
       return { status: 'maintenance', booking: null };
     }
 
-    // Check for booking on this date
+    // Check for booking on this date - must have active room assignment and confirmed payment
     const booking = bookings.find(b => {
       if (b.room_unit_id !== roomId) return false;
+      if (b.payment_status === 'cancelled') return false; // Don't show cancelled bookings
       
       const checkIn = startOfDay(parseISO(b.check_in));
-      const checkOut = endOfDay(parseISO(b.check_out));
+      const checkOut = startOfDay(parseISO(b.check_out)); // Check-out day is available
       const targetDate = startOfDay(date);
       
-      return isWithinInterval(targetDate, { start: checkIn, end: checkOut });
+      // Room is occupied from check-in date until (but not including) check-out date
+      return targetDate >= checkIn && targetDate < checkOut;
     });
 
     if (booking) {

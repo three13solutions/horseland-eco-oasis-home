@@ -1209,58 +1209,8 @@ export default function BookingManagement() {
 
         {/* Room Availability Tab */}
         <TabsContent value="availability" className="space-y-4">
-          {/* New Gantt-style Availability Grid */}
+          {/* Gantt-style Availability Grid */}
           <RoomAvailabilityGrid roomUnits={roomUnits} bookings={bookings} />
-          
-          {/* Original card view as fallback */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Quick Room Status</CardTitle>
-              <CardDescription>
-                Current status overview of all room units
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-                {roomUnits.map((unit) => {
-                  const availability = getUnitAvailabilityStatus(unit);
-                  return (
-                    <Card key={unit.id} className="relative">
-                      <CardContent className="pt-6">
-                        <div className="space-y-2">
-                          <div className="flex items-center justify-between">
-                            <h3 className="font-semibold">
-                              {unit.unit_number}
-                              {unit.unit_name && ` - ${unit.unit_name}`}
-                            </h3>
-                            <Badge variant={availability.variant}>
-                              {availability.status}
-                            </Badge>
-                          </div>
-                          <p className="text-sm text-muted-foreground">
-                            {unit.room_types?.name}
-                          </p>
-                          {availability.status === 'occupied' && availability.guest && (
-                            <div className="text-sm">
-                              <p className="font-medium">Guest: {availability.guest}</p>
-                              <p className="text-muted-foreground">
-                                Check-out: {format(parseISO(availability.checkOut!), 'MMM dd, yyyy')}
-                              </p>
-                            </div>
-                          )}
-                        </div>
-                      </CardContent>
-                    </Card>
-                  );
-                })}
-              </div>
-              {roomUnits.length === 0 && (
-                <div className="text-center py-8">
-                  <p className="text-muted-foreground">No room units found</p>
-                </div>
-              )}
-            </CardContent>
-          </Card>
         </TabsContent>
       </Tabs>
 
