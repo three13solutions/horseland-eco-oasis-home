@@ -17,6 +17,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { Link, useNavigate } from 'react-router-dom';
 import { format, parseISO, isAfter, isBefore, isToday } from 'date-fns';
+import { RoomAvailabilityGrid } from '@/components/admin/RoomAvailabilityGrid';
 
 interface Booking {
   id: string;
@@ -235,15 +236,23 @@ export default function BookingManagement() {
     const totalRevenue = bookingData.reduce((sum, booking) => sum + Number(booking.total_amount), 0);
     const pendingPayments = bookingData.filter(b => b.payment_status === 'pending').length;
     
-    // Calculate occupancy rate (simplified - active bookings vs total units)
-    const activeBookings = bookingData.filter(b => {
-      const today = new Date();
-      const checkIn = parseISO(b.check_in);
-      const checkOut = parseISO(b.check_out);
-      return (isBefore(checkIn, today) || isToday(checkIn)) && isAfter(checkOut, today);
-    }).length;
+    // Calculate accurate occupancy rate - rooms currently occupied
+    const today = new Date();
+    const occupiedRooms = new Set();
     
-    const occupancyRate = roomUnits.length > 0 ? (activeBookings / roomUnits.length) * 100 : 0;
+    bookingData.forEach(booking => {
+      if (!booking.room_unit_id) return;
+      
+      const checkIn = parseISO(booking.check_in);
+      const checkOut = parseISO(booking.check_out);
+      
+      // Check if booking is active today (checked in but not checked out)
+      if ((isBefore(checkIn, today) || isToday(checkIn)) && isAfter(checkOut, today)) {
+        occupiedRooms.add(booking.room_unit_id);
+      }
+    });
+    
+    const occupancyRate = roomUnits.length > 0 ? (occupiedRooms.size / roomUnits.length) * 100 : 0;
 
     setStats({
       totalBookings,
@@ -1200,11 +1209,15 @@ export default function BookingManagement() {
 
         {/* Room Availability Tab */}
         <TabsContent value="availability" className="space-y-4">
+          {/* New Gantt-style Availability Grid */}
+          <RoomAvailabilityGrid roomUnits={roomUnits} bookings={bookings} />
+          
+          {/* Original card view as fallback */}
           <Card>
             <CardHeader>
-              <CardTitle>Room Availability Status</CardTitle>
+              <CardTitle>Quick Room Status</CardTitle>
               <CardDescription>
-                Real-time status of all room units
+                Current status overview of all room units
               </CardDescription>
             </CardHeader>
             <CardContent>
