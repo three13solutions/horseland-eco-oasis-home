@@ -59,6 +59,9 @@ export const RoomAvailabilityGrid: React.FC<RoomAvailabilityGridProps> = ({
     roomName: string;
     selectedDate: Date;
   } | null>(null);
+  const [isDragging, setIsDragging] = useState(false);
+  const [dragStart, setDragStart] = useState<{roomId: string, date: Date} | null>(null);
+  const [dragEnd, setDragEnd] = useState<{roomId: string, date: Date} | null>(null);
   const { toast } = useToast();
 
   // Generate date range based on timeframe and timeline position
@@ -215,6 +218,44 @@ export const RoomAvailabilityGrid: React.FC<RoomAvailabilityGridProps> = ({
     }
   };
 
+  const handleMouseDown = (roomId: string, date: Date, status: string) => {
+    if (status === 'available') {
+      setIsDragging(true);
+      setDragStart({ roomId, date });
+      setDragEnd({ roomId, date });
+    }
+  };
+
+  const handleMouseEnter = (roomId: string, date: Date, status: string) => {
+    if (isDragging && dragStart && status === 'available' && roomId === dragStart.roomId) {
+      setDragEnd({ roomId, date });
+    }
+  };
+
+  const handleMouseUp = () => {
+    if (isDragging && dragStart && dragEnd) {
+      const startDate = dragStart.date < dragEnd.date ? dragStart.date : dragEnd.date;
+      const endDate = dragStart.date < dragEnd.date ? dragEnd.date : dragStart.date;
+      
+      setSelectedRoomForBooking({
+        roomUnitId: dragStart.roomId,
+        roomName: `${roomUnits.find(r => r.id === dragStart.roomId)?.unit_number}${roomUnits.find(r => r.id === dragStart.roomId)?.unit_name ? ` (${roomUnits.find(r => r.id === dragStart.roomId)?.unit_name})` : ''}`,
+        selectedDate: startDate
+      });
+      setIsManualBookingOpen(true);
+    }
+    setIsDragging(false);
+    setDragStart(null);
+    setDragEnd(null);
+  };
+
+  const isInDragRange = (roomId: string, date: Date) => {
+    if (!isDragging || !dragStart || !dragEnd || roomId !== dragStart.roomId) return false;
+    const startDate = dragStart.date < dragEnd.date ? dragStart.date : dragEnd.date;
+    const endDate = dragStart.date < dragEnd.date ? dragEnd.date : dragStart.date;
+    return date >= startDate && date <= endDate;
+  };
+
   const timeframeOptions = [
     { value: 'week' as TimeframeOption, label: 'This Week' },
     { value: 'nextweek' as TimeframeOption, label: 'Next Week' },
@@ -230,7 +271,7 @@ export const RoomAvailabilityGrid: React.FC<RoomAvailabilityGridProps> = ({
           <CardHeader className="pb-3">
             <CardTitle className="text-lg">Room Availability Calendar</CardTitle>
             <CardDescription>
-              Click on any booking block for details, or click on green (available) slots to create manual bookings
+              Click on any booking block for details, or click and drag on green (available) slots to select date range for manual booking
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -283,7 +324,7 @@ export const RoomAvailabilityGrid: React.FC<RoomAvailabilityGridProps> = ({
             <div className="flex gap-4 mb-6 text-sm flex-wrap">
               <div className="flex items-center gap-2">
                 <div className="w-4 h-4 bg-green-500 rounded"></div>
-                <span>Available (Click to book)</span>
+                <span>Available (Click & drag to select range)</span>
               </div>
               <div className="flex items-center gap-2">
                 <div className="w-4 h-4 bg-red-500 rounded"></div>
@@ -349,17 +390,16 @@ export const RoomAvailabilityGrid: React.FC<RoomAvailabilityGridProps> = ({
                                 <Tooltip>
                                   <TooltipTrigger asChild>
                                      <button
-                                        className={`w-full h-12 ${getStatusColor(status)} text-xs transition-colors relative`}
-                                        onClick={() => {
-                                          if (booking) {
+                                        className={`w-full h-12 ${getStatusColor(status)} text-xs transition-colors relative select-none ${
+                                          isInDragRange(room.id, date) ? 'ring-2 ring-blue-500' : ''
+                                        }`}
+                                        onMouseDown={() => handleMouseDown(room.id, date, status)}
+                                        onMouseEnter={() => handleMouseEnter(room.id, date, status)}
+                                        onMouseUp={handleMouseUp}
+                                        onClick={(e) => {
+                                          e.preventDefault();
+                                          if (!isDragging && booking) {
                                             setSelectedBooking(booking);
-                                          } else if (status === 'available') {
-                                            setSelectedRoomForBooking({
-                                              roomUnitId: room.id,
-                                              roomName: `${room.unit_number}${room.unit_name ? ` (${room.unit_name})` : ''}`,
-                                              selectedDate: date
-                                            });
-                                            setIsManualBookingOpen(true);
                                           }
                                         }}
                                       >
@@ -391,7 +431,7 @@ export const RoomAvailabilityGrid: React.FC<RoomAvailabilityGridProps> = ({
                                        ) : status === 'maintenance' ? (
                                         <div>Room under maintenance</div>
                                        ) : (
-                                        <div>Available for booking - Click to create manual booking</div>
+                                        <div>Available for booking - Click and drag to select date range</div>
                                        )}
                                     </div>
                                   </TooltipContent>
@@ -412,13 +452,16 @@ export const RoomAvailabilityGrid: React.FC<RoomAvailabilityGridProps> = ({
         {/* Booking Details Dialog */}
         {selectedBooking && (
           <Dialog open={!!selectedBooking} onOpenChange={() => setSelectedBooking(null)}>
-            <DialogContent className="max-w-2xl">
+            <DialogContent className="max-w-2xl" aria-describedby="booking-dialog-description">
               <DialogHeader>
                 <DialogTitle className="flex items-center gap-2">
                   <CalendarDays className="h-5 w-5" />
                   Booking Details - {selectedBooking.booking_id}
                 </DialogTitle>
               </DialogHeader>
+              <div id="booking-dialog-description" className="sr-only">
+                Booking details and payment status management for {selectedBooking.booking_id}
+              </div>
               <div className="space-y-6">
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-3">
@@ -533,10 +576,15 @@ export const RoomAvailabilityGrid: React.FC<RoomAvailabilityGridProps> = ({
             }}
             roomUnitId={selectedRoomForBooking.roomUnitId}
             roomName={selectedRoomForBooking.roomName}
-            preSelectedDates={{
-              checkIn: selectedRoomForBooking.selectedDate,
-              checkOut: addDays(selectedRoomForBooking.selectedDate, 1)
-            }}
+            preSelectedDates={
+              dragStart && dragEnd && selectedRoomForBooking ? {
+                checkIn: dragStart.date < dragEnd.date ? dragStart.date : dragEnd.date,
+                checkOut: addDays(dragStart.date < dragEnd.date ? dragEnd.date : dragStart.date, 1)
+              } : selectedRoomForBooking ? {
+                checkIn: selectedRoomForBooking.selectedDate,
+                checkOut: addDays(selectedRoomForBooking.selectedDate, 1)
+              } : undefined
+            }
             onBookingCreated={() => {
               if (onBookingUpdate) {
                 onBookingUpdate();

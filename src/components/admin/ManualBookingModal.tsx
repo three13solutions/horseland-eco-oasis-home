@@ -130,13 +130,16 @@ export const ManualBookingModal: React.FC<ManualBookingModalProps> = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto" aria-describedby="manual-booking-description">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <User className="h-5 w-5" />
             Manual Booking - {roomName}
           </DialogTitle>
         </DialogHeader>
+        <div id="manual-booking-description" className="sr-only">
+          Create a manual booking for {roomName} with guest information and payment details
+        </div>
 
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* Date Selection */}
