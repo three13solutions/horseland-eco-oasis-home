@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, Edit, Trash2, Users, IndianRupee, Home, Eye, Upload, LayoutGrid, List, Search, AlertTriangle, ArrowLeft } from 'lucide-react';
+import { Plus, Edit, Trash2, Users, IndianRupee, Home, Eye, Upload, LayoutGrid, List, Search, AlertTriangle, ArrowLeft, Grid } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
@@ -69,7 +69,7 @@ export default function RoomManagement() {
   const [editingRoom, setEditingRoom] = useState<RoomType | null>(null);
   const [editingUnit, setEditingUnit] = useState<RoomUnit | null>(null);
   const [activeTab, setActiveTab] = useState<'rooms' | 'units'>('rooms');
-  const [viewMode, setViewMode] = useState<'card' | 'table'>('card');
+  const [viewMode, setViewMode] = useState<'card' | 'list'>('card');
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const { toast } = useToast();
@@ -973,7 +973,24 @@ export default function RoomManagement() {
             <TabsTrigger value="units">Room Units</TabsTrigger>
           </TabsList>
           
-          <div className="flex items-center space-x-2">
+          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2">
+              <Button
+                variant={viewMode === 'card' ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => setViewMode('card')}
+              >
+                <Grid className="h-4 w-4" />
+              </Button>
+              <Button
+                variant={viewMode === 'list' ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => setViewMode('list')}
+              >
+                <List className="h-4 w-4" />
+              </Button>
+            </div>
+            
             <div className="relative">
               <Search className="w-4 h-4 absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground" />
               <Input
@@ -983,10 +1000,11 @@ export default function RoomManagement() {
                 className="pl-9 w-64"
               />
             </div>
+            
             <select
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
-              className="px-3 py-2 border rounded-md bg-background"
+              className="px-3 py-2 border border-input bg-background rounded-md text-sm"
             >
               <option value="all">All Status</option>
               {activeTab === 'rooms' ? (
@@ -1090,7 +1108,7 @@ export default function RoomManagement() {
                 </Card>
               ))}
             </div>
-          ) : (
+          ) : viewMode === 'list' ? (
             <div className="border rounded-lg">
               <Table>
                 <TableHeader>
@@ -1159,7 +1177,7 @@ export default function RoomManagement() {
                 </TableBody>
               </Table>
             </div>
-          )}
+          ) : null}
           
           {filteredRooms.length === 0 && !showRoomForm && (
             <Card className="py-12">
@@ -1270,7 +1288,7 @@ export default function RoomManagement() {
                 </Card>
               ))}
             </div>
-          ) : (
+          ) : viewMode === 'list' ? (
             <div className="border rounded-lg">
               <Table>
                 <TableHeader>
@@ -1334,7 +1352,7 @@ export default function RoomManagement() {
                 </TableBody>
               </Table>
             </div>
-          )}
+          ) : null}
 
           {filteredUnits.length === 0 && !showUnitForm && !showBulkForm && (
             <Card className="py-12">
