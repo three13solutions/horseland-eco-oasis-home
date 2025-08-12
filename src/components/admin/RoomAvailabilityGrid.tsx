@@ -109,31 +109,29 @@ export const RoomAvailabilityGrid: React.FC<RoomAvailabilityGridProps> = ({
       return { status: 'maintenance', booking: null };
     }
 
-    // Check for booking on this date - must have active room assignment
+    // Check for booking on this date - now including all payment statuses
     const booking = bookings.find(b => {
       if (b.room_unit_id !== roomId) return false;
-      if (b.payment_status === 'cancelled') return false; // Don't show cancelled bookings
       
       const checkIn = startOfDay(parseISO(b.check_in));
       const checkOut = startOfDay(parseISO(b.check_out)); // Check-out day is available
       const targetDate = startOfDay(date);
       
       // Room is occupied from check-in date until (but not including) check-out date
-      const isOccupied = targetDate >= checkIn && targetDate < checkOut;
-      
-      // Debug logging
-      if (roomId === '010104e1-5390-4ab2-a5d9-828d68304e1e' && format(date, 'yyyy-MM-dd') === '2025-07-15') {
-        console.log('DEBUG: Checking room', roomUnit?.unit_number, 'for date', format(date, 'yyyy-MM-dd'));
-        console.log('DEBUG: Booking', b.booking_id, 'check_in:', b.check_in, 'check_out:', b.check_out, 'room_unit_id:', b.room_unit_id);
-        console.log('DEBUG: Parsed dates - checkIn:', format(checkIn, 'yyyy-MM-dd'), 'checkOut:', format(checkOut, 'yyyy-MM-dd'), 'targetDate:', format(targetDate, 'yyyy-MM-dd'));
-        console.log('DEBUG: Is occupied?', isOccupied);
-      }
-      
-      return isOccupied;
+      return targetDate >= checkIn && targetDate < checkOut;
     });
 
     if (booking) {
-      return { status: 'booked', booking };
+      // Return different statuses based on payment status
+      if (booking.payment_status === 'cancelled') {
+        return { status: 'cancelled', booking };
+      } else if (booking.payment_status === 'pending') {
+        return { status: 'pending', booking };
+      } else if (booking.payment_status === 'confirmed') {
+        return { status: 'confirmed', booking };
+      } else {
+        return { status: 'booked', booking }; // fallback
+      }
     }
 
     return { status: 'available', booking: null };
@@ -142,14 +140,18 @@ export const RoomAvailabilityGrid: React.FC<RoomAvailabilityGridProps> = ({
   // Get color for status
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'booked':
-        return 'bg-red-500 hover:bg-red-600';
+      case 'confirmed':
+        return 'bg-red-500 hover:bg-red-600 text-white';
+      case 'pending':
+        return 'bg-orange-500 hover:bg-orange-600 text-white';
+      case 'cancelled':
+        return 'bg-gray-400 hover:bg-gray-500 text-white line-through';
       case 'available':
-        return 'bg-green-500 hover:bg-green-600';
+        return 'bg-green-500 hover:bg-green-600 text-white';
       case 'maintenance':
-        return 'bg-yellow-500 hover:bg-yellow-600';
+        return 'bg-yellow-500 hover:bg-yellow-600 text-white';
       default:
-        return 'bg-gray-300';
+        return 'bg-gray-300 text-white';
     }
   };
 
@@ -232,14 +234,22 @@ export const RoomAvailabilityGrid: React.FC<RoomAvailabilityGridProps> = ({
             </div>
 
             {/* Legend */}
-            <div className="flex gap-4 mb-6 text-sm">
+            <div className="flex gap-4 mb-6 text-sm flex-wrap">
               <div className="flex items-center gap-2">
                 <div className="w-4 h-4 bg-green-500 rounded"></div>
                 <span>Available</span>
               </div>
               <div className="flex items-center gap-2">
                 <div className="w-4 h-4 bg-red-500 rounded"></div>
-                <span>Booked</span>
+                <span>Confirmed Booking</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="w-4 h-4 bg-orange-500 rounded"></div>
+                <span>Pending Payment</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="w-4 h-4 bg-gray-400 rounded"></div>
+                <span>Cancelled</span>
               </div>
               <div className="flex items-center gap-2">
                 <div className="w-4 h-4 bg-yellow-500 rounded"></div>
@@ -292,15 +302,17 @@ export const RoomAvailabilityGrid: React.FC<RoomAvailabilityGridProps> = ({
                               <div key={date.toISOString()} className="border-r">
                                 <Tooltip>
                                   <TooltipTrigger asChild>
-                                    <button
-                                      className={`w-full h-12 ${getStatusColor(status)} text-white text-xs transition-colors`}
-                                      onClick={() => booking && setSelectedBooking(booking)}
-                                    >
-                                      {booking && (
-                                        <div className="truncate px-1">
-                                          {booking.guest_name.split(' ')[0]}
-                                        </div>
-                                      )}
+                                     <button
+                                       className={`w-full h-12 ${getStatusColor(status)} text-xs transition-colors relative`}
+                                       onClick={() => booking && setSelectedBooking(booking)}
+                                     >
+                                       {booking && (
+                                         <div className={`truncate px-1 ${status === 'cancelled' ? 'line-through' : ''}`}>
+                                           {booking.guest_name.split(' ')[0]}
+                                           {status === 'pending' && <span className="text-xs block">⏳</span>}
+                                           {status === 'cancelled' && <span className="text-xs block">❌</span>}
+                                         </div>
+                                       )}
                                     </button>
                                   </TooltipTrigger>
                                   <TooltipContent side="top" className="max-w-64">
