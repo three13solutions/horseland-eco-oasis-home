@@ -45,6 +45,7 @@ const ActivitiesManagement = () => {
   const [viewMode, setViewMode] = useState<'card' | 'list'>('card');
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
+  const [propertyFilter, setPropertyFilter] = useState('all');
   const [activities, setActivities] = useState<Activity[]>([]);
   const [showForm, setShowForm] = useState(false);
   const [editingActivity, setEditingActivity] = useState<Activity | null>(null);
@@ -277,7 +278,10 @@ const ActivitiesManagement = () => {
     const matchesStatus = statusFilter === 'all' || 
       (statusFilter === 'active' && activity.is_active) || 
       (statusFilter === 'inactive' && !activity.is_active);
-    return matchesSearch && matchesStatus;
+    const matchesProperty = propertyFilter === 'all' ||
+      (propertyFilter === 'on_property' && activity.is_on_property) ||
+      (propertyFilter === 'off_property' && !activity.is_on_property);
+    return matchesSearch && matchesStatus && matchesProperty;
   });
 
   if (loading) {
@@ -313,6 +317,41 @@ const ActivitiesManagement = () => {
           </Button>
         )}
       </div>
+
+      {/* Property Filter Toggle */}
+      {!showForm && (
+        <div className="mb-6">
+          <div className="flex items-center gap-2">
+            <span className="text-sm font-medium">Show:</span>
+            <div className="flex items-center gap-1 bg-muted rounded-lg p-1">
+              <Button
+                variant={propertyFilter === 'all' ? 'default' : 'ghost'}
+                size="sm"
+                onClick={() => setPropertyFilter('all')}
+                className="h-8 px-3"
+              >
+                All Activities
+              </Button>
+              <Button
+                variant={propertyFilter === 'on_property' ? 'default' : 'ghost'}
+                size="sm"
+                onClick={() => setPropertyFilter('on_property')}
+                className="h-8 px-3"
+              >
+                On Property
+              </Button>
+              <Button
+                variant={propertyFilter === 'off_property' ? 'default' : 'ghost'}
+                size="sm"
+                onClick={() => setPropertyFilter('off_property')}
+                className="h-8 px-3"
+              >
+                Off Property
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Activity Form */}
       {showForm && (
