@@ -1,8 +1,9 @@
 import React, { useState, useMemo } from 'react';
-import { format, addDays, parseISO, isWithinInterval, startOfDay, endOfDay, isSameDay } from 'date-fns';
+import { format, addDays, parseISO, isWithinInterval, startOfDay, endOfDay, isSameDay, subDays } from 'date-fns';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Slider } from '@/components/ui/slider';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
@@ -44,41 +45,57 @@ export const RoomAvailabilityGrid: React.FC<RoomAvailabilityGridProps> = ({
 }) => {
   const [selectedTimeframe, setSelectedTimeframe] = useState<TimeframeOption>('14days');
   const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null);
+  const [timelinePosition, setTimelinePosition] = useState<number>(0); // Days offset from today
 
-  // Generate date range based on timeframe
+  // Generate date range based on timeframe and timeline position
   const dateRange = useMemo(() => {
     const today = new Date();
-    const nextMonday = new Date(today);
-    nextMonday.setDate(today.getDate() + (7 - today.getDay() + 1) % 7);
-    
-    const startOfCurrentMonth = new Date(today.getFullYear(), today.getMonth(), 1);
-    const startOfPrevMonth = new Date(today.getFullYear(), today.getMonth() - 1, 1);
-    const endOfPrevMonth = new Date(today.getFullYear(), today.getMonth(), 0);
-    const startOfNextMonth = new Date(today.getFullYear(), today.getMonth() + 1, 1);
-    const endOfNextMonth = new Date(today.getFullYear(), today.getMonth() + 2, 0);
+    const startDate = addDays(today, timelinePosition);
+    const nextMonday = new Date(startDate);
+    nextMonday.setDate(startDate.getDate() + (7 - startDate.getDay() + 1) % 7);
     
     switch (selectedTimeframe) {
       case 'week':
-        return Array.from({ length: 7 }, (_, i) => addDays(today, i));
+        return Array.from({ length: 7 }, (_, i) => addDays(startDate, i));
       case 'nextweek':
         return Array.from({ length: 7 }, (_, i) => addDays(nextMonday, i));
       case '30days':
-        return Array.from({ length: 30 }, (_, i) => addDays(today, i));
+        return Array.from({ length: 30 }, (_, i) => addDays(startDate, i));
       case 'prevmonth':
+        const prevMonthStart = new Date(startDate.getFullYear(), startDate.getMonth() - 1, 1);
+        const prevMonthEnd = new Date(startDate.getFullYear(), startDate.getMonth(), 0);
         const prevMonthDays = [];
-        for (let d = new Date(startOfPrevMonth); d <= endOfPrevMonth; d = addDays(d, 1)) {
+        for (let d = new Date(prevMonthStart); d <= prevMonthEnd; d = addDays(d, 1)) {
           prevMonthDays.push(new Date(d));
         }
         return prevMonthDays;
       case 'nextmonth':
+        const nextMonthStart = new Date(startDate.getFullYear(), startDate.getMonth() + 1, 1);
+        const nextMonthEnd = new Date(startDate.getFullYear(), startDate.getMonth() + 2, 0);
         const nextMonthDays = [];
-        for (let d = new Date(startOfNextMonth); d <= endOfNextMonth; d = addDays(d, 1)) {
+        for (let d = new Date(nextMonthStart); d <= nextMonthEnd; d = addDays(d, 1)) {
           nextMonthDays.push(new Date(d));
         }
         return nextMonthDays;
       case '14days':
       default:
-        return Array.from({ length: 14 }, (_, i) => addDays(today, i));
+        return Array.from({ length: 14 }, (_, i) => addDays(startDate, i));
+    }
+  }, [selectedTimeframe, timelinePosition]);
+
+  // Timeline range based on timeframe
+  const timelineRange = useMemo(() => {
+    switch (selectedTimeframe) {
+      case 'week':
+      case '14days':
+        return { min: -90, max: 90 }; // 3 months before/after
+      case '30days':
+        return { min: -180, max: 180 }; // 6 months before/after
+      case 'prevmonth':
+      case 'nextmonth':
+        return { min: -365, max: 365 }; // 1 year before/after
+      default:
+        return { min: -90, max: 90 };
     }
   }, [selectedTimeframe]);
 
@@ -191,6 +208,33 @@ export const RoomAvailabilityGrid: React.FC<RoomAvailabilityGridProps> = ({
                   {option.label}
                 </Button>
               ))}
+            </div>
+
+            {/* Timeline Slider */}
+            <div className="mb-6 space-y-3">
+              <div className="flex items-center justify-between">
+                <Label className="text-sm font-medium">Navigate Timeline</Label>
+                <div className="text-xs text-muted-foreground">
+                  {timelinePosition === 0 ? 'Today' : 
+                   timelinePosition > 0 ? `${timelinePosition} days ahead` : 
+                   `${Math.abs(timelinePosition)} days ago`}
+                </div>
+              </div>
+              <div className="px-3">
+                <Slider
+                  value={[timelinePosition]}
+                  onValueChange={(value) => setTimelinePosition(value[0])}
+                  min={timelineRange.min}
+                  max={timelineRange.max}
+                  step={1}
+                  className="w-full"
+                />
+              </div>
+              <div className="flex justify-between text-xs text-muted-foreground">
+                <span>{timelineRange.min} days ago</span>
+                <span>Today</span>
+                <span>{timelineRange.max} days ahead</span>
+              </div>
             </div>
 
             {/* Legend */}
