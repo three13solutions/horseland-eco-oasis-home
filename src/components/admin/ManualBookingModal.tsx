@@ -47,7 +47,7 @@ export const ManualBookingModal: React.FC<ManualBookingModalProps> = ({
   
   // Addon services state
   const [availablePackages, setAvailablePackages] = useState<any[]>([]);
-  const [selectedPackage, setSelectedPackage] = useState<string>('');
+  const [selectedPackage, setSelectedPackage] = useState<string>('no-package');
   const [availableMeals, setAvailableMeals] = useState<any[]>([]);
   const [availableActivities, setAvailableActivities] = useState<any[]>([]);
   const [availableSpaServices, setAvailableSpaServices] = useState<any[]>([]);
@@ -85,7 +85,7 @@ export const ManualBookingModal: React.FC<ManualBookingModalProps> = ({
   const handlePackageChange = (packageId: string) => {
     setSelectedPackage(packageId);
     
-    if (!packageId) {
+    if (!packageId || packageId === 'no-package') {
       // Clear all selections if no package is selected
       setSelectedMeals([]);
       setSelectedActivities([]);
@@ -210,7 +210,7 @@ export const ManualBookingModal: React.FC<ManualBookingModalProps> = ({
       const bookingData = {
         booking_id: generateBookingId(),
         room_unit_id: roomUnitId,
-        package_id: selectedPackage || null,
+        package_id: (selectedPackage && selectedPackage !== 'no-package') ? selectedPackage : null,
         guest_name: guestName.trim(),
         guest_email: guestEmail.trim() || null,
         guest_phone: guestPhone.trim() || null,
@@ -246,7 +246,7 @@ export const ManualBookingModal: React.FC<ManualBookingModalProps> = ({
       setPaymentStatus('pending');
       setTotalAmount(0);
       setNotes('');
-      setSelectedPackage('');
+      setSelectedPackage('no-package');
       setSelectedMeals([]);
       setSelectedActivities([]);
       setSelectedSpaServices([]);
@@ -408,7 +408,7 @@ export const ManualBookingModal: React.FC<ManualBookingModalProps> = ({
                     <SelectValue placeholder="Select a package" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">No Package</SelectItem>
+                    <SelectItem value="no-package">No Package</SelectItem>
                     {availablePackages.map((pkg) => (
                       <SelectItem key={pkg.id} value={pkg.id}>
                         {pkg.title} - ₹{pkg.weekday_price}
@@ -468,7 +468,7 @@ export const ManualBookingModal: React.FC<ManualBookingModalProps> = ({
           <div className="space-y-4">
             <div className="flex items-center justify-between">
               <h3 className="text-lg font-medium">Add-on Services</h3>
-              {selectedPackage && (
+              {selectedPackage && selectedPackage !== 'no-package' && (
                 <Badge variant="secondary" className="text-xs">
                   Auto-populated from package
                 </Badge>
