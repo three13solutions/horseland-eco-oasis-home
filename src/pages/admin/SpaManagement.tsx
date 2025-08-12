@@ -7,7 +7,6 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -51,7 +50,7 @@ const AVAILABLE_BENEFITS = [
 const SpaManagement = () => {
   const [services, setServices] = useState<SpaService[]>([]);
   const [loading, setLoading] = useState(true);
-  const [dialogOpen, setDialogOpen] = useState(false);
+  const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'inactive'>('all');
@@ -154,7 +153,7 @@ const SpaManagement = () => {
         toast({ title: "Success", description: "Spa service created successfully" });
       }
 
-      setDialogOpen(false);
+      setShowForm(false);
       resetForm();
       loadServices();
     } catch (error) {
@@ -187,7 +186,7 @@ const SpaManagement = () => {
       featured_image_index: 0
     });
     setEditingId(service.id);
-    setDialogOpen(true);
+    setShowForm(true);
   };
 
   const handleDelete = async (id: string) => {
@@ -250,6 +249,236 @@ const SpaManagement = () => {
     return matchesSearch && matchesStatus && matchesCategory;
   });
 
+  if (showForm) {
+    return (
+      <div className="container mx-auto p-6">
+        <div className="flex items-center gap-4 mb-6">
+          <Button 
+            variant="ghost" 
+            onClick={() => {
+              setShowForm(false);
+              resetForm();
+            }}
+            className="flex items-center gap-2"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            Back to Spa Services
+          </Button>
+          <h1 className="text-2xl font-bold">
+            {editingId ? 'Edit Spa Service' : 'Add New Spa Service'}
+          </h1>
+        </div>
+
+        <Card>
+          <CardContent className="p-6">
+            <form onSubmit={handleSubmit} className="space-y-6">
+              <div className="grid md:grid-cols-2 gap-6">
+                <div>
+                  <Label htmlFor="title">Service Title*</Label>
+                  <Input
+                    id="title"
+                    value={formData.title}
+                    onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                    required
+                  />
+                </div>
+
+                <div>
+                  <Label htmlFor="price">Price*</Label>
+                  <Input
+                    id="price"
+                    type="number"
+                    value={formData.price}
+                    onChange={(e) => setFormData({ ...formData, price: e.target.value })}
+                    required
+                  />
+                </div>
+
+                <div>
+                  <Label htmlFor="duration">Duration (minutes)</Label>
+                  <Input
+                    id="duration"
+                    type="number"
+                    value={formData.duration}
+                    onChange={(e) => setFormData({ ...formData, duration: e.target.value })}
+                    placeholder="e.g., 60"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <Label htmlFor="description">Description</Label>
+                <Textarea
+                  id="description"
+                  value={formData.description}
+                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                  rows={4}
+                />
+              </div>
+
+              <div>
+                <Label>Service Media</Label>
+                <div className="space-y-4">
+                  <div className="border-2 border-dashed border-border rounded-lg p-4">
+                    <input
+                      type="file"
+                      multiple
+                      accept="image/*,video/*"
+                      onChange={(e) => {
+                        const files = Array.from(e.target.files || []);
+                        const newMediaFiles = files.map(file => ({
+                          url: URL.createObjectURL(file),
+                          name: file.name,
+                          isFeatured: formData.media_files.length === 0
+                        }));
+                        setFormData({ 
+                          ...formData, 
+                          media_files: [...formData.media_files, ...newMediaFiles] 
+                        });
+                      }}
+                      className="w-full"
+                    />
+                    <p className="text-sm text-muted-foreground mt-2">
+                      Upload images or videos for this service
+                    </p>
+                  </div>
+                  
+                  {formData.media_files.length > 0 && (
+                    <div className="space-y-2">
+                      <Label>Uploaded Media</Label>
+                      <div className="grid grid-cols-3 gap-2">
+                        {formData.media_files.map((media, index) => (
+                          <div key={index} className="relative group">
+                            <img 
+                              src={media.url} 
+                              alt={media.name}
+                              className="w-full h-20 object-cover rounded border"
+                            />
+                            <Button
+                              type="button"
+                              variant="destructive"
+                              size="sm"
+                              className="absolute -top-1 -right-1 h-6 w-6 rounded-full p-0 opacity-0 group-hover:opacity-100"
+                              onClick={() => {
+                                const newFiles = formData.media_files.filter((_, i) => i !== index);
+                                setFormData({ 
+                                  ...formData, 
+                                  media_files: newFiles
+                                });
+                              }}
+                            >
+                              <X className="h-3 w-3" />
+                            </Button>
+                            <Button
+                              type="button"
+                              variant={media.isFeatured ? "default" : "secondary"}
+                              size="sm"
+                              className="absolute -bottom-1 left-1 h-5 text-xs px-2"
+                              onClick={() => {
+                                const updatedFiles = formData.media_files.map((file, i) => ({
+                                  ...file,
+                                  isFeatured: i === index
+                                }));
+                                setFormData({ ...formData, media_files: updatedFiles });
+                              }}
+                            >
+                              {media.isFeatured ? "Featured" : "Set Featured"}
+                            </Button>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              <div>
+                <Label>Benefits/Tags</Label>
+                <Popover open={benefitsOpen} onOpenChange={setBenefitsOpen}>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      role="combobox"
+                      aria-expanded={benefitsOpen}
+                      className="w-full justify-between"
+                    >
+                      {formData.tags.length > 0
+                        ? `${formData.tags.length} benefit${formData.tags.length > 1 ? 's' : ''} selected`
+                        : "Select benefits..."}
+                      <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-full p-0">
+                    <Command>
+                      <CommandInput placeholder="Search benefits..." />
+                      <CommandEmpty>No benefit found.</CommandEmpty>
+                      <CommandGroup className="max-h-64 overflow-y-auto">
+                        {AVAILABLE_BENEFITS.map((benefit) => (
+                          <CommandItem
+                            key={benefit}
+                            onSelect={() => {
+                              const isSelected = formData.tags.includes(benefit);
+                              setFormData({
+                                ...formData,
+                                tags: isSelected
+                                  ? formData.tags.filter(tag => tag !== benefit)
+                                  : [...formData.tags, benefit]
+                              });
+                            }}
+                          >
+                            <Check
+                              className={cn(
+                                "mr-2 h-4 w-4",
+                                formData.tags.includes(benefit) ? "opacity-100" : "opacity-0"
+                              )}
+                            />
+                            {benefit}
+                          </CommandItem>
+                        ))}
+                      </CommandGroup>
+                    </Command>
+                  </PopoverContent>
+                </Popover>
+                {formData.tags.length > 0 && (
+                  <div className="flex flex-wrap gap-1 mt-2">
+                    {formData.tags.map((tag) => (
+                      <Badge key={tag} variant="secondary" className="text-xs">
+                        {tag}
+                        <X 
+                          className="h-3 w-3 ml-1 cursor-pointer" 
+                          onClick={() => setFormData({
+                            ...formData,
+                            tags: formData.tags.filter(t => t !== tag)
+                          })}
+                        />
+                      </Badge>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              <div className="flex gap-4 pt-4">
+                <Button type="submit" disabled={uploading}>
+                  {uploading ? 'Saving...' : (editingId ? 'Update Service' : 'Create Service')}
+                </Button>
+                <Button 
+                  type="button" 
+                  variant="outline" 
+                  onClick={() => {
+                    setShowForm(false);
+                    resetForm();
+                  }}
+                >
+                  Cancel
+                </Button>
+              </div>
+            </form>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -265,229 +494,21 @@ const SpaManagement = () => {
     <div className="min-h-screen bg-background">
       <div className="max-w-7xl mx-auto px-4 py-6">
         {/* Header */}
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
-          <div className="flex items-center gap-4">
-            <Button 
-              variant="ghost" 
-              size="sm" 
-              onClick={() => navigate('/admin')}
-              className="text-muted-foreground hover:text-foreground"
-            >
-              <ArrowLeft className="w-4 h-4 mr-2" />
-              Back to Dashboard
-            </Button>
-            <div className="h-6 w-px bg-border" />
-            <h1 className="text-3xl font-bold">Spa Services Management</h1>
+        <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 mb-8">
+          <div>
+            <h1 className="text-3xl font-bold text-foreground mb-2">Spa Services Management</h1>
+            <p className="text-muted-foreground">Manage your spa and wellness services</p>
           </div>
-
-          <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-            <DialogTrigger asChild>
-              <Button onClick={resetForm} className="flex items-center gap-2">
-                <Plus className="w-4 h-4" />
-                Add Spa Service
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-              <DialogHeader>
-                <DialogTitle>{editingId ? 'Edit Spa Service' : 'Add New Spa Service'}</DialogTitle>
-              </DialogHeader>
-              
-              <form onSubmit={handleSubmit} className="space-y-4">
-                <div>
-                  <Label htmlFor="title">Service Title</Label>
-                  <Input
-                    id="title"
-                    value={formData.title}
-                    onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                    required
-                  />
-                </div>
-
-                <div>
-                  <Label>Service Media (Images/Videos)</Label>
-                  <div className="space-y-4">
-                    <div className="border-2 border-dashed border-border rounded-lg p-4">
-                      <input
-                        type="file"
-                        multiple
-                        accept="image/*,video/*"
-                        onChange={(e) => {
-                          const files = Array.from(e.target.files || []);
-                          const newMediaFiles = files.map(file => ({
-                            url: URL.createObjectURL(file),
-                            name: file.name,
-                            isFeatured: formData.media_files.length === 0 // First file is featured by default
-                          }));
-                          setFormData({ 
-                            ...formData, 
-                            media_files: [...formData.media_files, ...newMediaFiles] 
-                          });
-                        }}
-                        className="w-full"
-                      />
-                      <p className="text-sm text-muted-foreground mt-2">
-                        Upload images or videos for this service
-                      </p>
-                    </div>
-                    
-                    {formData.media_files.length > 0 && (
-                      <div className="space-y-2">
-                        <Label>Uploaded Media</Label>
-                        <div className="grid grid-cols-3 gap-2">
-                          {formData.media_files.map((media, index) => (
-                            <div key={index} className="relative group">
-                              <img 
-                                src={media.url} 
-                                alt={media.name}
-                                className="w-full h-20 object-cover rounded border"
-                              />
-                              <Button
-                                type="button"
-                                variant="destructive"
-                                size="sm"
-                                className="absolute -top-1 -right-1 h-6 w-6 rounded-full p-0 opacity-0 group-hover:opacity-100"
-                                onClick={() => {
-                                  const newFiles = formData.media_files.filter((_, i) => i !== index);
-                                  setFormData({ 
-                                    ...formData, 
-                                    media_files: newFiles
-                                  });
-                                }}
-                              >
-                                <X className="h-3 w-3" />
-                              </Button>
-                              <Button
-                                type="button"
-                                variant={media.isFeatured ? "default" : "secondary"}
-                                size="sm"
-                                className="absolute -bottom-1 left-1 h-5 text-xs px-2"
-                                onClick={() => {
-                                  const updatedFiles = formData.media_files.map((file, i) => ({
-                                    ...file,
-                                    isFeatured: i === index
-                                  }));
-                                  setFormData({ ...formData, media_files: updatedFiles });
-                                }}
-                              >
-                                {media.isFeatured ? "Featured" : "Set Featured"}
-                              </Button>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                </div>
-
-                <div>
-                  <Label htmlFor="description">Description</Label>
-                  <Textarea
-                    id="description"
-                    value={formData.description}
-                    onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                    rows={3}
-                  />
-                </div>
-
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <Label htmlFor="duration">Duration (minutes)</Label>
-                    <Input
-                      id="duration"
-                      type="number"
-                      value={formData.duration}
-                      onChange={(e) => setFormData({ ...formData, duration: e.target.value })}
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="price">Price (₹)</Label>
-                    <Input
-                      id="price"
-                      type="number"
-                      step="0.01"
-                      value={formData.price}
-                      onChange={(e) => setFormData({ ...formData, price: e.target.value })}
-                      required
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <Label>Benefits/Tags</Label>
-                  <Popover open={benefitsOpen} onOpenChange={setBenefitsOpen}>
-                    <PopoverTrigger asChild>
-                      <Button
-                        variant="outline"
-                        role="combobox"
-                        aria-expanded={benefitsOpen}
-                        className="w-full justify-between"
-                      >
-                        {formData.tags.length > 0
-                          ? `${formData.tags.length} benefit${formData.tags.length > 1 ? 's' : ''} selected`
-                          : "Select benefits..."}
-                        <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                      </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-full p-0">
-                      <Command>
-                        <CommandInput placeholder="Search benefits..." />
-                        <CommandEmpty>No benefit found.</CommandEmpty>
-                        <CommandGroup className="max-h-64 overflow-y-auto">
-                          {AVAILABLE_BENEFITS.map((benefit) => (
-                            <CommandItem
-                              key={benefit}
-                              onSelect={() => {
-                                const isSelected = formData.tags.includes(benefit);
-                                setFormData({
-                                  ...formData,
-                                  tags: isSelected
-                                    ? formData.tags.filter(tag => tag !== benefit)
-                                    : [...formData.tags, benefit]
-                                });
-                              }}
-                            >
-                              <Check
-                                className={cn(
-                                  "mr-2 h-4 w-4",
-                                  formData.tags.includes(benefit) ? "opacity-100" : "opacity-0"
-                                )}
-                              />
-                              {benefit}
-                            </CommandItem>
-                          ))}
-                        </CommandGroup>
-                      </Command>
-                    </PopoverContent>
-                  </Popover>
-                  {formData.tags.length > 0 && (
-                    <div className="flex flex-wrap gap-1 mt-2">
-                      {formData.tags.map((tag) => (
-                        <Badge key={tag} variant="secondary" className="text-xs">
-                          {tag}
-                          <X 
-                            className="h-3 w-3 ml-1 cursor-pointer" 
-                            onClick={() => setFormData({
-                              ...formData,
-                              tags: formData.tags.filter(t => t !== tag)
-                            })}
-                          />
-                        </Badge>
-                      ))}
-                    </div>
-                  )}
-                </div>
-
-                <div className="flex justify-end gap-2 pt-4">
-                  <Button type="button" variant="outline" onClick={() => setDialogOpen(false)}>
-                    Cancel
-                  </Button>
-                  <Button type="submit">
-                    {editingId ? 'Update Service' : 'Create Service'}
-                  </Button>
-                </div>
-              </form>
-            </DialogContent>
-          </Dialog>
+          
+          <div className="flex flex-col sm:flex-row gap-3">
+            <Button 
+              onClick={() => setShowForm(true)}
+              className="flex items-center gap-2"
+            >
+              <Plus className="w-4 h-4" />
+              Add Spa Service
+            </Button>
+          </div>
         </div>
 
         {/* Controls */}
@@ -566,7 +587,7 @@ const SpaManagement = () => {
         {filteredServices.length === 0 ? (
           <div className="text-center py-12">
             <p className="text-muted-foreground mb-4">No spa services found.</p>
-            <Button onClick={() => setDialogOpen(true)}>
+            <Button onClick={() => setShowForm(true)}>
               <Plus className="w-4 h-4 mr-2" />
               Add Your First Spa Service
             </Button>
@@ -608,7 +629,7 @@ const SpaManagement = () => {
                         </div>
                         {service.tags && service.tags.length > 0 && (
                           <div className="flex flex-wrap gap-1 mb-4">
-                            {service.tags.slice(0, 3).map((tag, index) => (
+                            {service.tags.slice(0, 3).map((tag: string, index: number) => (
                               <Badge key={index} variant="secondary" className="text-xs">
                                 {tag}
                               </Badge>
