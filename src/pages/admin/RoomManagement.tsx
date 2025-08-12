@@ -202,7 +202,7 @@ export default function RoomManagement() {
     setUnitMaxOccupancy(2);
     setUnitBedConfigs([]);
     setEditingUnit(null);
-    setShowUnitForm(true);
+    setShowUnitForm(false);
   };
 
   const resetRoomForm = () => {
@@ -549,6 +549,23 @@ export default function RoomManagement() {
             Add Room Type
           </Button>
         )}
+        
+        {activeTab === 'units' && !showUnitForm && !showBulkForm && (
+          <div className="flex items-center gap-2">
+            <Button onClick={() => {resetUnitForm(); setShowUnitForm(true);}} className="flex items-center gap-2">
+              <Plus className="h-4 w-4" />
+              Add Unit
+            </Button>
+            <Button 
+              variant="outline" 
+              onClick={() => setShowBulkForm(true)}
+              className="flex items-center gap-2"
+            >
+              <Upload className="h-4 w-4" />
+              Bulk Add
+            </Button>
+          </div>
+        )}
       </div>
       
       {/* Room Form Section */}
@@ -736,11 +753,10 @@ export default function RoomManagement() {
               <Button 
                 variant="outline" 
                 size="sm"
-                onClick={() => {
-                  setShowUnitForm(false);
-                  setEditingUnit(null);
-                  resetUnitForm();
-                }}
+                  onClick={() => {
+                    setShowUnitForm(false);
+                    setEditingUnit(null);
+                  }}
               >
                 Cancel
               </Button>
@@ -873,7 +889,6 @@ export default function RoomManagement() {
                   onClick={() => {
                     setShowUnitForm(false);
                     setEditingUnit(null);
-                    resetUnitForm();
                   }}
                 >
                   Cancel
@@ -962,7 +977,7 @@ export default function RoomManagement() {
             <div className="relative">
               <Search className="w-4 h-4 absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground" />
               <Input
-                placeholder="Search..."
+                placeholder={activeTab === 'rooms' ? 'Search room types...' : 'Search units...'}
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="pl-9 w-64"
@@ -991,36 +1006,6 @@ export default function RoomManagement() {
           </div>
         </div>
 
-        {activeTab === 'units' && (
-          <div className="flex items-center justify-between mb-6">
-            <div className="flex items-center gap-4">
-              <Button onClick={resetUnitForm} className="flex items-center gap-2">
-                <Plus className="h-4 w-4" />
-                Add Unit
-              </Button>
-              <Button 
-                variant="outline" 
-                onClick={() => setShowBulkForm(true)}
-                className="flex items-center gap-2"
-              >
-                <Upload className="h-4 w-4" />
-                Bulk Add
-              </Button>
-            </div>
-            
-            <div className="flex items-center gap-4">
-              <div className="flex items-center gap-2">
-                <Search className="h-4 w-4 text-muted-foreground" />
-                <Input
-                  placeholder="Search units..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-64"
-                />
-              </div>
-            </div>
-          </div>
-        )}
 
         <TabsContent value="rooms">
           {viewMode === 'card' ? (
