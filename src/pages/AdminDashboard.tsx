@@ -166,6 +166,13 @@ const AdminDashboard = () => {
       color: 'bg-red-500'
     },
     { 
+      title: 'Guest Management', 
+      description: 'Manage guest profiles, documents & credit wallet',
+      icon: Users, 
+      path: '/admin/guests',
+      color: 'bg-violet-500'
+    },
+    { 
       title: 'Room Management', 
       description: 'Manage room types and availability',
       icon: Hotel, 

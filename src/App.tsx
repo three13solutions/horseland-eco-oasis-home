@@ -36,6 +36,7 @@ import DiningManagement from "./pages/admin/DiningManagement";
 import PackageManagement from "./pages/admin/PackageManagement";
 
 import UserManagement from "./pages/admin/UserManagement";
+import GuestManagement from "./pages/admin/GuestManagement";
 import SiteSettings from "./pages/admin/SiteSettings";
 import ContentManagement from "./pages/admin/ContentManagement";
 import MediaManagement from "./pages/admin/MediaManagement";
@@ -80,6 +81,7 @@ const App = () => (
           <Route path="/admin/packages" element={<PackageManagement />} />
           
           <Route path="/admin/users" element={<UserManagement />} />
+          <Route path="/admin/guests" element={<GuestManagement />} />
           <Route path="/admin/media" element={<MediaManagement />} />
           <Route path="/admin/settings" element={<SiteSettings />} />
           <Route path="/admin/content" element={<ContentManagement />} />
