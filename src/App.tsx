@@ -29,6 +29,7 @@ import NotFound from "./pages/NotFound";
 import AdminLogin from "./pages/AdminLogin";
 import AdminDashboard from "./pages/AdminDashboard";
 import RoomManagement from "./pages/admin/RoomManagement";
+import BookingManagement from "./pages/admin/BookingManagement";
 import ActivitiesManagement from "./pages/admin/ActivitiesManagement";
 import SpaManagement from "./pages/admin/SpaManagement";
 import DiningManagement from "./pages/admin/DiningManagement";
@@ -72,6 +73,7 @@ const App = () => (
           <Route path="/admin/login" element={<AdminLogin />} />
           <Route path="/admin" element={<AdminDashboard />} />
           <Route path="/admin/rooms" element={<RoomManagement />} />
+          <Route path="/admin/bookings" element={<BookingManagement />} />
           <Route path="/admin/activities" element={<ActivitiesManagement />} />
           <Route path="/admin/spa" element={<SpaManagement />} />
           <Route path="/admin/dining" element={<DiningManagement />} />
