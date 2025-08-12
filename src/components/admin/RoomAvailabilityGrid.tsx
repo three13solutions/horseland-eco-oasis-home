@@ -11,6 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { CalendarDays, User, CreditCard, MapPin, Phone, Mail } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { ManualBookingModal } from './ManualBookingModal';
 
 interface RoomUnit {
   id: string;
@@ -52,6 +53,12 @@ export const RoomAvailabilityGrid: React.FC<RoomAvailabilityGridProps> = ({
   const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null);
   const [timelinePosition, setTimelinePosition] = useState<number>(0); // Days offset from today
   const [updatingPayment, setUpdatingPayment] = useState(false);
+  const [isManualBookingOpen, setIsManualBookingOpen] = useState(false);
+  const [selectedRoomForBooking, setSelectedRoomForBooking] = useState<{
+    roomUnitId: string;
+    roomName: string;
+    selectedDate: Date;
+  } | null>(null);
   const { toast } = useToast();
 
   // Generate date range based on timeframe and timeline position
@@ -223,7 +230,7 @@ export const RoomAvailabilityGrid: React.FC<RoomAvailabilityGridProps> = ({
           <CardHeader className="pb-3">
             <CardTitle className="text-lg">Room Availability Calendar</CardTitle>
             <CardDescription>
-              Click on any booking block for details, or hover for quick info
+              Click on any booking block for details, or click on green (available) slots to create manual bookings
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -276,7 +283,7 @@ export const RoomAvailabilityGrid: React.FC<RoomAvailabilityGridProps> = ({
             <div className="flex gap-4 mb-6 text-sm flex-wrap">
               <div className="flex items-center gap-2">
                 <div className="w-4 h-4 bg-green-500 rounded"></div>
-                <span>Available</span>
+                <span>Available (Click to book)</span>
               </div>
               <div className="flex items-center gap-2">
                 <div className="w-4 h-4 bg-red-500 rounded"></div>
@@ -342,9 +349,20 @@ export const RoomAvailabilityGrid: React.FC<RoomAvailabilityGridProps> = ({
                                 <Tooltip>
                                   <TooltipTrigger asChild>
                                      <button
-                                       className={`w-full h-12 ${getStatusColor(status)} text-xs transition-colors relative`}
-                                       onClick={() => booking && setSelectedBooking(booking)}
-                                     >
+                                        className={`w-full h-12 ${getStatusColor(status)} text-xs transition-colors relative`}
+                                        onClick={() => {
+                                          if (booking) {
+                                            setSelectedBooking(booking);
+                                          } else if (status === 'available') {
+                                            setSelectedRoomForBooking({
+                                              roomUnitId: room.id,
+                                              roomName: `${room.unit_number}${room.unit_name ? ` (${room.unit_name})` : ''}`,
+                                              selectedDate: date
+                                            });
+                                            setIsManualBookingOpen(true);
+                                          }
+                                        }}
+                                      >
                                        {booking && (
                                          <div className={`truncate px-1 ${status === 'cancelled' ? 'line-through' : ''}`}>
                                            {booking.guest_name.split(' ')[0]}
@@ -370,11 +388,11 @@ export const RoomAvailabilityGrid: React.FC<RoomAvailabilityGridProps> = ({
                                           </div>
                                           {booking.notes && <div>Notes: {booking.notes}</div>}
                                         </>
-                                      ) : status === 'maintenance' ? (
+                                       ) : status === 'maintenance' ? (
                                         <div>Room under maintenance</div>
-                                      ) : (
-                                        <div>Available for booking</div>
-                                      )}
+                                       ) : (
+                                        <div>Available for booking - Click to create manual booking</div>
+                                       )}
                                     </div>
                                   </TooltipContent>
                                 </Tooltip>
@@ -503,6 +521,28 @@ export const RoomAvailabilityGrid: React.FC<RoomAvailabilityGridProps> = ({
               </div>
             </DialogContent>
           </Dialog>
+        )}
+
+        {/* Manual Booking Modal */}
+        {selectedRoomForBooking && (
+          <ManualBookingModal
+            isOpen={isManualBookingOpen}
+            onClose={() => {
+              setIsManualBookingOpen(false);
+              setSelectedRoomForBooking(null);
+            }}
+            roomUnitId={selectedRoomForBooking.roomUnitId}
+            roomName={selectedRoomForBooking.roomName}
+            preSelectedDates={{
+              checkIn: selectedRoomForBooking.selectedDate,
+              checkOut: addDays(selectedRoomForBooking.selectedDate, 1)
+            }}
+            onBookingCreated={() => {
+              if (onBookingUpdate) {
+                onBookingUpdate();
+              }
+            }}
+          />
         )}
       </div>
     </TooltipProvider>
