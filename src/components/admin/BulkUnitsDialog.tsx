@@ -8,6 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { Upload, Download, Plus } from 'lucide-react';
+import { BedConfiguration } from './BedConfiguration';
 
 interface BulkUnitsDialogProps {
   isOpen: boolean;
@@ -27,6 +28,8 @@ export function BulkUnitsDialog({ isOpen, onOpenChange, roomTypeId, onUnitsAdded
     status: 'available',
     features: '',
   });
+  const [maxOccupancy, setMaxOccupancy] = useState(2);
+  const [bedConfigs, setBedConfigs] = useState<any[]>([]);
   const [csvData, setCsvData] = useState('');
 
   const generateBulkUnits = async () => {
@@ -42,6 +45,8 @@ export function BulkUnitsDialog({ isOpen, onOpenChange, roomTypeId, onUnitsAdded
         special_features: bulkData.features 
           ? bulkData.features.split(',').map(f => f.trim()).filter(f => f)
           : [],
+        max_occupancy: maxOccupancy,
+        bed_configuration: bedConfigs,
       });
     }
 
@@ -207,6 +212,13 @@ export function BulkUnitsDialog({ isOpen, onOpenChange, roomTypeId, onUnitsAdded
                   placeholder="Balcony, Garden View (comma separated)"
                 />
               </div>
+
+              <BedConfiguration 
+                onConfigChange={(occupancy, configs) => {
+                  setMaxOccupancy(occupancy);
+                  setBedConfigs(configs);
+                }}
+              />
 
               <div className="flex justify-end gap-2">
                 <Button variant="outline" onClick={() => onOpenChange(false)}>
