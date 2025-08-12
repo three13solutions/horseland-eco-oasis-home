@@ -4,6 +4,7 @@ import { Plus, Search, Grid, List, Edit, Trash2, ArrowLeft, Clock, DollarSign } 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
@@ -607,14 +608,114 @@ const DiningManagement = () => {
             </DialogTrigger>
           </Dialog>
         </div>
-      ) : (
-        <div className={viewMode === 'grid' 
-          ? 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6'
-          : 'space-y-4'
-        }>
+      ) : viewMode === 'grid' ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
           {filteredMeals.map((meal) => (
             <MealCard key={meal.id} meal={meal} />
           ))}
+        </div>
+      ) : (
+        <div className="border rounded-lg">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Image</TableHead>
+                <TableHead>Title</TableHead>
+                <TableHead>Type</TableHead>
+                <TableHead>Variant</TableHead>
+                <TableHead>Price</TableHead>
+                <TableHead>Availability</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead className="text-right">Actions</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {filteredMeals.map((meal) => (
+                <TableRow key={meal.id}>
+                  <TableCell>
+                    <div className="w-16 h-12 bg-muted rounded overflow-hidden">
+                      {meal.featured_media ? (
+                        <img
+                          src={meal.featured_media}
+                          alt={meal.title}
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center text-xs text-muted-foreground">
+                          No Image
+                        </div>
+                      )}
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    <div>
+                      <div className="font-medium">{meal.title}</div>
+                      {meal.description && (
+                        <div className="text-sm text-muted-foreground truncate max-w-xs">
+                          {meal.description}
+                        </div>
+                      )}
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    <Badge variant="outline">{getMealTypeLabel(meal.meal_type)}</Badge>
+                  </TableCell>
+                  <TableCell>
+                    <Badge variant="outline">{getVariantLabel(meal.variant)}</Badge>
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex items-center gap-1">
+                      <DollarSign className="h-4 w-4" />
+                      <span className="font-medium">₹{meal.price}</span>
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex items-center gap-1 text-sm">
+                      <Clock className="h-4 w-4" />
+                      <span>{formatTime(meal.availability_start)} - {formatTime(meal.availability_end)}</span>
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    <Badge variant={meal.is_active ? "default" : "secondary"}>
+                      {meal.is_active ? "Active" : "Inactive"}
+                    </Badge>
+                  </TableCell>
+                  <TableCell className="text-right">
+                    <div className="flex justify-end gap-1">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleEdit(meal)}
+                      >
+                        <Edit className="h-4 w-4" />
+                      </Button>
+                      <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                          <Button variant="ghost" size="sm">
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                          <AlertDialogHeader>
+                            <AlertDialogTitle>Delete Meal</AlertDialogTitle>
+                            <AlertDialogDescription>
+                              Are you sure you want to delete this meal? This action cannot be undone.
+                            </AlertDialogDescription>
+                          </AlertDialogHeader>
+                          <AlertDialogFooter>
+                            <AlertDialogCancel>Cancel</AlertDialogCancel>
+                            <AlertDialogAction onClick={() => handleDelete(meal.id)}>
+                              Delete
+                            </AlertDialogAction>
+                          </AlertDialogFooter>
+                        </AlertDialogContent>
+                      </AlertDialog>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
         </div>
       )}
     </div>
