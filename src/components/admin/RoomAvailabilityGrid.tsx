@@ -119,7 +119,17 @@ export const RoomAvailabilityGrid: React.FC<RoomAvailabilityGridProps> = ({
       const targetDate = startOfDay(date);
       
       // Room is occupied from check-in date until (but not including) check-out date
-      return targetDate >= checkIn && targetDate < checkOut;
+      const isOccupied = targetDate >= checkIn && targetDate < checkOut;
+      
+      // Debug logging
+      if (roomId === '010104e1-5390-4ab2-a5d9-828d68304e1e' && format(date, 'yyyy-MM-dd') === '2025-07-15') {
+        console.log('DEBUG: Checking room', roomUnit?.unit_number, 'for date', format(date, 'yyyy-MM-dd'));
+        console.log('DEBUG: Booking', b.booking_id, 'check_in:', b.check_in, 'check_out:', b.check_out, 'room_unit_id:', b.room_unit_id);
+        console.log('DEBUG: Parsed dates - checkIn:', format(checkIn, 'yyyy-MM-dd'), 'checkOut:', format(checkOut, 'yyyy-MM-dd'), 'targetDate:', format(targetDate, 'yyyy-MM-dd'));
+        console.log('DEBUG: Is occupied?', isOccupied);
+      }
+      
+      return isOccupied;
     });
 
     if (booking) {

@@ -35,10 +35,10 @@ interface Booking {
   room_unit_id?: string;
   room_type_id?: string;
   package_id?: string;
-  selected_meals?: any[];
-  selected_activities?: any[];
-  selected_spa_services?: any[];
-  selected_bedding?: any[];
+  selected_meals?: any[] | null;
+  selected_activities?: any[] | null;
+  selected_spa_services?: any[] | null;
+  selected_bedding?: any[] | null;
   room_units?: {
     unit_number: string;
     unit_name?: string;
