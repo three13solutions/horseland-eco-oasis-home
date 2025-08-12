@@ -9,7 +9,9 @@ import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Plus, Edit, Trash2, Upload, ArrowLeft, Users, IndianRupee, Home } from 'lucide-react';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Plus, Edit, Trash2, Upload, ArrowLeft, Users, IndianRupee, Home, LayoutGrid, List, Search, Filter } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Link } from 'react-router-dom';
 
@@ -25,6 +27,23 @@ interface RoomType {
   is_published: boolean;
   created_at: string;
   updated_at: string;
+  room_units?: { count: number }[];
+}
+
+interface RoomUnit {
+  id: string;
+  room_type_id: string;
+  unit_number: string;
+  unit_name?: string | null;
+  floor_number?: number | null;
+  area_sqft?: number | null;
+  status: string;
+  special_features: any;
+  notes?: string | null;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+  room_types?: { name: string };
 }
 
 const ROOM_FEATURES = [
@@ -34,9 +53,14 @@ const ROOM_FEATURES = [
 
 const RoomManagement = () => {
   const [rooms, setRooms] = useState<RoomType[]>([]);
+  const [units, setUnits] = useState<RoomUnit[]>([]);
   const [loading, setLoading] = useState(true);
   const [editingRoom, setEditingRoom] = useState<RoomType | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [viewMode, setViewMode] = useState<'card' | 'table'>('card');
+  const [activeTab, setActiveTab] = useState<'rooms' | 'units'>('rooms');
+  const [searchTerm, setSearchTerm] = useState('');
+  const [statusFilter, setStatusFilter] = useState<string>('all');
   const { toast } = useToast();
 
   const [formData, setFormData] = useState({
@@ -51,14 +75,21 @@ const RoomManagement = () => {
   });
 
   useEffect(() => {
-    loadRooms();
-  }, []);
+    if (activeTab === 'rooms') {
+      loadRooms();
+    } else {
+      loadUnits();
+    }
+  }, [activeTab]);
 
   const loadRooms = async () => {
     try {
       const { data, error } = await supabase
         .from('room_types')
-        .select('*')
+        .select(`
+          *,
+          room_units(count)
+        `)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
@@ -68,6 +99,30 @@ const RoomManagement = () => {
       toast({
         title: "Error",
         description: "Failed to load rooms",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const loadUnits = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('room_units')
+        .select(`
+          *,
+          room_types(name)
+        `)
+        .order('unit_number');
+
+      if (error) throw error;
+      setUnits(data || []);
+    } catch (error) {
+      console.error('Error loading units:', error);
+      toast({
+        title: "Error",
+        description: "Failed to load units",
         variant: "destructive",
       });
     } finally {
@@ -226,6 +281,32 @@ const RoomManagement = () => {
     }));
   };
 
+  const filteredRooms = rooms.filter(room => {
+    const matchesSearch = room.name.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesStatus = statusFilter === 'all' || 
+      (statusFilter === 'published' && room.is_published) ||
+      (statusFilter === 'draft' && !room.is_published);
+    return matchesSearch && matchesStatus;
+  });
+
+  const filteredUnits = units.filter(unit => {
+    const matchesSearch = unit.unit_number.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (unit.unit_name && unit.unit_name.toLowerCase().includes(searchTerm.toLowerCase())) ||
+      (unit.room_types?.name && unit.room_types.name.toLowerCase().includes(searchTerm.toLowerCase()));
+    const matchesStatus = statusFilter === 'all' || unit.status === statusFilter;
+    return matchesSearch && matchesStatus;
+  });
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case "available": return "bg-green-100 text-green-800";
+      case "maintenance": return "bg-yellow-100 text-yellow-800";
+      case "out_of_order": return "bg-red-100 text-red-800";
+      case "occupied": return "bg-blue-100 text-blue-800";
+      default: return "bg-gray-100 text-gray-800";
+    }
+  };
+
   if (loading && rooms.length === 0) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
@@ -252,13 +333,35 @@ const RoomManagement = () => {
             <h1 className="text-xl font-serif font-semibold">Room Management</h1>
           </div>
           
-          <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-            <DialogTrigger asChild>
-              <Button onClick={resetForm}>
-                <Plus className="w-4 h-4 mr-2" />
-                Add Room
-              </Button>
-            </DialogTrigger>
+          <div className="flex items-center space-x-2">
+            {activeTab === 'rooms' && (
+              <div className="flex items-center space-x-1 border rounded-md">
+                <Button
+                  variant={viewMode === 'card' ? 'default' : 'ghost'}
+                  size="sm"
+                  onClick={() => setViewMode('card')}
+                  className="rounded-r-none"
+                >
+                  <LayoutGrid className="w-4 h-4" />
+                </Button>
+                <Button
+                  variant={viewMode === 'table' ? 'default' : 'ghost'}
+                  size="sm"
+                  onClick={() => setViewMode('table')}
+                  className="rounded-l-none"
+                >
+                  <List className="w-4 h-4" />
+                </Button>
+              </div>
+            )}
+            
+            <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+              <DialogTrigger asChild>
+                <Button onClick={resetForm}>
+                  <Plus className="w-4 h-4 mr-2" />
+                  {activeTab === 'rooms' ? 'Add Room' : 'Add Unit'}
+                </Button>
+              </DialogTrigger>
             <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
               <DialogHeader>
                 <DialogTitle>{editingRoom ? 'Edit Room' : 'Add New Room'}</DialogTitle>
@@ -389,13 +492,56 @@ const RoomManagement = () => {
               </form>
             </DialogContent>
           </Dialog>
+          </div>
         </div>
       </header>
 
       {/* Main Content */}
       <main className="container mx-auto px-4 py-8">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {rooms.map((room) => (
+        <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as 'rooms' | 'units')}>
+          <div className="flex justify-between items-center mb-6">
+            <TabsList>
+              <TabsTrigger value="rooms">Room Types</TabsTrigger>
+              <TabsTrigger value="units">Room Units</TabsTrigger>
+            </TabsList>
+            
+            <div className="flex items-center space-x-2">
+              <div className="relative">
+                <Search className="w-4 h-4 absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground" />
+                <Input
+                  placeholder="Search..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-9 w-64"
+                />
+              </div>
+              <select
+                value={statusFilter}
+                onChange={(e) => setStatusFilter(e.target.value)}
+                className="px-3 py-2 border rounded-md bg-background"
+              >
+                <option value="all">All Status</option>
+                {activeTab === 'rooms' ? (
+                  <>
+                    <option value="published">Published</option>
+                    <option value="draft">Draft</option>
+                  </>
+                ) : (
+                  <>
+                    <option value="available">Available</option>
+                    <option value="maintenance">Maintenance</option>
+                    <option value="out_of_order">Out of Order</option>
+                    <option value="occupied">Occupied</option>
+                  </>
+                )}
+              </select>
+            </div>
+          </div>
+
+          <TabsContent value="rooms">
+            {viewMode === 'card' ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {filteredRooms.map((room) => (
             <Card key={room.id}>
               <CardHeader>
                 <div className="flex justify-between items-start">
@@ -473,8 +619,126 @@ const RoomManagement = () => {
                 </div>
               </CardContent>
             </Card>
-          ))}
-        </div>
+                ))}
+              </div>
+            ) : (
+              <div className="border rounded-lg">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Room Name</TableHead>
+                      <TableHead>Max Guests</TableHead>
+                      <TableHead>Base Price</TableHead>
+                      <TableHead>Units</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead>Actions</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {filteredRooms.map((room) => (
+                      <TableRow key={room.id}>
+                        <TableCell className="font-medium">
+                          <div className="flex items-center space-x-3">
+                            {room.hero_image && (
+                              <img 
+                                src={room.hero_image} 
+                                alt={room.name}
+                                className="w-10 h-10 object-cover rounded"
+                              />
+                            )}
+                            <span>{room.name}</span>
+                          </div>
+                        </TableCell>
+                        <TableCell>{room.max_guests}</TableCell>
+                        <TableCell>₹{room.base_price}</TableCell>
+                        <TableCell>{room.room_units?.[0]?.count || 0}</TableCell>
+                        <TableCell>
+                          <Badge variant={room.is_published ? "default" : "secondary"}>
+                            {room.is_published ? 'Published' : 'Draft'}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex space-x-1">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => window.open(`/admin/room-units/${room.id}`, '_blank')}
+                            >
+                              <Home className="w-4 h-4" />
+                            </Button>
+                            <Button variant="outline" size="sm" onClick={() => handleEdit(room)}>
+                              <Edit className="w-4 h-4" />
+                            </Button>
+                            <Button 
+                              variant="outline" 
+                              size="sm" 
+                              onClick={() => togglePublish(room)}
+                            >
+                              {room.is_published ? 'Unpublish' : 'Publish'}
+                            </Button>
+                            <Button 
+                              variant="outline" 
+                              size="sm" 
+                              onClick={() => handleDelete(room.id)}
+                              className="text-destructive hover:text-destructive"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            )}
+          </TabsContent>
+
+          <TabsContent value="units">
+            <div className="border rounded-lg">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Unit Number</TableHead>
+                    <TableHead>Unit Name</TableHead>
+                    <TableHead>Room Type</TableHead>
+                    <TableHead>Floor</TableHead>
+                    <TableHead>Area</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead>Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {filteredUnits.map((unit) => (
+                    <TableRow key={unit.id}>
+                      <TableCell className="font-medium">{unit.unit_number}</TableCell>
+                      <TableCell>{unit.unit_name || '-'}</TableCell>
+                      <TableCell>{unit.room_types?.name}</TableCell>
+                      <TableCell>{unit.floor_number || '-'}</TableCell>
+                      <TableCell>{unit.area_sqft ? `${unit.area_sqft} sq ft` : '-'}</TableCell>
+                      <TableCell>
+                        <Badge className={getStatusColor(unit.status)}>
+                          {unit.status}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex space-x-1">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => window.open(`/admin/room-units/${unit.room_type_id}`, '_blank')}
+                          >
+                            <Edit className="w-4 h-4" />
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+          </TabsContent>
+        </Tabs>
       </main>
     </div>
   );

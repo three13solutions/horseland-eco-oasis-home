@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { ArrowLeft, Plus, Edit, Trash2, Home, AlertTriangle } from "lucide-react";
+import { ArrowLeft, Plus, Edit, Trash2, Home, AlertTriangle, Upload, LayoutGrid, List, Search } from "lucide-react";
 import { useNavigate, useParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -9,8 +9,10 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { BulkUnitsDialog } from "@/components/admin/BulkUnitsDialog";
 
 interface RoomUnit {
   id: string;
@@ -39,7 +41,11 @@ export default function RoomUnitsManagement() {
   const [roomType, setRoomType] = useState<RoomType | null>(null);
   const [loading, setLoading] = useState(true);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isBulkDialogOpen, setIsBulkDialogOpen] = useState(false);
   const [editingUnit, setEditingUnit] = useState<RoomUnit | null>(null);
+  const [viewMode, setViewMode] = useState<'card' | 'table'>('card');
+  const [searchTerm, setSearchTerm] = useState('');
+  const [statusFilter, setStatusFilter] = useState<string>('all');
   const [formData, setFormData] = useState({
     unit_number: "",
     unit_name: "",
@@ -212,6 +218,13 @@ export default function RoomUnitsManagement() {
     }
   };
 
+  const filteredUnits = units.filter(unit => {
+    const matchesSearch = unit.unit_number.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (unit.unit_name && unit.unit_name.toLowerCase().includes(searchTerm.toLowerCase()));
+    const matchesStatus = statusFilter === 'all' || unit.status === statusFilter;
+    return matchesSearch && matchesStatus;
+  });
+
   if (loading) {
     return <div className="flex items-center justify-center h-64">Loading...</div>;
   }
@@ -234,13 +247,42 @@ export default function RoomUnitsManagement() {
           </div>
         </div>
         
-        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-          <DialogTrigger asChild>
-            <Button onClick={resetForm} className="flex items-center gap-2">
-              <Plus className="h-4 w-4" />
-              Add Unit
+        <div className="flex items-center space-x-2">
+          <div className="flex items-center space-x-1 border rounded-md">
+            <Button
+              variant={viewMode === 'card' ? 'default' : 'ghost'}
+              size="sm"
+              onClick={() => setViewMode('card')}
+              className="rounded-r-none"
+            >
+              <LayoutGrid className="w-4 h-4" />
             </Button>
-          </DialogTrigger>
+            <Button
+              variant={viewMode === 'table' ? 'default' : 'ghost'}
+              size="sm"
+              onClick={() => setViewMode('table')}
+              className="rounded-l-none"
+            >
+              <List className="w-4 h-4" />
+            </Button>
+          </div>
+          
+          <Button
+            variant="outline"
+            onClick={() => setIsBulkDialogOpen(true)}
+            className="flex items-center gap-2"
+          >
+            <Upload className="h-4 w-4" />
+            Bulk Add
+          </Button>
+          
+          <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+            <DialogTrigger asChild>
+              <Button onClick={resetForm} className="flex items-center gap-2">
+                <Plus className="h-4 w-4" />
+                Add Unit
+              </Button>
+            </DialogTrigger>
           <DialogContent className="max-w-2xl">
             <DialogHeader>
               <DialogTitle>
@@ -338,10 +380,45 @@ export default function RoomUnitsManagement() {
             </form>
           </DialogContent>
         </Dialog>
+        
+        
+        <BulkUnitsDialog
+          isOpen={isBulkDialogOpen}
+          onOpenChange={setIsBulkDialogOpen}
+          roomTypeId={roomTypeId!}
+          onUnitsAdded={loadUnits}
+        />
+        </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {units.map((unit) => (
+      <div className="flex justify-between items-center mb-6">
+        <div className="flex items-center space-x-2">
+          <div className="relative">
+            <Search className="w-4 h-4 absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground" />
+            <Input
+              placeholder="Search units..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pl-9 w-64"
+            />
+          </div>
+          <select
+            value={statusFilter}
+            onChange={(e) => setStatusFilter(e.target.value)}
+            className="px-3 py-2 border rounded-md bg-background"
+          >
+            <option value="all">All Status</option>
+            <option value="available">Available</option>
+            <option value="maintenance">Maintenance</option>
+            <option value="out_of_order">Out of Order</option>
+            <option value="occupied">Occupied</option>
+          </select>
+        </div>
+      </div>
+
+      {viewMode === 'card' ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {filteredUnits.map((unit) => (
           <Card key={unit.id} className="hover:shadow-md transition-shadow">
             <CardHeader className="pb-3">
               <div className="flex items-center justify-between">
@@ -425,10 +502,88 @@ export default function RoomUnitsManagement() {
               </div>
             </CardContent>
           </Card>
-        ))}
-      </div>
+          ))}
+        </div>
+      ) : (
+        <div className="border rounded-lg">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Unit Number</TableHead>
+                <TableHead>Unit Name</TableHead>
+                <TableHead>Floor</TableHead>
+                <TableHead>Area</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead>Features</TableHead>
+                <TableHead>Actions</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {filteredUnits.map((unit) => (
+                <TableRow key={unit.id}>
+                  <TableCell className="font-medium">{unit.unit_number}</TableCell>
+                  <TableCell>{unit.unit_name || '-'}</TableCell>
+                  <TableCell>{unit.floor_number || '-'}</TableCell>
+                  <TableCell>{unit.area_sqft ? `${unit.area_sqft} sq ft` : '-'}</TableCell>
+                  <TableCell>
+                    <Badge className={getStatusColor(unit.status)}>
+                      {unit.status}
+                    </Badge>
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex flex-wrap gap-1">
+                      {unit.special_features.slice(0, 2).map((feature, index) => (
+                        <Badge key={index} variant="secondary" className="text-xs">
+                          {feature}
+                        </Badge>
+                      ))}
+                      {unit.special_features.length > 2 && (
+                        <Badge variant="secondary" className="text-xs">
+                          +{unit.special_features.length - 2}
+                        </Badge>
+                      )}
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex gap-1">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => handleEdit(unit)}
+                        className="h-8 px-2"
+                      >
+                        <Edit className="h-3 w-3" />
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant={unit.status === "available" ? "outline" : "default"}
+                        onClick={() => toggleStatus(unit)}
+                        className="h-8 px-2"
+                      >
+                        {unit.status === "available" ? (
+                          <AlertTriangle className="h-3 w-3" />
+                        ) : (
+                          <Home className="h-3 w-3" />
+                        )}
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="destructive"
+                        onClick={() => handleDelete(unit.id)}
+                        className="h-8 px-2"
+                      >
+                        <Trash2 className="h-3 w-3" />
+                      </Button>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </div>
+      )}
 
-      {units.length === 0 && (
+      {filteredUnits.length === 0 && (
         <Card className="py-12">
           <CardContent className="text-center">
             <Home className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
