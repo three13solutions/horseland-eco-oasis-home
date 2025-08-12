@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowLeft, Plus, Search, Edit, Trash2, ToggleLeft, ToggleRight, Grid, List } from 'lucide-react';
+import { ArrowLeft, Plus, Search, Edit, Trash2, ToggleLeft, ToggleRight, Grid, List, Upload, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -10,6 +10,11 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import { useForm } from 'react-hook-form';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 
@@ -20,7 +25,6 @@ interface Activity {
   distance?: string;
   image?: string;
   is_active: boolean;
-  booking_required: boolean;
   tags?: any;
   audience_tags?: any;
   location_name?: string;
@@ -41,6 +45,43 @@ interface Activity {
   booking_type?: string;
 }
 
+interface MediaFile {
+  url: string;
+  name: string;
+  isFeatured: boolean;
+}
+
+interface FormData {
+  title: string;
+  description: string;
+  distance: string;
+  location_name: string;
+  is_on_property: boolean;
+  price_type: 'free' | 'fixed' | 'range';
+  price_amount?: number;
+  price_range_min?: number;
+  price_range_max?: number;
+  duration_hours?: number;
+  duration_minutes?: number;
+  timings_type: '24_7' | 'specific';
+  specific_timings?: string;
+  available_days: string[];
+  available_seasons: string[];
+  disclaimer: string;
+  rules_regulations: string;
+  booking_type: 'reception' | 'online' | 'both' | 'third_party' | 'no_booking';
+  audience_tags: string[];
+  activity_tags: string[];
+  media_files: MediaFile[];
+}
+
+const DAYS_OF_WEEK = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
+const SEASONS = ['spring', 'summer', 'monsoon', 'winter'];
+
+// Sample existing tags for autocomplete
+const EXISTING_AUDIENCE_TAGS = ['families', 'couples', 'solo', 'kids', 'adults', 'seniors', 'teens', 'groups'];
+const EXISTING_ACTIVITY_TAGS = ['adventure', 'relaxing', 'cultural', 'sports', 'nature', 'indoor', 'outdoor', 'educational'];
+
 const ActivitiesManagement = () => {
   const [viewMode, setViewMode] = useState<'card' | 'list'>('card');
   const [searchTerm, setSearchTerm] = useState('');
@@ -49,32 +90,29 @@ const ActivitiesManagement = () => {
   const [activities, setActivities] = useState<Activity[]>([]);
   const [showForm, setShowForm] = useState(false);
   const [editingActivity, setEditingActivity] = useState<Activity | null>(null);
-  const [title, setTitle] = useState('');
-  const [description, setDescription] = useState('');
-  const [distance, setDistance] = useState('');
-  const [image, setImage] = useState('');
-  const [bookingRequired, setBookingRequired] = useState(false);
-  const [tags, setTags] = useState<string>('');
-  const [audienceTags, setAudienceTags] = useState<string>('');
-  const [locationName, setLocationName] = useState('');
-  const [isOnProperty, setIsOnProperty] = useState(true);
-  const [priceType, setPriceType] = useState<'free' | 'fixed' | 'range'>('free');
-  const [priceAmount, setPriceAmount] = useState('');
-  const [priceRangeMin, setPriceRangeMin] = useState('');
-  const [priceRangeMax, setPriceRangeMax] = useState('');
-  const [durationHours, setDurationHours] = useState('');
-  const [durationMinutes, setDurationMinutes] = useState('');
-  const [timingsType, setTimingsType] = useState<'24_7' | 'specific'>('24_7');
-  const [specificTimings, setSpecificTimings] = useState('');
-  const [availableDays, setAvailableDays] = useState<string>('');
-  const [availableSeasons, setAvailableSeasons] = useState<string>('');
-  const [disclaimer, setDisclaimer] = useState('');
-  const [rulesRegulations, setRulesRegulations] = useState('');
-  const [activityTags, setActivityTags] = useState<string>('');
-  const [mediaUrls, setMediaUrls] = useState<string>('');
-  const [bookingType, setBookingType] = useState<'online' | 'reception' | 'both'>('reception');
   const [loading, setLoading] = useState(true);
+  const [uploading, setUploading] = useState(false);
   const { toast } = useToast();
+
+  const form = useForm<FormData>({
+    defaultValues: {
+      title: '',
+      description: '',
+      distance: '',
+      location_name: '',
+      is_on_property: true,
+      price_type: 'free',
+      timings_type: '24_7',
+      available_days: [],
+      available_seasons: [],
+      disclaimer: '',
+      rules_regulations: '',
+      booking_type: 'reception',
+      audience_tags: [],
+      activity_tags: [],
+      media_files: [],
+    }
+  });
 
   useEffect(() => {
     loadActivities();
@@ -102,33 +140,32 @@ const ActivitiesManagement = () => {
     }
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSubmit = async (data: FormData) => {
     try {
+      const featuredMedia = data.media_files.find(m => m.isFeatured);
+      
       const activityData = {
-        title,
-        description,
-        distance,
-        image,
-        location_name: locationName,
-        is_on_property: isOnProperty,
-        price_type: priceType,
-        price_amount: priceAmount ? parseFloat(priceAmount) : null,
-        price_range_min: priceRangeMin ? parseFloat(priceRangeMin) : null,
-        price_range_max: priceRangeMax ? parseFloat(priceRangeMax) : null,
-        duration_hours: durationHours ? parseInt(durationHours) : null,
-        duration_minutes: durationMinutes ? parseInt(durationMinutes) : null,
-        timings: timingsType === '24_7' ? { type: '24_7' } : { type: 'specific', times: specificTimings.split(',').map(t => t.trim()) },
-        available_days: availableDays ? availableDays.split(',').map(d => d.trim()) : [],
-        available_seasons: availableSeasons ? availableSeasons.split(',').map(s => s.trim()) : [],
-        disclaimer,
-        rules_regulations: rulesRegulations,
-        booking_required: bookingRequired,
-        booking_type: bookingType,
-        tags: tags ? tags.split(',').map(tag => tag.trim()) : [],
-        audience_tags: audienceTags ? audienceTags.split(',').map(tag => tag.trim()) : [],
-        activity_tags: activityTags ? activityTags.split(',').map(tag => tag.trim()) : [],
-        media_urls: mediaUrls ? mediaUrls.split(',').map(url => url.trim()) : [],
+        title: data.title,
+        description: data.description,
+        distance: data.is_on_property ? '' : data.distance,
+        image: featuredMedia?.url || data.media_files[0]?.url || '',
+        location_name: data.location_name,
+        is_on_property: data.is_on_property,
+        price_type: data.price_type,
+        price_amount: data.price_amount || null,
+        price_range_min: data.price_range_min || null,
+        price_range_max: data.price_range_max || null,
+        duration_hours: data.duration_hours || null,
+        duration_minutes: data.duration_minutes || null,
+        timings: data.timings_type === '24_7' ? { type: '24_7' } : { type: 'specific', times: data.specific_timings?.split(',').map(t => t.trim()) || [] },
+        available_days: data.available_days,
+        available_seasons: data.available_seasons,
+        disclaimer: data.disclaimer,
+        rules_regulations: data.rules_regulations,
+        booking_type: data.booking_type,
+        audience_tags: data.audience_tags,
+        activity_tags: data.activity_tags,
+        media_urls: data.media_files.map(m => m.url),
         is_active: true
       };
 
@@ -164,6 +201,54 @@ const ActivitiesManagement = () => {
         description: "Failed to save activity",
         variant: "destructive",
       });
+    }
+  };
+
+  const handleFileUpload = async (files: FileList | null) => {
+    if (!files) return;
+    
+    setUploading(true);
+    const newMediaFiles: MediaFile[] = [];
+    
+    try {
+      for (const file of Array.from(files)) {
+        const fileExt = file.name.split('.').pop();
+        const fileName = `${Math.random()}.${fileExt}`;
+        const filePath = `activity-media/${fileName}`;
+
+        const { error: uploadError } = await supabase.storage
+          .from('activity-media')
+          .upload(filePath, file);
+
+        if (uploadError) throw uploadError;
+
+        const { data: { publicUrl } } = supabase.storage
+          .from('activity-media')
+          .getPublicUrl(filePath);
+
+        newMediaFiles.push({
+          url: publicUrl,
+          name: file.name,
+          isFeatured: false
+        });
+      }
+
+      const currentFiles = form.getValues('media_files');
+      form.setValue('media_files', [...currentFiles, ...newMediaFiles]);
+      
+      toast({
+        title: "Success",
+        description: `${newMediaFiles.length} file(s) uploaded successfully`,
+      });
+    } catch (error) {
+      console.error('Error uploading files:', error);
+      toast({
+        title: "Error",
+        description: "Failed to upload files",
+        variant: "destructive",
+      });
+    } finally {
+      setUploading(false);
     }
   };
 
@@ -216,59 +301,48 @@ const ActivitiesManagement = () => {
   };
 
   const resetForm = () => {
-    setTitle('');
-    setDescription('');
-    setDistance('');
-    setImage('');
-    setBookingRequired(false);
-    setTags('');
-    setAudienceTags('');
-    setLocationName('');
-    setIsOnProperty(true);
-    setPriceType('free');
-    setPriceAmount('');
-    setPriceRangeMin('');
-    setPriceRangeMax('');
-    setDurationHours('');
-    setDurationMinutes('');
-    setTimingsType('24_7');
-    setSpecificTimings('');
-    setAvailableDays('');
-    setAvailableSeasons('');
-    setDisclaimer('');
-    setRulesRegulations('');
-    setActivityTags('');
-    setMediaUrls('');
-    setBookingType('reception');
+    form.reset();
     setEditingActivity(null);
     setShowForm(false);
   };
 
   const editActivity = (activity: Activity) => {
-    setTitle(activity.title);
-    setDescription(activity.description || '');
-    setDistance(activity.distance || '');
-    setImage(activity.image || '');
-    setLocationName(activity.location_name || '');
-    setIsOnProperty(activity.is_on_property ?? true);
-    setPriceType(activity.price_type as 'free' | 'fixed' | 'range' || 'free');
-    setPriceAmount(activity.price_amount?.toString() || '');
-    setPriceRangeMin(activity.price_range_min?.toString() || '');
-    setPriceRangeMax(activity.price_range_max?.toString() || '');
-    setDurationHours(activity.duration_hours?.toString() || '');
-    setDurationMinutes(activity.duration_minutes?.toString() || '');
-    setTimingsType(activity.timings?.type === 'specific' ? 'specific' : '24_7');
-    setSpecificTimings(activity.timings?.times ? activity.timings.times.join(', ') : '');
-    setAvailableDays(Array.isArray(activity.available_days) ? activity.available_days.join(', ') : '');
-    setAvailableSeasons(Array.isArray(activity.available_seasons) ? activity.available_seasons.join(', ') : '');
-    setDisclaimer(activity.disclaimer || '');
-    setRulesRegulations(activity.rules_regulations || '');
-    setBookingRequired(activity.booking_required);
-    setBookingType(activity.booking_type as 'online' | 'reception' | 'both' || 'reception');
-    setTags(Array.isArray(activity.tags) ? activity.tags.join(', ') : '');
-    setAudienceTags(Array.isArray(activity.audience_tags) ? activity.audience_tags.join(', ') : '');
-    setActivityTags(Array.isArray(activity.activity_tags) ? activity.activity_tags.join(', ') : '');
-    setMediaUrls(Array.isArray(activity.media_urls) ? activity.media_urls.join(', ') : '');
+    const mediaFiles: MediaFile[] = [];
+    if (activity.image) {
+      mediaFiles.push({ url: activity.image, name: 'Featured Image', isFeatured: true });
+    }
+    if (Array.isArray(activity.media_urls)) {
+      activity.media_urls.forEach((url: string, index: number) => {
+        if (url !== activity.image) {
+          mediaFiles.push({ url, name: `Media ${index + 1}`, isFeatured: false });
+        }
+      });
+    }
+
+    form.reset({
+      title: activity.title,
+      description: activity.description || '',
+      distance: activity.distance || '',
+      location_name: activity.location_name || '',
+      is_on_property: activity.is_on_property ?? true,
+      price_type: activity.price_type as 'free' | 'fixed' | 'range' || 'free',
+      price_amount: activity.price_amount || undefined,
+      price_range_min: activity.price_range_min || undefined,
+      price_range_max: activity.price_range_max || undefined,
+      duration_hours: activity.duration_hours || undefined,
+      duration_minutes: activity.duration_minutes || undefined,
+      timings_type: activity.timings?.type === 'specific' ? 'specific' : '24_7',
+      specific_timings: activity.timings?.times ? activity.timings.times.join(', ') : '',
+      available_days: Array.isArray(activity.available_days) ? activity.available_days : [],
+      available_seasons: Array.isArray(activity.available_seasons) ? activity.available_seasons : [],
+      disclaimer: activity.disclaimer || '',
+      rules_regulations: activity.rules_regulations || '',
+      booking_type: activity.booking_type as any || 'reception',
+      audience_tags: Array.isArray(activity.audience_tags) ? activity.audience_tags : [],
+      activity_tags: Array.isArray(activity.activity_tags) ? activity.activity_tags : [],
+      media_files: mediaFiles,
+    });
+    
     setEditingActivity(activity);
     setShowForm(true);
   };
@@ -318,7 +392,6 @@ const ActivitiesManagement = () => {
         )}
       </div>
 
-
       {/* Activity Form */}
       {showForm && (
         <Card className="mb-8">
@@ -326,321 +399,652 @@ const ActivitiesManagement = () => {
             <CardTitle>{editingActivity ? 'Edit Activity' : 'Add New Activity'}</CardTitle>
           </CardHeader>
           <CardContent>
-            <form onSubmit={handleSubmit} className="space-y-6">
-              {/* Basic Information */}
-              <div className="space-y-4">
-                <h3 className="text-lg font-semibold">Basic Information</h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <Label htmlFor="title">Title *</Label>
-                    <Input
-                      id="title"
-                      value={title}
-                      onChange={(e) => setTitle(e.target.value)}
-                      required
+            <Form {...form}>
+              <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
+                {/* Basic Information */}
+                <div className="space-y-4">
+                  <h3 className="text-lg font-semibold">Basic Information</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <FormField
+                      control={form.control}
+                      name="title"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Title *</FormLabel>
+                          <FormControl>
+                            <Input {...field} required />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="location_name"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Location</FormLabel>
+                          <FormControl>
+                            <Input {...field} placeholder="e.g., Pool Area, Garden" />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
                     />
                   </div>
-                  <div>
-                    <Label htmlFor="locationName">Location</Label>
-                    <Input
-                      id="locationName"
-                      value={locationName}
-                      onChange={(e) => setLocationName(e.target.value)}
-                      placeholder="e.g., Pool Area, Garden"
+                  
+                  <FormField
+                    control={form.control}
+                    name="description"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Description</FormLabel>
+                        <FormControl>
+                          <Textarea {...field} rows={3} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <FormField
+                      control={form.control}
+                      name="distance"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Distance from Property</FormLabel>
+                          <FormControl>
+                            <Input 
+                              {...field} 
+                              placeholder="e.g., 2 km, Walking distance"
+                              disabled={form.watch('is_on_property')}
+                              className={form.watch('is_on_property') ? 'opacity-50' : ''}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="is_on_property"
+                      render={({ field }) => (
+                        <FormItem className="flex items-center space-x-2 pt-8">
+                          <FormControl>
+                            <Checkbox
+                              checked={field.value}
+                              onCheckedChange={field.onChange}
+                            />
+                          </FormControl>
+                          <FormLabel>On Property</FormLabel>
+                        </FormItem>
+                      )}
                     />
                   </div>
                 </div>
-                
-                <div>
-                  <Label htmlFor="description">Description</Label>
-                  <Textarea
-                    id="description"
-                    value={description}
-                    onChange={(e) => setDescription(e.target.value)}
-                    rows={3}
+
+                {/* Available Days */}
+                <div className="space-y-4">
+                  <h3 className="text-lg font-semibold">Availability</h3>
+                  <FormField
+                    control={form.control}
+                    name="available_days"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Available Days</FormLabel>
+                        <div className="flex flex-wrap gap-2">
+                          <div className="flex items-center space-x-2">
+                            <Checkbox
+                              checked={field.value.length === DAYS_OF_WEEK.length}
+                              onCheckedChange={(checked) => {
+                                if (checked) {
+                                  field.onChange(DAYS_OF_WEEK);
+                                } else {
+                                  field.onChange([]);
+                                }
+                              }}
+                            />
+                            <Label>All Days</Label>
+                          </div>
+                          <div className="flex items-center space-x-2">
+                            <Checkbox
+                              checked={field.value.includes('saturday') && field.value.includes('sunday')}
+                              onCheckedChange={(checked) => {
+                                if (checked) {
+                                  const newDays = [...field.value.filter(d => !['saturday', 'sunday'].includes(d)), 'saturday', 'sunday'];
+                                  field.onChange(newDays);
+                                } else {
+                                  field.onChange(field.value.filter(d => !['saturday', 'sunday'].includes(d)));
+                                }
+                              }}
+                            />
+                            <Label>Weekends</Label>
+                          </div>
+                          {DAYS_OF_WEEK.map((day) => (
+                            <div key={day} className="flex items-center space-x-2">
+                              <Checkbox
+                                checked={field.value.includes(day)}
+                                onCheckedChange={(checked) => {
+                                  if (checked) {
+                                    field.onChange([...field.value, day]);
+                                  } else {
+                                    field.onChange(field.value.filter(d => d !== day));
+                                  }
+                                }}
+                              />
+                              <Label className="capitalize">{day}</Label>
+                            </div>
+                          ))}
+                        </div>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="available_seasons"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Available Seasons</FormLabel>
+                        <div className="flex flex-wrap gap-2">
+                          <div className="flex items-center space-x-2">
+                            <Checkbox
+                              checked={field.value.length === SEASONS.length}
+                              onCheckedChange={(checked) => {
+                                if (checked) {
+                                  field.onChange(SEASONS);
+                                } else {
+                                  field.onChange([]);
+                                }
+                              }}
+                            />
+                            <Label>All Seasons</Label>
+                          </div>
+                          {SEASONS.map((season) => (
+                            <div key={season} className="flex items-center space-x-2">
+                              <Checkbox
+                                checked={field.value.includes(season)}
+                                onCheckedChange={(checked) => {
+                                  if (checked) {
+                                    field.onChange([...field.value, season]);
+                                  } else {
+                                    field.onChange(field.value.filter(s => s !== season));
+                                  }
+                                }}
+                              />
+                              <Label className="capitalize">{season}</Label>
+                            </div>
+                          ))}
+                        </div>
+                        <FormMessage />
+                      </FormItem>
+                    )}
                   />
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <Label htmlFor="distance">Distance from Property</Label>
-                    <Input
-                      id="distance"
-                      value={distance}
-                      onChange={(e) => setDistance(e.target.value)}
-                      placeholder="e.g., On Property, 2 km away"
+                {/* Tags */}
+                <div className="space-y-4">
+                  <h3 className="text-lg font-semibold">Tags</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <FormField
+                      control={form.control}
+                      name="audience_tags"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Audience Tags</FormLabel>
+                          <Popover>
+                            <PopoverTrigger asChild>
+                              <FormControl>
+                                <Button
+                                  variant="outline"
+                                  role="combobox"
+                                  className="w-full justify-between"
+                                >
+                                  {field.value.length > 0 ? `${field.value.length} selected` : "Select audience tags"}
+                                </Button>
+                              </FormControl>
+                            </PopoverTrigger>
+                            <PopoverContent className="w-full p-0">
+                              <Command>
+                                <CommandInput placeholder="Search audience tags..." />
+                                <CommandList>
+                                  <CommandEmpty>No tags found.</CommandEmpty>
+                                  <CommandGroup>
+                                    {EXISTING_AUDIENCE_TAGS.map((tag) => (
+                                      <CommandItem
+                                        key={tag}
+                                        onSelect={() => {
+                                          const currentTags = field.value;
+                                          if (currentTags.includes(tag)) {
+                                            field.onChange(currentTags.filter(t => t !== tag));
+                                          } else {
+                                            field.onChange([...currentTags, tag]);
+                                          }
+                                        }}
+                                      >
+                                        <Checkbox
+                                          checked={field.value.includes(tag)}
+                                          className="mr-2"
+                                        />
+                                        {tag}
+                                      </CommandItem>
+                                    ))}
+                                  </CommandGroup>
+                                </CommandList>
+                              </Command>
+                            </PopoverContent>
+                          </Popover>
+                          <div className="flex flex-wrap gap-1 mt-2">
+                            {field.value.map((tag) => (
+                              <Badge key={tag} variant="secondary" className="text-xs">
+                                {tag}
+                                <X
+                                  className="ml-1 h-3 w-3 cursor-pointer"
+                                  onClick={() => field.onChange(field.value.filter(t => t !== tag))}
+                                />
+                              </Badge>
+                            ))}
+                          </div>
+                          <FormMessage />
+                        </FormItem>
+                      )}
                     />
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <input
-                      type="checkbox"
-                      id="isOnProperty"
-                      checked={isOnProperty}
-                      onChange={(e) => setIsOnProperty(e.target.checked)}
-                      className="rounded"
+
+                    <FormField
+                      control={form.control}
+                      name="activity_tags"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Activity Type Tags</FormLabel>
+                          <Popover>
+                            <PopoverTrigger asChild>
+                              <FormControl>
+                                <Button
+                                  variant="outline"
+                                  role="combobox"
+                                  className="w-full justify-between"
+                                >
+                                  {field.value.length > 0 ? `${field.value.length} selected` : "Select activity tags"}
+                                </Button>
+                              </FormControl>
+                            </PopoverTrigger>
+                            <PopoverContent className="w-full p-0">
+                              <Command>
+                                <CommandInput placeholder="Search activity tags..." />
+                                <CommandList>
+                                  <CommandEmpty>No tags found.</CommandEmpty>
+                                  <CommandGroup>
+                                    {EXISTING_ACTIVITY_TAGS.map((tag) => (
+                                      <CommandItem
+                                        key={tag}
+                                        onSelect={() => {
+                                          const currentTags = field.value;
+                                          if (currentTags.includes(tag)) {
+                                            field.onChange(currentTags.filter(t => t !== tag));
+                                          } else {
+                                            field.onChange([...currentTags, tag]);
+                                          }
+                                        }}
+                                      >
+                                        <Checkbox
+                                          checked={field.value.includes(tag)}
+                                          className="mr-2"
+                                        />
+                                        {tag}
+                                      </CommandItem>
+                                    ))}
+                                  </CommandGroup>
+                                </CommandList>
+                              </Command>
+                            </PopoverContent>
+                          </Popover>
+                          <div className="flex flex-wrap gap-1 mt-2">
+                            {field.value.map((tag) => (
+                              <Badge key={tag} variant="secondary" className="text-xs">
+                                {tag}
+                                <X
+                                  className="ml-1 h-3 w-3 cursor-pointer"
+                                  onClick={() => field.onChange(field.value.filter(t => t !== tag))}
+                                />
+                              </Badge>
+                            ))}
+                          </div>
+                          <FormMessage />
+                        </FormItem>
+                      )}
                     />
-                    <Label htmlFor="isOnProperty">On Property</Label>
                   </div>
                 </div>
-              </div>
 
-              {/* Pricing */}
-              <div className="space-y-4">
-                <h3 className="text-lg font-semibold">Pricing</h3>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <div>
-                    <Label htmlFor="priceType">Price Type</Label>
-                    <Select value={priceType} onValueChange={(value: 'free' | 'fixed' | 'range') => setPriceType(value)}>
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="free">Free</SelectItem>
-                        <SelectItem value="fixed">Fixed Price</SelectItem>
-                        <SelectItem value="range">Price Range</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  {priceType === 'fixed' && (
-                    <div>
-                      <Label htmlFor="priceAmount">Price Amount</Label>
-                      <Input
-                        id="priceAmount"
-                        type="number"
-                        value={priceAmount}
-                        onChange={(e) => setPriceAmount(e.target.value)}
-                        placeholder="0"
+                {/* Media Upload */}
+                <div className="space-y-4">
+                  <h3 className="text-lg font-semibold">Media</h3>
+                  <FormField
+                    control={form.control}
+                    name="media_files"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Upload Images/Videos</FormLabel>
+                        <div className="border-2 border-dashed border-gray-300 rounded-lg p-6">
+                          <div className="text-center">
+                            <Upload className="mx-auto h-12 w-12 text-gray-400" />
+                            <div className="mt-4">
+                              <label htmlFor="media-upload" className="cursor-pointer">
+                                <span className="mt-2 block text-sm font-medium text-gray-900">
+                                  {uploading ? 'Uploading...' : 'Drop files here or click to upload'}
+                                </span>
+                                <input
+                                  id="media-upload"
+                                  type="file"
+                                  multiple
+                                  accept="image/*,video/*"
+                                  className="hidden"
+                                  onChange={(e) => handleFileUpload(e.target.files)}
+                                  disabled={uploading}
+                                />
+                              </label>
+                            </div>
+                          </div>
+                        </div>
+                        
+                        {field.value.length > 0 && (
+                          <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mt-4">
+                            {field.value.map((file, index) => (
+                              <div key={index} className="relative border rounded-lg p-2">
+                                <img 
+                                  src={file.url} 
+                                  alt={file.name}
+                                  className="w-full h-24 object-cover rounded"
+                                />
+                                <div className="absolute top-1 right-1 flex gap-1">
+                                  <Button
+                                    type="button"
+                                    size="sm"
+                                    variant={file.isFeatured ? "default" : "outline"}
+                                    onClick={() => {
+                                      const newFiles = field.value.map((f, i) => ({
+                                        ...f,
+                                        isFeatured: i === index
+                                      }));
+                                      field.onChange(newFiles);
+                                    }}
+                                    className="h-6 w-6 p-0 text-xs"
+                                  >
+                                    ★
+                                  </Button>
+                                  <Button
+                                    type="button"
+                                    size="sm"
+                                    variant="destructive"
+                                    onClick={() => {
+                                      field.onChange(field.value.filter((_, i) => i !== index));
+                                    }}
+                                    className="h-6 w-6 p-0"
+                                  >
+                                    <X className="h-3 w-3" />
+                                  </Button>
+                                </div>
+                                <p className="text-xs mt-1 truncate">{file.name}</p>
+                                {file.isFeatured && <p className="text-xs text-blue-600">Featured</p>}
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+
+                {/* Booking Method */}
+                <div className="space-y-4">
+                  <h3 className="text-lg font-semibold">Booking Information</h3>
+                  <FormField
+                    control={form.control}
+                    name="booking_type"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Booking Method</FormLabel>
+                        <Select onValueChange={field.onChange} value={field.value}>
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            <SelectItem value="reception">At Reception</SelectItem>
+                            <SelectItem value="online">Online (Prior Only)</SelectItem>
+                            <SelectItem value="both">Both Reception & Online</SelectItem>
+                            <SelectItem value="third_party">Third Party Vendor</SelectItem>
+                            <SelectItem value="no_booking">No Advance Booking Required</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+
+                {/* Pricing */}
+                <div className="space-y-4">
+                  <h3 className="text-lg font-semibold">Pricing</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <FormField
+                      control={form.control}
+                      name="price_type"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Price Type</FormLabel>
+                          <Select onValueChange={field.onChange} value={field.value}>
+                            <FormControl>
+                              <SelectTrigger>
+                                <SelectValue />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              <SelectItem value="free">Free</SelectItem>
+                              <SelectItem value="fixed">Fixed Price</SelectItem>
+                              <SelectItem value="range">Price Range</SelectItem>
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    {form.watch('price_type') === 'fixed' && (
+                      <FormField
+                        control={form.control}
+                        name="price_amount"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Price Amount</FormLabel>
+                            <FormControl>
+                              <Input
+                                type="number"
+                                {...field}
+                                onChange={(e) => field.onChange(e.target.value ? parseFloat(e.target.value) : undefined)}
+                                value={field.value || ''}
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
                       />
-                    </div>
-                  )}
-                  {priceType === 'range' && (
-                    <>
-                      <div>
-                        <Label htmlFor="priceRangeMin">Min Price</Label>
-                        <Input
-                          id="priceRangeMin"
-                          type="number"
-                          value={priceRangeMin}
-                          onChange={(e) => setPriceRangeMin(e.target.value)}
-                          placeholder="0"
+                    )}
+                    {form.watch('price_type') === 'range' && (
+                      <>
+                        <FormField
+                          control={form.control}
+                          name="price_range_min"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Min Price</FormLabel>
+                              <FormControl>
+                                <Input
+                                  type="number"
+                                  {...field}
+                                  onChange={(e) => field.onChange(e.target.value ? parseFloat(e.target.value) : undefined)}
+                                  value={field.value || ''}
+                                />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
                         />
-                      </div>
-                      <div>
-                        <Label htmlFor="priceRangeMax">Max Price</Label>
-                        <Input
-                          id="priceRangeMax"
-                          type="number"
-                          value={priceRangeMax}
-                          onChange={(e) => setPriceRangeMax(e.target.value)}
-                          placeholder="0"
+                        <FormField
+                          control={form.control}
+                          name="price_range_max"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Max Price</FormLabel>
+                              <FormControl>
+                                <Input
+                                  type="number"
+                                  {...field}
+                                  onChange={(e) => field.onChange(e.target.value ? parseFloat(e.target.value) : undefined)}
+                                  value={field.value || ''}
+                                />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
                         />
-                      </div>
-                    </>
-                  )}
-                </div>
-              </div>
-
-              {/* Duration */}
-              <div className="space-y-4">
-                <h3 className="text-lg font-semibold">Duration</h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <Label htmlFor="durationHours">Duration (Hours)</Label>
-                    <Input
-                      id="durationHours"
-                      type="number"
-                      value={durationHours}
-                      onChange={(e) => setDurationHours(e.target.value)}
-                      placeholder="0"
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="durationMinutes">Duration (Minutes)</Label>
-                    <Input
-                      id="durationMinutes"
-                      type="number"
-                      value={durationMinutes}
-                      onChange={(e) => setDurationMinutes(e.target.value)}
-                      placeholder="0"
-                    />
+                      </>
+                    )}
                   </div>
                 </div>
-              </div>
 
-              {/* Timing & Availability */}
-              <div className="space-y-4">
-                <h3 className="text-lg font-semibold">Timing & Availability</h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <Label htmlFor="timingsType">Timings</Label>
-                    <Select value={timingsType} onValueChange={(value: '24_7' | 'specific') => setTimingsType(value)}>
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="24_7">24/7 Available</SelectItem>
-                        <SelectItem value="specific">Specific Times</SelectItem>
-                      </SelectContent>
-                    </Select>
+                {/* Duration */}
+                <div className="space-y-4">
+                  <h3 className="text-lg font-semibold">Duration</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <FormField
+                      control={form.control}
+                      name="duration_hours"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Duration (Hours)</FormLabel>
+                          <FormControl>
+                            <Input
+                              type="number"
+                              {...field}
+                              onChange={(e) => field.onChange(e.target.value ? parseInt(e.target.value) : undefined)}
+                              value={field.value || ''}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="duration_minutes"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Duration (Minutes)</FormLabel>
+                          <FormControl>
+                            <Input
+                              type="number"
+                              {...field}
+                              onChange={(e) => field.onChange(e.target.value ? parseInt(e.target.value) : undefined)}
+                              value={field.value || ''}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
                   </div>
-                  {timingsType === 'specific' && (
-                    <div>
-                      <Label htmlFor="specificTimings">Specific Times (comma-separated)</Label>
-                      <Input
-                        id="specificTimings"
-                        value={specificTimings}
-                        onChange={(e) => setSpecificTimings(e.target.value)}
-                        placeholder="9:00-17:00, 19:00-21:00"
+                </div>
+
+                {/* Timing */}
+                <div className="space-y-4">
+                  <h3 className="text-lg font-semibold">Timing</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <FormField
+                      control={form.control}
+                      name="timings_type"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Timings</FormLabel>
+                          <Select onValueChange={field.onChange} value={field.value}>
+                            <FormControl>
+                              <SelectTrigger>
+                                <SelectValue />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              <SelectItem value="24_7">24/7 Available</SelectItem>
+                              <SelectItem value="specific">Specific Times</SelectItem>
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    {form.watch('timings_type') === 'specific' && (
+                      <FormField
+                        control={form.control}
+                        name="specific_timings"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Specific Times (comma-separated)</FormLabel>
+                            <FormControl>
+                              <Input {...field} placeholder="9:00-17:00, 19:00-21:00" />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
                       />
-                    </div>
-                  )}
-                </div>
-                
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <Label htmlFor="availableDays">Available Days (comma-separated)</Label>
-                    <Input
-                      id="availableDays"
-                      value={availableDays}
-                      onChange={(e) => setAvailableDays(e.target.value)}
-                      placeholder="monday, tuesday, wednesday (leave empty for all days)"
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="availableSeasons">Available Seasons (comma-separated)</Label>
-                    <Input
-                      id="availableSeasons"
-                      value={availableSeasons}
-                      onChange={(e) => setAvailableSeasons(e.target.value)}
-                      placeholder="spring, summer, monsoon, winter (leave empty for all seasons)"
-                    />
+                    )}
                   </div>
                 </div>
-              </div>
 
-              {/* Tags & Categories */}
-              <div className="space-y-4">
-                <h3 className="text-lg font-semibold">Tags & Categories</h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <Label htmlFor="audienceTags">Audience Tags (comma-separated)</Label>
-                    <Input
-                      id="audienceTags"
-                      value={audienceTags}
-                      onChange={(e) => setAudienceTags(e.target.value)}
-                      placeholder="families, couples, solo, kids, adults, seniors"
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="activityTags">Activity Tags (comma-separated)</Label>
-                    <Input
-                      id="activityTags"
-                      value={activityTags}
-                      onChange={(e) => setActivityTags(e.target.value)}
-                      placeholder="adventure, relaxing, cultural, sports"
-                    />
-                  </div>
-                </div>
-                <div>
-                  <Label htmlFor="tags">General Tags (comma-separated)</Label>
-                  <Input
-                    id="tags"
-                    value={tags}
-                    onChange={(e) => setTags(e.target.value)}
-                    placeholder="adventure, nature, family"
+                {/* Legal Information */}
+                <div className="space-y-4">
+                  <h3 className="text-lg font-semibold">Legal Information</h3>
+                  <FormField
+                    control={form.control}
+                    name="disclaimer"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Disclaimer</FormLabel>
+                        <FormControl>
+                          <Textarea {...field} rows={2} placeholder="Any disclaimers or warnings for this activity" />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="rules_regulations"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Rules & Regulations</FormLabel>
+                        <FormControl>
+                          <Textarea {...field} rows={3} placeholder="Rules and regulations for this activity" />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
                   />
                 </div>
-              </div>
 
-              {/* Media */}
-              <div className="space-y-4">
-                <h3 className="text-lg font-semibold">Media</h3>
-                <div>
-                  <Label htmlFor="image">Main Image URL</Label>
-                  <Input
-                    id="image"
-                    value={image}
-                    onChange={(e) => setImage(e.target.value)}
-                    placeholder="https://example.com/image.jpg"
-                  />
+                <div className="flex gap-2 pt-4">
+                  <Button type="submit" disabled={uploading}>{editingActivity ? 'Update' : 'Create'} Activity</Button>
+                  <Button 
+                    type="button" 
+                    variant="outline" 
+                    onClick={resetForm}
+                  >
+                    Cancel
+                  </Button>
                 </div>
-                <div>
-                  <Label htmlFor="mediaUrls">Additional Media URLs (comma-separated)</Label>
-                  <Textarea
-                    id="mediaUrls"
-                    value={mediaUrls}
-                    onChange={(e) => setMediaUrls(e.target.value)}
-                    placeholder="https://example.com/image1.jpg, https://example.com/video1.mp4"
-                    rows={2}
-                  />
-                </div>
-              </div>
-
-              {/* Legal & Booking */}
-              <div className="space-y-4">
-                <h3 className="text-lg font-semibold">Legal & Booking</h3>
-                <div>
-                  <Label htmlFor="disclaimer">Disclaimer</Label>
-                  <Textarea
-                    id="disclaimer"
-                    value={disclaimer}
-                    onChange={(e) => setDisclaimer(e.target.value)}
-                    rows={2}
-                    placeholder="Any disclaimers or warnings for this activity"
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="rulesRegulations">Rules & Regulations</Label>
-                  <Textarea
-                    id="rulesRegulations"
-                    value={rulesRegulations}
-                    onChange={(e) => setRulesRegulations(e.target.value)}
-                    rows={3}
-                    placeholder="Rules and regulations for this activity"
-                  />
-                </div>
-                
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <Label htmlFor="bookingType">Booking Method</Label>
-                    <Select value={bookingType} onValueChange={(value: 'online' | 'reception' | 'both') => setBookingType(value)}>
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="online">Online Only</SelectItem>
-                        <SelectItem value="reception">Reception Only</SelectItem>
-                        <SelectItem value="both">Both Online & Reception</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <input
-                      type="checkbox"
-                      id="bookingRequired"
-                      checked={bookingRequired}
-                      onChange={(e) => setBookingRequired(e.target.checked)}
-                      className="rounded"
-                    />
-                    <Label htmlFor="bookingRequired">Booking Required</Label>
-                  </div>
-                </div>
-              </div>
-
-              <div className="flex gap-2 pt-4">
-                <Button type="submit">{editingActivity ? 'Update' : 'Create'} Activity</Button>
-                <Button 
-                  type="button" 
-                  variant="outline" 
-                  onClick={() => {
-                    setShowForm(false);
-                    setEditingActivity(null);
-                  }}
-                >
-                  Cancel
-                </Button>
-              </div>
-            </form>
+              </form>
+            </Form>
           </CardContent>
         </Card>
       )}
@@ -867,8 +1271,8 @@ const ActivitiesManagement = () => {
           )}
           
           {filteredActivities.length === 0 && (
-            <div className="text-center py-8">
-              <p className="text-muted-foreground">No activities found.</p>
+            <div className="text-center py-12">
+              <p className="text-muted-foreground">No activities found matching your criteria.</p>
             </div>
           )}
         </>
