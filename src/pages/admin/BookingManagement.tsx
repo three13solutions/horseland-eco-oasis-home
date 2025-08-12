@@ -1047,15 +1047,13 @@ export default function BookingManagement() {
                                   </div>
                                 )}
                               </div>
-                            ) : booking.package_id ? (
+                            ) : (
                               <div>
-                                <div className="text-sm font-medium text-blue-600">
-                                  📦 Package Booking
+                                <div className="text-sm font-medium text-muted-foreground">
+                                  No room assigned
                                 </div>
                                 {renderAddons(booking)}
                               </div>
-                            ) : (
-                              <span className="text-muted-foreground">-</span>
                             )}
                           </div>
                         </TableCell>
