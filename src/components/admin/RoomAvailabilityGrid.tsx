@@ -36,7 +36,7 @@ interface RoomAvailabilityGridProps {
   bookings: Booking[];
 }
 
-type TimeframeOption = 'today' | 'tomorrow' | 'week' | 'nextweek' | '14days';
+type TimeframeOption = 'week' | 'nextweek' | '14days' | '30days' | 'prevmonth' | 'nextmonth';
 
 export const RoomAvailabilityGrid: React.FC<RoomAvailabilityGridProps> = ({
   roomUnits,
@@ -48,19 +48,34 @@ export const RoomAvailabilityGrid: React.FC<RoomAvailabilityGridProps> = ({
   // Generate date range based on timeframe
   const dateRange = useMemo(() => {
     const today = new Date();
-    const tomorrow = addDays(today, 1);
     const nextMonday = new Date(today);
     nextMonday.setDate(today.getDate() + (7 - today.getDay() + 1) % 7);
     
+    const startOfCurrentMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+    const startOfPrevMonth = new Date(today.getFullYear(), today.getMonth() - 1, 1);
+    const endOfPrevMonth = new Date(today.getFullYear(), today.getMonth(), 0);
+    const startOfNextMonth = new Date(today.getFullYear(), today.getMonth() + 1, 1);
+    const endOfNextMonth = new Date(today.getFullYear(), today.getMonth() + 2, 0);
+    
     switch (selectedTimeframe) {
-      case 'today':
-        return [today];
-      case 'tomorrow':
-        return [tomorrow];
       case 'week':
         return Array.from({ length: 7 }, (_, i) => addDays(today, i));
       case 'nextweek':
         return Array.from({ length: 7 }, (_, i) => addDays(nextMonday, i));
+      case '30days':
+        return Array.from({ length: 30 }, (_, i) => addDays(today, i));
+      case 'prevmonth':
+        const prevMonthDays = [];
+        for (let d = new Date(startOfPrevMonth); d <= endOfPrevMonth; d = addDays(d, 1)) {
+          prevMonthDays.push(new Date(d));
+        }
+        return prevMonthDays;
+      case 'nextmonth':
+        const nextMonthDays = [];
+        for (let d = new Date(startOfNextMonth); d <= endOfNextMonth; d = addDays(d, 1)) {
+          nextMonthDays.push(new Date(d));
+        }
+        return nextMonthDays;
       case '14days':
       default:
         return Array.from({ length: 14 }, (_, i) => addDays(today, i));
@@ -145,11 +160,12 @@ export const RoomAvailabilityGrid: React.FC<RoomAvailabilityGridProps> = ({
   };
 
   const timeframeOptions = [
-    { value: 'today' as TimeframeOption, label: 'Focus on Today' },
-    { value: 'tomorrow' as TimeframeOption, label: 'Focus on Tomorrow' },
     { value: 'week' as TimeframeOption, label: 'This Week' },
     { value: 'nextweek' as TimeframeOption, label: 'Next Week' },
     { value: '14days' as TimeframeOption, label: '14 Days' },
+    { value: '30days' as TimeframeOption, label: '30 Days' },
+    { value: 'prevmonth' as TimeframeOption, label: 'Previous Month' },
+    { value: 'nextmonth' as TimeframeOption, label: 'Next Month' },
   ];
 
   return (
