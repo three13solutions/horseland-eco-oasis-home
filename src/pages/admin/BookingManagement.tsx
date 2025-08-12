@@ -449,6 +449,17 @@ export default function BookingManagement() {
 
     return (
       <div className="mt-2 space-y-1">
+        {/* Package info first - above other addons */}
+        {booking.packages && (
+          <div className="text-xs">
+            <span className="font-medium text-indigo-600">📦 Package:</span>
+            <span className="text-muted-foreground ml-1">
+              {booking.packages.title}
+            </span>
+          </div>
+        )}
+        
+        {/* Regular addon services below package */}
         {booking.selected_meals && booking.selected_meals.length > 0 && (
           <div className="text-xs">
             <span className="font-medium text-orange-600">🍽️ Meals:</span>
@@ -486,14 +497,6 @@ export default function BookingManagement() {
               {booking.selected_bedding.map((bedding: any) => 
                 `${bedding.name} (${bedding.quantity})`
               ).join(', ')}
-            </span>
-          </div>
-        )}
-        {booking.packages && (
-          <div className="text-xs">
-            <span className="font-medium text-indigo-600">📦 Package:</span>
-            <span className="text-muted-foreground ml-1">
-              {booking.packages.title}
             </span>
           </div>
         )}
