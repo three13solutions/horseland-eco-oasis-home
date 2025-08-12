@@ -540,7 +540,7 @@ export default function RoomManagement() {
             <DialogTrigger asChild>
               <Button onClick={resetForm} className="flex items-center gap-2">
                 <Plus className="h-4 w-4" />
-                {activeTab === 'rooms' ? 'Add Room Type' : 'Add Unit'}
+                Add Room Type
               </Button>
             </DialogTrigger>
             <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
