@@ -201,6 +201,13 @@ const AdminDashboard = () => {
       color: 'bg-pink-500'
     },
     { 
+      title: 'Dining Management', 
+      description: 'Manage meals and dining options',
+      icon: UtensilsCrossed, 
+      path: '/admin/dining',
+      color: 'bg-amber-500'
+    },
+    { 
       title: 'Blog & Journal', 
       description: 'Manage blog posts and content',
       icon: BookOpen, 
