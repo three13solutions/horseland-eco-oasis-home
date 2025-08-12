@@ -33,13 +33,20 @@ export function BulkUnitsDialog({ isOpen, onOpenChange, roomTypeId, onUnitsAdded
   const [csvData, setCsvData] = useState('');
 
   const generateBulkUnits = async () => {
+    const floorMap: { [key: string]: number } = {
+      'basement': -1,
+      'ground': 0,
+      '1st': 1,
+      '2nd': 2
+    };
+    
     const units = [];
     for (let i = bulkData.startNumber; i <= bulkData.endNumber; i++) {
       const unitNumber = bulkData.prefix ? `${bulkData.prefix}${i}` : i.toString();
       units.push({
         room_type_id: roomTypeId,
         unit_number: unitNumber,
-        floor_number: bulkData.floor ? parseInt(bulkData.floor) : null,
+        floor_number: bulkData.floor ? floorMap[bulkData.floor] ?? null : null,
         area_sqft: bulkData.areaSqft ? parseFloat(bulkData.areaSqft) : null,
         status: bulkData.status,
         special_features: bulkData.features 
@@ -169,14 +176,21 @@ export function BulkUnitsDialog({ isOpen, onOpenChange, roomTypeId, onUnitsAdded
 
               <div className="grid grid-cols-3 gap-4">
                 <div>
-                  <Label htmlFor="floor">Floor Number</Label>
-                  <Input
-                    id="floor"
-                    type="number"
-                    value={bulkData.floor}
-                    onChange={(e) => setBulkData({...bulkData, floor: e.target.value})}
-                    placeholder="1"
-                  />
+                  <Label htmlFor="floor">Floor</Label>
+                  <Select 
+                    value={bulkData.floor} 
+                    onValueChange={(value) => setBulkData({...bulkData, floor: value})}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select floor" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="basement">Basement</SelectItem>
+                      <SelectItem value="ground">Ground</SelectItem>
+                      <SelectItem value="1st">1st Floor</SelectItem>
+                      <SelectItem value="2nd">2nd Floor</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
                 <div>
                   <Label htmlFor="area">Area (sq ft)</Label>

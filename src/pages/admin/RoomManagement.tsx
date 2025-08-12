@@ -16,6 +16,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { Link, useNavigate } from 'react-router-dom';
 import { BulkUnitsDialog } from '@/components/admin/BulkUnitsDialog';
+import { BedConfiguration } from '@/components/admin/BedConfiguration';
 
 const ROOM_FEATURES = [
   'Wi-Fi', 'Air Conditioning', 'TV', 'Mini Bar', 'Balcony', 
@@ -94,6 +95,9 @@ export default function RoomManagement() {
     special_features: '',
     notes: ''
   });
+  
+  const [unitMaxOccupancy, setUnitMaxOccupancy] = useState(2);
+  const [unitBedConfigs, setUnitBedConfigs] = useState<any[]>([]);
 
   useEffect(() => {
     loadRooms();
@@ -181,6 +185,8 @@ export default function RoomManagement() {
       special_features: '',
       notes: ''
     });
+    setUnitMaxOccupancy(2);
+    setUnitBedConfigs([]);
     setEditingUnit(null);
   };
 
@@ -201,16 +207,35 @@ export default function RoomManagement() {
 
   const handleEditUnit = (unit: RoomUnit) => {
     setEditingUnit(unit);
+    
+    const reverseFloorMap: { [key: number]: string } = {
+      [-1]: 'basement',
+      [0]: 'ground',
+      [1]: '1st',
+      [2]: '2nd'
+    };
+    
     setUnitFormData({
       room_type_id: unit.room_type_id,
       unit_number: unit.unit_number,
       unit_name: unit.unit_name || '',
-      floor_number: unit.floor_number?.toString() || '',
+      floor_number: unit.floor_number !== null ? reverseFloorMap[unit.floor_number] || '' : '',
       area_sqft: unit.area_sqft?.toString() || '',
       status: unit.status,
       special_features: unit.special_features.join(', '),
       notes: unit.notes || ''
     });
+    
+    // Load existing bed configuration and max occupancy if available
+    if ((unit as any).max_occupancy) {
+      setUnitMaxOccupancy((unit as any).max_occupancy);
+    }
+    if ((unit as any).bed_configuration) {
+      setUnitBedConfigs((unit as any).bed_configuration);
+    } else {
+      setUnitBedConfigs([]);
+    }
+    
     setIsUnitsDialogOpen(true);
   };
 
@@ -261,17 +286,26 @@ export default function RoomManagement() {
   const handleUnitSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
+    const floorMap: { [key: string]: number } = {
+      'basement': -1,
+      'ground': 0,
+      '1st': 1,
+      '2nd': 2
+    };
+
     const unitData = {
       room_type_id: unitFormData.room_type_id,
       unit_number: unitFormData.unit_number,
       unit_name: unitFormData.unit_name || null,
-      floor_number: unitFormData.floor_number ? parseInt(unitFormData.floor_number) : null,
+      floor_number: unitFormData.floor_number ? floorMap[unitFormData.floor_number] ?? null : null,
       area_sqft: unitFormData.area_sqft ? parseFloat(unitFormData.area_sqft) : null,
       status: unitFormData.status,
       special_features: unitFormData.special_features 
         ? unitFormData.special_features.split(',').map(f => f.trim()).filter(f => f)
         : [],
       notes: unitFormData.notes || null,
+      max_occupancy: unitMaxOccupancy,
+      bed_configuration: unitBedConfigs,
     };
 
     try {
@@ -746,14 +780,21 @@ export default function RoomManagement() {
 
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <Label htmlFor="floor_number">Floor Number</Label>
-                      <Input
-                        id="floor_number"
-                        type="number"
-                        value={unitFormData.floor_number}
-                        onChange={(e) => setUnitFormData({...unitFormData, floor_number: e.target.value})}
-                        placeholder="1"
-                      />
+                      <Label htmlFor="floor_number">Floor</Label>
+                      <Select 
+                        value={unitFormData.floor_number} 
+                        onValueChange={(value) => setUnitFormData({...unitFormData, floor_number: value})}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select floor" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="basement">Basement</SelectItem>
+                          <SelectItem value="ground">Ground</SelectItem>
+                          <SelectItem value="1st">1st Floor</SelectItem>
+                          <SelectItem value="2nd">2nd Floor</SelectItem>
+                        </SelectContent>
+                      </Select>
                     </div>
                     <div>
                       <Label htmlFor="area_sqft">Area (sq ft)</Label>
@@ -787,6 +828,14 @@ export default function RoomManagement() {
                       placeholder="Any special notes about this unit..."
                     />
                   </div>
+
+                  <BedConfiguration 
+                    onConfigChange={(occupancy, configs) => {
+                      setUnitMaxOccupancy(occupancy);
+                      setUnitBedConfigs(configs);
+                    }}
+                    initialConfig={unitBedConfigs}
+                  />
 
                   <div className="flex justify-end gap-2 pt-4">
                     <Button type="button" variant="outline" onClick={() => setIsUnitsDialogOpen(false)}>
