@@ -515,6 +515,33 @@ const SpaManagement = () => {
 
       {/* Controls */}
       <div className="flex justify-between items-center mb-6">
+        <div className="flex items-center gap-1 bg-muted rounded-lg p-1">
+          <Button
+            variant={categoryFilter === 'all' ? 'default' : 'ghost'}
+            size="sm"
+            onClick={() => setCategoryFilter('all')}
+            className="h-8 px-3"
+          >
+            All
+          </Button>
+          <Button
+            variant={categoryFilter === 'beauty' ? 'default' : 'ghost'}
+            size="sm"
+            onClick={() => setCategoryFilter('beauty')}
+            className="h-8 px-3"
+          >
+            Beauty
+          </Button>
+          <Button
+            variant={categoryFilter === 'wellness' ? 'default' : 'ghost'}
+            size="sm"
+            onClick={() => setCategoryFilter('wellness')}
+            className="h-8 px-3"
+          >
+            Wellness
+          </Button>
+        </div>
+        
         <div className="flex items-center gap-4">
           <div className="flex items-center gap-2">
             <Button
@@ -532,33 +559,7 @@ const SpaManagement = () => {
               <List className="h-4 w-4" />
             </Button>
           </div>
-
-          <div className="flex items-center gap-2">
-            <Button
-              variant={categoryFilter === 'beauty' ? 'default' : 'outline'}
-              size="sm"
-              onClick={() => setCategoryFilter('beauty')}
-            >
-              Beauty
-            </Button>
-            <Button
-              variant={categoryFilter === 'wellness' ? 'default' : 'outline'}
-              size="sm"
-              onClick={() => setCategoryFilter('wellness')}
-            >
-              Wellness
-            </Button>
-            <Button
-              variant={categoryFilter === 'all' ? 'default' : 'outline'}
-              size="sm"
-              onClick={() => setCategoryFilter('all')}
-            >
-              All
-            </Button>
-          </div>
-        </div>
-        
-        <div className="flex items-center gap-4">
+          
           <div className="relative">
             <Search className="w-4 h-4 absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground" />
             <Input
