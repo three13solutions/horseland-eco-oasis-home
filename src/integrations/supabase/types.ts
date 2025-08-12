@@ -182,6 +182,7 @@ export type Database = {
           package_id: string | null
           payment_status: string
           room_type_id: string | null
+          room_unit_id: string | null
           total_amount: number
           updated_at: string
         }
@@ -199,6 +200,7 @@ export type Database = {
           package_id?: string | null
           payment_status?: string
           room_type_id?: string | null
+          room_unit_id?: string | null
           total_amount?: number
           updated_at?: string
         }
@@ -216,6 +218,7 @@ export type Database = {
           package_id?: string | null
           payment_status?: string
           room_type_id?: string | null
+          room_unit_id?: string | null
           total_amount?: number
           updated_at?: string
         }
@@ -232,6 +235,13 @@ export type Database = {
             columns: ["room_type_id"]
             isOneToOne: false
             referencedRelation: "room_types"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bookings_room_unit_id_fkey"
+            columns: ["room_unit_id"]
+            isOneToOne: false
+            referencedRelation: "room_units"
             referencedColumns: ["id"]
           },
         ]
@@ -621,6 +631,59 @@ export type Database = {
         }
         Relationships: []
       }
+      room_units: {
+        Row: {
+          area_sqft: number | null
+          created_at: string
+          floor_number: number | null
+          id: string
+          is_active: boolean
+          notes: string | null
+          room_type_id: string
+          special_features: Json | null
+          status: string
+          unit_name: string | null
+          unit_number: string
+          updated_at: string
+        }
+        Insert: {
+          area_sqft?: number | null
+          created_at?: string
+          floor_number?: number | null
+          id?: string
+          is_active?: boolean
+          notes?: string | null
+          room_type_id: string
+          special_features?: Json | null
+          status?: string
+          unit_name?: string | null
+          unit_number: string
+          updated_at?: string
+        }
+        Update: {
+          area_sqft?: number | null
+          created_at?: string
+          floor_number?: number | null
+          id?: string
+          is_active?: boolean
+          notes?: string | null
+          room_type_id?: string
+          special_features?: Json | null
+          status?: string
+          unit_name?: string | null
+          unit_number?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "room_units_room_type_id_fkey"
+            columns: ["room_type_id"]
+            isOneToOne: false
+            referencedRelation: "room_types"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       site_settings: {
         Row: {
           id: string
@@ -752,6 +815,17 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      check_room_availability: {
+        Args: {
+          p_room_type_id: string
+          p_check_in: string
+          p_check_out: string
+        }
+        Returns: {
+          available_units: number
+          unit_ids: string[]
+        }[]
+      }
       get_current_user_role: {
         Args: Record<PropertyKey, never>
         Returns: string
