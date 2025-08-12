@@ -326,6 +326,11 @@ export default function BookingManagement() {
     return matchesSearch && matchesStatus && matchesDate;
   });
 
+  // Debug logging
+  console.log('Bookings data:', bookings.length, 'bookings loaded');
+  console.log('Filtered bookings:', filteredBookings.length, 'after filtering');
+  console.log('Filters:', { searchTerm, statusFilter, dateFilter });
+
   const handleAutoAssign = async (booking: Booking) => {
     if (!booking.room_type_id) {
       toast({
