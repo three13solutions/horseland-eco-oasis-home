@@ -318,40 +318,6 @@ const ActivitiesManagement = () => {
         )}
       </div>
 
-      {/* Property Filter Toggle */}
-      {!showForm && (
-        <div className="mb-6">
-          <div className="flex items-center gap-2">
-            <span className="text-sm font-medium">Show:</span>
-            <div className="flex items-center gap-1 bg-muted rounded-lg p-1">
-              <Button
-                variant={propertyFilter === 'all' ? 'default' : 'ghost'}
-                size="sm"
-                onClick={() => setPropertyFilter('all')}
-                className="h-8 px-3"
-              >
-                All Activities
-              </Button>
-              <Button
-                variant={propertyFilter === 'on_property' ? 'default' : 'ghost'}
-                size="sm"
-                onClick={() => setPropertyFilter('on_property')}
-                className="h-8 px-3"
-              >
-                On Property
-              </Button>
-              <Button
-                variant={propertyFilter === 'off_property' ? 'default' : 'ghost'}
-                size="sm"
-                onClick={() => setPropertyFilter('off_property')}
-                className="h-8 px-3"
-              >
-                Off Property
-              </Button>
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* Activity Form */}
       {showForm && (
@@ -682,7 +648,32 @@ const ActivitiesManagement = () => {
       {!showForm && (
         <>
           <div className="flex justify-between items-center mb-6">
-            <div></div> {/* Empty div for spacing */}
+            <div className="flex items-center gap-1 bg-muted rounded-lg p-1">
+              <Button
+                variant={propertyFilter === 'all' ? 'default' : 'ghost'}
+                size="sm"
+                onClick={() => setPropertyFilter('all')}
+                className="h-8 px-3"
+              >
+                All
+              </Button>
+              <Button
+                variant={propertyFilter === 'on_property' ? 'default' : 'ghost'}
+                size="sm"
+                onClick={() => setPropertyFilter('on_property')}
+                className="h-8 px-3"
+              >
+                On Property
+              </Button>
+              <Button
+                variant={propertyFilter === 'off_property' ? 'default' : 'ghost'}
+                size="sm"
+                onClick={() => setPropertyFilter('off_property')}
+                className="h-8 px-3"
+              >
+                Off Property
+              </Button>
+            </div>
             
             <div className="flex items-center gap-4">
               <div className="flex items-center gap-2">
