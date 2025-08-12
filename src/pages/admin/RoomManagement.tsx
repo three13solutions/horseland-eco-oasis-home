@@ -64,7 +64,8 @@ export default function RoomManagement() {
   const [loading, setLoading] = useState(true);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [showUnitForm, setShowUnitForm] = useState(false);
-  const [isBulkDialogOpen, setIsBulkDialogOpen] = useState(false);
+  const [showBulkForm, setShowBulkForm] = useState(false);
+  const [showRoomForm, setShowRoomForm] = useState(false);
   const [editingRoom, setEditingRoom] = useState<RoomType | null>(null);
   const [editingUnit, setEditingUnit] = useState<RoomUnit | null>(null);
   const [activeTab, setActiveTab] = useState<'rooms' | 'units'>('rooms');
@@ -98,6 +99,19 @@ export default function RoomManagement() {
   
   const [unitMaxOccupancy, setUnitMaxOccupancy] = useState(2);
   const [unitBedConfigs, setUnitBedConfigs] = useState<any[]>([]);
+  
+  // Bulk form state
+  const [bulkData, setBulkData] = useState({
+    prefix: '',
+    startNumber: 1,
+    endNumber: 10,
+    floor: '',
+    areaSqft: '',
+    status: 'available',
+    features: '',
+  });
+  const [bulkMaxOccupancy, setBulkMaxOccupancy] = useState(2);
+  const [bulkBedConfigs, setBulkBedConfigs] = useState<any[]>([]);
 
   useEffect(() => {
     loadRooms();
@@ -191,6 +205,21 @@ export default function RoomManagement() {
     setShowUnitForm(true);
   };
 
+  const resetRoomForm = () => {
+    setFormData({
+      name: '',
+      description: '',
+      hero_image: '',
+      gallery: [''],
+      max_guests: 2,
+      features: [],
+      base_price: 0,
+      is_published: false,
+    });
+    setEditingRoom(null);
+    setShowRoomForm(true);
+  };
+
   const handleEdit = (room: RoomType) => {
     setEditingRoom(room);
     setFormData({
@@ -203,7 +232,7 @@ export default function RoomManagement() {
       base_price: Number(room.base_price),
       is_published: room.is_published,
     });
-    setIsDialogOpen(true);
+    setShowRoomForm(true);
   };
 
   const handleEditUnit = (unit: RoomUnit) => {
@@ -269,9 +298,7 @@ export default function RoomManagement() {
         description: `Room ${editingRoom ? 'updated' : 'created'} successfully`,
       });
 
-      setIsDialogOpen(false);
-      resetForm();
-      loadRooms();
+      setShowRoomForm(false);
     } catch (error) {
       console.error('Error saving room:', error);
       toast({
@@ -505,219 +532,344 @@ export default function RoomManagement() {
     <div className="container mx-auto p-6">
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-4">
-          <Link to="/admin">
-            <Button variant="outline" className="flex items-center gap-2">
-              <ArrowLeft className="h-4 w-4" />
-              Back to Dashboard
-            </Button>
+          <Link 
+            to="/admin"
+            className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            Back to Dashboard
           </Link>
-          <div>
-            <h1 className="text-2xl font-bold">Room Management</h1>
-            <p className="text-muted-foreground">Manage room types and individual units</p>
-          </div>
+          <div className="h-6 w-px bg-border" />
+          <h1 className="text-3xl font-bold">Room Management</h1>
         </div>
         
-        <div className="flex items-center space-x-2">
-          {activeTab === 'rooms' && (
-            <div className="flex items-center space-x-1 border rounded-md">
-              <Button
-                variant={viewMode === 'card' ? 'default' : 'ghost'}
+        {activeTab === 'rooms' && !showRoomForm && (
+          <Button onClick={resetRoomForm} className="flex items-center gap-2">
+            <Plus className="h-4 w-4" />
+            Add Room Type
+          </Button>
+        )}
+      </div>
+      
+      {/* Room Form Section */}
+      {activeTab === 'rooms' && showRoomForm && (
+        <Card className="mb-6">
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <CardTitle>
+                {editingRoom ? "Edit Room Type" : "Add New Room Type"}
+              </CardTitle>
+              <Button 
+                variant="outline" 
                 size="sm"
-                onClick={() => setViewMode('card')}
-                className="rounded-r-none"
+                onClick={() => {
+                  setShowRoomForm(false);
+                  setEditingRoom(null);
+                }}
               >
-                <LayoutGrid className="w-4 h-4" />
-              </Button>
-              <Button
-                variant={viewMode === 'table' ? 'default' : 'ghost'}
-                size="sm"
-                onClick={() => setViewMode('table')}
-                className="rounded-l-none"
-              >
-                <List className="w-4 h-4" />
+                Cancel
               </Button>
             </div>
-          )}
-          
-          {activeTab === 'units' && (
-            <>
-              <div className="flex items-center space-x-1 border rounded-md">
-                <Button
-                  variant={viewMode === 'card' ? 'default' : 'ghost'}
-                  size="sm"
-                  onClick={() => setViewMode('card')}
-                  className="rounded-r-none"
-                >
-                  <LayoutGrid className="w-4 h-4" />
-                </Button>
-                <Button
-                  variant={viewMode === 'table' ? 'default' : 'ghost'}
-                  size="sm"
-                  onClick={() => setViewMode('table')}
-                  className="rounded-l-none"
-                >
-                  <List className="w-4 h-4" />
-                </Button>
+          </CardHeader>
+          <CardContent>
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="name">Room Name *</Label>
+                  <Input
+                    id="name"
+                    value={formData.name}
+                    onChange={(e) => setFormData({...formData, name: e.target.value})}
+                    placeholder="e.g., Deluxe Room"
+                    required
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="base_price">Base Price (₹) *</Label>
+                  <Input
+                    id="base_price"
+                    type="number"
+                    min="0"
+                    value={formData.base_price}
+                    onChange={(e) => setFormData({...formData, base_price: Number(e.target.value)})}
+                    placeholder="2500"
+                    required
+                  />
+                </div>
               </div>
-              
-              <Button
-                variant="outline"
-                onClick={() => setIsBulkDialogOpen(true)}
-                className="flex items-center gap-2"
-              >
-                <Upload className="h-4 w-4" />
-                Bulk Add Units
-              </Button>
-            </>
-          )}
 
-          {activeTab === 'rooms' && (
-            <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-              <DialogTrigger asChild>
-                <Button onClick={resetForm} className="flex items-center gap-2">
-                  <Plus className="h-4 w-4" />
-                  Add Room Type
-                </Button>
-              </DialogTrigger>
-            <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-              <DialogHeader>
-                <DialogTitle>{editingRoom ? 'Edit Room Type' : 'Add New Room Type'}</DialogTitle>
-              </DialogHeader>
-              <form onSubmit={handleSubmit} className="space-y-6">
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <Label htmlFor="name">Room Name *</Label>
-                    <Input
-                      id="name"
-                      value={formData.name}
-                      onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
-                      placeholder="e.g., Deluxe Room"
-                      required
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="hero_image">Hero Image URL</Label>
-                    <Input
-                      id="hero_image"
-                      value={formData.hero_image}
-                      onChange={(e) => setFormData(prev => ({ ...prev, hero_image: e.target.value }))}
-                      placeholder="https://example.com/image.jpg"
-                    />
-                  </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="max_guests">Max Guests *</Label>
+                  <Input
+                    id="max_guests"
+                    type="number"
+                    min="1"
+                    value={formData.max_guests}
+                    onChange={(e) => setFormData({...formData, max_guests: Number(e.target.value)})}
+                    required
+                  />
                 </div>
-
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <Label htmlFor="max_guests">Max Guests *</Label>
-                    <Input
-                      id="max_guests"
-                      type="number"
-                      min="1"
-                      value={formData.max_guests}
-                      onChange={(e) => setFormData(prev => ({ ...prev, max_guests: parseInt(e.target.value) || 1 }))}
-                      required
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="base_price">Base Price (₹) *</Label>
-                    <Input
-                      id="base_price"
-                      type="number"
-                      min="0"
-                      step="0.01"
-                      value={formData.base_price}
-                      onChange={(e) => setFormData(prev => ({ ...prev, base_price: parseFloat(e.target.value) || 0 }))}
-                      required
-                    />
-                  </div>
+                <div>
+                  <Label htmlFor="hero_image">Hero Image URL</Label>
+                  <Input
+                    id="hero_image"
+                    value={formData.hero_image}
+                    onChange={(e) => setFormData({...formData, hero_image: e.target.value})}
+                    placeholder="https://example.com/image.jpg"
+                  />
                 </div>
+              </div>
 
-                <div className="space-y-2">
-                  <Label>Gallery Images</Label>
-                  {formData.gallery.map((url, index) => (
-                    <div key={index} className="flex gap-2">
-                      <Input
-                        value={url}
-                        onChange={(e) => updateGalleryImage(index, e.target.value)}
-                        placeholder="https://example.com/image.jpg"
+              <div>
+                <Label htmlFor="description">Description</Label>
+                <Textarea
+                  id="description"
+                  value={formData.description}
+                  onChange={(e) => setFormData({...formData, description: e.target.value})}
+                  placeholder="Describe the room..."
+                  rows={3}
+                />
+              </div>
+
+              <div>
+                <Label>Features</Label>
+                <div className="grid grid-cols-3 gap-2 mt-2">
+                  {ROOM_FEATURES.map((feature) => (
+                    <div key={feature} className="flex items-center space-x-2">
+                      <Checkbox
+                        id={feature}
+                        checked={formData.features.includes(feature)}
+                        onCheckedChange={(checked) => {
+                          if (checked) {
+                            setFormData({...formData, features: [...formData.features, feature]});
+                          } else {
+                            setFormData({...formData, features: formData.features.filter(f => f !== feature)});
+                          }
+                        }}
                       />
-                      <Button
-                        type="button"
-                        variant="outline"
-                        onClick={() => removeGalleryImage(index)}
-                        disabled={formData.gallery.length === 1}
-                      >
-                        Remove
-                      </Button>
+                      <Label htmlFor={feature} className="text-sm">{feature}</Label>
                     </div>
                   ))}
-                  <Button type="button" variant="outline" onClick={addGalleryImage}>
-                    Add Image
-                  </Button>
                 </div>
+              </div>
 
-                <div className="space-y-2">
-                  <Label>Features</Label>
-                  <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                    {ROOM_FEATURES.map((feature) => (
-                      <div key={feature} className="flex items-center space-x-2">
-                        <Checkbox
-                          id={feature}
-                          checked={formData.features.includes(feature)}
-                          onCheckedChange={(checked) => handleFeatureChange(feature, checked as boolean)}
-                        />
-                        <Label htmlFor={feature} className="text-sm">{feature}</Label>
-                      </div>
-                    ))}
+              <div>
+                <Label>Gallery Images</Label>
+                {formData.gallery.map((url, index) => (
+                  <div key={index} className="flex items-center gap-2 mt-2">
+                    <Input
+                      value={url}
+                      onChange={(e) => {
+                        const newGallery = [...formData.gallery];
+                        newGallery[index] = e.target.value;
+                        setFormData({...formData, gallery: newGallery});
+                      }}
+                      placeholder="https://example.com/gallery-image.jpg"
+                    />
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        if (formData.gallery.length > 1) {
+                          setFormData({
+                            ...formData,
+                            gallery: formData.gallery.filter((_, i) => i !== index)
+                          });
+                        }
+                      }}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
                   </div>
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="description">Description</Label>
-                  <Textarea
-                    id="description"
-                    value={formData.description}
-                    onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
-                    placeholder="Detailed room description..."
-                    rows={4}
-                  />
-                </div>
-
-                <div className="flex items-center space-x-2">
-                  <Switch
-                    id="is_published"
-                    checked={formData.is_published}
-                    onCheckedChange={(checked) => setFormData(prev => ({ ...prev, is_published: checked }))}
-                  />
-                  <Label htmlFor="is_published">Publish room</Label>
-                </div>
-
-                <div className="flex justify-end space-x-2">
-                  <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>
-                    Cancel
-                  </Button>
-                  <Button type="submit" disabled={loading}>
-                    {loading ? 'Saving...' : (editingRoom ? 'Update Room' : 'Create Room')}
-                  </Button>
-                </div>
-              </form>
-            </DialogContent>
-          </Dialog>
-          )}
-
-        </div>
-
-        {/* Unit Form Section */}
-        {activeTab === 'units' && showUnitForm && (
-          <Card className="mb-6">
-            <CardHeader>
-              <div className="flex items-center justify-between">
-                <CardTitle>
-                  {editingUnit ? "Edit Room Unit" : "Add New Room Unit"}
-                </CardTitle>
-                <Button 
-                  variant="outline" 
+                ))}
+                <Button
+                  type="button"
+                  variant="outline"
                   size="sm"
+                  onClick={() => setFormData({...formData, gallery: [...formData.gallery, '']})}
+                  className="mt-2"
+                >
+                  <Plus className="h-4 w-4 mr-2" />
+                  Add Image
+                </Button>
+              </div>
+
+              <div className="flex items-center space-x-2">
+                <Switch
+                  id="is_published"
+                  checked={formData.is_published}
+                  onCheckedChange={(checked) => setFormData(prev => ({ ...prev, is_published: checked }))}
+                />
+                <Label htmlFor="is_published">Publish room</Label>
+              </div>
+
+              <div className="flex justify-end space-x-2">
+                <Button 
+                  type="button" 
+                  variant="outline" 
+                  onClick={() => {
+                    setShowRoomForm(false);
+                    setEditingRoom(null);
+                  }}
+                >
+                  Cancel
+                </Button>
+                <Button type="submit" disabled={loading}>
+                  {loading ? 'Saving...' : (editingRoom ? 'Update Room' : 'Create Room')}
+                </Button>
+              </div>
+            </form>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Unit Form Section */}
+      {activeTab === 'units' && showUnitForm && (
+        <Card className="mb-6">
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <CardTitle>
+                {editingUnit ? "Edit Room Unit" : "Add New Room Unit"}
+              </CardTitle>
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={() => {
+                  setShowUnitForm(false);
+                  setEditingUnit(null);
+                  resetUnitForm();
+                }}
+              >
+                Cancel
+              </Button>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <form onSubmit={handleUnitSubmit} className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="room_type_id">Room Type *</Label>
+                  <Select 
+                    value={unitFormData.room_type_id} 
+                    onValueChange={(value) => setUnitFormData({...unitFormData, room_type_id: value})}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select room type" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {rooms.map((room) => (
+                        <SelectItem key={room.id} value={room.id}>
+                          {room.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label htmlFor="unit_number">Unit Number *</Label>
+                  <Input
+                    id="unit_number"
+                    value={unitFormData.unit_number}
+                    onChange={(e) => setUnitFormData({...unitFormData, unit_number: e.target.value})}
+                    placeholder="e.g., 101, A1, etc."
+                    required
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="unit_name">Unit Name</Label>
+                  <Input
+                    id="unit_name"
+                    value={unitFormData.unit_name}
+                    onChange={(e) => setUnitFormData({...unitFormData, unit_name: e.target.value})}
+                    placeholder="e.g., Garden View Suite"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="status">Status</Label>
+                  <Select 
+                    value={unitFormData.status} 
+                    onValueChange={(value) => setUnitFormData({...unitFormData, status: value})}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="available">Available</SelectItem>
+                      <SelectItem value="maintenance">Maintenance</SelectItem>
+                      <SelectItem value="out_of_order">Out of Order</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="floor_number">Floor</Label>
+                  <Select 
+                    value={unitFormData.floor_number} 
+                    onValueChange={(value) => setUnitFormData({...unitFormData, floor_number: value})}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select floor" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="basement">Basement</SelectItem>
+                      <SelectItem value="ground">Ground</SelectItem>
+                      <SelectItem value="1st">1st Floor</SelectItem>
+                      <SelectItem value="2nd">2nd Floor</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label htmlFor="area_sqft">Area (sq ft)</Label>
+                  <Input
+                    id="area_sqft"
+                    type="number"
+                    step="0.01"
+                    value={unitFormData.area_sqft}
+                    onChange={(e) => setUnitFormData({...unitFormData, area_sqft: e.target.value})}
+                    placeholder="350"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <Label htmlFor="special_features">Special Features</Label>
+                <Input
+                  id="special_features"
+                  value={unitFormData.special_features}
+                  onChange={(e) => setUnitFormData({...unitFormData, special_features: e.target.value})}
+                  placeholder="Balcony, Garden View, Premium Location (comma separated)"
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="notes">Notes</Label>
+                <Textarea
+                  id="notes"
+                  value={unitFormData.notes}
+                  onChange={(e) => setUnitFormData({...unitFormData, notes: e.target.value})}
+                  placeholder="Any special notes about this unit..."
+                />
+              </div>
+
+              <BedConfiguration 
+                onConfigChange={(occupancy, configs) => {
+                  setUnitMaxOccupancy(occupancy);
+                  setUnitBedConfigs(configs);
+                }}
+                initialConfig={unitBedConfigs}
+              />
+
+              <div className="flex justify-end gap-2 pt-4">
+                <Button 
+                  type="button" 
+                  variant="outline" 
                   onClick={() => {
                     setShowUnitForm(false);
                     setEditingUnit(null);
@@ -726,156 +878,78 @@ export default function RoomManagement() {
                 >
                   Cancel
                 </Button>
+                <Button type="submit">
+                  {editingUnit ? "Update Unit" : "Create Unit"}
+                </Button>
               </div>
-            </CardHeader>
-            <CardContent>
-              <form onSubmit={handleUnitSubmit} className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <Label htmlFor="room_type_id">Room Type *</Label>
-                    <Select 
-                      value={unitFormData.room_type_id} 
-                      onValueChange={(value) => setUnitFormData({...unitFormData, room_type_id: value})}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select room type" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {rooms.map((room) => (
-                          <SelectItem key={room.id} value={room.id}>
-                            {room.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div>
-                    <Label htmlFor="unit_number">Unit Number *</Label>
-                    <Input
-                      id="unit_number"
-                      value={unitFormData.unit_number}
-                      onChange={(e) => setUnitFormData({...unitFormData, unit_number: e.target.value})}
-                      placeholder="e.g., 101, A1, etc."
-                      required
-                    />
-                  </div>
-                </div>
+            </form>
+          </CardContent>
+        </Card>
+      )}
 
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <Label htmlFor="unit_name">Unit Name</Label>
-                    <Input
-                      id="unit_name"
-                      value={unitFormData.unit_name}
-                      onChange={(e) => setUnitFormData({...unitFormData, unit_name: e.target.value})}
-                      placeholder="e.g., Garden View Suite"
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="status">Status</Label>
-                    <Select 
-                      value={unitFormData.status} 
-                      onValueChange={(value) => setUnitFormData({...unitFormData, status: value})}
-                    >
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="available">Available</SelectItem>
-                        <SelectItem value="maintenance">Maintenance</SelectItem>
-                        <SelectItem value="out_of_order">Out of Order</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <Label htmlFor="floor_number">Floor</Label>
-                    <Select 
-                      value={unitFormData.floor_number} 
-                      onValueChange={(value) => setUnitFormData({...unitFormData, floor_number: value})}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select floor" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="basement">Basement</SelectItem>
-                        <SelectItem value="ground">Ground</SelectItem>
-                        <SelectItem value="1st">1st Floor</SelectItem>
-                        <SelectItem value="2nd">2nd Floor</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div>
-                    <Label htmlFor="area_sqft">Area (sq ft)</Label>
-                    <Input
-                      id="area_sqft"
-                      type="number"
-                      step="0.01"
-                      value={unitFormData.area_sqft}
-                      onChange={(e) => setUnitFormData({...unitFormData, area_sqft: e.target.value})}
-                      placeholder="350"
-                    />
-                  </div>
-                </div>
-
+      {/* Bulk Form Section */}
+      {activeTab === 'units' && showBulkForm && (
+        <Card className="mb-6">
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <CardTitle>Bulk Add Room Units</CardTitle>
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={() => setShowBulkForm(false)}
+              >
+                Cancel
+              </Button>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              <div className="grid grid-cols-3 gap-4">
                 <div>
-                  <Label htmlFor="special_features">Special Features</Label>
+                  <Label>Unit Prefix</Label>
                   <Input
-                    id="special_features"
-                    value={unitFormData.special_features}
-                    onChange={(e) => setUnitFormData({...unitFormData, special_features: e.target.value})}
-                    placeholder="Balcony, Garden View, Premium Location (comma separated)"
+                    value={bulkData.prefix}
+                    onChange={(e) => setBulkData({...bulkData, prefix: e.target.value})}
+                    placeholder="A, B, etc."
                   />
                 </div>
-
                 <div>
-                  <Label htmlFor="notes">Notes</Label>
-                  <Textarea
-                    id="notes"
-                    value={unitFormData.notes}
-                    onChange={(e) => setUnitFormData({...unitFormData, notes: e.target.value})}
-                    placeholder="Any special notes about this unit..."
+                  <Label>Start Number</Label>
+                  <Input
+                    type="number"
+                    value={bulkData.startNumber}
+                    onChange={(e) => setBulkData({...bulkData, startNumber: parseInt(e.target.value)})}
                   />
                 </div>
-
-                <BedConfiguration 
-                  onConfigChange={(occupancy, configs) => {
-                    setUnitMaxOccupancy(occupancy);
-                    setUnitBedConfigs(configs);
-                  }}
-                  initialConfig={unitBedConfigs}
-                />
-
-                <div className="flex justify-end gap-2 pt-4">
-                  <Button 
-                    type="button" 
-                    variant="outline" 
-                    onClick={() => {
-                      setShowUnitForm(false);
-                      setEditingUnit(null);
-                      resetUnitForm();
-                    }}
-                  >
-                    Cancel
-                  </Button>
-                  <Button type="submit">
-                    {editingUnit ? "Update Unit" : "Create Unit"}
-                  </Button>
+                <div>
+                  <Label>End Number</Label>
+                  <Input
+                    type="number"
+                    value={bulkData.endNumber}
+                    onChange={(e) => setBulkData({...bulkData, endNumber: parseInt(e.target.value)})}
+                  />
                 </div>
-              </form>
-            </CardContent>
-          </Card>
-        )}
+              </div>
 
-        <BulkUnitsDialog
-          isOpen={isBulkDialogOpen}
-          onOpenChange={setIsBulkDialogOpen}
-          roomTypeId=""
-          onUnitsAdded={loadUnits}
-        />
-      </div>
+              <BedConfiguration 
+                onConfigChange={(occupancy, configs) => {
+                  setBulkMaxOccupancy(occupancy);
+                  setBulkBedConfigs(configs);
+                }}
+              />
+
+              <div className="flex justify-end gap-2">
+                <Button variant="outline" onClick={() => setShowBulkForm(false)}>
+                  Cancel
+                </Button>
+                <Button>
+                  Create {bulkData.endNumber - bulkData.startNumber + 1} Units
+                </Button>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as 'rooms' | 'units')}>
         <div className="flex justify-between items-center mb-6">
@@ -926,7 +1000,7 @@ export default function RoomManagement() {
               </Button>
               <Button 
                 variant="outline" 
-                onClick={() => setIsBulkDialogOpen(true)}
+                onClick={() => setShowBulkForm(true)}
                 className="flex items-center gap-2"
               >
                 <Upload className="h-4 w-4" />
@@ -1101,6 +1175,22 @@ export default function RoomManagement() {
               </Table>
             </div>
           )}
+          
+          {filteredRooms.length === 0 && !showRoomForm && (
+            <Card className="py-12">
+              <CardContent className="text-center">
+                <Home className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+                <h3 className="text-lg font-medium mb-2">No room types found</h3>
+                <p className="text-muted-foreground mb-4">
+                  Start by creating your first room type.
+                </p>
+                <Button onClick={resetRoomForm}>
+                  <Plus className="h-4 w-4 mr-2" />
+                  Add First Room Type
+                </Button>
+              </CardContent>
+            </Card>
+          )}
         </TabsContent>
 
         <TabsContent value="units">
@@ -1261,7 +1351,7 @@ export default function RoomManagement() {
             </div>
           )}
 
-          {filteredUnits.length === 0 && (
+          {filteredUnits.length === 0 && !showUnitForm && !showBulkForm && (
             <Card className="py-12">
               <CardContent className="text-center">
                 <Home className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
@@ -1269,10 +1359,16 @@ export default function RoomManagement() {
                 <p className="text-muted-foreground mb-4">
                   Start by adding some room units.
                 </p>
-                <Button onClick={() => {resetUnitForm(); setShowUnitForm(true);}}>
-                  <Plus className="h-4 w-4 mr-2" />
-                  Add First Unit
-                </Button>
+                <div className="flex gap-2 justify-center">
+                  <Button onClick={() => {resetUnitForm(); setShowUnitForm(true);}}>
+                    <Plus className="h-4 w-4 mr-2" />
+                    Add First Unit
+                  </Button>
+                  <Button variant="outline" onClick={() => setShowBulkForm(true)}>
+                    <Upload className="h-4 w-4 mr-2" />
+                    Bulk Add Units
+                  </Button>
+                </div>
               </CardContent>
             </Card>
           )}
