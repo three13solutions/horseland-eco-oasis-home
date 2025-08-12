@@ -7,7 +7,10 @@ import { Slider } from '@/components/ui/slider';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { CalendarDays, User, CreditCard, MapPin, Phone, Mail } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
+import { useToast } from '@/hooks/use-toast';
 
 interface RoomUnit {
   id: string;
@@ -35,17 +38,21 @@ interface Booking {
 interface RoomAvailabilityGridProps {
   roomUnits: RoomUnit[];
   bookings: Booking[];
+  onBookingUpdate?: () => void; // Callback to refresh bookings after update
 }
 
 type TimeframeOption = 'week' | 'nextweek' | '14days' | '30days';
 
 export const RoomAvailabilityGrid: React.FC<RoomAvailabilityGridProps> = ({
   roomUnits,
-  bookings
+  bookings,
+  onBookingUpdate
 }) => {
   const [selectedTimeframe, setSelectedTimeframe] = useState<TimeframeOption>('14days');
   const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null);
   const [timelinePosition, setTimelinePosition] = useState<number>(0); // Days offset from today
+  const [updatingPayment, setUpdatingPayment] = useState(false);
+  const { toast } = useToast();
 
   // Generate date range based on timeframe and timeline position
   const dateRange = useMemo(() => {
@@ -166,6 +173,38 @@ export const RoomAvailabilityGrid: React.FC<RoomAvailabilityGridProps> = ({
         return 'text-red-600';
       default:
         return 'text-gray-600';
+    }
+  };
+
+  const updatePaymentStatus = async (bookingId: string, newStatus: string) => {
+    setUpdatingPayment(true);
+    try {
+      const { error } = await supabase
+        .from('bookings')
+        .update({ payment_status: newStatus })
+        .eq('id', bookingId);
+
+      if (error) throw error;
+
+      toast({
+        title: "Payment Status Updated",
+        description: `Payment status updated to ${newStatus}`,
+      });
+
+      // Close dialog and refresh data
+      setSelectedBooking(null);
+      if (onBookingUpdate) {
+        onBookingUpdate();
+      }
+    } catch (error: any) {
+      console.error('Error updating payment status:', error);
+      toast({
+        title: "Error",
+        description: "Failed to update payment status",
+        variant: "destructive",
+      });
+    } finally {
+      setUpdatingPayment(false);
     }
   };
 
@@ -412,11 +451,27 @@ export const RoomAvailabilityGrid: React.FC<RoomAvailabilityGridProps> = ({
                     </div>
                     <div className="flex items-center gap-2">
                       <CreditCard className="h-4 w-4 text-muted-foreground" />
-                      <div>
+                      <div className="flex-1">
                         <Label className="text-sm font-medium">Payment Status</Label>
-                        <Badge variant={selectedBooking.payment_status === 'confirmed' ? 'default' : 'secondary'}>
-                          {selectedBooking.payment_status}
-                        </Badge>
+                        <div className="flex items-center gap-2 mt-1">
+                          <Badge variant={selectedBooking.payment_status === 'confirmed' ? 'default' : 'secondary'}>
+                            {selectedBooking.payment_status}
+                          </Badge>
+                          <Select 
+                            defaultValue={selectedBooking.payment_status} 
+                            onValueChange={(value) => updatePaymentStatus(selectedBooking.id, value)}
+                            disabled={updatingPayment}
+                          >
+                            <SelectTrigger className="w-32 h-8">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="pending">Pending</SelectItem>
+                              <SelectItem value="confirmed">Confirmed</SelectItem>
+                              <SelectItem value="cancelled">Cancelled</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -428,15 +483,22 @@ export const RoomAvailabilityGrid: React.FC<RoomAvailabilityGridProps> = ({
                   </div>
                 )}
                 <div className="flex gap-3 pt-4 border-t">
-                  <Button variant="outline" size="sm">
-                    Edit Booking
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={() => setSelectedBooking(null)}
+                  >
+                    Close
                   </Button>
-                  <Button variant="outline" size="sm">
-                    Reassign Room
-                  </Button>
-                  <Button variant="destructive" size="sm">
-                    Cancel Booking
-                  </Button>
+                  {selectedBooking.payment_status === 'pending' && (
+                    <Button 
+                      size="sm"
+                      onClick={() => updatePaymentStatus(selectedBooking.id, 'confirmed')}
+                      disabled={updatingPayment}
+                    >
+                      {updatingPayment ? 'Updating...' : 'Mark as Paid'}
+                    </Button>
+                  )}
                 </div>
               </div>
             </DialogContent>

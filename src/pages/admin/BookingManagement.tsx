@@ -1215,7 +1215,7 @@ export default function BookingManagement() {
         {/* Room Availability Tab */}
         <TabsContent value="availability" className="space-y-4">
           {/* Gantt-style Availability Grid */}
-          <RoomAvailabilityGrid roomUnits={roomUnits} bookings={bookings} />
+          <RoomAvailabilityGrid roomUnits={roomUnits} bookings={bookings} onBookingUpdate={loadBookings} />
         </TabsContent>
       </Tabs>
 
