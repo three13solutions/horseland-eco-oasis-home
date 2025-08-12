@@ -37,6 +37,7 @@ interface Booking {
   selected_meals?: any[];
   selected_activities?: any[];
   selected_spa_services?: any[];
+  selected_bedding?: any[];
   room_units?: {
     unit_number: string;
     unit_name?: string;
@@ -46,6 +47,7 @@ interface Booking {
   };
   room_types?: {
     name: string;
+    max_guests?: number;
   };
   packages?: {
     title: string;
@@ -109,6 +111,7 @@ export default function BookingManagement() {
     selected_meals: [] as any[],
     selected_activities: [] as any[],
     selected_spa_services: [] as any[],
+    selected_bedding: [] as any[],
   });
 
   // Available services for addon selection
@@ -438,7 +441,8 @@ export default function BookingManagement() {
     const hasAddons = 
       (booking.selected_meals && booking.selected_meals.length > 0) ||
       (booking.selected_activities && booking.selected_activities.length > 0) ||
-      (booking.selected_spa_services && booking.selected_spa_services.length > 0);
+      (booking.selected_spa_services && booking.selected_spa_services.length > 0) ||
+      (booking.selected_bedding && booking.selected_bedding.length > 0);
 
     if (!hasAddons) return null;
 
@@ -470,6 +474,16 @@ export default function BookingManagement() {
             <span className="text-muted-foreground ml-1">
               {booking.selected_spa_services.map((spa: any) => 
                 `${spa.name} (${spa.quantity})`
+              ).join(', ')}
+            </span>
+          </div>
+        )}
+        {booking.selected_bedding && booking.selected_bedding.length > 0 && (
+          <div className="text-xs">
+            <span className="font-medium text-blue-600">🛏️ Extra Bedding:</span>
+            <span className="text-muted-foreground ml-1">
+              {booking.selected_bedding.map((bedding: any) => 
+                `${bedding.name} (${bedding.quantity})`
               ).join(', ')}
             </span>
           </div>
@@ -585,7 +599,55 @@ export default function BookingManagement() {
     const mealsTotal = createFormData.selected_meals.reduce((sum, meal) => sum + (meal.price * meal.quantity), 0);
     const activitiesTotal = createFormData.selected_activities.reduce((sum, activity) => sum + (activity.price * activity.quantity), 0);
     const spaTotal = createFormData.selected_spa_services.reduce((sum, spa) => sum + (spa.price * spa.quantity), 0);
-    return mealsTotal + activitiesTotal + spaTotal;
+    const beddingTotal = createFormData.selected_bedding.reduce((sum, bedding) => sum + (bedding.price * bedding.quantity), 0);
+    return mealsTotal + activitiesTotal + spaTotal + beddingTotal;
+  };
+
+  // Calculate fixed bed capacity for a room type
+  const getFixedBedCapacity = (roomTypeId: string) => {
+    const roomType = roomTypes.find(rt => rt.id === roomTypeId);
+    if (!roomType) return 2; // Default capacity
+    
+    // If room type has max_guests, use that as fixed capacity
+    // In a real scenario, you'd calculate from bed_configuration
+    return roomType.max_guests || 2;
+  };
+
+  // Get available bedding options
+  const getBeddingOptions = () => [
+    { id: 'floor_mattress', name: 'Floor Mattress', price: 500, description: 'Comfortable floor mattress with bedding' },
+    { id: 'roll_on_bed', name: 'Roll-on Bed', price: 800, description: 'Portable roll-on bed with mattress' },
+  ];
+
+  // Add bedding to booking
+  const addBeddingToBooking = (bedding: any) => {
+    const existingIndex = createFormData.selected_bedding.findIndex(b => b.id === bedding.id);
+    
+    if (existingIndex >= 0) {
+      // Update quantity if already exists
+      const updated = [...createFormData.selected_bedding];
+      updated[existingIndex].quantity += 1;
+      setCreateFormData(prev => ({ ...prev, selected_bedding: updated }));
+    } else {
+      // Add new bedding with quantity 1
+      setCreateFormData(prev => ({
+        ...prev,
+        selected_bedding: [...prev.selected_bedding, { ...bedding, quantity: 1 }]
+      }));
+    }
+  };
+
+  // Update bedding quantity
+  const updateBeddingQuantity = (index: number, quantity: number) => {
+    const updated = [...createFormData.selected_bedding];
+    updated[index].quantity = Math.max(1, quantity);
+    setCreateFormData(prev => ({ ...prev, selected_bedding: updated }));
+  };
+
+  // Remove bedding from booking
+  const removeBeddingFromBooking = (index: number) => {
+    const updated = createFormData.selected_bedding.filter((_, i) => i !== index);
+    setCreateFormData(prev => ({ ...prev, selected_bedding: updated }));
   };
 
   const resetCreateForm = () => {
@@ -603,6 +665,7 @@ export default function BookingManagement() {
       selected_meals: [],
       selected_activities: [],
       selected_spa_services: [],
+      selected_bedding: [],
     });
   };
 
@@ -637,6 +700,7 @@ export default function BookingManagement() {
         selected_meals: createFormData.selected_meals,
         selected_activities: createFormData.selected_activities,
         selected_spa_services: createFormData.selected_spa_services,
+        selected_bedding: createFormData.selected_bedding,
       };
 
       const { data: newBooking, error } = await supabase
@@ -1098,6 +1162,22 @@ export default function BookingManagement() {
                                     {format(parseISO(booking.created_at), 'MMMM dd, yyyy at h:mm a')}
                                   </p>
                                 </div>
+
+                                {/* Addon Services */}
+                                {renderAddons(booking) && (
+                                  <div>
+                                    <Label className="text-sm font-medium">Add-on Services</Label>
+                                    {renderAddons(booking)}
+                                  </div>
+                                )}
+
+                                {/* Package Details */}
+                                {renderPackageDetails(booking) && (
+                                  <div>
+                                    <Label className="text-sm font-medium">Package Details</Label>
+                                    {renderPackageDetails(booking)}
+                                  </div>
+                                )}
                               </div>
                             </DialogContent>
                           </Dialog>
@@ -1479,6 +1559,60 @@ export default function BookingManagement() {
                   </SelectContent>
                 </Select>
               </div>
+
+              {/* Optional Bedding - only show when guests exceed room capacity */}
+              {createFormData.room_type_id && createFormData.guests_count > getFixedBedCapacity(createFormData.room_type_id) && (
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2">
+                    <Label className="text-sm font-medium text-blue-600">🛏️ Extra Bedding</Label>
+                    <Badge variant="secondary" className="text-xs">
+                      {createFormData.guests_count - getFixedBedCapacity(createFormData.room_type_id)} extra bed(s) needed
+                    </Badge>
+                  </div>
+                  <div className="text-xs text-muted-foreground mb-2">
+                    Room capacity: {getFixedBedCapacity(createFormData.room_type_id)} guests | Booking for: {createFormData.guests_count} guests
+                  </div>
+                  {createFormData.selected_bedding.length > 0 && (
+                    <div className="space-y-2 mb-3">
+                      {createFormData.selected_bedding.map((bedding, index) => (
+                        <div key={index} className="flex items-center gap-2 p-2 bg-blue-50 rounded-md">
+                          <span className="flex-1 text-sm">{bedding.name}</span>
+                          <Input
+                            type="number"
+                            min="1"
+                            value={bedding.quantity}
+                            onChange={(e) => updateBeddingQuantity(index, parseInt(e.target.value) || 1)}
+                            className="w-16 h-8"
+                          />
+                          <span className="text-sm">₹{(bedding.price * bedding.quantity).toLocaleString()}</span>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => removeBeddingFromBooking(index)}
+                          >
+                            ×
+                          </Button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                  <Select onValueChange={(value) => {
+                    const bedding = getBeddingOptions().find(b => b.id === value);
+                    if (bedding) addBeddingToBooking(bedding);
+                  }}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Add extra bedding" />
+                    </SelectTrigger>
+                    <SelectContent className="bg-white z-50">
+                      {getBeddingOptions().map((bedding) => (
+                        <SelectItem key={bedding.id} value={bedding.id}>
+                          {bedding.name} - ₹{bedding.price} ({bedding.description})
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
 
               {/* Addon Total */}
               {calculateAddonTotal() > 0 && (
