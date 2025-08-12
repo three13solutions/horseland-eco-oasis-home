@@ -225,6 +225,7 @@ export type Database = {
           check_out: string
           created_at: string
           guest_email: string | null
+          guest_id: string | null
           guest_name: string
           guest_phone: string | null
           guests_count: number
@@ -247,6 +248,7 @@ export type Database = {
           check_out: string
           created_at?: string
           guest_email?: string | null
+          guest_id?: string | null
           guest_name: string
           guest_phone?: string | null
           guests_count?: number
@@ -269,6 +271,7 @@ export type Database = {
           check_out?: string
           created_at?: string
           guest_email?: string | null
+          guest_id?: string | null
           guest_name?: string
           guest_phone?: string | null
           guests_count?: number
@@ -286,6 +289,13 @@ export type Database = {
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "bookings_guest_id_fkey"
+            columns: ["guest_id"]
+            isOneToOne: false
+            referencedRelation: "guests"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "bookings_package_id_fkey"
             columns: ["package_id"]
@@ -518,6 +528,129 @@ export type Database = {
           },
         ]
       }
+      guest_credit_notes: {
+        Row: {
+          amount: number
+          created_at: string
+          created_by: string | null
+          expires_at: string
+          guest_id: string
+          id: string
+          is_redeemed: boolean
+          original_booking_id: string | null
+          reason: string
+          redeemed_amount: number | null
+          redeemed_at: string | null
+          redeemed_booking_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          created_by?: string | null
+          expires_at: string
+          guest_id: string
+          id?: string
+          is_redeemed?: boolean
+          original_booking_id?: string | null
+          reason: string
+          redeemed_amount?: number | null
+          redeemed_at?: string | null
+          redeemed_booking_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          created_by?: string | null
+          expires_at?: string
+          guest_id?: string
+          id?: string
+          is_redeemed?: boolean
+          original_booking_id?: string | null
+          reason?: string
+          redeemed_amount?: number | null
+          redeemed_at?: string | null
+          redeemed_booking_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "guest_credit_notes_guest_id_fkey"
+            columns: ["guest_id"]
+            isOneToOne: false
+            referencedRelation: "guests"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "guest_credit_notes_original_booking_id_fkey"
+            columns: ["original_booking_id"]
+            isOneToOne: false
+            referencedRelation: "bookings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "guest_credit_notes_redeemed_booking_id_fkey"
+            columns: ["redeemed_booking_id"]
+            isOneToOne: false
+            referencedRelation: "bookings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      guest_identity_documents: {
+        Row: {
+          created_at: string
+          document_image_url: string | null
+          document_number: string
+          document_type: string
+          expiry_date: string | null
+          guest_id: string
+          id: string
+          is_verified: boolean
+          notes: string | null
+          updated_at: string
+          verified_at: string | null
+          verified_by: string | null
+        }
+        Insert: {
+          created_at?: string
+          document_image_url?: string | null
+          document_number: string
+          document_type: string
+          expiry_date?: string | null
+          guest_id: string
+          id?: string
+          is_verified?: boolean
+          notes?: string | null
+          updated_at?: string
+          verified_at?: string | null
+          verified_by?: string | null
+        }
+        Update: {
+          created_at?: string
+          document_image_url?: string | null
+          document_number?: string
+          document_type?: string
+          expiry_date?: string | null
+          guest_id?: string
+          id?: string
+          is_verified?: boolean
+          notes?: string | null
+          updated_at?: string
+          verified_at?: string | null
+          verified_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "guest_identity_documents_guest_id_fkey"
+            columns: ["guest_id"]
+            isOneToOne: false
+            referencedRelation: "guests"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       guest_reviews: {
         Row: {
           created_at: string
@@ -550,6 +683,60 @@ export type Database = {
           rating?: number
           review_content?: string
           stay_date?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      guests: {
+        Row: {
+          address: string | null
+          blacklist_reason: string | null
+          created_at: string
+          date_of_birth: string | null
+          email: string | null
+          emergency_contact_name: string | null
+          emergency_contact_phone: string | null
+          first_name: string
+          id: string
+          is_blacklisted: boolean
+          last_name: string
+          nationality: string | null
+          phone: string | null
+          special_requirements: string | null
+          updated_at: string
+        }
+        Insert: {
+          address?: string | null
+          blacklist_reason?: string | null
+          created_at?: string
+          date_of_birth?: string | null
+          email?: string | null
+          emergency_contact_name?: string | null
+          emergency_contact_phone?: string | null
+          first_name: string
+          id?: string
+          is_blacklisted?: boolean
+          last_name: string
+          nationality?: string | null
+          phone?: string | null
+          special_requirements?: string | null
+          updated_at?: string
+        }
+        Update: {
+          address?: string | null
+          blacklist_reason?: string | null
+          created_at?: string
+          date_of_birth?: string | null
+          email?: string | null
+          emergency_contact_name?: string | null
+          emergency_contact_phone?: string | null
+          first_name?: string
+          id?: string
+          is_blacklisted?: boolean
+          last_name?: string
+          nationality?: string | null
+          phone?: string | null
+          special_requirements?: string | null
           updated_at?: string
         }
         Relationships: []
@@ -956,6 +1143,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      calculate_credit_expiry: {
+        Args: { original_booking_date: string }
+        Returns: string
+      }
       check_room_availability: {
         Args: {
           p_room_type_id: string
@@ -970,6 +1161,10 @@ export type Database = {
       get_current_user_role: {
         Args: Record<PropertyKey, never>
         Returns: string
+      }
+      get_guest_available_credit: {
+        Args: { p_guest_id: string }
+        Returns: number
       }
       is_admin: {
         Args: Record<PropertyKey, never>
