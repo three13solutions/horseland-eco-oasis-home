@@ -234,6 +234,10 @@ export type Database = {
           payment_status: string
           room_type_id: string | null
           room_unit_id: string | null
+          selected_activities: Json | null
+          selected_bedding: Json | null
+          selected_meals: Json | null
+          selected_spa_services: Json | null
           total_amount: number
           updated_at: string
         }
@@ -252,6 +256,10 @@ export type Database = {
           payment_status?: string
           room_type_id?: string | null
           room_unit_id?: string | null
+          selected_activities?: Json | null
+          selected_bedding?: Json | null
+          selected_meals?: Json | null
+          selected_spa_services?: Json | null
           total_amount?: number
           updated_at?: string
         }
@@ -270,6 +278,10 @@ export type Database = {
           payment_status?: string
           room_type_id?: string | null
           room_unit_id?: string | null
+          selected_activities?: Json | null
+          selected_bedding?: Json | null
+          selected_meals?: Json | null
+          selected_spa_services?: Json | null
           total_amount?: number
           updated_at?: string
         }
@@ -542,6 +554,54 @@ export type Database = {
         }
         Relationships: []
       }
+      meals: {
+        Row: {
+          availability_end: string
+          availability_start: string
+          created_at: string
+          description: string | null
+          featured_media: string | null
+          id: string
+          is_active: boolean
+          meal_type: string
+          media_urls: Json | null
+          price: number
+          title: string
+          updated_at: string
+          variant: string
+        }
+        Insert: {
+          availability_end?: string
+          availability_start?: string
+          created_at?: string
+          description?: string | null
+          featured_media?: string | null
+          id?: string
+          is_active?: boolean
+          meal_type: string
+          media_urls?: Json | null
+          price?: number
+          title: string
+          updated_at?: string
+          variant: string
+        }
+        Update: {
+          availability_end?: string
+          availability_start?: string
+          created_at?: string
+          description?: string | null
+          featured_media?: string | null
+          id?: string
+          is_active?: boolean
+          meal_type?: string
+          media_urls?: Json | null
+          price?: number
+          title?: string
+          updated_at?: string
+          variant?: string
+        }
+        Relationships: []
+      }
       navigation_items: {
         Row: {
           created_at: string
@@ -586,13 +646,20 @@ export type Database = {
       packages: {
         Row: {
           banner_image: string | null
+          components: Json | null
           created_at: string
           cta_text: string | null
+          description: string | null
+          duration_days: number | null
           faqs: Json | null
+          featured_image: string | null
+          gallery: Json | null
           id: string
           inclusions: Json | null
           is_active: boolean
           is_featured: boolean
+          markup_percentage: number | null
+          max_guests: number | null
           package_type: string
           subtitle: string | null
           title: string
@@ -602,13 +669,20 @@ export type Database = {
         }
         Insert: {
           banner_image?: string | null
+          components?: Json | null
           created_at?: string
           cta_text?: string | null
+          description?: string | null
+          duration_days?: number | null
           faqs?: Json | null
+          featured_image?: string | null
+          gallery?: Json | null
           id?: string
           inclusions?: Json | null
           is_active?: boolean
           is_featured?: boolean
+          markup_percentage?: number | null
+          max_guests?: number | null
           package_type: string
           subtitle?: string | null
           title: string
@@ -618,13 +692,20 @@ export type Database = {
         }
         Update: {
           banner_image?: string | null
+          components?: Json | null
           created_at?: string
           cta_text?: string | null
+          description?: string | null
+          duration_days?: number | null
           faqs?: Json | null
+          featured_image?: string | null
+          gallery?: Json | null
           id?: string
           inclusions?: Json | null
           is_active?: boolean
           is_featured?: boolean
+          markup_percentage?: number | null
+          max_guests?: number | null
           package_type?: string
           subtitle?: string | null
           title?: string
@@ -685,10 +766,12 @@ export type Database = {
       room_units: {
         Row: {
           area_sqft: number | null
+          bed_configuration: Json | null
           created_at: string
           floor_number: number | null
           id: string
           is_active: boolean
+          max_occupancy: number | null
           notes: string | null
           room_type_id: string
           special_features: Json | null
@@ -699,10 +782,12 @@ export type Database = {
         }
         Insert: {
           area_sqft?: number | null
+          bed_configuration?: Json | null
           created_at?: string
           floor_number?: number | null
           id?: string
           is_active?: boolean
+          max_occupancy?: number | null
           notes?: string | null
           room_type_id: string
           special_features?: Json | null
@@ -713,10 +798,12 @@ export type Database = {
         }
         Update: {
           area_sqft?: number | null
+          bed_configuration?: Json | null
           created_at?: string
           floor_number?: number | null
           id?: string
           is_active?: boolean
+          max_occupancy?: number | null
           notes?: string | null
           room_type_id?: string
           special_features?: Json | null
