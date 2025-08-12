@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import NavigationV5 from '../components/v5/NavigationV5';
 import DynamicFooter from '../components/DynamicFooter';
 import FloatingElementsV5 from '../components/v5/FloatingElementsV5';
@@ -6,9 +6,35 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Heart, Users, Building, Sparkles, TreePine, Crown } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { supabase } from '@/integrations/supabase/client';
 
 const Packages = () => {
-  const packages = [
+  const [packages, setPackages] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    loadPackages();
+  }, []);
+
+  const loadPackages = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('packages')
+        .select('*')
+        .eq('is_active', true)
+        .order('is_featured', { ascending: false });
+
+      if (error) throw error;
+      setPackages(data || []);
+    } catch (error) {
+      console.error('Error loading packages:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Fallback packages for empty state
+  const fallbackPackages = [
     {
       id: 'family-package',
       name: 'Family Adventure Package',
@@ -91,6 +117,34 @@ const Packages = () => {
     }
   ];
 
+  const displayPackages = packages.length > 0 ? packages : fallbackPackages;
+
+  const getIconComponent = (packageType: string) => {
+    switch (packageType) {
+      case 'family': return Users;
+      case 'romantic': return Heart;
+      case 'corporate': return Building;
+      case 'adventure': return TreePine;
+      default: return Sparkles;
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-background overflow-x-hidden">
+        <NavigationV5 />
+        <div className="flex items-center justify-center min-h-96">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+            <p>Loading packages...</p>
+          </div>
+        </div>
+        <DynamicFooter />
+        <FloatingElementsV5 />
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-background overflow-x-hidden">
       <NavigationV5 />
@@ -120,15 +174,15 @@ const Packages = () => {
       <section className="py-16">
         <div className="max-w-6xl mx-auto px-4">
           <div className="grid lg:grid-cols-2 gap-8">
-            {packages.map((pkg) => {
-              const IconComponent = pkg.icon;
+            {displayPackages.map((pkg) => {
+              const IconComponent = pkg.icon || getIconComponent(pkg.package_type);
               
               return (
                 <div key={pkg.id} className="bg-card border rounded-lg overflow-hidden shadow-sm hover:shadow-lg transition-all duration-300">
                   <div className="relative">
                     <img 
-                      src={pkg.image}
-                      alt={pkg.name}
+                      src={pkg.featured_image || pkg.banner_image || pkg.image || 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80'}
+                      alt={pkg.title || pkg.name}
                       className="w-full h-48 object-cover"
                     />
                     <div className="absolute top-4 left-4">
@@ -136,18 +190,26 @@ const Packages = () => {
                         <IconComponent className="w-6 h-6 text-primary" />
                       </div>
                     </div>
-                    {pkg.originalPrice && (
+                    {pkg.weekend_price > pkg.weekday_price && (
                       <Badge className="absolute top-4 right-4 bg-primary text-primary-foreground">
-                        Save ₹{parseInt(pkg.originalPrice.replace('₹', '').replace(',', '')) - parseInt(pkg.price.replace('₹', '').replace(',', ''))}
+                        Save ₹{pkg.weekend_price - pkg.weekday_price}
+                      </Badge>
+                    )}
+                    {pkg.is_featured && (
+                      <Badge className="absolute top-4 right-4 bg-secondary text-secondary-foreground">
+                        Featured
                       </Badge>
                     )}
                   </div>
                   
                   <div className="p-6">
                     <div className="flex items-center justify-between mb-3">
-                      <h3 className="text-2xl font-heading font-bold text-foreground">{pkg.name}</h3>
+                      <h3 className="text-2xl font-heading font-bold text-foreground">{pkg.title || pkg.name}</h3>
                       <div className="text-right">
-                        <div className="text-2xl font-heading font-bold text-primary">{pkg.price}</div>
+                        <div className="text-2xl font-heading font-bold text-primary">₹{pkg.weekday_price || pkg.price?.replace('₹', '')}</div>
+                        {pkg.weekend_price && pkg.weekend_price !== pkg.weekday_price && (
+                          <div className="text-sm text-muted-foreground">Weekend: ₹{pkg.weekend_price}</div>
+                        )}
                         {pkg.originalPrice && (
                           <div className="text-sm text-muted-foreground line-through">{pkg.originalPrice}</div>
                         )}
@@ -155,8 +217,10 @@ const Packages = () => {
                     </div>
                     
                     <div className="flex items-center gap-4 mb-4">
-                      <Badge variant="secondary">{pkg.duration}</Badge>
-                      <span className="text-sm text-muted-foreground font-body">{pkg.bestFor}</span>
+                      <Badge variant="secondary">{pkg.duration_days ? `${pkg.duration_days} days` : pkg.duration}</Badge>
+                      <span className="text-sm text-muted-foreground font-body">
+                        {pkg.max_guests ? `Max ${pkg.max_guests} guests` : pkg.bestFor}
+                      </span>
                     </div>
                     
                     <p className="text-muted-foreground font-body mb-6 leading-relaxed">
@@ -166,16 +230,16 @@ const Packages = () => {
                     <div className="mb-6">
                       <h4 className="font-body font-semibold mb-3 text-foreground">Package Highlights:</h4>
                       <div className="grid grid-cols-1 gap-2">
-                        {pkg.highlights.slice(0, 4).map((highlight, index) => (
+                        {(pkg.inclusions || pkg.highlights || []).slice(0, 4).map((highlight: string, index: number) => (
                           <div key={index} className="text-sm text-muted-foreground font-body flex items-start gap-2">
                             <span className="text-primary mt-1">•</span>
                             {highlight}
                           </div>
                         ))}
-                        {pkg.highlights.length > 4 && (
+                        {(pkg.inclusions || pkg.highlights || []).length > 4 && (
                           <div className="text-sm text-muted-foreground font-body flex items-start gap-2">
                             <span className="text-primary mt-1">•</span>
-                            +{pkg.highlights.length - 4} more inclusions
+                            +{(pkg.inclusions || pkg.highlights || []).length - 4} more inclusions
                           </div>
                         )}
                       </div>
@@ -183,7 +247,7 @@ const Packages = () => {
                     
                     <div className="border-t pt-4 mb-6">
                       <p className="text-xs text-muted-foreground font-body">
-                        <strong>Includes:</strong> {pkg.includes}
+                        <strong>Includes:</strong> {pkg.subtitle || pkg.includes || 'Accommodation, activities, and more'}
                       </p>
                     </div>
                     
