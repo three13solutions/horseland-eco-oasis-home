@@ -11,6 +11,7 @@ import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { MultiSelect } from '@/components/ui/multi-select';
 import ImageUpload from '@/components/ImageUpload';
 import { Plus, Edit, Trash2, Search, Grid, List, Calendar, Users, ArrowLeft, Save, X, Hotel, Activity, Utensils, Sparkles } from 'lucide-react';
 
@@ -340,17 +341,6 @@ const PackageManagement = () => {
     setShowForm(true);
   };
 
-  const handleComponentToggle = (type: keyof PackageData['components'], itemId: string) => {
-    setFormData(prev => ({
-      ...prev,
-      components: {
-        ...prev.components!,
-        [type]: prev.components![type].includes(itemId)
-          ? prev.components![type].filter(id => id !== itemId)
-          : [...prev.components![type], itemId]
-      }
-    }));
-  };
 
   const getComponentIcon = (type: string) => {
     switch (type) {
@@ -518,157 +508,109 @@ const PackageManagement = () => {
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               {/* Room Units */}
               <Card>
-                <CardHeader className="pb-3">
+                <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     {getComponentIcon('room_units')}
-                    Rooms ({formData.components?.room_units?.length || 0})
+                    Rooms
                   </CardTitle>
                 </CardHeader>
-                <CardContent className="space-y-3">
-                  {roomUnits.map((unit) => (
-                    <div
-                      key={unit.id}
-                      className={`p-3 rounded-lg border cursor-pointer transition-all ${
-                        formData.components?.room_units?.includes(unit.id)
-                          ? 'border-primary bg-primary/5'
-                          : 'border-muted hover:border-border'
-                      }`}
-                      onClick={() => handleComponentToggle('room_units', unit.id)}
-                    >
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <div className="font-medium">{unit.unit_name || `Unit ${unit.unit_number}`}</div>
-                          <div className="text-sm text-muted-foreground">
-                            {unit.room_types?.name} • Room {unit.unit_number}
-                          </div>
-                        </div>
-                        <div className={`w-4 h-4 rounded border-2 ${
-                          formData.components?.room_units?.includes(unit.id)
-                            ? 'bg-primary border-primary'
-                            : 'border-muted-foreground'
-                        }`} />
-                      </div>
-                    </div>
-                  ))}
-                  {roomUnits.length === 0 && (
-                    <p className="text-sm text-muted-foreground text-center py-4">No rooms available</p>
-                  )}
+                <CardContent>
+                  <MultiSelect
+                    options={roomUnits.map(unit => ({
+                      id: unit.id,
+                      label: unit.unit_name || `Unit ${unit.unit_number}`,
+                      subtitle: `${unit.room_types?.name} • Room ${unit.unit_number}`
+                    }))}
+                    value={formData.components?.room_units || []}
+                    onChange={(value) => setFormData(prev => ({
+                      ...prev,
+                      components: { ...prev.components!, room_units: value }
+                    }))}
+                    placeholder="Select rooms"
+                    searchPlaceholder="Search rooms..."
+                    emptyText="No rooms available"
+                  />
                 </CardContent>
               </Card>
 
               {/* Activities */}
               <Card>
-                <CardHeader className="pb-3">
+                <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     {getComponentIcon('activities')}
-                    Activities ({formData.components?.activities?.length || 0})
+                    Activities
                   </CardTitle>
                 </CardHeader>
-                <CardContent className="space-y-3">
-                  {activities.map((activity) => (
-                    <div
-                      key={activity.id}
-                      className={`p-3 rounded-lg border cursor-pointer transition-all ${
-                        formData.components?.activities?.includes(activity.id)
-                          ? 'border-primary bg-primary/5'
-                          : 'border-muted hover:border-border'
-                      }`}
-                      onClick={() => handleComponentToggle('activities', activity.id)}
-                    >
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <div className="font-medium">{activity.title}</div>
-                          {activity.price_amount && (
-                            <div className="text-sm text-muted-foreground">₹{activity.price_amount}</div>
-                          )}
-                        </div>
-                        <div className={`w-4 h-4 rounded border-2 ${
-                          formData.components?.activities?.includes(activity.id)
-                            ? 'bg-primary border-primary'
-                            : 'border-muted-foreground'
-                        }`} />
-                      </div>
-                    </div>
-                  ))}
-                  {activities.length === 0 && (
-                    <p className="text-sm text-muted-foreground text-center py-4">No activities available</p>
-                  )}
+                <CardContent>
+                  <MultiSelect
+                    options={activities.map(activity => ({
+                      id: activity.id,
+                      label: activity.title,
+                      price: activity.price_amount
+                    }))}
+                    value={formData.components?.activities || []}
+                    onChange={(value) => setFormData(prev => ({
+                      ...prev,
+                      components: { ...prev.components!, activities: value }
+                    }))}
+                    placeholder="Select activities"
+                    searchPlaceholder="Search activities..."
+                    emptyText="No activities available"
+                  />
                 </CardContent>
               </Card>
 
               {/* Meals */}
               <Card>
-                <CardHeader className="pb-3">
+                <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     {getComponentIcon('meals')}
-                    Meals ({formData.components?.meals?.length || 0})
+                    Meals
                   </CardTitle>
                 </CardHeader>
-                <CardContent className="space-y-3">
-                  {meals.map((meal) => (
-                    <div
-                      key={meal.id}
-                      className={`p-3 rounded-lg border cursor-pointer transition-all ${
-                        formData.components?.meals?.includes(meal.id)
-                          ? 'border-primary bg-primary/5'
-                          : 'border-muted hover:border-border'
-                      }`}
-                      onClick={() => handleComponentToggle('meals', meal.id)}
-                    >
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <div className="font-medium">{meal.title}</div>
-                          <div className="text-sm text-muted-foreground">₹{meal.price}</div>
-                        </div>
-                        <div className={`w-4 h-4 rounded border-2 ${
-                          formData.components?.meals?.includes(meal.id)
-                            ? 'bg-primary border-primary'
-                            : 'border-muted-foreground'
-                        }`} />
-                      </div>
-                    </div>
-                  ))}
-                  {meals.length === 0 && (
-                    <p className="text-sm text-muted-foreground text-center py-4">No meals available</p>
-                  )}
+                <CardContent>
+                  <MultiSelect
+                    options={meals.map(meal => ({
+                      id: meal.id,
+                      label: meal.title,
+                      price: meal.price
+                    }))}
+                    value={formData.components?.meals || []}
+                    onChange={(value) => setFormData(prev => ({
+                      ...prev,
+                      components: { ...prev.components!, meals: value }
+                    }))}
+                    placeholder="Select meals"
+                    searchPlaceholder="Search meals..."
+                    emptyText="No meals available"
+                  />
                 </CardContent>
               </Card>
 
               {/* Spa Services */}
               <Card>
-                <CardHeader className="pb-3">
+                <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     {getComponentIcon('spa_services')}
-                    Spa Services ({formData.components?.spa_services?.length || 0})
+                    Spa Services
                   </CardTitle>
                 </CardHeader>
-                <CardContent className="space-y-3">
-                  {spaServices.map((service) => (
-                    <div
-                      key={service.id}
-                      className={`p-3 rounded-lg border cursor-pointer transition-all ${
-                        formData.components?.spa_services?.includes(service.id)
-                          ? 'border-primary bg-primary/5'
-                          : 'border-muted hover:border-border'
-                      }`}
-                      onClick={() => handleComponentToggle('spa_services', service.id)}
-                    >
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <div className="font-medium">{service.title}</div>
-                          <div className="text-sm text-muted-foreground">₹{service.price}</div>
-                        </div>
-                        <div className={`w-4 h-4 rounded border-2 ${
-                          formData.components?.spa_services?.includes(service.id)
-                            ? 'bg-primary border-primary'
-                            : 'border-muted-foreground'
-                        }`} />
-                      </div>
-                    </div>
-                  ))}
-                  {spaServices.length === 0 && (
-                    <p className="text-sm text-muted-foreground text-center py-4">No spa services available</p>
-                  )}
+                <CardContent>
+                  <MultiSelect
+                    options={spaServices.map(service => ({
+                      id: service.id,
+                      label: service.title,
+                      price: service.price
+                    }))}
+                    value={formData.components?.spa_services || []}
+                    onChange={(value) => setFormData(prev => ({
+                      ...prev,
+                      components: { ...prev.components!, spa_services: value }
+                    }))}
+                    placeholder="Select spa services"
+                    searchPlaceholder="Search spa services..."
+                    emptyText="No spa services available"
+                  />
                 </CardContent>
               </Card>
             </div>
