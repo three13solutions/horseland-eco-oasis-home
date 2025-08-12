@@ -9,7 +9,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
-import { ArrowLeft, Search, Grid, List, Plus, Eye, Edit, Trash2 } from 'lucide-react';
+import { ArrowLeft, Search, Grid, List, Plus, Eye, Edit, Trash2, X } from 'lucide-react';
 import { Toggle } from '@/components/ui/toggle';
 import { useNavigate } from 'react-router-dom';
 import ImageUpload from '@/components/ImageUpload';
@@ -26,6 +26,7 @@ interface SpaService {
   is_active: boolean;
   created_at: string;
   updated_at: string;
+  media_urls?: any;
 }
 
 const SpaManagement = () => {
@@ -67,7 +68,8 @@ const SpaManagement = () => {
       if (error) throw error;
       setServices((data || []).map(service => ({
         ...service,
-        tags: Array.isArray(service.tags) ? service.tags : []
+        tags: Array.isArray(service.tags) ? service.tags : [],
+        media_urls: Array.isArray(service.media_urls) ? service.media_urls : []
       })));
     } catch (error) {
       console.error('Error loading spa services:', error);

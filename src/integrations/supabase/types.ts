@@ -765,6 +765,7 @@ export type Database = {
           id: string
           image: string | null
           is_active: boolean
+          media_urls: Json | null
           price: number
           tags: Json | null
           title: string
@@ -778,6 +779,7 @@ export type Database = {
           id?: string
           image?: string | null
           is_active?: boolean
+          media_urls?: Json | null
           price?: number
           tags?: Json | null
           title: string
@@ -791,6 +793,7 @@ export type Database = {
           id?: string
           image?: string | null
           is_active?: boolean
+          media_urls?: Json | null
           price?: number
           tags?: Json | null
           title?: string

@@ -1,0 +1,22 @@
+-- Add media_urls column to spa_services table
+ALTER TABLE spa_services ADD COLUMN IF NOT EXISTS media_urls jsonb DEFAULT '[]'::jsonb;
+
+-- Insert hardcoded spa services data
+INSERT INTO spa_services (title, image, description, duration, price, tags, is_active, media_urls) VALUES
+('Traditional Ayurvedic Massage', 'https://images.unsplash.com/photo-1544161515-4ab6ce6db874?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80', 'Full-body massage using warm herbal oils to balance your doshas and rejuvenate your energy.', 90, 4500, '["Stress Relief", "Improved Circulation", "Muscle Relaxation", "Energy Balance"]'::jsonb, true, '["https://images.unsplash.com/photo-1544161515-4ab6ce6db874?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80"]'::jsonb),
+
+('Mountain Stone Therapy', 'https://images.unsplash.com/photo-1570172619644-dfd03ed5d881?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80', 'Heated volcanic stones from local mountains to release tension and promote deep relaxation.', 75, 3800, '["Deep Muscle Relief", "Improved Sleep", "Stress Reduction", "Pain Management"]'::jsonb, true, '["https://images.unsplash.com/photo-1570172619644-dfd03ed5d881?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80"]'::jsonb),
+
+('Forest Aromatherapy', 'https://images.unsplash.com/photo-1515377905703-c4788e51af15?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80', 'Essential oils from native forest plants combined with gentle massage techniques.', 60, 3200, '["Mental Clarity", "Emotional Balance", "Respiratory Health", "Skin Nourishment"]'::jsonb, true, '["https://images.unsplash.com/photo-1515377905703-c4788e51af15?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80"]'::jsonb),
+
+('Couples Wellness Retreat', 'https://images.unsplash.com/photo-1544161515-4ab6ce6db874?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80', 'Side-by-side massage experience in our private couples suite with mountain views.', 120, 8000, '["Bonding Experience", "Shared Relaxation", "Romantic Ambiance", "Private Setting"]'::jsonb, true, '["https://images.unsplash.com/photo-1544161515-4ab6ce6db874?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80"]'::jsonb),
+
+('Guided Meditation Session', 'https://images.unsplash.com/photo-1506126613408-eca07ce68773?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80', 'Mindfulness meditation sessions in our outdoor pavilion surrounded by nature.', 45, 1800, '["Mindfulness", "Stress Relief", "Mental Clarity", "Inner Peace"]'::jsonb, true, '["https://images.unsplash.com/photo-1506126613408-eca07ce68773?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80"]'::jsonb),
+
+('Therapeutic Yoga Session', 'https://images.unsplash.com/photo-1599901860904-17e6ed7083a0?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80', 'Personalized yoga practice designed to address specific physical and mental wellness goals.', 75, 2500, '["Flexibility", "Strength Building", "Posture Improvement", "Mind-Body Balance"]'::jsonb, true, '["https://images.unsplash.com/photo-1599901860904-17e6ed7083a0?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80"]'::jsonb),
+
+('Head Massage', 'https://images.unsplash.com/photo-1519823551278-64ac92734fb1?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80', 'Relaxing head massage using traditional techniques to relieve stress and improve circulation.', 45, 2000, '["Stress Relief", "Improved Sleep", "Hair Health", "Mental Clarity"]'::jsonb, true, '["https://images.unsplash.com/photo-1519823551278-64ac92734fb1?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80"]'::jsonb),
+
+('Foot Massage', 'https://images.unsplash.com/photo-1544161515-4ab6ce6db874?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80', 'Therapeutic foot massage targeting pressure points to restore energy flow and reduce fatigue.', 45, 1800, '["Foot Relief", "Better Circulation", "Energy Boost", "Stress Reduction"]'::jsonb, true, '["https://images.unsplash.com/photo-1544161515-4ab6ce6db874?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80"]'::jsonb),
+
+('Outdoor Poolside Body Massage', 'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80', 'Full-body massage in our outdoor poolside cabana surrounded by mountain views and fresh air.', 90, 4200, '["Nature Connection", "Deep Relaxation", "Fresh Air Therapy", "Mountain Views"]'::jsonb, true, '["https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80"]'::jsonb);
