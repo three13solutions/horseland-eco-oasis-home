@@ -80,6 +80,8 @@ export default function BookingManagement() {
   const [selectedRoomOverride, setSelectedRoomOverride] = useState<string>('');
   const [overrideBookingId, setOverrideBookingId] = useState<string | null>(null);
   const [showCreateForm, setShowCreateForm] = useState(false);
+  const [editingPaymentStatus, setEditingPaymentStatus] = useState<string | null>(null);
+  const [selectedPaymentStatus, setSelectedPaymentStatus] = useState<string>('');
   const [stats, setStats] = useState<BookingStats>({
     totalBookings: 0,
     totalRevenue: 0,
@@ -380,6 +382,33 @@ export default function BookingManagement() {
       status: 'available',
       variant: 'default' as const
     };
+  };
+
+  const handleUpdatePaymentStatus = async (bookingId: string, newStatus: string) => {
+    try {
+      const { error } = await supabase
+        .from('bookings')
+        .update({ payment_status: newStatus })
+        .eq('id', bookingId);
+
+      if (error) throw error;
+
+      toast({
+        title: "Payment Status Updated",
+        description: `Payment status changed to ${newStatus}`,
+      });
+
+      setEditingPaymentStatus(null);
+      setSelectedPaymentStatus('');
+      loadBookings();
+    } catch (error: any) {
+      console.error('Payment status update error:', error);
+      toast({
+        title: "Error",
+        description: "Failed to update payment status",
+        variant: "destructive",
+      });
+    }
   };
 
   const resetCreateForm = () => {
@@ -770,7 +799,58 @@ export default function BookingManagement() {
                         <TableCell>{format(parseISO(booking.check_out), 'MMM dd, yyyy')}</TableCell>
                         <TableCell>{booking.guests_count}</TableCell>
                         <TableCell>₹{Number(booking.total_amount).toLocaleString()}</TableCell>
-                        <TableCell>{getPaymentStatusBadge(booking.payment_status)}</TableCell>
+                        <TableCell>
+                          {editingPaymentStatus === booking.id ? (
+                            <div className="flex gap-2 items-center">
+                              <Select 
+                                value={selectedPaymentStatus} 
+                                onValueChange={setSelectedPaymentStatus}
+                              >
+                                <SelectTrigger className="w-32">
+                                  <SelectValue placeholder="Status" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="pending">Pending</SelectItem>
+                                  <SelectItem value="confirmed">Confirmed</SelectItem>
+                                  <SelectItem value="completed">Completed</SelectItem>
+                                  <SelectItem value="cancelled">Cancelled</SelectItem>
+                                </SelectContent>
+                              </Select>
+                              <Button
+                                size="sm"
+                                onClick={() => handleUpdatePaymentStatus(booking.id, selectedPaymentStatus)}
+                                disabled={!selectedPaymentStatus}
+                              >
+                                Update
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => {
+                                  setEditingPaymentStatus(null);
+                                  setSelectedPaymentStatus('');
+                                }}
+                              >
+                                Cancel
+                              </Button>
+                            </div>
+                          ) : (
+                            <div className="flex items-center gap-2">
+                              {getPaymentStatusBadge(booking.payment_status)}
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                onClick={() => {
+                                  setEditingPaymentStatus(booking.id);
+                                  setSelectedPaymentStatus(booking.payment_status);
+                                }}
+                                className="h-6 w-6 p-0"
+                              >
+                                <Edit className="h-3 w-3" />
+                              </Button>
+                            </div>
+                          )}
+                        </TableCell>
                         <TableCell>
                           <Dialog>
                             <DialogTrigger asChild>
