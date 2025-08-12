@@ -34,6 +34,9 @@ interface Booking {
   room_unit_id?: string;
   room_type_id?: string;
   package_id?: string;
+  selected_meals?: any[];
+  selected_activities?: any[];
+  selected_spa_services?: any[];
   room_units?: {
     unit_number: string;
     unit_name?: string;
@@ -46,7 +49,9 @@ interface Booking {
   };
   packages?: {
     title: string;
-  };
+    inclusions?: string[];
+    components?: any;
+  } | null;
 }
 
 interface RoomUnit {
@@ -120,13 +125,13 @@ export default function BookingManagement() {
           *,
           room_units(unit_number, unit_name, room_types(name)),
           room_types(name),
-          packages(title)
+          packages(title, inclusions, components)
         `)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      setBookings(data || []);
-      calculateStats(data || []);
+      setBookings((data || []) as any);
+      calculateStats((data || []) as any);
     } catch (error) {
       console.error('Error loading bookings:', error);
       toast({
@@ -382,6 +387,96 @@ export default function BookingManagement() {
       status: 'available',
       variant: 'default' as const
     };
+  };
+
+  const renderAddons = (booking: Booking) => {
+    const hasAddons = 
+      (booking.selected_meals && booking.selected_meals.length > 0) ||
+      (booking.selected_activities && booking.selected_activities.length > 0) ||
+      (booking.selected_spa_services && booking.selected_spa_services.length > 0);
+
+    if (!hasAddons) return null;
+
+    return (
+      <div className="mt-2 space-y-1">
+        {booking.selected_meals && booking.selected_meals.length > 0 && (
+          <div className="text-xs">
+            <span className="font-medium text-orange-600">🍽️ Meals:</span>
+            <span className="text-muted-foreground ml-1">
+              {booking.selected_meals.map((meal: any) => 
+                `${meal.name} (${meal.quantity})`
+              ).join(', ')}
+            </span>
+          </div>
+        )}
+        {booking.selected_activities && booking.selected_activities.length > 0 && (
+          <div className="text-xs">
+            <span className="font-medium text-green-600">🏃 Activities:</span>
+            <span className="text-muted-foreground ml-1">
+              {booking.selected_activities.map((activity: any) => 
+                `${activity.name} (${activity.quantity})`
+              ).join(', ')}
+            </span>
+          </div>
+        )}
+        {booking.selected_spa_services && booking.selected_spa_services.length > 0 && (
+          <div className="text-xs">
+            <span className="font-medium text-purple-600">🧘 Spa:</span>
+            <span className="text-muted-foreground ml-1">
+              {booking.selected_spa_services.map((spa: any) => 
+                `${spa.name} (${spa.quantity})`
+              ).join(', ')}
+            </span>
+          </div>
+        )}
+      </div>
+    );
+  };
+
+  const renderPackageDetails = (booking: Booking) => {
+    if (!booking.packages) return null;
+
+    return (
+      <div className="mt-2 space-y-1">
+        <div className="text-sm font-medium text-blue-600">
+          📦 {booking.packages.title}
+        </div>
+        {booking.packages.inclusions && booking.packages.inclusions.length > 0 && (
+          <div className="text-xs text-muted-foreground">
+            <span className="font-medium">Includes:</span> {booking.packages.inclusions.slice(0, 3).join(', ')}
+            {booking.packages.inclusions.length > 3 && '...'}
+          </div>
+        )}
+        {booking.packages.components && (
+          <div className="text-xs space-y-0.5">
+            {booking.packages.components.meals && booking.packages.components.meals.length > 0 && (
+              <div>
+                <span className="font-medium text-orange-600">🍽️ Package Meals:</span>
+                <span className="text-muted-foreground ml-1">
+                  {booking.packages.components.meals.map((meal: any) => meal.name).join(', ')}
+                </span>
+              </div>
+            )}
+            {booking.packages.components.spa_services && booking.packages.components.spa_services.length > 0 && (
+              <div>
+                <span className="font-medium text-purple-600">🧘 Package Spa:</span>
+                <span className="text-muted-foreground ml-1">
+                  {booking.packages.components.spa_services.map((spa: any) => spa.name).join(', ')}
+                </span>
+              </div>
+            )}
+            {booking.packages.components.activities && booking.packages.components.activities.length > 0 && (
+              <div>
+                <span className="font-medium text-green-600">🏃 Package Activities:</span>
+                <span className="text-muted-foreground ml-1">
+                  {booking.packages.components.activities.map((activity: any) => activity.name).join(', ')}
+                </span>
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+    );
   };
 
   const handleUpdatePaymentStatus = async (bookingId: string, newStatus: string) => {
@@ -681,6 +776,7 @@ export default function BookingManagement() {
                                 <div className="text-sm text-muted-foreground">
                                   {booking.room_units?.room_types?.name}
                                 </div>
+                                {renderAddons(booking)}
                                 {overrideBookingId === booking.id ? (
                                   <div className="flex gap-2 mt-2">
                                     <Select value={selectedRoomOverride} onValueChange={setSelectedRoomOverride}>
@@ -730,6 +826,7 @@ export default function BookingManagement() {
                                 <div className="text-sm font-medium text-muted-foreground">
                                   {booking.room_types?.name} (No unit assigned)
                                 </div>
+                                {renderAddons(booking)}
                                 <div className="flex gap-2 mt-2">
                                   <Button
                                     size="sm"
@@ -787,8 +884,8 @@ export default function BookingManagement() {
                                 )}
                               </div>
                             ) : booking.package_id ? (
-                              <div className="text-sm text-muted-foreground">
-                                Package: {booking.packages?.title}
+                              <div>
+                                {renderPackageDetails(booking)}
                               </div>
                             ) : (
                               <span className="text-muted-foreground">-</span>
