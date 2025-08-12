@@ -805,7 +805,7 @@ export default function BookingManagement() {
             className="flex items-center gap-2"
           >
             <Phone className="h-4 w-4" />
-            Create Phone Booking
+            Create Manual Booking
           </Button>
         </div>
       </div>
@@ -1225,7 +1225,7 @@ export default function BookingManagement() {
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <Phone className="h-5 w-5" />
-              Create Phone Booking
+              Create Manual Booking
             </DialogTitle>
           </DialogHeader>
 

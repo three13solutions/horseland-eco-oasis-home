@@ -58,6 +58,7 @@ export const RoomAvailabilityGrid: React.FC<RoomAvailabilityGridProps> = ({
     roomUnitId: string;
     roomName: string;
     selectedDate: Date;
+    selectedEndDate?: Date;
   } | null>(null);
   const [isDragging, setIsDragging] = useState(false);
   const [dragStart, setDragStart] = useState<{roomId: string, date: Date} | null>(null);
@@ -240,7 +241,8 @@ export const RoomAvailabilityGrid: React.FC<RoomAvailabilityGridProps> = ({
       setSelectedRoomForBooking({
         roomUnitId: dragStart.roomId,
         roomName: `${roomUnits.find(r => r.id === dragStart.roomId)?.unit_number}${roomUnits.find(r => r.id === dragStart.roomId)?.unit_name ? ` (${roomUnits.find(r => r.id === dragStart.roomId)?.unit_name})` : ''}`,
-        selectedDate: startDate
+        selectedDate: startDate,
+        selectedEndDate: endDate
       });
       setIsManualBookingOpen(true);
     }
@@ -577,12 +579,11 @@ export const RoomAvailabilityGrid: React.FC<RoomAvailabilityGridProps> = ({
             roomUnitId={selectedRoomForBooking.roomUnitId}
             roomName={selectedRoomForBooking.roomName}
             preSelectedDates={
-              dragStart && dragEnd && selectedRoomForBooking ? {
-                checkIn: dragStart.date < dragEnd.date ? dragStart.date : dragEnd.date,
-                checkOut: addDays(dragStart.date < dragEnd.date ? dragEnd.date : dragStart.date, 1)
-              } : selectedRoomForBooking ? {
+              selectedRoomForBooking ? {
                 checkIn: selectedRoomForBooking.selectedDate,
-                checkOut: addDays(selectedRoomForBooking.selectedDate, 1)
+                checkOut: selectedRoomForBooking.selectedEndDate 
+                  ? addDays(selectedRoomForBooking.selectedEndDate, 1)
+                  : addDays(selectedRoomForBooking.selectedDate, 1)
               } : undefined
             }
             onBookingCreated={() => {
