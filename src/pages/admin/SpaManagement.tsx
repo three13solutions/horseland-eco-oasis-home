@@ -403,7 +403,7 @@ const SpaManagement = () => {
                       className="w-full justify-between"
                     >
                       {formData.tags.length > 0
-                        ? `${formData.tags.length} benefit${formData.tags.length > 1 ? 's' : ''} selected`
+                        ? `${formData.tags.length} selected`
                         : "Select benefits..."}
                       <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                     </Button>
@@ -411,31 +411,31 @@ const SpaManagement = () => {
                   <PopoverContent className="w-full p-0">
                     <Command>
                       <CommandInput placeholder="Search benefits..." />
-                      <CommandEmpty>No benefit found.</CommandEmpty>
-                      <CommandGroup className="max-h-64 overflow-y-auto">
-                        {AVAILABLE_BENEFITS.map((benefit) => (
-                          <CommandItem
-                            key={benefit}
-                            onSelect={() => {
-                              const isSelected = formData.tags.includes(benefit);
-                              setFormData({
-                                ...formData,
-                                tags: isSelected
-                                  ? formData.tags.filter(tag => tag !== benefit)
-                                  : [...formData.tags, benefit]
-                              });
-                            }}
-                          >
-                            <Check
-                              className={cn(
-                                "mr-2 h-4 w-4",
-                                formData.tags.includes(benefit) ? "opacity-100" : "opacity-0"
-                              )}
-                            />
-                            {benefit}
-                          </CommandItem>
-                        ))}
-                      </CommandGroup>
+                      <CommandList>
+                        <CommandEmpty>No benefit found.</CommandEmpty>
+                        <CommandGroup>
+                          {AVAILABLE_BENEFITS.map((benefit) => (
+                            <CommandItem
+                              key={benefit}
+                              onSelect={() => {
+                                const isSelected = formData.tags.includes(benefit);
+                                setFormData({
+                                  ...formData,
+                                  tags: isSelected
+                                    ? formData.tags.filter(tag => tag !== benefit)
+                                    : [...formData.tags, benefit]
+                                });
+                              }}
+                            >
+                              <Checkbox
+                                checked={formData.tags.includes(benefit)}
+                                className="mr-2"
+                              />
+                              {benefit}
+                            </CommandItem>
+                          ))}
+                        </CommandGroup>
+                      </CommandList>
                     </Command>
                   </PopoverContent>
                 </Popover>
@@ -445,7 +445,7 @@ const SpaManagement = () => {
                       <Badge key={tag} variant="secondary" className="text-xs">
                         {tag}
                         <X 
-                          className="h-3 w-3 ml-1 cursor-pointer" 
+                          className="ml-1 h-3 w-3 cursor-pointer" 
                           onClick={() => setFormData({
                             ...formData,
                             tags: formData.tags.filter(t => t !== tag)
