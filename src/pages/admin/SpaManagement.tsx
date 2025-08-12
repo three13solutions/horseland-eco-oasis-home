@@ -57,7 +57,6 @@ const SpaManagement = () => {
   const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'inactive'>('all');
   const [viewMode, setViewMode] = useState<'card' | 'list'>('card');
   const [categoryFilter, setCategoryFilter] = useState<'all' | 'beauty' | 'wellness'>('all');
-  const [showInactive, setShowInactive] = useState(false);
   const [uploading, setUploading] = useState(false);
   
   const [formData, setFormData] = useState({
@@ -248,9 +247,7 @@ const SpaManagement = () => {
                            (categoryFilter === 'beauty' && service.tags?.includes('beauty')) ||
                            (categoryFilter === 'wellness' && service.tags?.includes('wellness'));
     
-    const matchesToggle = showInactive || service.is_active;
-    
-    return matchesSearch && matchesStatus && matchesCategory && matchesToggle;
+    return matchesSearch && matchesStatus && matchesCategory;
   });
 
   if (loading) {
@@ -562,18 +559,6 @@ const SpaManagement = () => {
                 All
               </Button>
             </div>
-          </div>
-
-          <div className="flex items-center gap-2">
-            <Button
-              variant={showInactive ? 'default' : 'outline'}
-              size="sm"
-              onClick={() => setShowInactive(!showInactive)}
-              className="h-8"
-            >
-              <Eye className="w-4 h-4 mr-1" />
-              {showInactive ? 'Hide Inactive' : 'Show Inactive'}
-            </Button>
           </div>
         </div>
 
