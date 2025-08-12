@@ -16,38 +16,89 @@ export type Database = {
     Tables: {
       activities: {
         Row: {
+          activity_tags: Json | null
+          audience_tags: Json | null
+          available_days: Json | null
+          available_seasons: Json | null
           booking_required: boolean
+          booking_type: string | null
           created_at: string
           description: string | null
+          disclaimer: string | null
           distance: string | null
+          duration_hours: number | null
+          duration_minutes: number | null
           id: string
           image: string | null
           is_active: boolean
+          is_on_property: boolean | null
+          location_name: string | null
+          media_urls: Json | null
+          price_amount: number | null
+          price_range_max: number | null
+          price_range_min: number | null
+          price_type: string | null
+          rules_regulations: string | null
           tags: Json | null
+          timings: Json | null
           title: string
           updated_at: string
         }
         Insert: {
+          activity_tags?: Json | null
+          audience_tags?: Json | null
+          available_days?: Json | null
+          available_seasons?: Json | null
           booking_required?: boolean
+          booking_type?: string | null
           created_at?: string
           description?: string | null
+          disclaimer?: string | null
           distance?: string | null
+          duration_hours?: number | null
+          duration_minutes?: number | null
           id?: string
           image?: string | null
           is_active?: boolean
+          is_on_property?: boolean | null
+          location_name?: string | null
+          media_urls?: Json | null
+          price_amount?: number | null
+          price_range_max?: number | null
+          price_range_min?: number | null
+          price_type?: string | null
+          rules_regulations?: string | null
           tags?: Json | null
+          timings?: Json | null
           title: string
           updated_at?: string
         }
         Update: {
+          activity_tags?: Json | null
+          audience_tags?: Json | null
+          available_days?: Json | null
+          available_seasons?: Json | null
           booking_required?: boolean
+          booking_type?: string | null
           created_at?: string
           description?: string | null
+          disclaimer?: string | null
           distance?: string | null
+          duration_hours?: number | null
+          duration_minutes?: number | null
           id?: string
           image?: string | null
           is_active?: boolean
+          is_on_property?: boolean | null
+          location_name?: string | null
+          media_urls?: Json | null
+          price_amount?: number | null
+          price_range_max?: number | null
+          price_range_min?: number | null
+          price_type?: string | null
+          rules_regulations?: string | null
           tags?: Json | null
+          timings?: Json | null
           title?: string
           updated_at?: string
         }

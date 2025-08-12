@@ -22,6 +22,23 @@ interface Activity {
   is_active: boolean;
   booking_required: boolean;
   tags?: any;
+  audience_tags?: any;
+  location_name?: string;
+  is_on_property?: boolean;
+  price_type?: string;
+  price_amount?: number;
+  price_range_min?: number;
+  price_range_max?: number;
+  duration_hours?: number;
+  duration_minutes?: number;
+  timings?: any;
+  available_days?: any;
+  available_seasons?: any;
+  disclaimer?: string;
+  rules_regulations?: string;
+  activity_tags?: any;
+  media_urls?: any;
+  booking_type?: string;
 }
 
 const ActivitiesManagement = () => {
@@ -37,6 +54,24 @@ const ActivitiesManagement = () => {
   const [image, setImage] = useState('');
   const [bookingRequired, setBookingRequired] = useState(false);
   const [tags, setTags] = useState<string>('');
+  const [audienceTags, setAudienceTags] = useState<string>('');
+  const [locationName, setLocationName] = useState('');
+  const [isOnProperty, setIsOnProperty] = useState(true);
+  const [priceType, setPriceType] = useState<'free' | 'fixed' | 'range'>('free');
+  const [priceAmount, setPriceAmount] = useState('');
+  const [priceRangeMin, setPriceRangeMin] = useState('');
+  const [priceRangeMax, setPriceRangeMax] = useState('');
+  const [durationHours, setDurationHours] = useState('');
+  const [durationMinutes, setDurationMinutes] = useState('');
+  const [timingsType, setTimingsType] = useState<'24_7' | 'specific'>('24_7');
+  const [specificTimings, setSpecificTimings] = useState('');
+  const [availableDays, setAvailableDays] = useState<string>('');
+  const [availableSeasons, setAvailableSeasons] = useState<string>('');
+  const [disclaimer, setDisclaimer] = useState('');
+  const [rulesRegulations, setRulesRegulations] = useState('');
+  const [activityTags, setActivityTags] = useState<string>('');
+  const [mediaUrls, setMediaUrls] = useState<string>('');
+  const [bookingType, setBookingType] = useState<'online' | 'reception' | 'both'>('reception');
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
 
@@ -74,8 +109,25 @@ const ActivitiesManagement = () => {
         description,
         distance,
         image,
+        location_name: locationName,
+        is_on_property: isOnProperty,
+        price_type: priceType,
+        price_amount: priceAmount ? parseFloat(priceAmount) : null,
+        price_range_min: priceRangeMin ? parseFloat(priceRangeMin) : null,
+        price_range_max: priceRangeMax ? parseFloat(priceRangeMax) : null,
+        duration_hours: durationHours ? parseInt(durationHours) : null,
+        duration_minutes: durationMinutes ? parseInt(durationMinutes) : null,
+        timings: timingsType === '24_7' ? { type: '24_7' } : { type: 'specific', times: specificTimings.split(',').map(t => t.trim()) },
+        available_days: availableDays ? availableDays.split(',').map(d => d.trim()) : [],
+        available_seasons: availableSeasons ? availableSeasons.split(',').map(s => s.trim()) : [],
+        disclaimer,
+        rules_regulations: rulesRegulations,
         booking_required: bookingRequired,
+        booking_type: bookingType,
         tags: tags ? tags.split(',').map(tag => tag.trim()) : [],
+        audience_tags: audienceTags ? audienceTags.split(',').map(tag => tag.trim()) : [],
+        activity_tags: activityTags ? activityTags.split(',').map(tag => tag.trim()) : [],
+        media_urls: mediaUrls ? mediaUrls.split(',').map(url => url.trim()) : [],
         is_active: true
       };
 
@@ -169,6 +221,24 @@ const ActivitiesManagement = () => {
     setImage('');
     setBookingRequired(false);
     setTags('');
+    setAudienceTags('');
+    setLocationName('');
+    setIsOnProperty(true);
+    setPriceType('free');
+    setPriceAmount('');
+    setPriceRangeMin('');
+    setPriceRangeMax('');
+    setDurationHours('');
+    setDurationMinutes('');
+    setTimingsType('24_7');
+    setSpecificTimings('');
+    setAvailableDays('');
+    setAvailableSeasons('');
+    setDisclaimer('');
+    setRulesRegulations('');
+    setActivityTags('');
+    setMediaUrls('');
+    setBookingType('reception');
     setEditingActivity(null);
     setShowForm(false);
   };
@@ -178,8 +248,26 @@ const ActivitiesManagement = () => {
     setDescription(activity.description || '');
     setDistance(activity.distance || '');
     setImage(activity.image || '');
+    setLocationName(activity.location_name || '');
+    setIsOnProperty(activity.is_on_property ?? true);
+    setPriceType(activity.price_type as 'free' | 'fixed' | 'range' || 'free');
+    setPriceAmount(activity.price_amount?.toString() || '');
+    setPriceRangeMin(activity.price_range_min?.toString() || '');
+    setPriceRangeMax(activity.price_range_max?.toString() || '');
+    setDurationHours(activity.duration_hours?.toString() || '');
+    setDurationMinutes(activity.duration_minutes?.toString() || '');
+    setTimingsType(activity.timings?.type === 'specific' ? 'specific' : '24_7');
+    setSpecificTimings(activity.timings?.times ? activity.timings.times.join(', ') : '');
+    setAvailableDays(Array.isArray(activity.available_days) ? activity.available_days.join(', ') : '');
+    setAvailableSeasons(Array.isArray(activity.available_seasons) ? activity.available_seasons.join(', ') : '');
+    setDisclaimer(activity.disclaimer || '');
+    setRulesRegulations(activity.rules_regulations || '');
     setBookingRequired(activity.booking_required);
+    setBookingType(activity.booking_type as 'online' | 'reception' | 'both' || 'reception');
     setTags(Array.isArray(activity.tags) ? activity.tags.join(', ') : '');
+    setAudienceTags(Array.isArray(activity.audience_tags) ? activity.audience_tags.join(', ') : '');
+    setActivityTags(Array.isArray(activity.activity_tags) ? activity.activity_tags.join(', ') : '');
+    setMediaUrls(Array.isArray(activity.media_urls) ? activity.media_urls.join(', ') : '');
     setEditingActivity(activity);
     setShowForm(true);
   };
@@ -233,51 +321,223 @@ const ActivitiesManagement = () => {
             <CardTitle>{editingActivity ? 'Edit Activity' : 'Add New Activity'}</CardTitle>
           </CardHeader>
           <CardContent>
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <form onSubmit={handleSubmit} className="space-y-6">
+              {/* Basic Information */}
+              <div className="space-y-4">
+                <h3 className="text-lg font-semibold">Basic Information</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="title">Title *</Label>
+                    <Input
+                      id="title"
+                      value={title}
+                      onChange={(e) => setTitle(e.target.value)}
+                      required
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="locationName">Location</Label>
+                    <Input
+                      id="locationName"
+                      value={locationName}
+                      onChange={(e) => setLocationName(e.target.value)}
+                      placeholder="e.g., Pool Area, Garden"
+                    />
+                  </div>
+                </div>
+                
                 <div>
-                  <Label htmlFor="title">Title *</Label>
-                  <Input
-                    id="title"
-                    value={title}
-                    onChange={(e) => setTitle(e.target.value)}
-                    required
+                  <Label htmlFor="description">Description</Label>
+                  <Textarea
+                    id="description"
+                    value={description}
+                    onChange={(e) => setDescription(e.target.value)}
+                    rows={3}
                   />
                 </div>
-                <div>
-                  <Label htmlFor="distance">Distance</Label>
-                  <Input
-                    id="distance"
-                    value={distance}
-                    onChange={(e) => setDistance(e.target.value)}
-                    placeholder="e.g., On Property, 2 km away"
-                  />
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="distance">Distance from Property</Label>
+                    <Input
+                      id="distance"
+                      value={distance}
+                      onChange={(e) => setDistance(e.target.value)}
+                      placeholder="e.g., On Property, 2 km away"
+                    />
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <input
+                      type="checkbox"
+                      id="isOnProperty"
+                      checked={isOnProperty}
+                      onChange={(e) => setIsOnProperty(e.target.checked)}
+                      className="rounded"
+                    />
+                    <Label htmlFor="isOnProperty">On Property</Label>
+                  </div>
                 </div>
               </div>
-              
-              <div>
-                <Label htmlFor="description">Description</Label>
-                <Textarea
-                  id="description"
-                  value={description}
-                  onChange={(e) => setDescription(e.target.value)}
-                  rows={3}
-                />
+
+              {/* Pricing */}
+              <div className="space-y-4">
+                <h3 className="text-lg font-semibold">Pricing</h3>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div>
+                    <Label htmlFor="priceType">Price Type</Label>
+                    <Select value={priceType} onValueChange={(value: 'free' | 'fixed' | 'range') => setPriceType(value)}>
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="free">Free</SelectItem>
+                        <SelectItem value="fixed">Fixed Price</SelectItem>
+                        <SelectItem value="range">Price Range</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  {priceType === 'fixed' && (
+                    <div>
+                      <Label htmlFor="priceAmount">Price Amount</Label>
+                      <Input
+                        id="priceAmount"
+                        type="number"
+                        value={priceAmount}
+                        onChange={(e) => setPriceAmount(e.target.value)}
+                        placeholder="0"
+                      />
+                    </div>
+                  )}
+                  {priceType === 'range' && (
+                    <>
+                      <div>
+                        <Label htmlFor="priceRangeMin">Min Price</Label>
+                        <Input
+                          id="priceRangeMin"
+                          type="number"
+                          value={priceRangeMin}
+                          onChange={(e) => setPriceRangeMin(e.target.value)}
+                          placeholder="0"
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="priceRangeMax">Max Price</Label>
+                        <Input
+                          id="priceRangeMax"
+                          type="number"
+                          value={priceRangeMax}
+                          onChange={(e) => setPriceRangeMax(e.target.value)}
+                          placeholder="0"
+                        />
+                      </div>
+                    </>
+                  )}
+                </div>
               </div>
 
-              <div>
-                <Label htmlFor="image">Image URL</Label>
-                <Input
-                  id="image"
-                  value={image}
-                  onChange={(e) => setImage(e.target.value)}
-                  placeholder="https://example.com/image.jpg"
-                />
+              {/* Duration */}
+              <div className="space-y-4">
+                <h3 className="text-lg font-semibold">Duration</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="durationHours">Duration (Hours)</Label>
+                    <Input
+                      id="durationHours"
+                      type="number"
+                      value={durationHours}
+                      onChange={(e) => setDurationHours(e.target.value)}
+                      placeholder="0"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="durationMinutes">Duration (Minutes)</Label>
+                    <Input
+                      id="durationMinutes"
+                      type="number"
+                      value={durationMinutes}
+                      onChange={(e) => setDurationMinutes(e.target.value)}
+                      placeholder="0"
+                    />
+                  </div>
+                </div>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {/* Timing & Availability */}
+              <div className="space-y-4">
+                <h3 className="text-lg font-semibold">Timing & Availability</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="timingsType">Timings</Label>
+                    <Select value={timingsType} onValueChange={(value: '24_7' | 'specific') => setTimingsType(value)}>
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="24_7">24/7 Available</SelectItem>
+                        <SelectItem value="specific">Specific Times</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  {timingsType === 'specific' && (
+                    <div>
+                      <Label htmlFor="specificTimings">Specific Times (comma-separated)</Label>
+                      <Input
+                        id="specificTimings"
+                        value={specificTimings}
+                        onChange={(e) => setSpecificTimings(e.target.value)}
+                        placeholder="9:00-17:00, 19:00-21:00"
+                      />
+                    </div>
+                  )}
+                </div>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="availableDays">Available Days (comma-separated)</Label>
+                    <Input
+                      id="availableDays"
+                      value={availableDays}
+                      onChange={(e) => setAvailableDays(e.target.value)}
+                      placeholder="monday, tuesday, wednesday (leave empty for all days)"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="availableSeasons">Available Seasons (comma-separated)</Label>
+                    <Input
+                      id="availableSeasons"
+                      value={availableSeasons}
+                      onChange={(e) => setAvailableSeasons(e.target.value)}
+                      placeholder="spring, summer, monsoon, winter (leave empty for all seasons)"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Tags & Categories */}
+              <div className="space-y-4">
+                <h3 className="text-lg font-semibold">Tags & Categories</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="audienceTags">Audience Tags (comma-separated)</Label>
+                    <Input
+                      id="audienceTags"
+                      value={audienceTags}
+                      onChange={(e) => setAudienceTags(e.target.value)}
+                      placeholder="families, couples, solo, kids, adults, seniors"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="activityTags">Activity Tags (comma-separated)</Label>
+                    <Input
+                      id="activityTags"
+                      value={activityTags}
+                      onChange={(e) => setActivityTags(e.target.value)}
+                      placeholder="adventure, relaxing, cultural, sports"
+                    />
+                  </div>
+                </div>
                 <div>
-                  <Label htmlFor="tags">Tags (comma-separated)</Label>
+                  <Label htmlFor="tags">General Tags (comma-separated)</Label>
                   <Input
                     id="tags"
                     value={tags}
@@ -285,19 +545,84 @@ const ActivitiesManagement = () => {
                     placeholder="adventure, nature, family"
                   />
                 </div>
-                <div className="flex items-center space-x-2">
-                  <input
-                    type="checkbox"
-                    id="bookingRequired"
-                    checked={bookingRequired}
-                    onChange={(e) => setBookingRequired(e.target.checked)}
-                    className="rounded"
+              </div>
+
+              {/* Media */}
+              <div className="space-y-4">
+                <h3 className="text-lg font-semibold">Media</h3>
+                <div>
+                  <Label htmlFor="image">Main Image URL</Label>
+                  <Input
+                    id="image"
+                    value={image}
+                    onChange={(e) => setImage(e.target.value)}
+                    placeholder="https://example.com/image.jpg"
                   />
-                  <Label htmlFor="bookingRequired">Booking Required</Label>
+                </div>
+                <div>
+                  <Label htmlFor="mediaUrls">Additional Media URLs (comma-separated)</Label>
+                  <Textarea
+                    id="mediaUrls"
+                    value={mediaUrls}
+                    onChange={(e) => setMediaUrls(e.target.value)}
+                    placeholder="https://example.com/image1.jpg, https://example.com/video1.mp4"
+                    rows={2}
+                  />
                 </div>
               </div>
 
-              <div className="flex gap-2">
+              {/* Legal & Booking */}
+              <div className="space-y-4">
+                <h3 className="text-lg font-semibold">Legal & Booking</h3>
+                <div>
+                  <Label htmlFor="disclaimer">Disclaimer</Label>
+                  <Textarea
+                    id="disclaimer"
+                    value={disclaimer}
+                    onChange={(e) => setDisclaimer(e.target.value)}
+                    rows={2}
+                    placeholder="Any disclaimers or warnings for this activity"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="rulesRegulations">Rules & Regulations</Label>
+                  <Textarea
+                    id="rulesRegulations"
+                    value={rulesRegulations}
+                    onChange={(e) => setRulesRegulations(e.target.value)}
+                    rows={3}
+                    placeholder="Rules and regulations for this activity"
+                  />
+                </div>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="bookingType">Booking Method</Label>
+                    <Select value={bookingType} onValueChange={(value: 'online' | 'reception' | 'both') => setBookingType(value)}>
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="online">Online Only</SelectItem>
+                        <SelectItem value="reception">Reception Only</SelectItem>
+                        <SelectItem value="both">Both Online & Reception</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <input
+                      type="checkbox"
+                      id="bookingRequired"
+                      checked={bookingRequired}
+                      onChange={(e) => setBookingRequired(e.target.checked)}
+                      className="rounded"
+                    />
+                    <Label htmlFor="bookingRequired">Booking Required</Label>
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex gap-2 pt-4">
                 <Button type="submit">{editingActivity ? 'Update' : 'Create'} Activity</Button>
                 <Button 
                   type="button" 
