@@ -74,6 +74,7 @@ interface GuestBooking {
   total_amount: number;
   payment_status: string;
   created_at: string;
+  guest_id: string;
 }
 
 interface CreditNote {
@@ -93,13 +94,15 @@ export default function GuestManagement() {
   const [guestDocuments, setGuestDocuments] = useState<GuestDocument[]>([]);
   const [guestBookings, setGuestBookings] = useState<GuestBooking[]>([]);
   const [creditNotes, setCreditNotes] = useState<CreditNote[]>([]);
+  const [allBookings, setAllBookings] = useState<GuestBooking[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [viewMode, setViewMode] = useState<'card' | 'list'>('card');
   const [showGuestDialog, setShowGuestDialog] = useState(false);
   const [showCreditDialog, setShowCreditDialog] = useState(false);
   const [showDocumentDialog, setShowDocumentDialog] = useState(false);
+  const [showGuestDetails, setShowGuestDetails] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [activeTab, setActiveTab] = useState('list');
+  const [activeTab, setActiveTab] = useState('active-stay');
   const { toast } = useToast();
 
   // Document form state
@@ -111,9 +114,10 @@ export default function GuestManagement() {
     notes: ''
   });
 
-  // Load guests
+  // Load guests and all bookings
   useEffect(() => {
     loadGuests();
+    loadAllBookings();
   }, []);
 
   const loadGuests = async () => {
@@ -135,6 +139,20 @@ export default function GuestManagement() {
       });
     } finally {
       setLoading(false);
+    }
+  };
+
+  const loadAllBookings = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('bookings')
+        .select('*')
+        .order('check_in', { ascending: false });
+
+      if (error) throw error;
+      setAllBookings(data || []);
+    } catch (error: any) {
+      console.error('Error loading bookings:', error);
     }
   };
 
@@ -175,7 +193,7 @@ export default function GuestManagement() {
 
   const handleGuestSelect = async (guest: Guest) => {
     setSelectedGuest(guest);
-    setActiveTab('details');
+    setShowGuestDetails(true);
     await loadGuestDetails(guest.id);
   };
 
@@ -254,11 +272,67 @@ export default function GuestManagement() {
     }
   };
 
-  const filteredGuests = guests.filter(guest =>
+  // Filter guests based on search term
+  const searchFilteredGuests = guests.filter(guest =>
     `${guest.first_name} ${guest.last_name}`.toLowerCase().includes(searchTerm.toLowerCase()) ||
     guest.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
     guest.phone?.includes(searchTerm)
   );
+
+  // Get booking status for a guest
+  const getGuestBookingStatus = (guestId: string) => {
+    const guestBookings = allBookings.filter(booking => 
+      booking.guest_id === guestId && 
+      booking.payment_status !== 'cancelled'
+    );
+    
+    if (guestBookings.length === 0) return 'no-bookings';
+    
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    
+    // Check for active stay (check-in <= today <= check-out)
+    const activeBooking = guestBookings.find(booking => {
+      const checkIn = new Date(booking.check_in);
+      const checkOut = new Date(booking.check_out);
+      checkIn.setHours(0, 0, 0, 0);
+      checkOut.setHours(0, 0, 0, 0);
+      return checkIn <= today && checkOut >= today;
+    });
+    
+    if (activeBooking) return 'active-stay';
+    
+    // Check for upcoming bookings
+    const upcomingBooking = guestBookings.find(booking => {
+      const checkIn = new Date(booking.check_in);
+      checkIn.setHours(0, 0, 0, 0);
+      return checkIn > today;
+    });
+    
+    if (upcomingBooking) return 'upcoming';
+    
+    return 'past';
+  };
+
+  // Filter guests based on active tab
+  const getFilteredGuests = () => {
+    let filtered = searchFilteredGuests;
+    
+    if (activeTab === 'active-stay') {
+      filtered = searchFilteredGuests.filter(guest => 
+        getGuestBookingStatus(guest.id) === 'active-stay'
+      );
+    } else if (activeTab === 'upcoming') {
+      filtered = searchFilteredGuests.filter(guest => 
+        getGuestBookingStatus(guest.id) === 'upcoming'
+      );
+    }
+    // 'all-guests' shows all searchFilteredGuests
+    
+    return filtered;
+  };
+
+  const filteredGuests = getFilteredGuests();
 
   // Calculate available credit for the currently selected guest only
   const getAvailableCredit = (creditNotes: CreditNote[]) => {
@@ -281,6 +355,422 @@ export default function GuestManagement() {
     
     return <Badge variant="outline">Partial ({verifiedDocs}/{totalDocs})</Badge>;
   };
+
+  // Guest List Content Component
+  const GuestListContent = () => (
+    <>
+      {/* Search and View Controls */}
+      <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
+        <div className="flex items-center gap-4 flex-1">
+          <div className="relative flex-1 max-w-md">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+            <Input
+              placeholder="Search by name, email, or phone..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pl-10"
+            />
+          </div>
+        </div>
+        
+        <div className="flex items-center gap-2">
+          <Button
+            variant={viewMode === 'card' ? 'default' : 'outline'}
+            size="sm"
+            onClick={() => setViewMode('card')}
+          >
+            <Grid className="w-4 h-4" />
+          </Button>
+          <Button
+            variant={viewMode === 'list' ? 'default' : 'outline'}
+            size="sm"
+            onClick={() => setViewMode('list')}
+          >
+            <List className="w-4 h-4" />
+          </Button>
+        </div>
+      </div>
+
+      {/* Guest List Content */}
+      {viewMode === 'card' ? (
+        <div className="grid gap-4">
+          {filteredGuests.map((guest) => (
+            <Card key={guest.id} className="p-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-4">
+                  <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center">
+                    <User className="h-6 w-6 text-primary" />
+                  </div>
+                  <div>
+                    <h3 className="font-semibold">{guest.first_name} {guest.last_name}</h3>
+                    <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                      {guest.email && (
+                        <div className="flex items-center gap-1">
+                          <Mail className="h-3 w-3" />
+                          {guest.email}
+                        </div>
+                      )}
+                      {guest.phone && (
+                        <div className="flex items-center gap-1">
+                          <Phone className="h-3 w-3" />
+                          {guest.phone}
+                        </div>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-2 text-xs text-muted-foreground mt-1">
+                      <span>Joined {format(new Date(guest.created_at), 'MMM yyyy')}</span>
+                      <Badge variant="outline" className="text-xs">
+                        {getGuestBookingStatus(guest.id).replace('-', ' ')}
+                      </Badge>
+                    </div>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2">
+                  {guest.is_blacklisted && (
+                    <Badge variant="destructive">
+                      <AlertTriangle className="h-3 w-3 mr-1" />
+                      Blacklisted
+                    </Badge>
+                  )}
+                  <Button onClick={() => handleGuestSelect(guest)}>
+                    View Details
+                  </Button>
+                </div>
+              </div>
+            </Card>
+          ))}
+        </div>
+      ) : (
+        <div className="border rounded-lg">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Name</TableHead>
+                <TableHead>Contact</TableHead>
+                <TableHead>Booking Status</TableHead>
+                <TableHead>Joined</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead>Actions</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {filteredGuests.map((guest) => (
+                <TableRow key={guest.id}>
+                  <TableCell className="font-medium">
+                    {guest.first_name} {guest.last_name}
+                  </TableCell>
+                  <TableCell>
+                    <div className="space-y-1">
+                      {guest.email && (
+                        <div className="flex items-center gap-1 text-sm">
+                          <Mail className="h-3 w-3" />
+                          {guest.email}
+                        </div>
+                      )}
+                      {guest.phone && (
+                        <div className="flex items-center gap-1 text-sm">
+                          <Phone className="h-3 w-3" />
+                          {guest.phone}
+                        </div>
+                      )}
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    <Badge variant="outline" className="capitalize">
+                      {getGuestBookingStatus(guest.id).replace('-', ' ')}
+                    </Badge>
+                  </TableCell>
+                  <TableCell>
+                    {format(new Date(guest.created_at), 'MMM yyyy')}
+                  </TableCell>
+                  <TableCell>
+                    {guest.is_blacklisted ? (
+                      <Badge variant="destructive">
+                        <AlertTriangle className="h-3 w-3 mr-1" />
+                        Blacklisted
+                      </Badge>
+                    ) : (
+                      <Badge variant="default">Active</Badge>
+                    )}
+                  </TableCell>
+                  <TableCell>
+                    <Button
+                      size="sm"
+                      onClick={() => handleGuestSelect(guest)}
+                    >
+                      <Eye className="h-4 w-4" />
+                    </Button>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </div>
+      )}
+
+      {filteredGuests.length === 0 && (
+        <Card className="py-12">
+          <CardContent className="text-center">
+            <User className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+            <h3 className="text-lg font-medium mb-2">No guests found</h3>
+            <p className="text-muted-foreground mb-4">
+              {searchTerm 
+                ? 'No guests match your search criteria.' 
+                : activeTab === 'active-stay' 
+                ? 'No guests currently staying at the property.'
+                : activeTab === 'upcoming'
+                ? 'No guests with upcoming bookings.'
+                : 'Start by adding your first guest.'
+              }
+            </p>
+            {!searchTerm && activeTab === 'all-guests' && (
+              <Button onClick={() => setShowGuestDialog(true)}>
+                <Plus className="h-4 w-4 mr-2" />
+                Add First Guest
+              </Button>
+            )}
+          </CardContent>
+        </Card>
+      )}
+    </>
+  );
+
+  // Guest Details Content Component
+  const GuestDetailsContent = () => (
+    <>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        {/* Guest Profile */}
+        <Card className="md:col-span-1">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <User className="h-5 w-5" />
+              Guest Profile
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div>
+              <Label className="text-sm font-medium">Name</Label>
+              <p className="text-sm">{selectedGuest?.first_name} {selectedGuest?.last_name}</p>
+            </div>
+            
+            {selectedGuest?.email && (
+              <div>
+                <Label className="text-sm font-medium">Email</Label>
+                <p className="text-sm flex items-center gap-1">
+                  <Mail className="h-3 w-3" />
+                  {selectedGuest.email}
+                </p>
+              </div>
+            )}
+            
+            {selectedGuest?.phone && (
+              <div>
+                <Label className="text-sm font-medium">Phone</Label>
+                <p className="text-sm flex items-center gap-1">
+                  <Phone className="h-3 w-3" />
+                  {selectedGuest.phone}
+                </p>
+              </div>
+            )}
+            
+            {selectedGuest?.address && (
+              <div>
+                <Label className="text-sm font-medium">Address</Label>
+                <p className="text-sm flex items-center gap-1">
+                  <MapPin className="h-3 w-3" />
+                  {selectedGuest.address}
+                </p>
+              </div>
+            )}
+            
+            {selectedGuest?.date_of_birth && (
+              <div>
+                <Label className="text-sm font-medium">Date of Birth</Label>
+                <p className="text-sm">{format(new Date(selectedGuest.date_of_birth), 'PPP')}</p>
+              </div>
+            )}
+            
+            <div className="flex gap-2">
+              <Button variant="outline" size="sm">
+                <Edit className="h-4 w-4 mr-1" />
+                Edit
+              </Button>
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={() => setShowCreditDialog(true)}
+              >
+                <Wallet className="h-4 w-4 mr-1" />
+                Add Credit
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Documents */}
+        <Card className="md:col-span-1">
+          <CardHeader>
+            <div className="flex justify-between items-center">
+              <CardTitle className="flex items-center gap-2">
+                <IdCard className="h-5 w-5" />
+                Identity Documents
+              </CardTitle>
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={() => setShowDocumentDialog(true)}
+              >
+                <Plus className="h-4 w-4" />
+              </Button>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-3">
+              {guestDocuments.map((doc) => (
+                <div key={doc.id} className="border rounded p-3">
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <p className="font-medium capitalize">
+                        {doc.document_type.replace('_', ' ')}
+                      </p>
+                      <p className="text-sm text-muted-foreground">
+                        {doc.document_number}
+                      </p>
+                      {doc.expiry_date && (
+                        <p className="text-xs text-muted-foreground">
+                          Expires: {format(new Date(doc.expiry_date), 'PPP')}
+                        </p>
+                      )}
+                      {doc.notes && (
+                        <p className="text-xs text-muted-foreground mt-1">
+                          {doc.notes}
+                        </p>
+                      )}
+                    </div>
+                    <Badge variant={doc.is_verified ? 'default' : 'secondary'}>
+                      {doc.is_verified ? 'Verified' : 'Pending'}
+                    </Badge>
+                  </div>
+                  {doc.document_image_url && (
+                    <div className="mt-2">
+                      <img 
+                        src={doc.document_image_url} 
+                        alt="Document" 
+                        className="w-full h-20 object-cover rounded border"
+                      />
+                    </div>
+                  )}
+                </div>
+              ))}
+              
+              {guestDocuments.length === 0 && (
+                <div className="text-center py-4">
+                  <FileText className="h-8 w-8 mx-auto text-muted-foreground mb-2" />
+                  <p className="text-sm text-muted-foreground">No documents uploaded</p>
+                </div>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Credit Wallet */}
+        <Card className="md:col-span-1">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <CreditCard className="h-5 w-5" />
+              Credit Wallet
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-3">
+              <div className="text-center p-4 bg-muted rounded-lg">
+                <p className="text-2xl font-bold">
+                  ₹{getAvailableCredit(creditNotes).toLocaleString()}
+                </p>
+                <p className="text-sm text-muted-foreground">Available Credit</p>
+              </div>
+              
+              <div className="space-y-2">
+                {creditNotes.slice(0, 3).map((credit) => (
+                  <div key={credit.id} className="border rounded p-2">
+                    <div className="flex justify-between">
+                      <span className="font-medium">₹{credit.amount}</span>
+                      <Badge variant={credit.is_redeemed ? 'secondary' : 'default'}>
+                        {credit.is_redeemed ? 'Redeemed' : 'Active'}
+                      </Badge>
+                    </div>
+                    <p className="text-xs text-muted-foreground">{credit.reason}</p>
+                    <p className="text-xs text-muted-foreground">
+                      Expires: {format(new Date(credit.expires_at), 'PPP')}
+                    </p>
+                  </div>
+                ))}
+                
+                {creditNotes.length === 0 && (
+                  <p className="text-sm text-muted-foreground text-center py-4">
+                    No credit notes found
+                  </p>
+                )}
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Booking History */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <History className="h-5 w-5" />
+            Booking History
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Booking ID</TableHead>
+                <TableHead>Check-in</TableHead>
+                <TableHead>Check-out</TableHead>
+                <TableHead>Guests</TableHead>
+                <TableHead>Amount</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead>Date</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {guestBookings.map((booking) => (
+                <TableRow key={booking.id}>
+                  <TableCell className="font-medium">{booking.booking_id}</TableCell>
+                  <TableCell>{format(new Date(booking.check_in), 'PPP')}</TableCell>
+                  <TableCell>{format(new Date(booking.check_out), 'PPP')}</TableCell>
+                  <TableCell>{booking.guests_count}</TableCell>
+                  <TableCell>₹{booking.total_amount.toLocaleString()}</TableCell>
+                  <TableCell>
+                    <Badge 
+                      variant={
+                        booking.payment_status === 'confirmed' ? 'default' :
+                        booking.payment_status === 'pending' ? 'secondary' : 'destructive'
+                      }
+                    >
+                      {booking.payment_status}
+                    </Badge>
+                  </TableCell>
+                  <TableCell>{format(new Date(booking.created_at), 'PPP')}</TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+          
+          {guestBookings.length === 0 && (
+            <div className="text-center py-8">
+              <p className="text-muted-foreground">No bookings found for this guest</p>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+    </>
+  );
 
   return (
     <div className="container mx-auto py-8 px-4">
@@ -311,411 +801,36 @@ export default function GuestManagement() {
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList>
-          <TabsTrigger value="list">Guest List</TabsTrigger>
-          {selectedGuest && (
-            <TabsTrigger value="details">
-              Guest Details ({selectedGuest.first_name} {selectedGuest.last_name})
-            </TabsTrigger>
-          )}
+        <TabsList className="grid w-full grid-cols-3">
+          <TabsTrigger value="active-stay">Active Stay</TabsTrigger>
+          <TabsTrigger value="upcoming">Upcoming</TabsTrigger>
+          <TabsTrigger value="all-guests">All Guests</TabsTrigger>
         </TabsList>
 
-        <TabsContent value="list" className="space-y-4">
-          {/* Search and View Controls */}
-          <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
-            <div className="flex items-center gap-4 flex-1">
-              <div className="relative flex-1 max-w-md">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
-                <Input
-                  placeholder="Search by name, email, or phone..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10"
-                />
-              </div>
-            </div>
-            
-            <div className="flex items-center gap-2">
-              <Button
-                variant={viewMode === 'card' ? 'default' : 'outline'}
-                size="sm"
-                onClick={() => setViewMode('card')}
-              >
-                <Grid className="w-4 h-4" />
-              </Button>
-              <Button
-                variant={viewMode === 'list' ? 'default' : 'outline'}
-                size="sm"
-                onClick={() => setViewMode('list')}
-              >
-                <List className="w-4 h-4" />
-              </Button>
-            </div>
-          </div>
-
-          {/* Guest List Content */}
-          {viewMode === 'card' ? (
-            <div className="grid gap-4">
-              {filteredGuests.map((guest) => (
-                <Card key={guest.id} className="p-4">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-4">
-                      <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center">
-                        <User className="h-6 w-6 text-primary" />
-                      </div>
-                      <div>
-                        <h3 className="font-semibold">{guest.first_name} {guest.last_name}</h3>
-                        <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                          {guest.email && (
-                            <div className="flex items-center gap-1">
-                              <Mail className="h-3 w-3" />
-                              {guest.email}
-                            </div>
-                          )}
-                          {guest.phone && (
-                            <div className="flex items-center gap-1">
-                              <Phone className="h-3 w-3" />
-                              {guest.phone}
-                            </div>
-                          )}
-                        </div>
-                        <div className="text-xs text-muted-foreground mt-1">
-                          Joined {format(new Date(guest.created_at), 'MMM yyyy')}
-                        </div>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      {guest.is_blacklisted && (
-                        <Badge variant="destructive">
-                          <AlertTriangle className="h-3 w-3 mr-1" />
-                          Blacklisted
-                        </Badge>
-                      )}
-                      <Button onClick={() => handleGuestSelect(guest)}>
-                        View Details
-                      </Button>
-                    </div>
-                  </div>
-                </Card>
-              ))}
-            </div>
-          ) : (
-            <div className="border rounded-lg">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Name</TableHead>
-                    <TableHead>Contact</TableHead>
-                    <TableHead>Joined</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead>Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {filteredGuests.map((guest) => (
-                    <TableRow key={guest.id}>
-                      <TableCell className="font-medium">
-                        {guest.first_name} {guest.last_name}
-                      </TableCell>
-                      <TableCell>
-                        <div className="space-y-1">
-                          {guest.email && (
-                            <div className="flex items-center gap-1 text-sm">
-                              <Mail className="h-3 w-3" />
-                              {guest.email}
-                            </div>
-                          )}
-                          {guest.phone && (
-                            <div className="flex items-center gap-1 text-sm">
-                              <Phone className="h-3 w-3" />
-                              {guest.phone}
-                            </div>
-                          )}
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        {format(new Date(guest.created_at), 'MMM yyyy')}
-                      </TableCell>
-                      <TableCell>
-                        {guest.is_blacklisted ? (
-                          <Badge variant="destructive">
-                            <AlertTriangle className="h-3 w-3 mr-1" />
-                            Blacklisted
-                          </Badge>
-                        ) : (
-                          <Badge variant="default">Active</Badge>
-                        )}
-                      </TableCell>
-                      <TableCell>
-                        <Button
-                          size="sm"
-                          onClick={() => handleGuestSelect(guest)}
-                        >
-                          <Eye className="h-4 w-4" />
-                        </Button>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </div>
-          )}
-
-          {filteredGuests.length === 0 && (
-            <Card className="py-12">
-              <CardContent className="text-center">
-                <User className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-                <h3 className="text-lg font-medium mb-2">No guests found</h3>
-                <p className="text-muted-foreground mb-4">
-                  {searchTerm ? 'No guests match your search criteria.' : 'Start by adding your first guest.'}
-                </p>
-                {!searchTerm && (
-                  <Button onClick={() => setShowGuestDialog(true)}>
-                    <Plus className="h-4 w-4 mr-2" />
-                    Add First Guest
-                  </Button>
-                )}
-              </CardContent>
-            </Card>
-          )}
+        <TabsContent value="active-stay" className="space-y-4">
+          <GuestListContent />
         </TabsContent>
 
-        {selectedGuest && (
-          <TabsContent value="details" className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              {/* Guest Profile */}
-              <Card className="md:col-span-1">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <User className="h-5 w-5" />
-                    Guest Profile
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div>
-                    <Label className="text-sm font-medium">Name</Label>
-                    <p className="text-sm">{selectedGuest.first_name} {selectedGuest.last_name}</p>
-                  </div>
-                  
-                  {selectedGuest.email && (
-                    <div>
-                      <Label className="text-sm font-medium">Email</Label>
-                      <p className="text-sm flex items-center gap-1">
-                        <Mail className="h-3 w-3" />
-                        {selectedGuest.email}
-                      </p>
-                    </div>
-                  )}
-                  
-                  {selectedGuest.phone && (
-                    <div>
-                      <Label className="text-sm font-medium">Phone</Label>
-                      <p className="text-sm flex items-center gap-1">
-                        <Phone className="h-3 w-3" />
-                        {selectedGuest.phone}
-                      </p>
-                    </div>
-                  )}
-                  
-                  {selectedGuest.address && (
-                    <div>
-                      <Label className="text-sm font-medium">Address</Label>
-                      <p className="text-sm flex items-center gap-1">
-                        <MapPin className="h-3 w-3" />
-                        {selectedGuest.address}
-                      </p>
-                    </div>
-                  )}
-                  
-                  {selectedGuest.date_of_birth && (
-                    <div>
-                      <Label className="text-sm font-medium">Date of Birth</Label>
-                      <p className="text-sm">{format(new Date(selectedGuest.date_of_birth), 'PPP')}</p>
-                    </div>
-                  )}
-                  
-                  <div className="flex gap-2">
-                    <Button variant="outline" size="sm">
-                      <Edit className="h-4 w-4 mr-1" />
-                      Edit
-                    </Button>
-                    <Button 
-                      variant="outline" 
-                      size="sm"
-                      onClick={() => setShowCreditDialog(true)}
-                    >
-                      <Wallet className="h-4 w-4 mr-1" />
-                      Add Credit
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
+        <TabsContent value="upcoming" className="space-y-4">
+          <GuestListContent />
+        </TabsContent>
 
-              {/* Documents */}
-              <Card className="md:col-span-1">
-                <CardHeader>
-                  <div className="flex justify-between items-center">
-                    <CardTitle className="flex items-center gap-2">
-                      <IdCard className="h-5 w-5" />
-                      Identity Documents
-                    </CardTitle>
-                    <Button 
-                      variant="outline" 
-                      size="sm"
-                      onClick={() => setShowDocumentDialog(true)}
-                    >
-                      <Plus className="h-4 w-4" />
-                    </Button>
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-3">
-                    {guestDocuments.map((doc) => (
-                      <div key={doc.id} className="border rounded p-3">
-                        <div className="flex justify-between items-start">
-                          <div>
-                            <p className="font-medium capitalize">
-                              {doc.document_type.replace('_', ' ')}
-                            </p>
-                            <p className="text-sm text-muted-foreground">
-                              {doc.document_number}
-                            </p>
-                            {doc.expiry_date && (
-                              <p className="text-xs text-muted-foreground">
-                                Expires: {format(new Date(doc.expiry_date), 'PPP')}
-                              </p>
-                            )}
-                            {doc.notes && (
-                              <p className="text-xs text-muted-foreground mt-1">
-                                {doc.notes}
-                              </p>
-                            )}
-                          </div>
-                          <Badge variant={doc.is_verified ? 'default' : 'secondary'}>
-                            {doc.is_verified ? 'Verified' : 'Pending'}
-                          </Badge>
-                        </div>
-                        {doc.document_image_url && (
-                          <div className="mt-2">
-                            <img 
-                              src={doc.document_image_url} 
-                              alt="Document" 
-                              className="w-full h-20 object-cover rounded border"
-                            />
-                          </div>
-                        )}
-                      </div>
-                    ))}
-                    
-                    {guestDocuments.length === 0 && (
-                      <div className="text-center py-4">
-                        <FileText className="h-8 w-8 mx-auto text-muted-foreground mb-2" />
-                        <p className="text-sm text-muted-foreground">No documents uploaded</p>
-                      </div>
-                    )}
-                  </div>
-                </CardContent>
-              </Card>
-
-              {/* Credit Wallet */}
-              <Card className="md:col-span-1">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <CreditCard className="h-5 w-5" />
-                    Credit Wallet
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-3">
-                    <div className="text-center p-4 bg-muted rounded-lg">
-                      <p className="text-2xl font-bold">
-                        ₹{getAvailableCredit(creditNotes).toLocaleString()}
-                      </p>
-                      <p className="text-sm text-muted-foreground">Available Credit</p>
-                    </div>
-                    
-                    <div className="space-y-2">
-                      {creditNotes.slice(0, 3).map((credit) => (
-                        <div key={credit.id} className="border rounded p-2">
-                          <div className="flex justify-between">
-                            <span className="font-medium">₹{credit.amount}</span>
-                            <Badge variant={credit.is_redeemed ? 'secondary' : 'default'}>
-                              {credit.is_redeemed ? 'Redeemed' : 'Active'}
-                            </Badge>
-                          </div>
-                          <p className="text-xs text-muted-foreground">{credit.reason}</p>
-                          <p className="text-xs text-muted-foreground">
-                            Expires: {format(new Date(credit.expires_at), 'PPP')}
-                          </p>
-                        </div>
-                      ))}
-                      
-                      {creditNotes.length === 0 && (
-                        <p className="text-sm text-muted-foreground text-center py-4">
-                          No credit notes found
-                        </p>
-                      )}
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-
-            {/* Booking History */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <History className="h-5 w-5" />
-                  Booking History
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Booking ID</TableHead>
-                      <TableHead>Check-in</TableHead>
-                      <TableHead>Check-out</TableHead>
-                      <TableHead>Guests</TableHead>
-                      <TableHead>Amount</TableHead>
-                      <TableHead>Status</TableHead>
-                      <TableHead>Date</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {guestBookings.map((booking) => (
-                      <TableRow key={booking.id}>
-                        <TableCell className="font-medium">{booking.booking_id}</TableCell>
-                        <TableCell>{format(new Date(booking.check_in), 'PPP')}</TableCell>
-                        <TableCell>{format(new Date(booking.check_out), 'PPP')}</TableCell>
-                        <TableCell>{booking.guests_count}</TableCell>
-                        <TableCell>₹{booking.total_amount.toLocaleString()}</TableCell>
-                        <TableCell>
-                          <Badge 
-                            variant={
-                              booking.payment_status === 'confirmed' ? 'default' :
-                              booking.payment_status === 'pending' ? 'secondary' : 'destructive'
-                            }
-                          >
-                            {booking.payment_status}
-                          </Badge>
-                        </TableCell>
-                        <TableCell>{format(new Date(booking.created_at), 'PPP')}</TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-                
-                {guestBookings.length === 0 && (
-                  <div className="text-center py-8">
-                    <p className="text-muted-foreground">No bookings found for this guest</p>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          </TabsContent>
-        )}
+        <TabsContent value="all-guests" className="space-y-4">
+          <GuestListContent />
+        </TabsContent>
       </Tabs>
+
+      {/* Guest Details Modal/Overlay */}
+      <Dialog open={showGuestDetails} onOpenChange={setShowGuestDetails}>
+        <DialogContent className="max-w-7xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>
+              Guest Details - {selectedGuest?.first_name} {selectedGuest?.last_name}
+            </DialogTitle>
+          </DialogHeader>
+          <GuestDetailsContent />
+        </DialogContent>
+      </Dialog>
 
       {/* Credit Note Dialog */}
       <Dialog open={showCreditDialog} onOpenChange={setShowCreditDialog}>
