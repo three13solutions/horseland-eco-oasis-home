@@ -1,132 +1,70 @@
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 import NavigationV5 from '../components/v5/NavigationV5';
 import DynamicFooter from '../components/DynamicFooter';
 import FloatingElementsV5 from '../components/v5/FloatingElementsV5';
 import CategoryFilters, { Filters } from '@/components/stay/CategoryFilters';
 import CategoryCard, { Category } from '@/components/stay/CategoryCard';
 import CategoryBookingModal from '@/components/stay/CategoryBookingModal';
+import { supabase } from '@/integrations/supabase/client';
+
+// Helper function to map room features to category attributes
+const mapRoomToCategory = (room: any): Category => {
+  const features = room.features || [];
+  
+  // Extract bed configurations from features
+  const bedConfigurations = features.filter((f: string) => 
+    f.includes('double') || f.includes('bed') || f.includes('loft')
+  );
+  
+  // Determine audiences based on max guests and features
+  const audiences = [];
+  if (room.max_guests >= 2) audiences.push('Couple');
+  if (room.max_guests >= 3 || features.some((f: string) => f.includes('family') || f.includes('playground'))) audiences.push('Family with kids');
+  if (room.max_guests >= 4) audiences.push('Friends / Group');
+  
+  // Determine budget category based on price
+  let budget: 'Budget' | 'Mid-range' | 'Premium' = 'Budget';
+  if (room.base_price >= 4000) budget = 'Premium';
+  else if (room.base_price >= 3000) budget = 'Mid-range';
+  
+  // Extract view locations from features and name
+  const viewLocations = [];
+  if (features.some((f: string) => f.toLowerCase().includes('pool'))) viewLocations.push('Pool view (window)', 'Near pool');
+  if (features.some((f: string) => f.toLowerCase().includes('balcony'))) viewLocations.push('Balcony');
+  if (features.some((f: string) => f.toLowerCase().includes('highest'))) viewLocations.push('Highest point');
+  if (features.some((f: string) => f.toLowerCase().includes('sports'))) viewLocations.push('Near sports courts');
+  if (features.some((f: string) => f.toLowerCase().includes('playground'))) viewLocations.push('Near playground');
+  if (features.some((f: string) => f.toLowerCase().includes('entrance'))) viewLocations.push('Near entrance');
+  if (features.some((f: string) => f.toLowerCase().includes('private') || f.toLowerCase().includes('windowless'))) viewLocations.push('No view / private and snug');
+  
+  // Determine noise level
+  let noise: 'Lively zone' | 'Moderate' | 'Quiet' = 'Moderate';
+  if (features.some((f: string) => f.toLowerCase().includes('pool') || f.toLowerCase().includes('sports') || f.toLowerCase().includes('active'))) noise = 'Lively zone';
+  else if (features.some((f: string) => f.toLowerCase().includes('private') || f.toLowerCase().includes('quiet') || f.toLowerCase().includes('cave'))) noise = 'Quiet';
+  
+  // Create tagline from description or generate one
+  const tagline = room.description ? 
+    room.description.split('.')[0] : 
+    `Comfortable accommodation for up to ${room.max_guests} guests`;
+
+  return {
+    id: room.id,
+    name: room.name,
+    tagline,
+    image: room.hero_image || 'https://images.unsplash.com/photo-1571896349842-33c89424de2d?auto=format&fit=crop&w=800&q=80',
+    maxGuests: room.max_guests,
+    bedConfigurations: bedConfigurations.length > 0 ? bedConfigurations : ['Standard bed'],
+    audiences: audiences.length > 0 ? audiences : ['Anyone'],
+    budget,
+    viewLocations: viewLocations.length > 0 ? viewLocations : ['Standard view'],
+    features,
+    noise,
+  };
+};
 
 const Stay = () => {
-  // New category-first experience
-  const categories: Category[] = [
-    {
-      id: 'cave-hideouts',
-      name: 'Cave Hideouts',
-      tagline: 'Naturally cool rooms tucked below ground',
-      image: 'https://images.unsplash.com/photo-1564501049412-61c2a3083791?auto=format&fit=crop&w=800&q=80',
-      maxGuests: 3,
-      bedConfigurations: ['1 double', 'double + sofa‑cum‑bed'],
-      audiences: ['Couple', 'Family with kids', 'Friends / Group'],
-      budget: 'Budget',
-      viewLocations: ['No view / private and snug', 'Near entrance'],
-      features: ['Basement/cave style', 'Windowless/private', 'Air‑conditioned'],
-      noise: 'Quiet',
-    },
-    {
-      id: 'bamboo-heights',
-      name: 'Bamboo Heights Cabins',
-      tagline: 'Cozy cabins with elevated views',
-      image: 'https://images.unsplash.com/photo-1449824913935-59a10b8d2000?auto=format&fit=crop&w=800&q=80',
-      maxGuests: 4,
-      bedConfigurations: ['2 doubles'],
-      audiences: ['Family with kids', 'Friends / Group'],
-      budget: 'Mid-range',
-      viewLocations: ['Balcony', 'Highest point'],
-      features: ['Cabin/cottage style', 'Air‑conditioned', 'Interconnected'],
-      noise: 'Moderate',
-    },
-    {
-      id: 'pool-deck',
-      name: 'Pool Deck Rooms',
-      tagline: 'Steps from a refreshing dip',
-      image: 'https://images.unsplash.com/photo-1571896349842-33c89424de2d?auto=format&fit=crop&w=800&q=80',
-      maxGuests: 3,
-      bedConfigurations: ['1 double', 'double + sofa‑cum‑bed'],
-      audiences: ['Couple', 'Family with kids'],
-      budget: 'Mid-range',
-      viewLocations: ['Near pool', 'Pool view (window)'],
-      features: ['Air‑conditioned'],
-      noise: 'Lively zone',
-    },
-    {
-      id: 'balcony-bliss',
-      name: 'Balcony Bliss',
-      tagline: 'Open-air balconies for fresh forest breezes',
-      image: 'https://images.unsplash.com/photo-1631049307264-da0ec9d70304?auto=format&fit=crop&w=800&q=80',
-      maxGuests: 3,
-      bedConfigurations: ['1 double'],
-      audiences: ['Couple'],
-      budget: 'Premium',
-      viewLocations: ['Balcony', 'Highest point'],
-      features: ['Air‑conditioned'],
-      noise: 'Moderate',
-    },
-    {
-      id: 'loftscapes',
-      name: 'Loftscapes Rooms',
-      tagline: 'Smart loft layouts with extra sleeping space',
-      image: 'https://images.unsplash.com/photo-1586023492125-27b2c045efd7?auto=format&fit=crop&w=800&q=80',
-      maxGuests: 5,
-      bedConfigurations: ['loft bed present', '2 doubles'],
-      audiences: ['Family with kids', 'Friends / Group'],
-      budget: 'Mid-range',
-      viewLocations: ['Balcony'],
-      features: ['Loft layout', 'Interconnected', 'Air‑conditioned'],
-      noise: 'Moderate',
-    },
-    {
-      id: 'poolside-peeks',
-      name: 'Poolside Peeks',
-      tagline: 'Cheerful rooms close to pool fun',
-      image: 'https://images.unsplash.com/photo-1578683010236-d716f9a3f461?auto=format&fit=crop&w=800&q=80',
-      maxGuests: 4,
-      bedConfigurations: ['2 doubles'],
-      audiences: ['Friends / Group', 'Family with kids'],
-      budget: 'Budget',
-      viewLocations: ['Near pool', 'Pool view (window)'],
-      features: ['Air‑conditioned'],
-      noise: 'Lively zone',
-    },
-    {
-      id: 'plateau-pods',
-      name: 'Plateau Pods',
-      tagline: 'Calm, elevated pods with privacy',
-      image: 'https://images.unsplash.com/photo-1602002418082-a4443e081dd1?auto=format&fit=crop&w=800&q=80',
-      maxGuests: 2,
-      bedConfigurations: ['1 double'],
-      audiences: ['Couple'],
-      budget: 'Budget',
-      viewLocations: ['Highest point'],
-      features: ['Non‑AC', 'Windowless/private'],
-      noise: 'Quiet',
-    },
-    {
-      id: 'courtside-quarters',
-      name: 'Courtside Quarters',
-      tagline: 'Stay by the action near sports courts',
-      image: 'https://images.unsplash.com/photo-1631049307264-da0ec9d70304?auto=format&fit=crop&w=800&q=80',
-      maxGuests: 4,
-      bedConfigurations: ['2 doubles'],
-      audiences: ['Friends / Group', 'Family with kids'],
-      budget: 'Budget',
-      viewLocations: ['Near sports courts'],
-      features: ['Air‑conditioned'],
-      noise: 'Lively zone',
-    },
-    {
-      id: 'playside-nooks',
-      name: 'Playside Nooks',
-      tagline: 'Family-friendly spaces near the playground',
-      image: 'https://images.unsplash.com/photo-1566665797739-1674de7a421a?auto=format&fit=crop&w=800&q=80',
-      maxGuests: 4,
-      bedConfigurations: ['double + sofa‑cum‑bed'],
-      audiences: ['Family with kids'],
-      budget: 'Budget',
-      viewLocations: ['Near playground', 'Near entrance'],
-      features: ['Air‑conditioned', 'Interconnected'],
-      noise: 'Moderate',
-    },
-  ];
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [loading, setLoading] = useState(true);
 
   const [filters, setFilters] = useState<Filters>({
     guests: null,
@@ -140,6 +78,33 @@ const Stay = () => {
 
   const [selectedCategory, setSelectedCategory] = useState<Category | null>(null);
   const [bookingOpen, setBookingOpen] = useState(false);
+
+  // Load room types from database
+  useEffect(() => {
+    const loadRoomTypes = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('room_types')
+          .select('*')
+          .eq('is_published', true)
+          .order('name');
+
+        if (error) {
+          console.error('Error loading room types:', error);
+          return;
+        }
+
+        const mappedCategories = data.map(mapRoomToCategory);
+        setCategories(mappedCategories);
+      } catch (error) {
+        console.error('Error loading room types:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadRoomTypes();
+  }, []);
 
   const filteredCategories = useMemo(() => {
     return categories.filter((c) => {
@@ -159,6 +124,17 @@ const Stay = () => {
       return true;
     });
   }, [categories, filters]);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-muted-foreground">Loading room categories...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background overflow-x-hidden">
