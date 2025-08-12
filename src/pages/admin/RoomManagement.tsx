@@ -536,13 +536,14 @@ export default function RoomManagement() {
             </>
           )}
 
-          <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-            <DialogTrigger asChild>
-              <Button onClick={resetForm} className="flex items-center gap-2">
-                <Plus className="h-4 w-4" />
-                Add Room Type
-              </Button>
-            </DialogTrigger>
+          {activeTab === 'rooms' && (
+            <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+              <DialogTrigger asChild>
+                <Button onClick={resetForm} className="flex items-center gap-2">
+                  <Plus className="h-4 w-4" />
+                  Add Room Type
+                </Button>
+              </DialogTrigger>
             <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
               <DialogHeader>
                 <DialogTitle>{editingRoom ? 'Edit Room Type' : 'Add New Room Type'}</DialogTitle>
@@ -667,6 +668,7 @@ export default function RoomManagement() {
               </form>
             </DialogContent>
           </Dialog>
+          )}
 
           {activeTab === 'units' && (
             <Dialog open={isUnitsDialogOpen} onOpenChange={setIsUnitsDialogOpen}>
