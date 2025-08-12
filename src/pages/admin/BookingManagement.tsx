@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Calendar, Eye, Search, Filter, Users, IndianRupee, ArrowLeft, Clock, CheckCircle, XCircle, AlertCircle } from 'lucide-react';
+import { Calendar, Eye, Search, Filter, Users, IndianRupee, ArrowLeft, Clock, CheckCircle, XCircle, AlertCircle, Bot, RefreshCw, Edit } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
@@ -71,6 +71,9 @@ export default function BookingManagement() {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [dateFilter, setDateFilter] = useState<string>('all');
+  const [autoAssigning, setAutoAssigning] = useState<string | null>(null);
+  const [selectedRoomOverride, setSelectedRoomOverride] = useState<string>('');
+  const [overrideBookingId, setOverrideBookingId] = useState<string | null>(null);
   const [stats, setStats] = useState<BookingStats>({
     totalBookings: 0,
     totalRevenue: 0,
@@ -221,6 +224,95 @@ export default function BookingManagement() {
 
     return matchesSearch && matchesStatus && matchesDate;
   });
+
+  const handleAutoAssign = async (booking: Booking) => {
+    if (!booking.room_type_id) {
+      toast({
+        title: "Error",
+        description: "Please select a room type first",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setAutoAssigning(booking.id);
+
+    try {
+      const { data, error } = await supabase.functions.invoke('auto-assign-room', {
+        body: {
+          bookingId: booking.id,
+          roomTypeId: booking.room_type_id,
+          checkIn: booking.check_in,
+          checkOut: booking.check_out,
+          guestsCount: booking.guests_count
+        }
+      });
+
+      if (error) throw error;
+
+      if (data.error) {
+        toast({
+          title: "Auto-assignment Failed",
+          description: data.error,
+          variant: "destructive",
+        });
+        return;
+      }
+
+      toast({
+        title: "Room Assigned Successfully",
+        description: `Automatically assigned unit to ${booking.guest_name}`,
+      });
+
+      loadBookings(); // Refresh the bookings list
+    } catch (error: any) {
+      console.error('Auto-assign error:', error);
+      toast({
+        title: "Error",
+        description: "Failed to auto-assign room",
+        variant: "destructive",
+      });
+    } finally {
+      setAutoAssigning(null);
+    }
+  };
+
+  const handleManualOverride = async (bookingId: string, roomUnitId: string) => {
+    try {
+      const { error } = await supabase
+        .from('bookings')
+        .update({ room_unit_id: roomUnitId })
+        .eq('id', bookingId);
+
+      if (error) throw error;
+
+      toast({
+        title: "Room Assignment Updated",
+        description: "Room assignment changed successfully",
+      });
+
+      setOverrideBookingId(null);
+      setSelectedRoomOverride('');
+      loadBookings();
+    } catch (error: any) {
+      console.error('Manual override error:', error);
+      toast({
+        title: "Error",
+        description: "Failed to update room assignment",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const getAvailableUnitsForBooking = (booking: Booking) => {
+    if (!booking.room_type_id) return [];
+    
+    return roomUnits.filter(unit => 
+      unit.room_type_id === booking.room_type_id && 
+      unit.status === 'available' &&
+      unit.is_active
+    );
+  };
 
   const getUnitAvailabilityStatus = (unit: RoomUnit) => {
     const activeBooking = bookings.find(booking => {
@@ -423,27 +515,129 @@ export default function BookingManagement() {
                           </div>
                         </TableCell>
                         <TableCell>
-                          {booking.room_unit_id ? (
-                            <div>
-                              <div className="font-medium">
-                                {booking.room_units?.unit_number}
-                                {booking.room_units?.unit_name && ` - ${booking.room_units.unit_name}`}
+                          <div className="space-y-2">
+                            {booking.room_unit_id ? (
+                              <div>
+                                <div className="font-medium">
+                                  {booking.room_units?.unit_number}
+                                  {booking.room_units?.unit_name && ` - ${booking.room_units.unit_name}`}
+                                </div>
+                                <div className="text-sm text-muted-foreground">
+                                  {booking.room_units?.room_types?.name}
+                                </div>
+                                {overrideBookingId === booking.id ? (
+                                  <div className="flex gap-2 mt-2">
+                                    <Select value={selectedRoomOverride} onValueChange={setSelectedRoomOverride}>
+                                      <SelectTrigger className="w-40">
+                                        <SelectValue placeholder="Select unit" />
+                                      </SelectTrigger>
+                                      <SelectContent>
+                                        {getAvailableUnitsForBooking(booking).map((unit) => (
+                                          <SelectItem key={unit.id} value={unit.id}>
+                                            {unit.unit_number} - {unit.unit_name || 'No name'}
+                                          </SelectItem>
+                                        ))}
+                                      </SelectContent>
+                                    </Select>
+                                    <Button
+                                      size="sm"
+                                      onClick={() => handleManualOverride(booking.id, selectedRoomOverride)}
+                                      disabled={!selectedRoomOverride}
+                                    >
+                                      Update
+                                    </Button>
+                                    <Button
+                                      size="sm"
+                                      variant="outline"
+                                      onClick={() => {
+                                        setOverrideBookingId(null);
+                                        setSelectedRoomOverride('');
+                                      }}
+                                    >
+                                      Cancel
+                                    </Button>
+                                  </div>
+                                ) : (
+                                  <Button
+                                    size="sm"
+                                    variant="outline"
+                                    className="mt-1"
+                                    onClick={() => setOverrideBookingId(booking.id)}
+                                  >
+                                    <Edit className="h-3 w-3 mr-1" />
+                                    Change Room
+                                  </Button>
+                                )}
                               </div>
+                            ) : booking.room_type_id ? (
+                              <div>
+                                <div className="text-sm font-medium text-muted-foreground">
+                                  {booking.room_types?.name} (No unit assigned)
+                                </div>
+                                <div className="flex gap-2 mt-2">
+                                  <Button
+                                    size="sm"
+                                    onClick={() => handleAutoAssign(booking)}
+                                    disabled={autoAssigning === booking.id}
+                                    className="bg-blue-600 hover:bg-blue-700"
+                                  >
+                                    {autoAssigning === booking.id ? (
+                                      <RefreshCw className="h-3 w-3 mr-1 animate-spin" />
+                                    ) : (
+                                      <Bot className="h-3 w-3 mr-1" />
+                                    )}
+                                    Auto-assign
+                                  </Button>
+                                  <Button
+                                    size="sm"
+                                    variant="outline"
+                                    onClick={() => setOverrideBookingId(booking.id)}
+                                  >
+                                    Manual
+                                  </Button>
+                                </div>
+                                {overrideBookingId === booking.id && (
+                                  <div className="flex gap-2 mt-2">
+                                    <Select value={selectedRoomOverride} onValueChange={setSelectedRoomOverride}>
+                                      <SelectTrigger className="w-40">
+                                        <SelectValue placeholder="Select unit" />
+                                      </SelectTrigger>
+                                      <SelectContent>
+                                        {getAvailableUnitsForBooking(booking).map((unit) => (
+                                          <SelectItem key={unit.id} value={unit.id}>
+                                            {unit.unit_number} - {unit.unit_name || 'No name'}
+                                          </SelectItem>
+                                        ))}
+                                      </SelectContent>
+                                    </Select>
+                                    <Button
+                                      size="sm"
+                                      onClick={() => handleManualOverride(booking.id, selectedRoomOverride)}
+                                      disabled={!selectedRoomOverride}
+                                    >
+                                      Assign
+                                    </Button>
+                                    <Button
+                                      size="sm"
+                                      variant="outline"
+                                      onClick={() => {
+                                        setOverrideBookingId(null);
+                                        setSelectedRoomOverride('');
+                                      }}
+                                    >
+                                      Cancel
+                                    </Button>
+                                  </div>
+                                )}
+                              </div>
+                            ) : booking.package_id ? (
                               <div className="text-sm text-muted-foreground">
-                                {booking.room_units?.room_types?.name}
+                                Package: {booking.packages?.title}
                               </div>
-                            </div>
-                          ) : booking.room_type_id ? (
-                            <div className="text-sm text-muted-foreground">
-                              {booking.room_types?.name} (Any unit)
-                            </div>
-                          ) : booking.package_id ? (
-                            <div className="text-sm text-muted-foreground">
-                              Package: {booking.packages?.title}
-                            </div>
-                          ) : (
-                            <span className="text-muted-foreground">-</span>
-                          )}
+                            ) : (
+                              <span className="text-muted-foreground">-</span>
+                            )}
+                          </div>
                         </TableCell>
                         <TableCell>{format(parseISO(booking.check_in), 'MMM dd, yyyy')}</TableCell>
                         <TableCell>{format(parseISO(booking.check_out), 'MMM dd, yyyy')}</TableCell>
