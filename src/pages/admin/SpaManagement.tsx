@@ -44,7 +44,9 @@ const SpaManagement = () => {
     description: '',
     duration: '',
     price: '',
-    tags: [] as string[]
+    tags: [] as string[],
+    media_urls: [] as string[],
+    featured_image_index: 0
   });
 
   const { toast } = useToast();
@@ -86,7 +88,9 @@ const SpaManagement = () => {
       description: '',
       duration: '',
       price: '',
-      tags: []
+      tags: [],
+      media_urls: [],
+      featured_image_index: 0
     });
     setEditingId(null);
   };
@@ -97,13 +101,14 @@ const SpaManagement = () => {
     try {
       const serviceData = {
         title: formData.title,
-        image: formData.image || null,
+        image: formData.media_urls.length > 0 ? formData.media_urls[formData.featured_image_index] : null,
         description: formData.description || null,
         duration: formData.duration ? parseInt(formData.duration) : null,
         price: parseFloat(formData.price),
         tags: formData.tags,
         booking_required: true,
-        is_active: true
+        is_active: true,
+        media_urls: formData.media_urls
       };
 
       if (editingId) {
@@ -143,7 +148,9 @@ const SpaManagement = () => {
       description: service.description || '',
       duration: service.duration?.toString() || '',
       price: service.price.toString(),
-      tags: service.tags || []
+      tags: service.tags || [],
+      media_urls: Array.isArray(service.media_urls) ? service.media_urls : [],
+      featured_image_index: 0
     });
     setEditingId(service.id);
     setDialogOpen(true);
@@ -222,7 +229,7 @@ const SpaManagement = () => {
     <div className="min-h-screen bg-background">
       <div className="max-w-7xl mx-auto px-4 py-6">
         {/* Header */}
-        <div className="flex items-center justify-between mb-6">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
           <div className="flex items-center gap-4">
             <Button 
               variant="ghost" 
@@ -233,16 +240,14 @@ const SpaManagement = () => {
               <ArrowLeft className="w-4 h-4 mr-2" />
               Back to Dashboard
             </Button>
-            <div>
-              <h1 className="text-2xl font-heading font-bold text-foreground">Spa Services Management</h1>
-              <p className="text-muted-foreground font-body">Manage your spa services and treatments</p>
-            </div>
+            <div className="h-6 w-px bg-border" />
+            <h1 className="text-3xl font-bold">Spa Services Management</h1>
           </div>
 
           <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
             <DialogTrigger asChild>
-              <Button onClick={resetForm}>
-                <Plus className="w-4 h-4 mr-2" />
+              <Button onClick={resetForm} className="flex items-center gap-2">
+                <Plus className="w-4 h-4" />
                 Add Spa Service
               </Button>
             </DialogTrigger>
@@ -263,14 +268,72 @@ const SpaManagement = () => {
                 </div>
 
                 <div>
-                  <Label htmlFor="image">Service Image URL</Label>
-                  <Input
-                    id="image"
-                    type="url"
-                    value={formData.image}
-                    onChange={(e) => setFormData({ ...formData, image: e.target.value })}
-                    placeholder="https://example.com/image.jpg"
-                  />
+                  <Label>Service Media (Images/Videos)</Label>
+                  <div className="space-y-4">
+                    <div className="border-2 border-dashed border-border rounded-lg p-4">
+                      <input
+                        type="file"
+                        multiple
+                        accept="image/*,video/*"
+                        onChange={(e) => {
+                          const files = Array.from(e.target.files || []);
+                          // For demo purposes, we'll use placeholder URLs
+                          // In a real implementation, you'd upload these files to storage
+                          const newUrls = files.map(file => URL.createObjectURL(file));
+                          setFormData({ 
+                            ...formData, 
+                            media_urls: [...formData.media_urls, ...newUrls] 
+                          });
+                        }}
+                        className="w-full"
+                      />
+                      <p className="text-sm text-muted-foreground mt-2">
+                        Upload images or videos for this service
+                      </p>
+                    </div>
+                    
+                    {formData.media_urls.length > 0 && (
+                      <div className="space-y-2">
+                        <Label>Uploaded Media</Label>
+                        <div className="grid grid-cols-3 gap-2">
+                          {formData.media_urls.map((url, index) => (
+                            <div key={index} className="relative group">
+                              <img 
+                                src={url} 
+                                alt={`Media ${index + 1}`}
+                                className="w-full h-20 object-cover rounded border"
+                              />
+                              <Button
+                                type="button"
+                                variant="destructive"
+                                size="sm"
+                                className="absolute -top-1 -right-1 h-6 w-6 rounded-full p-0 opacity-0 group-hover:opacity-100"
+                                onClick={() => {
+                                  const newUrls = formData.media_urls.filter((_, i) => i !== index);
+                                  setFormData({ 
+                                    ...formData, 
+                                    media_urls: newUrls,
+                                    featured_image_index: formData.featured_image_index >= newUrls.length ? 0 : formData.featured_image_index
+                                  });
+                                }}
+                              >
+                                <X className="h-3 w-3" />
+                              </Button>
+                              <Button
+                                type="button"
+                                variant={formData.featured_image_index === index ? "default" : "secondary"}
+                                size="sm"
+                                className="absolute -bottom-1 left-1 h-5 text-xs px-2"
+                                onClick={() => setFormData({ ...formData, featured_image_index: index })}
+                              >
+                                {formData.featured_image_index === index ? "Featured" : "Set Featured"}
+                              </Button>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
                 </div>
 
                 <div>
