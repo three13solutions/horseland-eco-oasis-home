@@ -1,95 +1,50 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import NavigationV5 from '../components/v5/NavigationV5';
 import DynamicFooter from '../components/DynamicFooter';
 import FloatingElementsV5 from '../components/v5/FloatingElementsV5';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Clock, Sparkles, Heart, Leaf } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
+
+interface SpaService {
+  id: string;
+  title: string;
+  image: string | null;
+  description: string | null;
+  duration: number | null;
+  price: number;
+  tags: any;
+  is_active: boolean;
+}
 
 const Spa = () => {
-  const services = [
-    {
-      id: 'ayurvedic-massage',
-      name: 'Traditional Ayurvedic Massage',
-      image: 'https://images.unsplash.com/photo-1544161515-4ab6ce6db874?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
-      duration: '90 minutes',
-      price: '₹4,500',
-      description: 'Full-body massage using warm herbal oils to balance your doshas and rejuvenate your energy.',
-      benefits: ['Stress Relief', 'Improved Circulation', 'Muscle Relaxation', 'Energy Balance']
-    },
-    {
-      id: 'mountain-stone-therapy',
-      name: 'Mountain Stone Therapy',
-      image: 'https://images.unsplash.com/photo-1570172619644-dfd03ed5d881?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
-      duration: '75 minutes',
-      price: '₹3,800',
-      description: 'Heated volcanic stones from local mountains to release tension and promote deep relaxation.',
-      benefits: ['Deep Muscle Relief', 'Improved Sleep', 'Stress Reduction', 'Pain Management']
-    },
-    {
-      id: 'forest-aromatherapy',
-      name: 'Forest Aromatherapy',
-      image: 'https://images.unsplash.com/photo-1515377905703-c4788e51af15?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
-      duration: '60 minutes',
-      price: '₹3,200',
-      description: 'Essential oils from native forest plants combined with gentle massage techniques.',
-      benefits: ['Mental Clarity', 'Emotional Balance', 'Respiratory Health', 'Skin Nourishment']
-    },
-    {
-      id: 'couples-retreat',
-      name: 'Couples Wellness Retreat',
-      image: 'https://images.unsplash.com/photo-1544161515-4ab6ce6db874?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
-      duration: '120 minutes',
-      price: '₹8,000',
-      description: 'Side-by-side massage experience in our private couples suite with mountain views.',
-      benefits: ['Bonding Experience', 'Shared Relaxation', 'Romantic Ambiance', 'Private Setting']
-    },
-    {
-      id: 'meditation-session',
-      name: 'Guided Meditation Session',
-      image: 'https://images.unsplash.com/photo-1506126613408-eca07ce68773?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
-      duration: '45 minutes',
-      price: '₹1,800',
-      description: 'Mindfulness meditation sessions in our outdoor pavilion surrounded by nature.',
-      benefits: ['Mindfulness', 'Stress Relief', 'Mental Clarity', 'Inner Peace']
-    },
-    {
-      id: 'yoga-therapy',
-      name: 'Therapeutic Yoga Session',
-      image: 'https://images.unsplash.com/photo-1599901860904-17e6ed7083a0?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
-      duration: '75 minutes',
-      price: '₹2,500',
-      description: 'Personalized yoga practice designed to address specific physical and mental wellness goals.',
-      benefits: ['Flexibility', 'Strength Building', 'Posture Improvement', 'Mind-Body Balance']
-    },
-    {
-      id: 'head-massage',
-      name: 'Head Massage',
-      image: 'https://images.unsplash.com/photo-1519823551278-64ac92734fb1?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
-      duration: '45 minutes',
-      price: '₹2,000',
-      description: 'Relaxing head massage using traditional techniques to relieve stress and improve circulation.',
-      benefits: ['Stress Relief', 'Improved Sleep', 'Hair Health', 'Mental Clarity']
-    },
-    {
-      id: 'foot-massage',
-      name: 'Foot Massage',
-      image: 'https://images.unsplash.com/photo-1544161515-4ab6ce6db874?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
-      duration: '45 minutes',
-      price: '₹1,800',
-      description: 'Therapeutic foot massage targeting pressure points to restore energy flow and reduce fatigue.',
-      benefits: ['Foot Relief', 'Better Circulation', 'Energy Boost', 'Stress Reduction']
-    },
-    {
-      id: 'poolside-massage',
-      name: 'Outdoor Poolside Body Massage',
-      image: 'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
-      duration: '90 minutes',
-      price: '₹4,200',
-      description: 'Full-body massage in our outdoor poolside cabana surrounded by mountain views and fresh air.',
-      benefits: ['Nature Connection', 'Deep Relaxation', 'Fresh Air Therapy', 'Mountain Views']
+  const [services, setServices] = useState<SpaService[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    loadServices();
+  }, []);
+
+  const loadServices = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('spa_services')
+        .select('*')
+        .eq('is_active', true)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      setServices((data || []).map(service => ({
+        ...service,
+        tags: Array.isArray(service.tags) ? service.tags : []
+      })));
+    } catch (error) {
+      console.error('Error loading spa services:', error);
+    } finally {
+      setLoading(false);
     }
-  ];
+  };
 
   const packages = [
     {
@@ -184,55 +139,73 @@ const Spa = () => {
             Spa Services
           </h2>
           
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {services.map((service) => (
-              <div key={service.id} className="bg-card border rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-all duration-300">
-                <div className="relative">
-                  <img 
-                    src={service.image}
-                    alt={service.name}
-                    className="w-full h-48 object-cover"
-                  />
-                  <Badge className="absolute top-3 right-3 bg-primary text-primary-foreground">
-                    {service.price}
-                  </Badge>
-                </div>
-                
-                <div className="p-6">
-                  <h3 className="text-xl font-heading font-semibold mb-2">{service.name}</h3>
-                  
-                  <div className="flex items-center gap-2 mb-3 text-muted-foreground">
-                    <Clock className="w-4 h-4" />
-                    <span className="font-body text-sm">{service.duration}</span>
+          {loading ? (
+            <div className="flex justify-center py-12">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+            </div>
+          ) : services.length === 0 ? (
+            <div className="text-center py-12">
+              <p className="text-muted-foreground">No spa services available at the moment.</p>
+            </div>
+          ) : (
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+              {services.map((service) => (
+                <div key={service.id} className="bg-card border rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-all duration-300">
+                  <div className="relative">
+                    {service.image && (
+                      <img 
+                        src={service.image}
+                        alt={service.title}
+                        className="w-full h-48 object-cover"
+                      />
+                    )}
+                    <Badge className="absolute top-3 right-3 bg-primary text-primary-foreground">
+                      ₹{service.price}
+                    </Badge>
                   </div>
                   
-                  <p className="text-muted-foreground font-body text-sm mb-4 leading-relaxed">
-                    {service.description}
-                  </p>
-                  
-                  <div className="mb-4">
-                    <h4 className="font-body font-semibold mb-2 text-foreground text-sm">Benefits:</h4>
-                    <div className="flex flex-wrap gap-1">
-                      {service.benefits.slice(0, 2).map((benefit, index) => (
-                        <Badge key={index} variant="secondary" className="text-xs">
-                          {benefit}
-                        </Badge>
-                      ))}
-                      {service.benefits.length > 2 && (
-                        <Badge variant="secondary" className="text-xs">
-                          +{service.benefits.length - 2} more
-                        </Badge>
-                      )}
-                    </div>
+                  <div className="p-6">
+                    <h3 className="text-xl font-heading font-semibold mb-2">{service.title}</h3>
+                    
+                    {service.duration && (
+                      <div className="flex items-center gap-2 mb-3 text-muted-foreground">
+                        <Clock className="w-4 h-4" />
+                        <span className="font-body text-sm">{service.duration} minutes</span>
+                      </div>
+                    )}
+                    
+                    {service.description && (
+                      <p className="text-muted-foreground font-body text-sm mb-4 leading-relaxed">
+                        {service.description}
+                      </p>
+                    )}
+                    
+                    {service.tags && service.tags.length > 0 && (
+                      <div className="mb-4">
+                        <h4 className="font-body font-semibold mb-2 text-foreground text-sm">Benefits:</h4>
+                        <div className="flex flex-wrap gap-1">
+                          {service.tags.slice(0, 2).map((tag, index) => (
+                            <Badge key={index} variant="secondary" className="text-xs">
+                              {tag}
+                            </Badge>
+                          ))}
+                          {service.tags.length > 2 && (
+                            <Badge variant="secondary" className="text-xs">
+                              +{service.tags.length - 2} more
+                            </Badge>
+                          )}
+                        </div>
+                      </div>
+                    )}
+                    
+                    <Button className="w-full font-body">
+                      Book a Slot
+                    </Button>
                   </div>
-                  
-                  <Button className="w-full font-body">
-                    Book a Slot
-                  </Button>
                 </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          )}
         </div>
       </section>
 

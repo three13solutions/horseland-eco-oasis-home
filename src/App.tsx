@@ -30,6 +30,7 @@ import AdminLogin from "./pages/AdminLogin";
 import AdminDashboard from "./pages/AdminDashboard";
 import RoomManagement from "./pages/admin/RoomManagement";
 import ActivitiesManagement from "./pages/admin/ActivitiesManagement";
+import SpaManagement from "./pages/admin/SpaManagement";
 
 import UserManagement from "./pages/admin/UserManagement";
 import SiteSettings from "./pages/admin/SiteSettings";
@@ -70,6 +71,7 @@ const App = () => (
           <Route path="/admin" element={<AdminDashboard />} />
           <Route path="/admin/rooms" element={<RoomManagement />} />
           <Route path="/admin/activities" element={<ActivitiesManagement />} />
+          <Route path="/admin/spa" element={<SpaManagement />} />
           
           <Route path="/admin/users" element={<UserManagement />} />
           <Route path="/admin/media" element={<MediaManagement />} />
