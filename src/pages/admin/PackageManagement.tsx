@@ -10,10 +10,9 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import ImageUpload from '@/components/ImageUpload';
-import { Plus, Edit, Trash2, Search, Grid, List, Calendar, Users, DollarSign, Package } from 'lucide-react';
+import { Plus, Edit, Trash2, Search, Grid, List, Calendar, Users, ArrowLeft, Save, X, Hotel, Activity, Utensils, Sparkles } from 'lucide-react';
 
 interface PackageData {
   id: string;
@@ -79,7 +78,7 @@ const PackageManagement = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [selectedPackage, setSelectedPackage] = useState<PackageData | null>(null);
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [showForm, setShowForm] = useState(false);
   const [activeTab, setActiveTab] = useState('basic');
 
   const [formData, setFormData] = useState<Partial<PackageData>>({
@@ -251,7 +250,7 @@ const PackageManagement = () => {
         });
       }
 
-      setIsDialogOpen(false);
+      setShowForm(false);
       setSelectedPackage(null);
       resetForm();
       loadData();
@@ -321,7 +320,7 @@ const PackageManagement = () => {
     setActiveTab('basic');
   };
 
-  const openEditDialog = (pkg: PackageData) => {
+  const openEditForm = (pkg: PackageData) => {
     setSelectedPackage(pkg);
     setFormData({
       ...pkg,
@@ -332,13 +331,35 @@ const PackageManagement = () => {
         spa_services: []
       }
     });
-    setIsDialogOpen(true);
+    setShowForm(true);
   };
 
-  const openCreateDialog = () => {
+  const openCreateForm = () => {
     setSelectedPackage(null);
     resetForm();
-    setIsDialogOpen(true);
+    setShowForm(true);
+  };
+
+  const handleComponentToggle = (type: keyof PackageData['components'], itemId: string) => {
+    setFormData(prev => ({
+      ...prev,
+      components: {
+        ...prev.components!,
+        [type]: prev.components![type].includes(itemId)
+          ? prev.components![type].filter(id => id !== itemId)
+          : [...prev.components![type], itemId]
+      }
+    }));
+  };
+
+  const getComponentIcon = (type: string) => {
+    switch (type) {
+      case 'room_units': return <Hotel className="w-5 h-5" />;
+      case 'activities': return <Activity className="w-5 h-5" />;
+      case 'meals': return <Utensils className="w-5 h-5" />;
+      case 'spa_services': return <Sparkles className="w-5 h-5" />;
+      default: return null;
+    }
   };
 
   const filteredPackages = packages.filter(pkg =>
@@ -350,6 +371,433 @@ const PackageManagement = () => {
     return <div className="flex items-center justify-center min-h-96">Loading...</div>;
   }
 
+  if (showForm) {
+    return (
+      <div className="p-6 space-y-6 max-w-4xl mx-auto">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <Button variant="ghost" onClick={() => setShowForm(false)}>
+              <ArrowLeft className="w-4 h-4 mr-2" />
+              Back to Packages
+            </Button>
+            <div>
+              <h1 className="text-3xl font-bold">
+                {selectedPackage ? 'Edit Package' : 'Create Package'}
+              </h1>
+              <p className="text-muted-foreground">
+                {selectedPackage ? 'Update package details' : 'Add a new travel package'}
+              </p>
+            </div>
+          </div>
+          <div className="flex gap-2">
+            <Button variant="outline" onClick={() => setShowForm(false)}>
+              <X className="w-4 h-4 mr-2" />
+              Cancel
+            </Button>
+            <Button onClick={handleSave}>
+              <Save className="w-4 h-4 mr-2" />
+              Save Package
+            </Button>
+          </div>
+        </div>
+
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+          <TabsList className="grid w-full grid-cols-4">
+            <TabsTrigger value="basic">Basic Info</TabsTrigger>
+            <TabsTrigger value="components">Components</TabsTrigger>
+            <TabsTrigger value="media">Media</TabsTrigger>
+            <TabsTrigger value="settings">Settings</TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="basic" className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle>Package Details</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="title">Title *</Label>
+                    <Input
+                      id="title"
+                      value={formData.title}
+                      onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
+                      placeholder="Package title"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="subtitle">Subtitle</Label>
+                    <Input
+                      id="subtitle"
+                      value={formData.subtitle}
+                      onChange={(e) => setFormData(prev => ({ ...prev, subtitle: e.target.value }))}
+                      placeholder="Package subtitle"
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="description">Description</Label>
+                  <Textarea
+                    id="description"
+                    value={formData.description}
+                    onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
+                    placeholder="Package description"
+                    rows={4}
+                  />
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="package_type">Package Type</Label>
+                    <Select 
+                      value={formData.package_type} 
+                      onValueChange={(value) => setFormData(prev => ({ ...prev, package_type: value }))}
+                    >
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="family">Family</SelectItem>
+                        <SelectItem value="couple">Couple</SelectItem>
+                        <SelectItem value="solo">Solo</SelectItem>
+                        <SelectItem value="group">Group</SelectItem>
+                        <SelectItem value="corporate">Corporate</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="duration_days">Duration (Days)</Label>
+                    <Input
+                      id="duration_days"
+                      type="number"
+                      value={formData.duration_days}
+                      onChange={(e) => setFormData(prev => ({ ...prev, duration_days: parseInt(e.target.value) || 1 }))}
+                      min="1"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="max_guests">Max Guests</Label>
+                    <Input
+                      id="max_guests"
+                      type="number"
+                      value={formData.max_guests}
+                      onChange={(e) => setFormData(prev => ({ ...prev, max_guests: parseInt(e.target.value) || 1 }))}
+                      min="1"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="weekday_price">Weekday Price (₹)</Label>
+                    <Input
+                      id="weekday_price"
+                      type="number"
+                      value={formData.weekday_price}
+                      onChange={(e) => setFormData(prev => ({ ...prev, weekday_price: parseFloat(e.target.value) || 0 }))}
+                      min="0"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="weekend_price">Weekend Price (₹)</Label>
+                    <Input
+                      id="weekend_price"
+                      type="number"
+                      value={formData.weekend_price}
+                      onChange={(e) => setFormData(prev => ({ ...prev, weekend_price: parseFloat(e.target.value) || 0 }))}
+                      min="0"
+                    />
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="components" className="space-y-6">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {/* Room Units */}
+              <Card>
+                <CardHeader className="pb-3">
+                  <CardTitle className="flex items-center gap-2">
+                    {getComponentIcon('room_units')}
+                    Rooms ({formData.components?.room_units?.length || 0})
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  {roomUnits.map((unit) => (
+                    <div
+                      key={unit.id}
+                      className={`p-3 rounded-lg border cursor-pointer transition-all ${
+                        formData.components?.room_units?.includes(unit.id)
+                          ? 'border-primary bg-primary/5'
+                          : 'border-muted hover:border-border'
+                      }`}
+                      onClick={() => handleComponentToggle('room_units', unit.id)}
+                    >
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <div className="font-medium">{unit.unit_name || `Unit ${unit.unit_number}`}</div>
+                          <div className="text-sm text-muted-foreground">
+                            {unit.room_types?.name} • Room {unit.unit_number}
+                          </div>
+                        </div>
+                        <div className={`w-4 h-4 rounded border-2 ${
+                          formData.components?.room_units?.includes(unit.id)
+                            ? 'bg-primary border-primary'
+                            : 'border-muted-foreground'
+                        }`} />
+                      </div>
+                    </div>
+                  ))}
+                  {roomUnits.length === 0 && (
+                    <p className="text-sm text-muted-foreground text-center py-4">No rooms available</p>
+                  )}
+                </CardContent>
+              </Card>
+
+              {/* Activities */}
+              <Card>
+                <CardHeader className="pb-3">
+                  <CardTitle className="flex items-center gap-2">
+                    {getComponentIcon('activities')}
+                    Activities ({formData.components?.activities?.length || 0})
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  {activities.map((activity) => (
+                    <div
+                      key={activity.id}
+                      className={`p-3 rounded-lg border cursor-pointer transition-all ${
+                        formData.components?.activities?.includes(activity.id)
+                          ? 'border-primary bg-primary/5'
+                          : 'border-muted hover:border-border'
+                      }`}
+                      onClick={() => handleComponentToggle('activities', activity.id)}
+                    >
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <div className="font-medium">{activity.title}</div>
+                          {activity.price_amount && (
+                            <div className="text-sm text-muted-foreground">₹{activity.price_amount}</div>
+                          )}
+                        </div>
+                        <div className={`w-4 h-4 rounded border-2 ${
+                          formData.components?.activities?.includes(activity.id)
+                            ? 'bg-primary border-primary'
+                            : 'border-muted-foreground'
+                        }`} />
+                      </div>
+                    </div>
+                  ))}
+                  {activities.length === 0 && (
+                    <p className="text-sm text-muted-foreground text-center py-4">No activities available</p>
+                  )}
+                </CardContent>
+              </Card>
+
+              {/* Meals */}
+              <Card>
+                <CardHeader className="pb-3">
+                  <CardTitle className="flex items-center gap-2">
+                    {getComponentIcon('meals')}
+                    Meals ({formData.components?.meals?.length || 0})
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  {meals.map((meal) => (
+                    <div
+                      key={meal.id}
+                      className={`p-3 rounded-lg border cursor-pointer transition-all ${
+                        formData.components?.meals?.includes(meal.id)
+                          ? 'border-primary bg-primary/5'
+                          : 'border-muted hover:border-border'
+                      }`}
+                      onClick={() => handleComponentToggle('meals', meal.id)}
+                    >
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <div className="font-medium">{meal.title}</div>
+                          <div className="text-sm text-muted-foreground">₹{meal.price}</div>
+                        </div>
+                        <div className={`w-4 h-4 rounded border-2 ${
+                          formData.components?.meals?.includes(meal.id)
+                            ? 'bg-primary border-primary'
+                            : 'border-muted-foreground'
+                        }`} />
+                      </div>
+                    </div>
+                  ))}
+                  {meals.length === 0 && (
+                    <p className="text-sm text-muted-foreground text-center py-4">No meals available</p>
+                  )}
+                </CardContent>
+              </Card>
+
+              {/* Spa Services */}
+              <Card>
+                <CardHeader className="pb-3">
+                  <CardTitle className="flex items-center gap-2">
+                    {getComponentIcon('spa_services')}
+                    Spa Services ({formData.components?.spa_services?.length || 0})
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  {spaServices.map((service) => (
+                    <div
+                      key={service.id}
+                      className={`p-3 rounded-lg border cursor-pointer transition-all ${
+                        formData.components?.spa_services?.includes(service.id)
+                          ? 'border-primary bg-primary/5'
+                          : 'border-muted hover:border-border'
+                      }`}
+                      onClick={() => handleComponentToggle('spa_services', service.id)}
+                    >
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <div className="font-medium">{service.title}</div>
+                          <div className="text-sm text-muted-foreground">₹{service.price}</div>
+                        </div>
+                        <div className={`w-4 h-4 rounded border-2 ${
+                          formData.components?.spa_services?.includes(service.id)
+                            ? 'bg-primary border-primary'
+                            : 'border-muted-foreground'
+                        }`} />
+                      </div>
+                    </div>
+                  ))}
+                  {spaServices.length === 0 && (
+                    <p className="text-sm text-muted-foreground text-center py-4">No spa services available</p>
+                  )}
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* Cost Summary */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Package Components Summary</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
+                  <div className="p-4 bg-muted/50 rounded-lg">
+                    <div className="text-2xl font-bold">{formData.components?.room_units?.length || 0}</div>
+                    <div className="text-sm text-muted-foreground">Rooms</div>
+                  </div>
+                  <div className="p-4 bg-muted/50 rounded-lg">
+                    <div className="text-2xl font-bold">{formData.components?.activities?.length || 0}</div>
+                    <div className="text-sm text-muted-foreground">Activities</div>
+                  </div>
+                  <div className="p-4 bg-muted/50 rounded-lg">
+                    <div className="text-2xl font-bold">{formData.components?.meals?.length || 0}</div>
+                    <div className="text-sm text-muted-foreground">Meals</div>
+                  </div>
+                  <div className="p-4 bg-muted/50 rounded-lg">
+                    <div className="text-2xl font-bold">{formData.components?.spa_services?.length || 0}</div>
+                    <div className="text-sm text-muted-foreground">Spa Services</div>
+                  </div>
+                </div>
+                <div className="mt-4 p-4 bg-primary/10 rounded-lg">
+                  <div className="text-center">
+                    <div className="text-lg font-semibold">Total Component Cost</div>
+                    <div className="text-3xl font-bold text-primary">₹{calculateTotalCost()}</div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="media" className="space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Featured Image</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <ImageUpload
+                    label="Featured Image"
+                    value={formData.featured_image || ''}
+                    onChange={(url) => setFormData(prev => ({ ...prev, featured_image: url }))}
+                  />
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle>Banner Image</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <ImageUpload
+                    label="Banner Image"
+                    value={formData.banner_image || ''}
+                    onChange={(url) => setFormData(prev => ({ ...prev, banner_image: url }))}
+                  />
+                </CardContent>
+              </Card>
+            </div>
+          </TabsContent>
+
+          <TabsContent value="settings" className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle>Package Settings</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <div className="flex items-center justify-between">
+                  <div className="space-y-0.5">
+                    <Label>Featured Package</Label>
+                    <p className="text-sm text-muted-foreground">
+                      Mark this package as featured to highlight it
+                    </p>
+                  </div>
+                  <Switch
+                    checked={formData.is_featured}
+                    onCheckedChange={(checked) => setFormData(prev => ({ ...prev, is_featured: checked }))}
+                  />
+                </div>
+
+                <div className="flex items-center justify-between">
+                  <div className="space-y-0.5">
+                    <Label>Active</Label>
+                    <p className="text-sm text-muted-foreground">
+                      Make this package available for booking
+                    </p>
+                  </div>
+                  <Switch
+                    checked={formData.is_active}
+                    onCheckedChange={(checked) => setFormData(prev => ({ ...prev, is_active: checked }))}
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="cta_text">Call to Action Text</Label>
+                  <Input
+                    id="cta_text"
+                    value={formData.cta_text}
+                    onChange={(e) => setFormData(prev => ({ ...prev, cta_text: e.target.value }))}
+                    placeholder="Book Now"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="markup_percentage">Markup Percentage</Label>
+                  <Input
+                    id="markup_percentage"
+                    type="number"
+                    value={formData.markup_percentage}
+                    onChange={(e) => setFormData(prev => ({ ...prev, markup_percentage: parseFloat(e.target.value) || 0 }))}
+                    min="0"
+                    max="100"
+                  />
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+        </Tabs>
+      </div>
+    );
+  }
+
   return (
     <div className="p-6 space-y-6">
       <div className="flex items-center justify-between">
@@ -357,7 +805,7 @@ const PackageManagement = () => {
           <h1 className="text-3xl font-bold">Package Management</h1>
           <p className="text-muted-foreground">Manage your travel packages</p>
         </div>
-        <Button onClick={openCreateDialog}>
+        <Button onClick={openCreateForm}>
           <Plus className="w-4 h-4 mr-2" />
           Add Package
         </Button>
@@ -436,7 +884,7 @@ const PackageManagement = () => {
                   </div>
                 </div>
                 <div className="flex gap-2">
-                  <Button variant="outline" size="sm" onClick={() => openEditDialog(pkg)}>
+                  <Button variant="outline" size="sm" onClick={() => openEditForm(pkg)}>
                     <Edit className="w-4 h-4" />
                   </Button>
                   <Button 
@@ -500,7 +948,7 @@ const PackageManagement = () => {
                   </TableCell>
                   <TableCell>
                     <div className="flex gap-2">
-                      <Button variant="outline" size="sm" onClick={() => openEditDialog(pkg)}>
+                      <Button variant="outline" size="sm" onClick={() => openEditForm(pkg)}>
                         <Edit className="w-4 h-4" />
                       </Button>
                       <Button 
@@ -519,354 +967,6 @@ const PackageManagement = () => {
           </Table>
         </Card>
       )}
-
-      {/* Edit/Create Dialog */}
-      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>
-              {selectedPackage ? 'Edit Package' : 'Create Package'}
-            </DialogTitle>
-          </DialogHeader>
-          
-          <Tabs value={activeTab} onValueChange={setActiveTab}>
-            <TabsList className="grid w-full grid-cols-4">
-              <TabsTrigger value="basic">Basic Info</TabsTrigger>
-              <TabsTrigger value="components">Components</TabsTrigger>
-              <TabsTrigger value="media">Media</TabsTrigger>
-              <TabsTrigger value="settings">Settings</TabsTrigger>
-            </TabsList>
-
-            <TabsContent value="basic" className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="title">Title</Label>
-                  <Input
-                    id="title"
-                    value={formData.title}
-                    onChange={(e) => setFormData({...formData, title: e.target.value})}
-                    placeholder="Package title"
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="subtitle">Subtitle</Label>
-                  <Input
-                    id="subtitle"
-                    value={formData.subtitle}
-                    onChange={(e) => setFormData({...formData, subtitle: e.target.value})}
-                    placeholder="Package subtitle"
-                  />
-                </div>
-              </div>
-              
-              <div>
-                <Label htmlFor="description">Description</Label>
-                <Textarea
-                  id="description"
-                  value={formData.description}
-                  onChange={(e) => setFormData({...formData, description: e.target.value})}
-                  placeholder="Package description"
-                  rows={3}
-                />
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="package_type">Package Type</Label>
-                  <Select
-                    value={formData.package_type}
-                    onValueChange={(value) => setFormData({...formData, package_type: value})}
-                  >
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="family">Family</SelectItem>
-                      <SelectItem value="couple">Couple</SelectItem>
-                      <SelectItem value="romantic">Romantic</SelectItem>
-                      <SelectItem value="corporate">Corporate</SelectItem>
-                      <SelectItem value="relaxation">Relaxation</SelectItem>
-                      <SelectItem value="membership">Membership</SelectItem>
-                      <SelectItem value="adventure">Adventure</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div>
-                  <Label htmlFor="cta_text">CTA Text</Label>
-                  <Input
-                    id="cta_text"
-                    value={formData.cta_text}
-                    onChange={(e) => setFormData({...formData, cta_text: e.target.value})}
-                    placeholder="Book Now"
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-4 gap-4">
-                <div>
-                  <Label htmlFor="duration_days">Duration (Days)</Label>
-                  <Input
-                    id="duration_days"
-                    type="number"
-                    value={formData.duration_days}
-                    onChange={(e) => setFormData({...formData, duration_days: parseInt(e.target.value) || 1})}
-                    min="1"
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="max_guests">Max Guests</Label>
-                  <Input
-                    id="max_guests"
-                    type="number"
-                    value={formData.max_guests}
-                    onChange={(e) => setFormData({...formData, max_guests: parseInt(e.target.value) || 1})}
-                    min="1"
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="weekday_price">Weekday Price (₹)</Label>
-                  <Input
-                    id="weekday_price"
-                    type="number"
-                    value={formData.weekday_price}
-                    onChange={(e) => setFormData({...formData, weekday_price: parseFloat(e.target.value) || 0})}
-                    min="0"
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="weekend_price">Weekend Price (₹)</Label>
-                  <Input
-                    id="weekend_price"
-                    type="number"
-                    value={formData.weekend_price}
-                    onChange={(e) => setFormData({...formData, weekend_price: parseFloat(e.target.value) || 0})}
-                    min="0"
-                  />
-                </div>
-              </div>
-            </TabsContent>
-
-            <TabsContent value="components" className="space-y-4">
-              <div className="grid grid-cols-2 gap-6">
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="text-sm">Room Units</CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-2">
-                    {roomUnits.map((unit) => (
-                      <div key={unit.id} className="flex items-center space-x-2">
-                        <input
-                          type="checkbox"
-                          checked={formData.components?.room_units?.includes(unit.id) || false}
-                          onChange={(e) => {
-                            const roomUnits = formData.components?.room_units || [];
-                            setFormData({
-                              ...formData,
-                              components: {
-                                ...formData.components!,
-                                room_units: e.target.checked
-                                  ? [...roomUnits, unit.id]
-                                  : roomUnits.filter(id => id !== unit.id)
-                              }
-                            });
-                          }}
-                        />
-                        <label className="text-sm">
-                          {unit.unit_number} - {unit.room_types?.name || 'N/A'}
-                        </label>
-                      </div>
-                    ))}
-                  </CardContent>
-                </Card>
-
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="text-sm">Activities</CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-2">
-                    {activities.map((activity) => (
-                      <div key={activity.id} className="flex items-center justify-between">
-                        <div className="flex items-center space-x-2">
-                          <input
-                            type="checkbox"
-                            checked={formData.components?.activities?.includes(activity.id) || false}
-                            onChange={(e) => {
-                              const activities = formData.components?.activities || [];
-                              setFormData({
-                                ...formData,
-                                components: {
-                                  ...formData.components!,
-                                  activities: e.target.checked
-                                    ? [...activities, activity.id]
-                                    : activities.filter(id => id !== activity.id)
-                                }
-                              });
-                            }}
-                          />
-                          <label className="text-sm">{activity.title}</label>
-                        </div>
-                        <span className="text-xs text-muted-foreground">
-                          ₹{activity.price_amount || 0}
-                        </span>
-                      </div>
-                    ))}
-                  </CardContent>
-                </Card>
-
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="text-sm">Meals</CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-2">
-                    {meals.map((meal) => (
-                      <div key={meal.id} className="flex items-center justify-between">
-                        <div className="flex items-center space-x-2">
-                          <input
-                            type="checkbox"
-                            checked={formData.components?.meals?.includes(meal.id) || false}
-                            onChange={(e) => {
-                              const meals = formData.components?.meals || [];
-                              setFormData({
-                                ...formData,
-                                components: {
-                                  ...formData.components!,
-                                  meals: e.target.checked
-                                    ? [...meals, meal.id]
-                                    : meals.filter(id => id !== meal.id)
-                                }
-                              });
-                            }}
-                          />
-                          <label className="text-sm">{meal.title}</label>
-                        </div>
-                        <span className="text-xs text-muted-foreground">₹{meal.price}</span>
-                      </div>
-                    ))}
-                  </CardContent>
-                </Card>
-
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="text-sm">Spa Services</CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-2">
-                    {spaServices.map((service) => (
-                      <div key={service.id} className="flex items-center justify-between">
-                        <div className="flex items-center space-x-2">
-                          <input
-                            type="checkbox"
-                            checked={formData.components?.spa_services?.includes(service.id) || false}
-                            onChange={(e) => {
-                              const spaServices = formData.components?.spa_services || [];
-                              setFormData({
-                                ...formData,
-                                components: {
-                                  ...formData.components!,
-                                  spa_services: e.target.checked
-                                    ? [...spaServices, service.id]
-                                    : spaServices.filter(id => id !== service.id)
-                                }
-                              });
-                            }}
-                          />
-                          <label className="text-sm">{service.title}</label>
-                        </div>
-                        <span className="text-xs text-muted-foreground">₹{service.price}</span>
-                      </div>
-                    ))}
-                  </CardContent>
-                </Card>
-              </div>
-
-              <Card>
-                <CardContent className="p-4">
-                  <div className="flex items-center justify-between">
-                    <span className="font-medium">Total Component Cost:</span>
-                    <span className="text-lg font-bold">₹{calculateTotalCost()}</span>
-                  </div>
-                  <div className="flex items-center justify-between mt-2">
-                    <span className="text-sm text-muted-foreground">Package Price (Weekday):</span>
-                    <span className="text-sm">₹{formData.weekday_price}</span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm text-muted-foreground">Markup:</span>
-                    <span className="text-sm">
-                      ₹{(formData.weekday_price || 0) - calculateTotalCost()}
-                    </span>
-                  </div>
-                </CardContent>
-              </Card>
-            </TabsContent>
-
-            <TabsContent value="media" className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label>Featured Image</Label>
-                  <ImageUpload
-                    label="Featured Image"
-                    value={formData.featured_image || ''}
-                    onChange={(url) => setFormData({...formData, featured_image: url})}
-                    bucketName="uploads"
-                    folder="packages"
-                  />
-                </div>
-                <div>
-                  <Label>Banner Image</Label>
-                  <ImageUpload
-                    label="Banner Image"
-                    value={formData.banner_image || ''}
-                    onChange={(url) => setFormData({...formData, banner_image: url})}
-                    bucketName="uploads"
-                    folder="packages"
-                  />
-                </div>
-              </div>
-            </TabsContent>
-
-            <TabsContent value="settings" className="space-y-4">
-              <div className="flex items-center space-x-2">
-                <Switch
-                  id="is_featured"
-                  checked={formData.is_featured}
-                  onCheckedChange={(checked) => setFormData({...formData, is_featured: checked})}
-                />
-                <Label htmlFor="is_featured">Featured Package</Label>
-              </div>
-              
-              <div className="flex items-center space-x-2">
-                <Switch
-                  id="is_active"
-                  checked={formData.is_active}
-                  onCheckedChange={(checked) => setFormData({...formData, is_active: checked})}
-                />
-                <Label htmlFor="is_active">Active</Label>
-              </div>
-
-              <div>
-                <Label htmlFor="markup_percentage">Markup Percentage</Label>
-                <Input
-                  id="markup_percentage"
-                  type="number"
-                  value={formData.markup_percentage}
-                  onChange={(e) => setFormData({...formData, markup_percentage: parseFloat(e.target.value) || 0})}
-                  min="0"
-                  max="100"
-                  step="0.1"
-                />
-              </div>
-            </TabsContent>
-          </Tabs>
-
-          <div className="flex justify-end gap-2 pt-4">
-            <Button variant="outline" onClick={() => setIsDialogOpen(false)}>
-              Cancel
-            </Button>
-            <Button onClick={handleSave}>
-              {selectedPackage ? 'Update' : 'Create'} Package
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 };
