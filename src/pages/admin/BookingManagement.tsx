@@ -442,7 +442,8 @@ export default function BookingManagement() {
       (booking.selected_meals && booking.selected_meals.length > 0) ||
       (booking.selected_activities && booking.selected_activities.length > 0) ||
       (booking.selected_spa_services && booking.selected_spa_services.length > 0) ||
-      (booking.selected_bedding && booking.selected_bedding.length > 0);
+      (booking.selected_bedding && booking.selected_bedding.length > 0) ||
+      (booking.packages); // Include packages here
 
     if (!hasAddons) return null;
 
@@ -485,6 +486,17 @@ export default function BookingManagement() {
               {booking.selected_bedding.map((bedding: any) => 
                 `${bedding.name} (${bedding.quantity})`
               ).join(', ')}
+            </span>
+          </div>
+        )}
+        {booking.packages && (
+          <div className="text-xs">
+            <span className="font-medium text-blue-600">📦 Package:</span>
+            <span className="text-muted-foreground ml-1">
+              {booking.packages.title}
+              {booking.packages.inclusions && booking.packages.inclusions.length > 0 && 
+                ` - Includes: ${booking.packages.inclusions.slice(0, 3).join(', ')}${booking.packages.inclusions.length > 3 ? '...' : ''}`
+              }
             </span>
           </div>
         )}
@@ -1037,7 +1049,10 @@ export default function BookingManagement() {
                               </div>
                             ) : booking.package_id ? (
                               <div>
-                                {renderPackageDetails(booking)}
+                                <div className="text-sm font-medium text-blue-600">
+                                  📦 Package Booking
+                                </div>
+                                {renderAddons(booking)}
                               </div>
                             ) : (
                               <span className="text-muted-foreground">-</span>
@@ -1163,19 +1178,11 @@ export default function BookingManagement() {
                                   </p>
                                 </div>
 
-                                {/* Addon Services */}
+                                {/* Combined Services & Packages */}
                                 {renderAddons(booking) && (
                                   <div>
-                                    <Label className="text-sm font-medium">Add-on Services</Label>
+                                    <Label className="text-sm font-medium">Services & Add-ons</Label>
                                     {renderAddons(booking)}
-                                  </div>
-                                )}
-
-                                {/* Package Details */}
-                                {renderPackageDetails(booking) && (
-                                  <div>
-                                    <Label className="text-sm font-medium">Package Details</Label>
-                                    {renderPackageDetails(booking)}
                                   </div>
                                 )}
                               </div>
