@@ -831,25 +831,9 @@ export default function GuestManagement() {
         </Button>
       </div>
 
-      <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="grid w-full grid-cols-3">
-          <TabsTrigger value="active-stay">Active Stay</TabsTrigger>
-          <TabsTrigger value="upcoming">Upcoming</TabsTrigger>
-          <TabsTrigger value="all-guests">All Guests</TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="active-stay" className="space-y-4">
-          <GuestListContent />
-        </TabsContent>
-
-        <TabsContent value="upcoming" className="space-y-4">
-          <GuestListContent />
-        </TabsContent>
-
-        <TabsContent value="all-guests" className="space-y-4">
-          <GuestListContent />
-        </TabsContent>
-      </Tabs>
+      <div className="space-y-4">
+        <GuestListContent />
+      </div>
 
       {/* Guest Details Modal/Overlay */}
       <Dialog open={showGuestDetails} onOpenChange={setShowGuestDetails}>
