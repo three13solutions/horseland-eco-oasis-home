@@ -18,6 +18,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Link, useNavigate } from 'react-router-dom';
 import { format, parseISO, isAfter, isBefore, isToday } from 'date-fns';
 import { RoomAvailabilityGrid } from '@/components/admin/RoomAvailabilityGrid';
+import { CollapsibleBookingRow } from '@/components/admin/CollapsibleBookingRow';
 import { BookingActions } from '@/components/admin/BookingActions';
 import { SimplifiedRoomCell } from '@/components/admin/SimplifiedRoomCell';
 import { PaymentOptionsModal } from '@/components/PaymentOptionsModal';

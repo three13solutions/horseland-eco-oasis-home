@@ -117,18 +117,6 @@ export function BookingActions({
         </DialogContent>
       </Dialog>
 
-      {/* Payment Button */}
-      {needsPaymentButton && (
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => onProcessPayment(booking)}
-          className="text-blue-600 border-blue-200 hover:bg-blue-50"
-        >
-          <CreditCard className="h-4 w-4 mr-1" />
-          Pay
-        </Button>
-      )}
 
       {/* Room Management Actions Dropdown */}
       <DropdownMenu>

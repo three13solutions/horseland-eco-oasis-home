@@ -134,24 +134,30 @@ export const PaymentOptionsModal: React.FC<PaymentOptionsModalProps> = ({
             </div>
 
             {/* Payment Options */}
-            <div className="space-y-3">
+            <div className="grid grid-cols-2 gap-3">
               <Button
                 onClick={handleCashPayment}
                 disabled={processingCash}
-                className="w-full h-16 flex flex-col items-center justify-center gap-2 bg-green-600 hover:bg-green-700"
-                size="lg"
+                variant="outline"
+                className="h-auto p-4 flex flex-col items-center gap-2 border-border hover:bg-accent hover:text-accent-foreground"
               >
-                <Banknote className="w-6 h-6" />
-                <span>{processingCash ? 'Recording...' : 'Cash Payment'}</span>
+                {processingCash ? (
+                  <div className="animate-spin h-6 w-6 border-2 border-muted-foreground border-t-primary rounded-full" />
+                ) : (
+                  <Banknote className="h-6 w-6 text-muted-foreground" />
+                )}
+                <span className="text-sm font-medium">Cash Payment</span>
+                <span className="text-xs text-muted-foreground">Collect at front desk</span>
               </Button>
 
               <Button
                 onClick={handleRazorpayPayment}
-                className="w-full h-16 flex flex-col items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700"
-                size="lg"
+                variant="outline"
+                className="h-auto p-4 flex flex-col items-center gap-2 border-border hover:bg-accent hover:text-accent-foreground"
               >
-                <CreditCard className="w-6 h-6" />
-                <span>Online Payment (Razorpay)</span>
+                <CreditCard className="h-6 w-6 text-muted-foreground" />
+                <span className="text-sm font-medium">Online Payment</span>
+                <span className="text-xs text-muted-foreground">Via Razorpay</span>
               </Button>
             </div>
 
