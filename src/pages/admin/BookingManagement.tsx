@@ -1335,19 +1335,19 @@ export default function BookingManagement() {
                                 </div>
                                 {renderAddons(booking)}
                                 {overrideBookingId === booking.id ? (
-                                  <div className="flex gap-2 mt-2">
-                                    <Select value={selectedRoomOverride} onValueChange={setSelectedRoomOverride}>
-                                      <SelectTrigger className="w-40">
-                                        <SelectValue placeholder="Select unit" />
-                                      </SelectTrigger>
-                                      <SelectContent>
-                                        {getAvailableUnitsForBooking(booking).map((unit) => (
-                                          <SelectItem key={unit.id} value={unit.id}>
-                                            {unit.unit_number} - {unit.unit_name || 'No name'}
-                                          </SelectItem>
-                                        ))}
-                                      </SelectContent>
-                                    </Select>
+                                   <div className="flex gap-2 mt-2">
+                                     <Select value={selectedRoomOverride} onValueChange={setSelectedRoomOverride}>
+                                       <SelectTrigger className="w-40 bg-background border z-50">
+                                         <SelectValue placeholder="Select unit" />
+                                       </SelectTrigger>
+                                       <SelectContent className="bg-background border shadow-lg z-50">
+                                         {getAvailableUnitsForBooking(booking).map((unit) => (
+                                           <SelectItem key={unit.id} value={unit.id} className="bg-background hover:bg-accent">
+                                             {unit.unit_number} - {unit.unit_name || 'No name'}
+                                           </SelectItem>
+                                         ))}
+                                       </SelectContent>
+                                     </Select>
                                     <Button
                                       size="sm"
                                       onClick={() => handleManualOverride(booking.id, selectedRoomOverride)}
@@ -1371,14 +1371,14 @@ export default function BookingManagement() {
                                      {changingRoomUnit === booking.id ? (
                                        <div className="flex gap-2">
                                          <Select value={selectedNewRoomUnit} onValueChange={setSelectedNewRoomUnit}>
-                                           <SelectTrigger className="w-40">
+                                           <SelectTrigger className="w-40 bg-background border z-50">
                                              <SelectValue placeholder="Select unit" />
                                            </SelectTrigger>
-                                           <SelectContent>
+                                           <SelectContent className="bg-background border shadow-lg z-50">
                                              {roomUnits
                                                .filter(unit => unit.room_type_id === booking.room_type_id && unit.is_active)
                                                .map((unit) => (
-                                                 <SelectItem key={unit.id} value={unit.id}>
+                                                 <SelectItem key={unit.id} value={unit.id} className="bg-background hover:bg-accent">
                                                    {unit.unit_number} - {unit.unit_name || 'No name'}
                                                  </SelectItem>
                                                ))}
@@ -1405,12 +1405,12 @@ export default function BookingManagement() {
                                      ) : changingRoomType === booking.id ? (
                                        <div className="flex gap-2">
                                          <Select value={selectedNewRoomType} onValueChange={setSelectedNewRoomType}>
-                                           <SelectTrigger className="w-40">
+                                           <SelectTrigger className="w-40 bg-background border z-50">
                                              <SelectValue placeholder="Select type" />
                                            </SelectTrigger>
-                                           <SelectContent>
+                                           <SelectContent className="bg-background border shadow-lg z-50">
                                              {roomTypes.map((type) => (
-                                               <SelectItem key={type.id} value={type.id}>
+                                               <SelectItem key={type.id} value={type.id} className="bg-background hover:bg-accent">
                                                  {type.name}
                                                </SelectItem>
                                              ))}
