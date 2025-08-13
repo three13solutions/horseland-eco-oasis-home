@@ -131,7 +131,7 @@ export function BedConfiguration({ onConfigChange, initialConfig = [] }: BedConf
       <div className="space-y-3">
         <div className="flex items-center justify-between">
           <Label className="text-lg font-medium">Fixed Beds (Permanent)</Label>
-          <Button variant="outline" size="sm" onClick={addBedConfig}>
+          <Button type="button" variant="outline" size="sm" onClick={addBedConfig}>
             <Plus className="h-4 w-4 mr-1" />
             Add Fixed Bed
           </Button>
@@ -170,6 +170,7 @@ export function BedConfiguration({ onConfigChange, initialConfig = [] }: BedConf
             </div>
 
             <Button
+              type="button"
               variant="outline"
               size="sm"
               onClick={() => removeBedConfig(config.id)}
@@ -185,6 +186,7 @@ export function BedConfiguration({ onConfigChange, initialConfig = [] }: BedConf
         <div className="flex items-center justify-between">
           <Label className="text-lg font-medium">Optional Beds (Upon Request)</Label>
           <Button 
+            type="button"
             variant="outline" 
             size="sm" 
             onClick={() => setBedConfigs([...bedConfigs, { 
@@ -239,6 +241,7 @@ export function BedConfiguration({ onConfigChange, initialConfig = [] }: BedConf
             </div>
 
             <Button
+              type="button"
               variant="outline"
               size="sm"
               onClick={() => removeBedConfig(config.id)}
