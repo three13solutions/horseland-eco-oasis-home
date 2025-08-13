@@ -218,6 +218,96 @@ export type Database = {
         }
         Relationships: []
       }
+      booking_waitlist: {
+        Row: {
+          alternative_date_range_end: string | null
+          alternative_date_range_start: string | null
+          check_in: string
+          check_out: string
+          created_at: string
+          expires_at: string | null
+          flexible_dates: boolean | null
+          guest_email: string | null
+          guest_name: string
+          guest_phone: string | null
+          guests_count: number
+          id: string
+          max_price_willing: number | null
+          notify_email: boolean | null
+          notify_sms: boolean | null
+          original_booking_attempt_id: string | null
+          preferred_room_unit_id: string | null
+          priority_score: number | null
+          room_type_id: string | null
+          special_requests: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          alternative_date_range_end?: string | null
+          alternative_date_range_start?: string | null
+          check_in: string
+          check_out: string
+          created_at?: string
+          expires_at?: string | null
+          flexible_dates?: boolean | null
+          guest_email?: string | null
+          guest_name: string
+          guest_phone?: string | null
+          guests_count?: number
+          id?: string
+          max_price_willing?: number | null
+          notify_email?: boolean | null
+          notify_sms?: boolean | null
+          original_booking_attempt_id?: string | null
+          preferred_room_unit_id?: string | null
+          priority_score?: number | null
+          room_type_id?: string | null
+          special_requests?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          alternative_date_range_end?: string | null
+          alternative_date_range_start?: string | null
+          check_in?: string
+          check_out?: string
+          created_at?: string
+          expires_at?: string | null
+          flexible_dates?: boolean | null
+          guest_email?: string | null
+          guest_name?: string
+          guest_phone?: string | null
+          guests_count?: number
+          id?: string
+          max_price_willing?: number | null
+          notify_email?: boolean | null
+          notify_sms?: boolean | null
+          original_booking_attempt_id?: string | null
+          preferred_room_unit_id?: string | null
+          priority_score?: number | null
+          room_type_id?: string | null
+          special_requests?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "booking_waitlist_preferred_room_unit_id_fkey"
+            columns: ["preferred_room_unit_id"]
+            isOneToOne: false
+            referencedRelation: "room_units"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "booking_waitlist_room_type_id_fkey"
+            columns: ["room_type_id"]
+            isOneToOne: false
+            referencedRelation: "room_types"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       bookings: {
         Row: {
           booking_id: string

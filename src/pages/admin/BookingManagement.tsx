@@ -906,6 +906,67 @@ export default function BookingManagement() {
       console.error('Error during guest check:', error);
     }
 
+    // Validate booking availability before creating
+    try {
+      console.log('=== VALIDATING BOOKING AVAILABILITY ===');
+      
+      const validationRequest = {
+        roomTypeId: createFormData.room_type_id || undefined,
+        checkIn: format(createFormData.check_in, 'yyyy-MM-dd'),
+        checkOut: format(createFormData.check_out, 'yyyy-MM-dd'),
+        guestsCount: createFormData.guests_count
+      };
+      
+      console.log('Validation request:', validationRequest);
+      
+      const { data: validationResult, error: validationError } = await supabase.functions.invoke('validate-booking', {
+        body: validationRequest
+      });
+      
+      if (validationError) {
+        console.error('Validation function error:', validationError);
+        throw new Error('Failed to validate booking availability');
+      }
+      
+      console.log('Validation result:', validationResult);
+      
+      if (!validationResult.isValid) {
+        // Show validation error and suggest waitlist if appropriate
+        toast({
+          title: "Booking Not Available",
+          description: validationResult.message,
+          variant: "destructive",
+        });
+        
+        if (validationResult.suggestedWaitlist) {
+          // TODO: Show waitlist dialog
+          toast({
+            title: "Add to Waitlist?",
+            description: "Would you like to add this guest to the waitlist for these dates?",
+          });
+        }
+        
+        setLoading(false);
+        return;
+      }
+      
+      // Validation passed, proceed with booking creation
+      toast({
+        title: "Availability Confirmed",
+        description: validationResult.message,
+      });
+      
+    } catch (validationError) {
+      console.error('Booking validation failed:', validationError);
+      toast({
+        title: "Validation Failed",
+        description: "Could not validate room availability. Please try again.",
+        variant: "destructive",
+      });
+      setLoading(false);
+      return;
+    }
+
     try {
       console.log('=== CREATING BOOKING ===');
       // Generate booking ID

@@ -39,45 +39,31 @@ serve(async (req) => {
       )
     }
 
-    // Check room availability using the existing database function
-    const { data: availabilityData, error: availabilityError } = await supabase
-      .rpc('check_room_availability', {
-        p_room_type_id: roomTypeId,
-        p_check_in: checkIn,
-        p_check_out: checkOut
-      })
-
-    if (availabilityError) {
-      console.error('Error checking availability:', availabilityError)
-      return new Response(
-        JSON.stringify({ error: 'Failed to check room availability' }),
-        { 
-          status: 500, 
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
-        }
-      )
-    }
-
-    console.log('Availability check result:', availabilityData)
-
-    // Check if any units are available
-    if (!availabilityData || availabilityData.length === 0) {
-      return new Response(
-        JSON.stringify({ error: 'No availability data returned' }),
-        { 
-          status: 500, 
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
-        }
-      )
-    }
-
-    const availability = availabilityData[0]
+    // First validate the booking using the validation service
+    console.log('Validating booking before assignment...')
     
-    if (!availability.available_units || availability.available_units === 0) {
+    const validateResponse = await fetch(`${Deno.env.get('SUPABASE_URL')}/functions/v1/validate-booking`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')}`,
+      },
+      body: JSON.stringify({
+        roomTypeId: roomTypeId,
+        checkIn: checkIn,
+        checkOut: checkOut,
+        guestsCount: guestsCount,
+        bookingId: bookingId // Exclude current booking from validation
+      })
+    })
+
+    if (!validateResponse.ok) {
+      const validationError = await validateResponse.json()
+      console.error('Validation failed:', validationError)
       return new Response(
         JSON.stringify({ 
-          error: 'No available units found for the selected dates',
-          availableUnits: 0
+          error: validationError.message || 'Room validation failed',
+          suggestedWaitlist: validationError.suggestedWaitlist || false
         }),
         { 
           status: 409, 
@@ -86,8 +72,39 @@ serve(async (req) => {
       )
     }
 
-    // Get the first available unit
-    const selectedUnitId = availability.unit_ids[0]
+    const validationResult = await validateResponse.json()
+    console.log('Validation result:', validationResult)
+
+    if (!validationResult.isValid) {
+      return new Response(
+        JSON.stringify({ 
+          error: validationResult.message,
+          suggestedWaitlist: validationResult.suggestedWaitlist,
+          conflictingBookings: validationResult.conflictingBookings
+        }),
+        { 
+          status: 409, 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+        }
+      )
+    }
+
+    // Validation passed, proceed with assignment
+    if (!validationResult.availableRoomUnits || validationResult.availableRoomUnits.length === 0) {
+      return new Response(
+        JSON.stringify({ 
+          error: 'No available units found despite validation passing',
+          availableUnits: 0
+        }),
+        { 
+          status: 500, 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+        }
+      )
+    }
+
+    // Get the first available unit from validation result
+    const selectedUnitId = validationResult.availableRoomUnits[0]
 
     console.log('Assigning unit:', selectedUnitId, 'to booking:', bookingId)
 
@@ -122,8 +139,8 @@ serve(async (req) => {
       JSON.stringify({ 
         success: true,
         assignedUnit: selectedUnitId,
-        availableUnits: availability.available_units,
-        totalUnits: availability.unit_ids.length,
+        availableUnits: validationResult.availableUnits,
+        totalUnits: validationResult.availableRoomUnits.length,
         booking: updateData[0]
       }),
       { 
