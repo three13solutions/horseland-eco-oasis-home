@@ -19,8 +19,6 @@ import { Link, useNavigate } from 'react-router-dom';
 import { format, parseISO, isAfter, isBefore, isToday } from 'date-fns';
 import { RoomAvailabilityGrid } from '@/components/admin/RoomAvailabilityGrid';
 import { CollapsibleBookingRow } from '@/components/admin/CollapsibleBookingRow';
-import { BookingActions } from '@/components/admin/BookingActions';
-import { SimplifiedRoomCell } from '@/components/admin/SimplifiedRoomCell';
 import { PaymentOptionsModal } from '@/components/PaymentOptionsModal';
 import { formatCurrency, calculateBookingAmount } from '@/lib/razorpay';
 import { differenceInDays } from 'date-fns';
@@ -1379,21 +1377,18 @@ export default function BookingManagement() {
               <Table>
                 <TableHeader>
                   <TableRow>
-                     <TableHead>Booking ID</TableHead>
-                     <TableHead>Guest</TableHead>
-                     <TableHead>Room</TableHead>
-                     <TableHead>Check-in</TableHead>
-                     <TableHead>Check-out</TableHead>
-                     <TableHead>Guests</TableHead>
-                     <TableHead>Amount</TableHead>
-                     <TableHead>Status</TableHead>
-                     <TableHead>Actions</TableHead>
-                   </TableRow>
+                    <TableHead className="w-8"></TableHead>
+                    <TableHead>Booking</TableHead>
+                    <TableHead>Dates</TableHead>
+                    <TableHead>Room</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead>Actions</TableHead>
+                  </TableRow>
                 </TableHeader>
                 <TableBody>
                   {filteredBookings.length === 0 ? (
                     <TableRow>
-                      <TableCell colSpan={9} className="text-center py-8">
+                      <TableCell colSpan={6} className="text-center py-8">
                         <div className="text-muted-foreground">
                           {searchTerm || statusFilter !== 'all' || dateFilter !== 'all' 
                             ? 'No bookings match your filters'
@@ -1403,78 +1398,35 @@ export default function BookingManagement() {
                     </TableRow>
                   ) : (
                     filteredBookings.map((booking) => (
-                      <TableRow key={booking.id}>
-                        <TableCell className="font-medium">{booking.booking_id}</TableCell>
-                        <TableCell>
-                          <div>
-                            <div className="font-medium">{booking.guest_name}</div>
-                            {booking.guest_email && (
-                              <div className="text-sm text-muted-foreground">{booking.guest_email}</div>
-                            )}
-                            {booking.guest_phone && (
-                              <div className="text-sm text-muted-foreground">{booking.guest_phone}</div>
-                            )}
-                          </div>
-                        </TableCell>
-                         <TableCell>
-                           <SimplifiedRoomCell
-                             booking={booking}
-                             renderAddons={renderAddons}
-                           />
-                         </TableCell>
-                        <TableCell>{format(parseISO(booking.check_in), 'MMM dd, yyyy')}</TableCell>
-                        <TableCell>{format(parseISO(booking.check_out), 'MMM dd, yyyy')}</TableCell>
-                        <TableCell>{booking.guests_count}</TableCell>
-                         <TableCell>₹{Number(booking.total_amount).toLocaleString()}</TableCell>
-                         
-                          {/* Combined Status Column - shows payment status if paid, otherwise booking status + pay button */}
-                          <TableCell>
-                            {booking.payment_method || booking.payment_id ? (
-                              getPaymentStatusBadge(booking)
-                            ) : (
-                              <div className="flex items-center gap-2">
-                                {getBookingStatusBadge(booking.payment_status)}
-                                <Button
-                                  variant="outline"
-                                  size="sm"
-                                  onClick={() => handleProcessPayment(booking)}
-                                  className="text-blue-600 border-blue-200 hover:bg-blue-50"
-                                >
-                                  <CreditCard className="h-4 w-4 mr-1" />
-                                  Pay
-                                </Button>
-                              </div>
-                            )}
-                          </TableCell>
-                         <TableCell className="relative">
-                           <BookingActions
-                             booking={booking}
-                             roomUnits={roomUnits}
-                             roomTypes={roomTypes}
-                             autoAssigning={autoAssigning}
-                             overrideBookingId={overrideBookingId}
-                             changingRoomUnit={changingRoomUnit}
-                             changingRoomType={changingRoomType}
-                             selectedRoomOverride={selectedRoomOverride}
-                             selectedNewRoomUnit={selectedNewRoomUnit}
-                             selectedNewRoomType={selectedNewRoomType}
-                             onAutoAssign={handleAutoAssign}
-                             onManualOverride={handleManualOverride}
-                             onChangeRoomUnit={handleChangeRoomUnit}
-                             onChangeRoomType={handleChangeRoomType}
-                             setOverrideBookingId={setOverrideBookingId}
-                             setChangingRoomUnit={setChangingRoomUnit}
-                             setChangingRoomType={setChangingRoomType}
-                             setSelectedRoomOverride={setSelectedRoomOverride}
-                             setSelectedNewRoomUnit={setSelectedNewRoomUnit}
-                             setSelectedNewRoomType={setSelectedNewRoomType}
-                             renderAddons={renderAddons}
-                             getAvailableUnitsForBooking={getAvailableUnitsForBooking}
-                             onProcessPayment={handleProcessPayment}
-                             getPaymentStatusBadge={getPaymentStatusBadge}
-                           />
-                         </TableCell>
-                      </TableRow>
+                      <CollapsibleBookingRow
+                        key={booking.id}
+                        booking={booking}
+                        roomUnits={roomUnits}
+                        roomTypes={roomTypes}
+                        autoAssigning={autoAssigning}
+                        overrideBookingId={overrideBookingId}
+                        changingRoomUnit={changingRoomUnit}
+                        changingRoomType={changingRoomType}
+                        selectedRoomOverride={selectedRoomOverride}
+                        selectedNewRoomUnit={selectedNewRoomUnit}
+                        selectedNewRoomType={selectedNewRoomType}
+                        onAutoAssign={handleAutoAssign}
+                        onManualOverride={handleManualOverride}
+                        onChangeRoomUnit={handleChangeRoomUnit}
+                        onChangeRoomType={handleChangeRoomType}
+                        setOverrideBookingId={setOverrideBookingId}
+                        setChangingRoomUnit={setChangingRoomUnit}
+                        setChangingRoomType={setChangingRoomType}
+                        setSelectedRoomOverride={setSelectedRoomOverride}
+                        setSelectedNewRoomUnit={setSelectedNewRoomUnit}
+                        setSelectedNewRoomType={setSelectedNewRoomType}
+                        renderAddons={renderAddons}
+                        getAvailableUnitsForBooking={getAvailableUnitsForBooking}
+                        onProcessPayment={handleProcessPayment}
+                        getPaymentStatusBadge={getPaymentStatusBadge}
+                        getBookingStatusBadge={getBookingStatusBadge}
+                        onReloadBookings={loadBookings}
+                      />
                     ))
                   )}
                 </TableBody>
