@@ -191,12 +191,46 @@ export default function GuestManagement() {
         .select('*')
         .eq('guest_id', guestId);
 
-      // Load bookings
-      const { data: bookings } = await supabase
+      // Load bookings - check both guest_id and contact information
+      console.log('Loading bookings for guest:', guestId);
+      
+      // First get the guest's contact information
+      const { data: guestData } = await supabase
+        .from('guests')
+        .select('email, phone, contact_emails, contact_phones')
+        .eq('id', guestId)
+        .single();
+
+      let allBookingsQuery = supabase
         .from('bookings')
-        .select('*')
-        .eq('guest_id', guestId)
+        .select('*');
+
+      if (guestData) {
+        const emails = Array.isArray(guestData.contact_emails) ? guestData.contact_emails : [];
+        if (guestData.email) emails.push(guestData.email);
+        
+        const phones = Array.isArray(guestData.contact_phones) ? guestData.contact_phones : [];
+        if (guestData.phone) phones.push(guestData.phone);
+
+        // Query for bookings by guest_id OR matching contact info
+        const emailConditions = emails.map(email => `guest_email.eq.${email}`).join(',');
+        const phoneConditions = phones.map(phone => `guest_phone.eq.${phone}`).join(',');
+        
+        let orCondition = `guest_id.eq.${guestId}`;
+        if (emailConditions) orCondition += `,${emailConditions}`;
+        if (phoneConditions) orCondition += `,${phoneConditions}`;
+        
+        allBookingsQuery = allBookingsQuery.or(orCondition);
+        
+        console.log('Searching bookings with conditions:', orCondition);
+      } else {
+        allBookingsQuery = allBookingsQuery.eq('guest_id', guestId);
+      }
+
+      const { data: bookings } = await allBookingsQuery
         .order('created_at', { ascending: false });
+
+      console.log('Found bookings:', bookings?.length || 0);
 
       // Load credit notes for this specific guest
       const { data: credits } = await supabase
@@ -213,6 +247,112 @@ export default function GuestManagement() {
       toast({
         title: "Error",
         description: "Failed to load guest details",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const linkUnlinkedBookings = async (guestId: string) => {
+    try {
+      console.log('Linking unlinked bookings for guest:', guestId);
+      
+      // Get guest's contact information
+      const { data: guest } = await supabase
+        .from('guests')
+        .select('email, phone, contact_emails, contact_phones')
+        .eq('id', guestId)
+        .single();
+
+      if (!guest) return;
+
+      const emails = Array.isArray(guest.contact_emails) ? guest.contact_emails.filter(e => typeof e === 'string') as string[] : [];
+      if (guest.email && typeof guest.email === 'string') emails.push(guest.email);
+      
+      const phones = Array.isArray(guest.contact_phones) ? guest.contact_phones.filter(p => typeof p === 'string') as string[] : [];
+      if (guest.phone && typeof guest.phone === 'string') phones.push(guest.phone);
+
+      let linkedCount = 0;
+
+      // Find and link bookings by email
+      for (const email of emails) {
+        const { data: emailBookings, error } = await supabase
+          .from('bookings')
+          .update({ guest_id: guestId })
+          .eq('guest_email', email)
+          .is('guest_id', null)
+          .select();
+
+        if (!error && emailBookings) {
+          linkedCount += emailBookings.length;
+          console.log(`Linked ${emailBookings.length} bookings by email: ${email}`);
+        }
+      }
+
+      // Find and link bookings by phone
+      for (const phone of phones) {
+        const { data: phoneBookings, error } = await supabase
+          .from('bookings')
+          .update({ guest_id: guestId })
+          .eq('guest_phone', phone)
+          .is('guest_id', null)
+          .select();
+
+        if (!error && phoneBookings) {
+          linkedCount += phoneBookings.length;
+          console.log(`Linked ${phoneBookings.length} bookings by phone: ${phone}`);
+        }
+      }
+
+      if (linkedCount > 0) {
+        toast({
+          title: "Bookings Linked",
+          description: `Successfully linked ${linkedCount} unlinked booking(s) to this guest.`,
+        });
+        
+        // Reload guest details to show newly linked bookings
+        await loadGuestDetails(guestId);
+      } else {
+        toast({
+          title: "No Unlinked Bookings",
+          description: "No unlinked bookings found for this guest's contact information.",
+        });
+      }
+    } catch (error: any) {
+      console.error('Error linking bookings:', error);
+      toast({
+        title: "Error",
+        description: "Failed to link unlinked bookings",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const updatePrimaryContact = async (guestId: string, type: 'email' | 'phone', newPrimary: string) => {
+    try {
+      const updateData = type === 'email' ? { email: newPrimary } : { phone: newPrimary };
+      
+      const { error } = await supabase
+        .from('guests')
+        .update(updateData)
+        .eq('id', guestId);
+
+      if (error) throw error;
+
+      // Update local state
+      setSelectedGuest(prev => prev ? { ...prev, [type]: newPrimary } : null);
+      
+      // Reload guests list
+      await loadGuests();
+      
+      toast({
+        title: "Primary Contact Updated",
+        description: `Primary ${type} has been updated successfully.`,
+      });
+    } catch (error: any) {
+      console.error('Error updating primary contact:', error);
+      toast({
+        title: "Error",
+        description: `Failed to update primary ${type}`,
         variant: "destructive",
       });
     }
@@ -886,15 +1026,23 @@ export default function GuestManagement() {
                 {selectedGuest?.contact_emails && selectedGuest.contact_emails.length > 0 && (
                   <div>
                     <Label className="text-xs text-muted-foreground">
-                      All Email Addresses ({selectedGuest.contact_emails.length})
+                      All Email Addresses ({selectedGuest.contact_emails.length}) - Click to set as primary
                     </Label>
                     <div className="space-y-1">
                       {selectedGuest.contact_emails.map((email, index) => (
-                        <p key={index} className="text-sm flex items-center gap-1 text-muted-foreground">
+                        <div 
+                          key={index} 
+                          className={`text-sm flex items-center gap-1 ${
+                            email === selectedGuest.email 
+                              ? 'text-foreground' 
+                              : 'text-muted-foreground cursor-pointer hover:text-foreground transition-colors'
+                          }`}
+                          onClick={() => email !== selectedGuest.email && updatePrimaryContact(selectedGuest.id, 'email', email)}
+                        >
                           <Mail className="h-3 w-3" />
                           {email}
                           {email === selectedGuest.email && <Badge variant="secondary" className="ml-1 text-xs">Primary</Badge>}
-                        </p>
+                        </div>
                       ))}
                     </div>
                   </div>
@@ -915,15 +1063,23 @@ export default function GuestManagement() {
                 {selectedGuest?.contact_phones && selectedGuest.contact_phones.length > 0 && (
                   <div>
                     <Label className="text-xs text-muted-foreground">
-                      All Phone Numbers ({selectedGuest.contact_phones.length})
+                      All Phone Numbers ({selectedGuest.contact_phones.length}) - Click to set as primary
                     </Label>
                     <div className="space-y-1">
                       {selectedGuest.contact_phones.map((phone, index) => (
-                        <p key={index} className="text-sm flex items-center gap-1 text-muted-foreground">
+                        <div 
+                          key={index} 
+                          className={`text-sm flex items-center gap-1 ${
+                            phone === selectedGuest.phone 
+                              ? 'text-foreground' 
+                              : 'text-muted-foreground cursor-pointer hover:text-foreground transition-colors'
+                          }`}
+                          onClick={() => phone !== selectedGuest.phone && updatePrimaryContact(selectedGuest.id, 'phone', phone)}
+                        >
                           <Phone className="h-3 w-3" />
                           {phone}
                           {phone === selectedGuest.phone && <Badge variant="secondary" className="ml-1 text-xs">Primary</Badge>}
-                        </p>
+                        </div>
                       ))}
                     </div>
                   </div>
@@ -964,6 +1120,14 @@ export default function GuestManagement() {
               >
                 <Wallet className="h-4 w-4 mr-1" />
                 Add Credit
+              </Button>
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={() => selectedGuest && linkUnlinkedBookings(selectedGuest.id)}
+              >
+                <History className="h-4 w-4 mr-1" />
+                Link Bookings
               </Button>
             </div>
           </CardContent>
