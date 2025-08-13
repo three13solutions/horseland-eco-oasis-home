@@ -846,6 +846,62 @@ export type Database = {
         }
         Relationships: []
       }
+      invoices: {
+        Row: {
+          booking_id: string
+          created_at: string
+          due_amount: number
+          gst_amount: number
+          id: string
+          invoice_date: string
+          invoice_number: string
+          line_items: Json
+          paid_amount: number
+          status: string
+          subtotal_amount: number
+          total_amount: number
+          updated_at: string
+        }
+        Insert: {
+          booking_id: string
+          created_at?: string
+          due_amount?: number
+          gst_amount?: number
+          id?: string
+          invoice_date?: string
+          invoice_number: string
+          line_items?: Json
+          paid_amount?: number
+          status?: string
+          subtotal_amount?: number
+          total_amount?: number
+          updated_at?: string
+        }
+        Update: {
+          booking_id?: string
+          created_at?: string
+          due_amount?: number
+          gst_amount?: number
+          id?: string
+          invoice_date?: string
+          invoice_number?: string
+          line_items?: Json
+          paid_amount?: number
+          status?: string
+          subtotal_amount?: number
+          total_amount?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "invoices_booking_id_fkey"
+            columns: ["booking_id"]
+            isOneToOne: true
+            referencedRelation: "bookings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       meals: {
         Row: {
           availability_end: string
@@ -1006,6 +1062,72 @@ export type Database = {
           weekend_price?: number
         }
         Relationships: []
+      }
+      payments: {
+        Row: {
+          amount: number
+          booking_id: string
+          created_at: string
+          id: string
+          invoice_id: string
+          notes: string | null
+          payment_date: string
+          payment_method: string
+          razorpay_order_id: string | null
+          razorpay_payment_id: string | null
+          received_by: string | null
+          status: string
+          transaction_reference: string | null
+          updated_at: string
+        }
+        Insert: {
+          amount: number
+          booking_id: string
+          created_at?: string
+          id?: string
+          invoice_id: string
+          notes?: string | null
+          payment_date?: string
+          payment_method: string
+          razorpay_order_id?: string | null
+          razorpay_payment_id?: string | null
+          received_by?: string | null
+          status?: string
+          transaction_reference?: string | null
+          updated_at?: string
+        }
+        Update: {
+          amount?: number
+          booking_id?: string
+          created_at?: string
+          id?: string
+          invoice_id?: string
+          notes?: string | null
+          payment_date?: string
+          payment_method?: string
+          razorpay_order_id?: string | null
+          razorpay_payment_id?: string | null
+          received_by?: string | null
+          status?: string
+          transaction_reference?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payments_booking_id_fkey"
+            columns: ["booking_id"]
+            isOneToOne: false
+            referencedRelation: "bookings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "payments_invoice_id_fkey"
+            columns: ["invoice_id"]
+            isOneToOne: false
+            referencedRelation: "invoices"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       room_types: {
         Row: {
@@ -1252,6 +1374,14 @@ export type Database = {
         Args: { original_booking_date: string }
         Returns: string
       }
+      calculate_invoice_totals: {
+        Args: { p_subtotal: number }
+        Returns: {
+          subtotal: number
+          gst_amount: number
+          total_amount: number
+        }[]
+      }
       check_room_availability: {
         Args: {
           p_room_type_id: string
@@ -1262,6 +1392,10 @@ export type Database = {
           available_units: number
           unit_ids: string[]
         }[]
+      }
+      generate_invoice_number: {
+        Args: Record<PropertyKey, never>
+        Returns: string
       }
       get_current_user_role: {
         Args: Record<PropertyKey, never>
