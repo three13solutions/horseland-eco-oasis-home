@@ -1,5 +1,6 @@
 
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Calendar, Users, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -13,6 +14,7 @@ import {
 } from '@/components/ui/carousel';
 
 const HeroSection = () => {
+  const navigate = useNavigate();
   const [checkIn, setCheckIn] = useState('');
   const [checkOut, setCheckOut] = useState('');
   const [guests, setGuests] = useState('2');
@@ -22,6 +24,21 @@ const HeroSection = () => {
     'https://images.unsplash.com/photo-1482938289607-e9573fc25ebb?w=1920&h=1080&fit=crop',
     'https://images.unsplash.com/photo-1501854140801-50d01698950b?w=1920&h=1080&fit=crop',
   ];
+
+  const handleCheckAvailability = () => {
+    if (!checkIn || !checkOut) {
+      alert('Please select check-in and check-out dates');
+      return;
+    }
+
+    const searchParams = new URLSearchParams({
+      checkIn,
+      checkOut,
+      guests
+    });
+    
+    navigate(`/booking?${searchParams.toString()}`);
+  };
 
   return (
     <section className="relative h-screen overflow-hidden">
@@ -100,7 +117,10 @@ const HeroSection = () => {
                 </div>
                 
                 <div className="flex items-end">
-                  <Button className="w-full bg-primary hover:bg-primary/90 text-primary-foreground">
+                  <Button 
+                    onClick={handleCheckAvailability}
+                    className="w-full bg-primary hover:bg-primary/90 text-primary-foreground"
+                  >
                     Check Availability
                   </Button>
                 </div>
