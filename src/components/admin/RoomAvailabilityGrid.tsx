@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Slider } from '@/components/ui/slider';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { CalendarDays, User, CreditCard, MapPin, Phone, Mail } from 'lucide-react';
@@ -63,6 +64,13 @@ export const RoomAvailabilityGrid: React.FC<RoomAvailabilityGridProps> = ({
   const [isDragging, setIsDragging] = useState(false);
   const [dragStart, setDragStart] = useState<{roomId: string, date: Date} | null>(null);
   const [dragEnd, setDragEnd] = useState<{roomId: string, date: Date} | null>(null);
+  const [bookingDrag, setBookingDrag] = useState<{
+    booking: Booking;
+    originalDate: Date;
+    targetDate: Date;
+    targetRoomId: string;
+  } | null>(null);
+  const [isBookingDragConfirmOpen, setIsBookingDragConfirmOpen] = useState(false);
   const { toast } = useToast();
 
   // Generate date range based on timeframe and timeline position
@@ -219,17 +227,32 @@ export const RoomAvailabilityGrid: React.FC<RoomAvailabilityGridProps> = ({
     }
   };
 
-  const handleMouseDown = (roomId: string, date: Date, status: string) => {
+  const handleMouseDown = (roomId: string, date: Date, status: string, booking?: Booking | null) => {
     if (status === 'available') {
       setIsDragging(true);
       setDragStart({ roomId, date });
       setDragEnd({ roomId, date });
+    } else if (booking && (status === 'confirmed' || status === 'pending')) {
+      // Start booking drag
+      setBookingDrag({
+        booking,
+        originalDate: date,
+        targetDate: date,
+        targetRoomId: roomId
+      });
     }
   };
 
   const handleMouseEnter = (roomId: string, date: Date, status: string) => {
     if (isDragging && dragStart && status === 'available' && roomId === dragStart.roomId) {
       setDragEnd({ roomId, date });
+    } else if (bookingDrag && status === 'available') {
+      // Update booking drag target
+      setBookingDrag(prev => prev ? {
+        ...prev,
+        targetDate: date,
+        targetRoomId: roomId
+      } : null);
     }
   };
 
@@ -245,6 +268,17 @@ export const RoomAvailabilityGrid: React.FC<RoomAvailabilityGridProps> = ({
         selectedEndDate: endDate
       });
       setIsManualBookingOpen(true);
+    } else if (bookingDrag) {
+      // Check if booking was moved to a different date or room
+      const originalCheckIn = startOfDay(parseISO(bookingDrag.booking.check_in));
+      const isSamePosition = isSameDay(bookingDrag.targetDate, originalCheckIn) && 
+                            bookingDrag.targetRoomId === bookingDrag.booking.room_unit_id;
+      
+      if (!isSamePosition) {
+        setIsBookingDragConfirmOpen(true);
+      } else {
+        setBookingDrag(null);
+      }
     }
     setIsDragging(false);
     setDragStart(null);
@@ -256,6 +290,49 @@ export const RoomAvailabilityGrid: React.FC<RoomAvailabilityGridProps> = ({
     const startDate = dragStart.date < dragEnd.date ? dragStart.date : dragEnd.date;
     const endDate = dragStart.date < dragEnd.date ? dragEnd.date : dragStart.date;
     return date >= startDate && date <= endDate;
+  };
+
+  const moveBooking = async () => {
+    if (!bookingDrag) return;
+
+    try {
+      const { booking, targetDate, targetRoomId } = bookingDrag;
+      const originalCheckIn = parseISO(booking.check_in);
+      const originalCheckOut = parseISO(booking.check_out);
+      const bookingDuration = Math.ceil((originalCheckOut.getTime() - originalCheckIn.getTime()) / (1000 * 60 * 60 * 24));
+      
+      const newCheckIn = startOfDay(targetDate);
+      const newCheckOut = addDays(newCheckIn, bookingDuration);
+
+      const { error } = await supabase
+        .from('bookings')
+        .update({
+          check_in: newCheckIn.toISOString(),
+          check_out: newCheckOut.toISOString(),
+          room_unit_id: targetRoomId
+        })
+        .eq('id', booking.id);
+
+      if (error) throw error;
+
+      toast({
+        title: "Booking Moved",
+        description: `Booking ${booking.booking_id} moved to ${format(newCheckIn, 'MMM d, yyyy')}`,
+      });
+
+      setBookingDrag(null);
+      setIsBookingDragConfirmOpen(false);
+      if (onBookingUpdate) {
+        onBookingUpdate();
+      }
+    } catch (error: any) {
+      console.error('Error moving booking:', error);
+      toast({
+        title: "Error",
+        description: "Failed to move booking",
+        variant: "destructive",
+      });
+    }
   };
 
   const timeframeOptions = [
@@ -273,7 +350,7 @@ export const RoomAvailabilityGrid: React.FC<RoomAvailabilityGridProps> = ({
           <CardHeader className="pb-3">
             <CardTitle className="text-lg">Room Availability Calendar</CardTitle>
             <CardDescription>
-              Click on any booking block for details, or click and drag on green (available) slots to select date range for manual booking
+              Click on any booking block for details, drag bookings to move them to different dates, or click and drag on green (available) slots to select date range for manual booking
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -330,11 +407,11 @@ export const RoomAvailabilityGrid: React.FC<RoomAvailabilityGridProps> = ({
               </div>
               <div className="flex items-center gap-2">
                 <div className="w-4 h-4 bg-red-500 rounded"></div>
-                <span>Confirmed Booking</span>
+                <span>Confirmed Booking (Drag to move)</span>
               </div>
               <div className="flex items-center gap-2">
                 <div className="w-4 h-4 bg-orange-500 rounded"></div>
-                <span>Pending Payment</span>
+                <span>Pending Payment (Drag to move)</span>
               </div>
               <div className="flex items-center gap-2">
                 <div className="w-4 h-4 bg-gray-400 rounded"></div>
@@ -394,13 +471,18 @@ export const RoomAvailabilityGrid: React.FC<RoomAvailabilityGridProps> = ({
                                      <button
                                         className={`w-full h-12 ${getStatusColor(status)} text-xs transition-colors relative select-none ${
                                           isInDragRange(room.id, date) ? 'ring-2 ring-blue-500' : ''
+                                        } ${
+                                          bookingDrag && bookingDrag.targetRoomId === room.id && isSameDay(bookingDrag.targetDate, date) 
+                                            ? 'ring-2 ring-purple-500' : ''
+                                        } ${
+                                          (status === 'confirmed' || status === 'pending') ? 'cursor-move' : ''
                                         }`}
-                                        onMouseDown={() => handleMouseDown(room.id, date, status)}
+                                        onMouseDown={() => handleMouseDown(room.id, date, status, booking)}
                                         onMouseEnter={() => handleMouseEnter(room.id, date, status)}
                                         onMouseUp={handleMouseUp}
                                         onClick={(e) => {
                                           e.preventDefault();
-                                          if (!isDragging && booking) {
+                                          if (!isDragging && !bookingDrag && booking) {
                                             setSelectedBooking(booking);
                                           }
                                         }}
@@ -593,6 +675,49 @@ export const RoomAvailabilityGrid: React.FC<RoomAvailabilityGridProps> = ({
             }}
           />
         )}
+
+        {/* Booking Move Confirmation Dialog */}
+        <AlertDialog open={isBookingDragConfirmOpen} onOpenChange={setIsBookingDragConfirmOpen}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Move Booking</AlertDialogTitle>
+              <AlertDialogDescription>
+                {bookingDrag && (
+                  <>
+                    Are you sure you want to move booking <strong>{bookingDrag.booking.booking_id}</strong> for{' '}
+                    <strong>{bookingDrag.booking.guest_name}</strong> to{' '}
+                    <strong>{format(bookingDrag.targetDate, 'MMM d, yyyy')}</strong>
+                    {bookingDrag.targetRoomId !== bookingDrag.booking.room_unit_id && (
+                      <>
+                        {' '}in room{' '}
+                        <strong>
+                          {roomUnits.find(r => r.id === bookingDrag.targetRoomId)?.unit_number}
+                        </strong>
+                      </>
+                    )}
+                    ?
+                    <div className="mt-2 text-sm text-muted-foreground">
+                      The booking duration will remain the same (
+                      {Math.ceil(
+                        (parseISO(bookingDrag.booking.check_out).getTime() - 
+                         parseISO(bookingDrag.booking.check_in).getTime()) / 
+                        (1000 * 60 * 60 * 24)
+                      )} nights).
+                    </div>
+                  </>
+                )}
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel onClick={() => setBookingDrag(null)}>
+                Cancel
+              </AlertDialogCancel>
+              <AlertDialogAction onClick={moveBooking}>
+                Move Booking
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </div>
     </TooltipProvider>
   );
