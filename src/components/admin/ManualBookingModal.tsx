@@ -289,6 +289,8 @@ export const ManualBookingModal: React.FC<ManualBookingModalProps> = ({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
+    alert('MANUAL BOOKING MODAL DETECTED - This alert confirms which form you are using');
+    
     console.log('=== FORM SUBMISSION STARTED ===');
     console.log('Guest Email:', guestEmail);
     console.log('Guest Phone:', guestPhone);

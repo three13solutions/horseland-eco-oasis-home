@@ -699,6 +699,8 @@ export default function BookingManagement() {
 
   const handleCreateBooking = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    alert('BOOKING MANAGEMENT FORM DETECTED - This alert confirms which form you are using');
 
     console.log('=== BOOKING CREATION STARTED ===');
     console.log('Guest Name:', createFormData.guest_name);
