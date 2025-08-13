@@ -1445,28 +1445,25 @@ export default function BookingManagement() {
                         <TableCell>{booking.guests_count}</TableCell>
                          <TableCell>₹{Number(booking.total_amount).toLocaleString()}</TableCell>
                          
-                         {/* Booking Status Column */}
-                         <TableCell>
-                           {getBookingStatusBadge(booking.payment_status)}
-                         </TableCell>
-                         
-                         {/* Payment Status/Action Column */}
-                         <TableCell>
-                           {/* Show payment status or pay button based on actual payment completion */}
-                           {booking.payment_method === 'cash' || booking.payment_method === 'razorpay' || booking.payment_id ? (
-                             getPaymentStatusBadge(booking)
-                           ) : (
-                             <Button
-                               variant="outline"
-                               size="sm"
-                               onClick={() => handleProcessPayment(booking)}
-                               className="text-blue-600 border-blue-200 hover:bg-blue-50"
-                             >
-                               <CreditCard className="h-4 w-4 mr-1" />
-                               Pay
-                             </Button>
-                           )}
-                         </TableCell>
+                          {/* Combined Status Column - shows payment status if paid, otherwise booking status + pay button */}
+                          <TableCell>
+                            {booking.payment_method || booking.payment_id ? (
+                              getPaymentStatusBadge(booking)
+                            ) : (
+                              <div className="flex items-center gap-2">
+                                {getBookingStatusBadge(booking.payment_status)}
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => handleProcessPayment(booking)}
+                                  className="text-blue-600 border-blue-200 hover:bg-blue-50"
+                                >
+                                  <CreditCard className="h-4 w-4 mr-1" />
+                                  Pay
+                                </Button>
+                              </div>
+                            )}
+                          </TableCell>
                          <TableCell>
                            <div className="flex items-center gap-2">
                             <Dialog>
@@ -1541,18 +1538,6 @@ export default function BookingManagement() {
                               </div>
                              </DialogContent>
                            </Dialog>
-                           
-                           {!(booking.payment_method || booking.payment_id) && (
-                             <Button
-                               variant="outline"
-                               size="sm"
-                               onClick={() => handleProcessPayment(booking)}
-                               className="text-blue-600 border-blue-200 hover:bg-blue-50"
-                             >
-                               <CreditCard className="h-4 w-4 mr-1" />
-                               Pay
-                             </Button>
-                           )}
                            </div>
                          </TableCell>
                       </TableRow>
