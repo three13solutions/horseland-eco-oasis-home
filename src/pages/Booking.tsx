@@ -48,6 +48,23 @@ interface SelectedAddon extends Addon {
   quantity: number;
 }
 
+interface GuestDetails {
+  name: string;
+  email: string;
+  phone: string;
+  address: string;
+  dietaryPreference: 'vegetarian' | 'non-vegetarian' | 'jain' | 'no-preference';
+  specialRequests: string;
+}
+
+interface PickupService {
+  id: string;
+  from: 'mumbai' | 'pune';
+  to: 'property';
+  price: number;
+  type: 'pickup';
+}
+
 const Booking = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const navigate = useNavigate();
@@ -73,6 +90,16 @@ const Booking = () => {
   const [selectedAddons, setSelectedAddons] = useState<SelectedAddon[]>([]);
   const [selectedRoomType, setSelectedRoomType] = useState<RoomType | null>(null);
   const [showBookingForm, setShowBookingForm] = useState(false);
+  const [showGuestDetails, setShowGuestDetails] = useState(false);
+  const [guestDetails, setGuestDetails] = useState<GuestDetails>({
+    name: '',
+    email: '',
+    phone: '',
+    address: '',
+    dietaryPreference: 'no-preference',
+    specialRequests: ''
+  });
+  const [selectedPickup, setSelectedPickup] = useState<PickupService | null>(null);
 
   // Load available rooms and addons
   useEffect(() => {
@@ -262,7 +289,8 @@ const Booking = () => {
     const nights = calculateNights();
     const roomTotal = selectedRoomType.base_price * nights;
     const addonsTotal = selectedAddons.reduce((total, addon) => total + (addon.price * addon.quantity), 0);
-    return roomTotal + addonsTotal;
+    const pickupTotal = selectedPickup ? selectedPickup.price : 0;
+    return roomTotal + addonsTotal + pickupTotal;
   };
 
   const formatDate = (dateString: string) => {
@@ -284,11 +312,51 @@ const Booking = () => {
     return <MapPin className="h-4 w-4" />;
   };
 
-  const handleProceedToBooking = () => {
+  const getFilteredMeals = () => {
+    if (guestDetails.dietaryPreference === 'no-preference') return meals;
+    
+    return meals.filter(meal => {
+      const mealTitle = meal.title.toLowerCase();
+      const mealDesc = meal.description?.toLowerCase() || '';
+      
+      switch (guestDetails.dietaryPreference) {
+        case 'vegetarian':
+          return mealTitle.includes('veg') || mealDesc.includes('vegetarian');
+        case 'non-vegetarian':
+          return mealTitle.includes('non-veg') || mealTitle.includes('chicken') || 
+                 mealTitle.includes('mutton') || mealTitle.includes('fish') || 
+                 mealDesc.includes('non-vegetarian');
+        case 'jain':
+          return mealTitle.includes('jain') || mealDesc.includes('jain');
+        default:
+          return true;
+      }
+    });
+  };
+
+  const pickupServices: PickupService[] = [
+    { id: 'pickup-mumbai', from: 'mumbai', to: 'property', price: 5000, type: 'pickup' },
+    { id: 'pickup-pune', from: 'pune', to: 'property', price: 3000, type: 'pickup' }
+  ];
+
+  const handleProceedToPayment = () => {
+    if (!guestDetails.name || !guestDetails.email || !guestDetails.phone) {
+      toast({
+        title: "Missing Information",
+        description: "Please fill in all guest details",
+        variant: "destructive",
+      });
+      return;
+    }
+    
     toast({
       title: "Booking Confirmation",
-      description: `Proceeding to book ${selectedRoomType?.name} with ${selectedAddons.length} addons. Total: ₹${calculateTotal().toLocaleString()}`,
+      description: `Proceeding to payment for ${selectedRoomType?.name}. Total: ₹${calculateTotal().toLocaleString()}`,
     });
+  };
+
+  const handleProceedToGuestDetails = () => {
+    setShowGuestDetails(true);
   };
 
   const nights = calculateNights();
@@ -345,15 +413,26 @@ const Booking = () => {
                     <CardTitle>Add Services & Experiences</CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <Tabs defaultValue="meals" className="w-full">
-                      <TabsList className="grid w-full grid-cols-3">
+                     <Tabs defaultValue="meals" className="w-full">
+                      <TabsList className="grid w-full grid-cols-4">
                         <TabsTrigger value="meals">Meals</TabsTrigger>
+                        <TabsTrigger value="pickup">Pickup/Drop</TabsTrigger>
                         <TabsTrigger value="activities">Activities</TabsTrigger>
-                        <TabsTrigger value="spa">Spa Services</TabsTrigger>
+                        <TabsTrigger value="spa">Spa</TabsTrigger>
                       </TabsList>
                       
                       <TabsContent value="meals" className="space-y-4">
-                        {meals.map((meal) => (
+                        {guestDetails.dietaryPreference !== 'no-preference' && (
+                          <div className="text-sm text-muted-foreground mb-4">
+                            Showing {guestDetails.dietaryPreference.replace('-', ' ')} options only
+                          </div>
+                        )}
+                        {getFilteredMeals().length === 0 ? (
+                          <div className="text-center text-muted-foreground py-8">
+                            No meals available for your dietary preference
+                          </div>
+                        ) : (
+                          getFilteredMeals().map((meal) => (
                           <div key={meal.id} className="flex items-center justify-between p-4 border rounded-lg">
                             <div className="flex-1">
                               <h4 className="font-medium">{meal.title}</h4>
@@ -381,7 +460,46 @@ const Booking = () => {
                               </Button>
                             </div>
                           </div>
-                        ))}
+                        )))}
+                      </TabsContent>
+                      
+                      <TabsContent value="pickup" className="space-y-4">
+                        <div className="space-y-4">
+                          {pickupServices.map((pickup) => (
+                            <div key={pickup.id} className="p-4 border rounded-lg">
+                              <div className="flex items-center justify-between">
+                                <div className="flex-1">
+                                  <h4 className="font-medium capitalize">
+                                    Pickup from {pickup.from}
+                                  </h4>
+                                  <p className="text-sm text-muted-foreground">
+                                    One-way transfer to the property
+                                  </p>
+                                  <p className="text-lg font-semibold">₹{pickup.price.toLocaleString()}</p>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                  <input
+                                    type="radio"
+                                    name="pickup"
+                                    className="h-4 w-4"
+                                    checked={selectedPickup?.id === pickup.id}
+                                    onChange={() => setSelectedPickup(pickup)}
+                                  />
+                                  <label className="text-sm">Select</label>
+                                </div>
+                              </div>
+                            </div>
+                          ))}
+                          {selectedPickup && (
+                            <Button
+                              variant="outline"
+                              onClick={() => setSelectedPickup(null)}
+                              className="w-full"
+                            >
+                              Remove Pickup Service
+                            </Button>
+                          )}
+                        </div>
                       </TabsContent>
                       
                       <TabsContent value="activities" className="space-y-4">
@@ -486,26 +604,133 @@ const Booking = () => {
                         <span>₹{(selectedRoomType.base_price * nights).toLocaleString()}</span>
                       </div>
                       
-                      {selectedAddons.map((addon) => (
-                        <div key={addon.id} className="flex justify-between text-sm">
-                          <span>{addon.title} x{addon.quantity}:</span>
-                          <span>₹{(addon.price * addon.quantity).toLocaleString()}</span>
-                        </div>
-                      ))}
-                    </div>
+                          {selectedAddons.length > 0 && (
+                            <div className="space-y-2">
+                              <Separator />
+                              <div className="font-medium">Add-ons:</div>
+                              {selectedAddons.map((addon) => (
+                                <div key={addon.id} className="flex justify-between text-sm">
+                                  <span>{addon.title} x{addon.quantity}</span>
+                                  <span>₹{(addon.price * addon.quantity).toLocaleString()}</span>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                          
+                          {selectedPickup && (
+                            <div className="space-y-2">
+                              <Separator />
+                              <div className="font-medium">Pickup Service:</div>
+                              <div className="flex justify-between text-sm">
+                                <span>Pickup from {selectedPickup.from}</span>
+                                <span>₹{selectedPickup.price.toLocaleString()}</span>
+                              </div>
+                            </div>
+                          )}
+                     </div>
 
-                    <Separator />
+                     <Separator />
 
-                    <div className="flex justify-between font-semibold text-lg">
-                      <span>Total:</span>
-                      <span>₹{calculateTotal().toLocaleString()}</span>
-                    </div>
+                     <div className="flex justify-between font-semibold text-lg">
+                       <span>Total:</span>
+                       <span>₹{calculateTotal().toLocaleString()}</span>
+                     </div>
 
-                    <Button onClick={handleProceedToBooking} className="w-full">
-                      Proceed to Payment
-                    </Button>
+                      {!showGuestDetails ? (
+                        <Button 
+                          className="w-full" 
+                          size="lg"
+                          onClick={handleProceedToGuestDetails}
+                        >
+                          Proceed to Guest Details
+                        </Button>
+                      ) : (
+                        <Button 
+                          className="w-full" 
+                          size="lg"
+                          onClick={handleProceedToPayment}
+                        >
+                          Proceed to Payment
+                        </Button>
+                      )}
                   </CardContent>
                 </Card>
+                
+                {/* Guest Details Form */}
+                {showGuestDetails && (
+                  <Card>
+                    <CardHeader>
+                      <CardTitle>Guest Details</CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                          <Label htmlFor="name">Full Name *</Label>
+                          <Input
+                            id="name"
+                            value={guestDetails.name}
+                            onChange={(e) => setGuestDetails(prev => ({ ...prev, name: e.target.value }))}
+                            placeholder="Enter full name"
+                          />
+                        </div>
+                        <div>
+                          <Label htmlFor="email">Email *</Label>
+                          <Input
+                            id="email"
+                            type="email"
+                            value={guestDetails.email}
+                            onChange={(e) => setGuestDetails(prev => ({ ...prev, email: e.target.value }))}
+                            placeholder="Enter email address"
+                          />
+                        </div>
+                        <div>
+                          <Label htmlFor="phone">Phone Number *</Label>
+                          <Input
+                            id="phone"
+                            value={guestDetails.phone}
+                            onChange={(e) => setGuestDetails(prev => ({ ...prev, phone: e.target.value }))}
+                            placeholder="Enter phone number"
+                          />
+                        </div>
+                        <div>
+                          <Label htmlFor="dietary">Dietary Preference</Label>
+                          <select
+                            id="dietary"
+                            className="w-full p-2 border rounded-md"
+                            value={guestDetails.dietaryPreference}
+                            onChange={(e) => setGuestDetails(prev => ({ 
+                              ...prev, 
+                              dietaryPreference: e.target.value as GuestDetails['dietaryPreference']
+                            }))}
+                          >
+                            <option value="no-preference">No Preference</option>
+                            <option value="vegetarian">Vegetarian</option>
+                            <option value="non-vegetarian">Non-Vegetarian</option>
+                            <option value="jain">Jain</option>
+                          </select>
+                        </div>
+                      </div>
+                      <div>
+                        <Label htmlFor="address">Address</Label>
+                        <Input
+                          id="address"
+                          value={guestDetails.address}
+                          onChange={(e) => setGuestDetails(prev => ({ ...prev, address: e.target.value }))}
+                          placeholder="Enter address"
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="special">Special Requests</Label>
+                        <Input
+                          id="special"
+                          value={guestDetails.specialRequests}
+                          onChange={(e) => setGuestDetails(prev => ({ ...prev, specialRequests: e.target.value }))}
+                          placeholder="Any special requirements or requests"
+                        />
+                      </div>
+                    </CardContent>
+                  </Card>
+                )}
               </div>
             </div>
           </div>
