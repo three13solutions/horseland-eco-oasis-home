@@ -43,6 +43,8 @@ interface Guest {
   last_name: string;
   email: string;
   phone: string;
+  contact_emails: string[] | null;
+  contact_phones: string[] | null;
   address: string;
   date_of_birth: string;
   nationality: string;
@@ -150,7 +152,11 @@ export default function GuestManagement() {
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      setGuests(data || []);
+      setGuests((data || []).map(guest => ({
+        ...guest,
+        contact_emails: Array.isArray(guest.contact_emails) ? guest.contact_emails as string[] : [],
+        contact_phones: Array.isArray(guest.contact_phones) ? guest.contact_phones as string[] : []
+      })));
     } catch (error: any) {
       console.error('Error loading guests:', error);
       toast({
@@ -861,25 +867,69 @@ export default function GuestManagement() {
               <p className="text-sm">{selectedGuest?.first_name} {selectedGuest?.last_name}</p>
             </div>
             
-            {selectedGuest?.email && (
-              <div>
-                <Label className="text-sm font-medium">Email</Label>
-                <p className="text-sm flex items-center gap-1">
-                  <Mail className="h-3 w-3" />
-                  {selectedGuest.email}
-                </p>
+            {/* Contact Information Section */}
+            <div>
+              <Label className="text-sm font-medium mb-2 block">Contact Information</Label>
+              <div className="space-y-2">
+                {/* Primary Email */}
+                {selectedGuest?.email && (
+                  <div>
+                    <Label className="text-xs text-muted-foreground">Primary Email</Label>
+                    <p className="text-sm flex items-center gap-1">
+                      <Mail className="h-3 w-3" />
+                      {selectedGuest.email}
+                    </p>
+                  </div>
+                )}
+                
+                {/* All Email Addresses */}
+                {selectedGuest?.contact_emails && selectedGuest.contact_emails.length > 0 && (
+                  <div>
+                    <Label className="text-xs text-muted-foreground">
+                      All Email Addresses ({selectedGuest.contact_emails.length})
+                    </Label>
+                    <div className="space-y-1">
+                      {selectedGuest.contact_emails.map((email, index) => (
+                        <p key={index} className="text-sm flex items-center gap-1 text-muted-foreground">
+                          <Mail className="h-3 w-3" />
+                          {email}
+                          {email === selectedGuest.email && <Badge variant="secondary" className="ml-1 text-xs">Primary</Badge>}
+                        </p>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                
+                {/* Primary Phone */}
+                {selectedGuest?.phone && (
+                  <div>
+                    <Label className="text-xs text-muted-foreground">Primary Phone</Label>
+                    <p className="text-sm flex items-center gap-1">
+                      <Phone className="h-3 w-3" />
+                      {selectedGuest.phone}
+                    </p>
+                  </div>
+                )}
+                
+                {/* All Phone Numbers */}
+                {selectedGuest?.contact_phones && selectedGuest.contact_phones.length > 0 && (
+                  <div>
+                    <Label className="text-xs text-muted-foreground">
+                      All Phone Numbers ({selectedGuest.contact_phones.length})
+                    </Label>
+                    <div className="space-y-1">
+                      {selectedGuest.contact_phones.map((phone, index) => (
+                        <p key={index} className="text-sm flex items-center gap-1 text-muted-foreground">
+                          <Phone className="h-3 w-3" />
+                          {phone}
+                          {phone === selectedGuest.phone && <Badge variant="secondary" className="ml-1 text-xs">Primary</Badge>}
+                        </p>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
-            )}
-            
-            {selectedGuest?.phone && (
-              <div>
-                <Label className="text-sm font-medium">Phone</Label>
-                <p className="text-sm flex items-center gap-1">
-                  <Phone className="h-3 w-3" />
-                  {selectedGuest.phone}
-                </p>
-              </div>
-            )}
+            </div>
             
             {selectedGuest?.address && (
               <div>
