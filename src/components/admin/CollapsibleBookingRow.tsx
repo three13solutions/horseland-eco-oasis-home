@@ -7,6 +7,7 @@ import { TableCell, TableRow } from '@/components/ui/table';
 import { format, parseISO } from 'date-fns';
 import { BookingActions } from './BookingActions';
 import { SimplifiedRoomCell } from './SimplifiedRoomCell';
+import { PaymentModal } from './PaymentModal';
 import { UpdateBookingModal } from './UpdateBookingModal';
 
 interface CollapsibleBookingRowProps {
@@ -32,8 +33,6 @@ interface CollapsibleBookingRowProps {
   setSelectedNewRoomType: (id: string) => void;
   renderAddons: (booking: any) => React.ReactNode;
   getAvailableUnitsForBooking: (booking: any) => any[];
-  onProcessPayment: (booking: any) => void;
-  onUpdateBooking: (booking: any) => void;
   getPaymentStatusBadge: (booking: any) => React.ReactNode;
   getBookingStatusBadge: (status: string) => React.ReactNode;
   onReloadBookings: () => void;
@@ -62,13 +61,12 @@ export function CollapsibleBookingRow({
   setSelectedNewRoomType,
   renderAddons,
   getAvailableUnitsForBooking,
-  onProcessPayment,
-  onUpdateBooking,
   getPaymentStatusBadge,
   getBookingStatusBadge,
   onReloadBookings,
 }: CollapsibleBookingRowProps) {
   const [isExpanded, setIsExpanded] = useState(false);
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [showUpdateModal, setShowUpdateModal] = useState(false);
 
   const hasPaymentMethod = booking.payment_method || booking.payment_id;
@@ -114,17 +112,7 @@ export function CollapsibleBookingRow({
             {hasPaymentMethod ? (
               getPaymentStatusBadge(booking)
             ) : (
-              <>
-                {getBookingStatusBadge(booking.payment_status)}
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => onProcessPayment(booking)}
-                  className="text-primary border-primary/20 hover:bg-primary/10 w-full mt-1"
-                >
-                  Pay
-                </Button>
-              </>
+              getBookingStatusBadge(booking.payment_status)
             )}
           </div>
         </TableCell>
@@ -152,11 +140,11 @@ export function CollapsibleBookingRow({
               setSelectedRoomOverride={setSelectedRoomOverride}
               setSelectedNewRoomUnit={setSelectedNewRoomUnit}
               setSelectedNewRoomType={setSelectedNewRoomType}
-            renderAddons={renderAddons}
-            getAvailableUnitsForBooking={getAvailableUnitsForBooking}
-            onProcessPayment={onProcessPayment}
-            onUpdateBooking={onUpdateBooking}
-            getPaymentStatusBadge={getPaymentStatusBadge}
+              renderAddons={renderAddons}
+              getAvailableUnitsForBooking={getAvailableUnitsForBooking}
+              onProcessPayment={() => setShowPaymentModal(true)}
+              onUpdateBooking={() => setShowUpdateModal(true)}
+              getPaymentStatusBadge={getPaymentStatusBadge}
             />
           </div>
         </TableCell>
@@ -219,6 +207,17 @@ export function CollapsibleBookingRow({
           </TableCell>
         </TableRow>
       )}
+
+      {/* Payment Modal */}
+      <PaymentModal
+        isOpen={showPaymentModal}
+        onClose={() => setShowPaymentModal(false)}
+        onSuccess={() => {
+          setShowPaymentModal(false);
+          onReloadBookings();
+        }}
+        booking={booking}
+      />
 
       {/* Update Booking Modal */}
       <UpdateBookingModal
