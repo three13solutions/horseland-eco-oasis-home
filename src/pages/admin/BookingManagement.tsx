@@ -294,30 +294,51 @@ export default function BookingManagement() {
   };
 
   const getPaymentStatusBadge = (booking: Booking) => {
-    const { payment_status, payment_method, payment_id } = booking;
+    // Check if payment is actually completed based on payment_method or payment_id
+    const isPaymentCompleted = booking.payment_method || booking.payment_id;
     
-    switch (payment_status) {
-      case 'completed':
+    if (isPaymentCompleted) {
+      return (
+        <div className="flex items-center gap-1">
+          <Badge className="bg-green-100 text-green-800 flex items-center gap-1">
+            <Check className="h-3 w-3" />
+            Paid
+          </Badge>
+          {booking.payment_method && (
+            <span className="text-xs text-muted-foreground">
+              ({booking.payment_method === 'razorpay' ? 'Online' : 'Cash'})
+            </span>
+          )}
+        </div>
+      );
+    } else {
+      return <Badge className="bg-yellow-100 text-yellow-800">Pending Payment</Badge>;
+    }
+  };
+
+  // This shows the booking status (confirmed, pending, cancelled)
+  const getBookingStatusBadge = (status: string) => {
+    switch (status) {
       case 'confirmed':
-        return (
-          <div className="flex items-center gap-1">
-            <Badge className="bg-green-100 text-green-800 flex items-center gap-1">
-              <Check className="h-3 w-3" />
-              Paid
-            </Badge>
-            {payment_method && (
-              <span className="text-xs text-muted-foreground">
-                ({payment_method === 'razorpay' ? 'Online' : 'Cash'})
-              </span>
-            )}
-          </div>
-        );
+        return <Badge className="bg-blue-100 text-blue-800">Confirmed</Badge>;
       case 'pending':
         return <Badge className="bg-yellow-100 text-yellow-800">Pending</Badge>;
       case 'cancelled':
         return <Badge className="bg-red-100 text-red-800">Cancelled</Badge>;
       default:
-        return <Badge className="bg-gray-100 text-gray-800">{payment_status}</Badge>;
+        return <Badge className="bg-gray-100 text-gray-800">{status}</Badge>;
+    }
+  };
+  const getBookingStatusBadge = (status: string) => {
+    switch (status) {
+      case 'confirmed':
+        return <Badge className="bg-blue-100 text-blue-800">Confirmed</Badge>;
+      case 'pending':
+        return <Badge className="bg-yellow-100 text-yellow-800">Pending</Badge>;
+      case 'cancelled':
+        return <Badge className="bg-red-100 text-red-800">Cancelled</Badge>;
+      default:
+        return <Badge className="bg-gray-100 text-gray-800">{status}</Badge>;
     }
   };
 
@@ -1368,16 +1389,16 @@ export default function BookingManagement() {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Booking ID</TableHead>
-                    <TableHead>Guest</TableHead>
-                    <TableHead>Room</TableHead>
-                    <TableHead>Check-in</TableHead>
-                    <TableHead>Check-out</TableHead>
-                    <TableHead>Guests</TableHead>
-                    <TableHead>Amount</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead>Actions</TableHead>
-                  </TableRow>
+                     <TableHead>Booking ID</TableHead>
+                     <TableHead>Guest</TableHead>
+                     <TableHead>Room</TableHead>
+                     <TableHead>Check-in</TableHead>
+                     <TableHead>Check-out</TableHead>
+                     <TableHead>Guests</TableHead>
+                     <TableHead>Amount</TableHead>
+                     <TableHead>Status</TableHead>
+                     <TableHead>Actions</TableHead>
+                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {filteredBookings.length === 0 ? (
@@ -1434,60 +1455,31 @@ export default function BookingManagement() {
                         <TableCell>{format(parseISO(booking.check_in), 'MMM dd, yyyy')}</TableCell>
                         <TableCell>{format(parseISO(booking.check_out), 'MMM dd, yyyy')}</TableCell>
                         <TableCell>{booking.guests_count}</TableCell>
-                        <TableCell>₹{Number(booking.total_amount).toLocaleString()}</TableCell>
-                        <TableCell>
-                          {editingPaymentStatus === booking.id ? (
-                            <div className="flex gap-2 items-center">
-                              <Select 
-                                value={selectedPaymentStatus} 
-                                onValueChange={setSelectedPaymentStatus}
-                              >
-                                <SelectTrigger className="w-32">
-                                  <SelectValue placeholder="Status" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                  <SelectItem value="pending">Pending</SelectItem>
-                                  <SelectItem value="confirmed">Confirmed</SelectItem>
-                                  <SelectItem value="completed">Completed</SelectItem>
-                                  <SelectItem value="cancelled">Cancelled</SelectItem>
-                                </SelectContent>
-                              </Select>
-                              <Button
-                                size="sm"
-                                onClick={() => handleUpdatePaymentStatus(booking.id, selectedPaymentStatus)}
-                                disabled={!selectedPaymentStatus}
-                              >
-                                Update
-                              </Button>
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                onClick={() => {
-                                  setEditingPaymentStatus(null);
-                                  setSelectedPaymentStatus('');
-                                }}
-                              >
-                                Cancel
-                              </Button>
-                            </div>
-                          ) : (
-                            <div className="flex items-center gap-2">
-                              {getPaymentStatusBadge(booking)}
-                              <Button
-                                size="sm"
-                                variant="ghost"
-                                onClick={() => {
-                                  setEditingPaymentStatus(booking.id);
-                                  setSelectedPaymentStatus(booking.payment_status);
-                                }}
-                                className="h-6 w-6 p-0"
-                              >
-                                <Edit className="h-3 w-3" />
-                              </Button>
-                            </div>
-                          )}
-                        </TableCell>
-                        <TableCell>
+                         <TableCell>₹{Number(booking.total_amount).toLocaleString()}</TableCell>
+                         
+                         {/* Booking Status Column */}
+                         <TableCell>
+                           {getBookingStatusBadge(booking.payment_status)}
+                         </TableCell>
+                         
+                         {/* Payment Status/Action Column */}
+                         <TableCell>
+                           {/* Show payment status or pay button based on actual payment completion */}
+                           {booking.payment_method === 'cash' || booking.payment_method === 'razorpay' || booking.payment_id ? (
+                             getPaymentStatusBadge(booking)
+                           ) : (
+                             <Button
+                               variant="outline"
+                               size="sm"
+                               onClick={() => handleProcessPayment(booking)}
+                               className="text-blue-600 border-blue-200 hover:bg-blue-50"
+                             >
+                               <CreditCard className="h-4 w-4 mr-1" />
+                               Pay
+                             </Button>
+                           )}
+                         </TableCell>
+                         {/* Actions Column */}
                           <div className="flex items-center gap-2">
                             <Dialog>
                               <DialogTrigger asChild>
@@ -1562,17 +1554,6 @@ export default function BookingManagement() {
                             </DialogContent>
                           </Dialog>
                           
-                          {(booking.payment_status === 'pending') && (
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => handleProcessPayment(booking)}
-                              className="text-blue-600 border-blue-200 hover:bg-blue-50"
-                            >
-                              <CreditCard className="h-4 w-4 mr-1" />
-                              Pay
-                            </Button>
-                          )}
                           </div>
                         </TableCell>
                       </TableRow>
