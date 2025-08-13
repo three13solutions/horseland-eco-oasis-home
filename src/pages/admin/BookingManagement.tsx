@@ -1340,6 +1340,39 @@ export default function BookingManagement() {
                     type="email"
                     value={createFormData.guest_email}
                     onChange={(e) => setCreateFormData(prev => ({ ...prev, guest_email: e.target.value }))}
+                    onBlur={async (e) => {
+                      const emailValue = e.target.value.trim();
+                      if (!emailValue) return;
+                      
+                      console.log('Email field blur - checking for existing guest with email:', emailValue);
+                      
+                      try {
+                        const { data: existingGuests, error } = await supabase
+                          .from('guests')
+                          .select('*')
+                          .eq('email', emailValue)
+                          .limit(1);
+                          
+                        if (error) {
+                          console.error('Error checking email:', error);
+                          return;
+                        }
+                        
+                        if (existingGuests && existingGuests.length > 0) {
+                          const existingGuest = existingGuests[0];
+                          console.log('Found existing guest by email:', existingGuest);
+                          toast({
+                            title: "Existing Guest Detected!",
+                            description: `Email belongs to: ${existingGuest.first_name} ${existingGuest.last_name}. This booking will be linked to their profile.`,
+                            variant: "destructive",
+                          });
+                        } else {
+                          console.log('No existing guest found for this email');
+                        }
+                      } catch (error) {
+                        console.error('Error during email check:', error);
+                      }
+                    }}
                     placeholder="guest@example.com"
                   />
                 </div>
@@ -1349,6 +1382,55 @@ export default function BookingManagement() {
                     id="guest_phone"
                     value={createFormData.guest_phone}
                     onChange={(e) => setCreateFormData(prev => ({ ...prev, guest_phone: e.target.value }))}
+                    onBlur={async (e) => {
+                      const phoneValue = e.target.value.trim();
+                      if (!phoneValue) return;
+                      
+                      console.log('Phone field blur - checking for existing guest with phone:', phoneValue);
+                      
+                      // Normalize phone number
+                      const normalizePhone = (phone: string) => {
+                        const digitsOnly = phone.replace(/\D/g, '');
+                        if (digitsOnly.startsWith('91') && digitsOnly.length === 12) {
+                          return digitsOnly.substring(2);
+                        }
+                        return digitsOnly;
+                      };
+                      
+                      const normalizedPhone = normalizePhone(phoneValue);
+                      console.log('Normalized phone:', normalizedPhone);
+                      
+                      try {
+                        const { data: allGuests, error } = await supabase
+                          .from('guests')
+                          .select('*')
+                          .not('phone', 'is', null);
+                          
+                        if (error) {
+                          console.error('Error checking guests:', error);
+                          return;
+                        }
+                        
+                        const existingGuest = allGuests.find(guest => {
+                          if (!guest.phone) return false;
+                          const guestNormalizedPhone = normalizePhone(guest.phone);
+                          return guestNormalizedPhone === normalizedPhone;
+                        });
+                        
+                        if (existingGuest) {
+                          console.log('Found existing guest:', existingGuest);
+                          toast({
+                            title: "Existing Guest Detected!",
+                            description: `Phone number belongs to: ${existingGuest.first_name} ${existingGuest.last_name}. This booking will be linked to their profile.`,
+                            variant: "destructive",
+                          });
+                        } else {
+                          console.log('No existing guest found for this phone number');
+                        }
+                      } catch (error) {
+                        console.error('Error during phone check:', error);
+                      }
+                    }}
                     placeholder="+91-9876543210"
                   />
                 </div>
