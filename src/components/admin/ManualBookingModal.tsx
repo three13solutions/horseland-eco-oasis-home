@@ -134,42 +134,64 @@ export const ManualBookingModal: React.FC<ManualBookingModalProps> = ({
     }
   };
 
+  const normalizePhoneNumber = (phone: string) => {
+    if (!phone) return '';
+    // Remove all non-digits
+    const digitsOnly = phone.replace(/\D/g, '');
+    // Remove country code if present (91 for India)
+    if (digitsOnly.startsWith('91') && digitsOnly.length === 12) {
+      return digitsOnly.substring(2);
+    }
+    return digitsOnly;
+  };
+
   const findExistingGuest = async (email?: string, phone?: string) => {
     if (!email && !phone) return null;
 
+    console.log('Searching for existing guest with:', { email, phone });
+
     try {
-      let query = supabase.from('guests').select('*');
+      if (email && email.trim()) {
+        console.log('Checking email:', email.trim());
+        const { data, error } = await supabase
+          .from('guests')
+          .select('*')
+          .eq('email', email.trim())
+          .limit(1);
+        
+        if (error) throw error;
+        if (data && data.length > 0) {
+          console.log('Found guest by email:', data[0]);
+          return data[0];
+        }
+      }
       
-      if (email && phone) {
-        // Check for either email OR phone match
-        const { data, error } = await supabase
+      if (phone && phone.trim()) {
+        const normalizedPhone = normalizePhoneNumber(phone.trim());
+        console.log('Checking phone. Original:', phone, 'Normalized:', normalizedPhone);
+        
+        // Search for guests with phone numbers that normalize to the same value
+        const { data: allGuests, error } = await supabase
           .from('guests')
           .select('*')
-          .or(`email.eq.${email},phone.eq.${phone}`)
-          .limit(1);
+          .not('phone', 'is', null);
         
         if (error) throw error;
-        return data && data.length > 0 ? data[0] : null;
-      } else if (email) {
-        const { data, error } = await supabase
-          .from('guests')
-          .select('*')
-          .eq('email', email)
-          .limit(1);
         
-        if (error) throw error;
-        return data && data.length > 0 ? data[0] : null;
-      } else if (phone) {
-        const { data, error } = await supabase
-          .from('guests')
-          .select('*')
-          .eq('phone', phone)
-          .limit(1);
+        const matchingGuest = allGuests?.find(guest => {
+          if (!guest.phone) return false;
+          const guestNormalizedPhone = normalizePhoneNumber(guest.phone);
+          console.log('Comparing normalized phones:', normalizedPhone, 'vs', guestNormalizedPhone);
+          return guestNormalizedPhone === normalizedPhone;
+        });
         
-        if (error) throw error;
-        return data && data.length > 0 ? data[0] : null;
+        if (matchingGuest) {
+          console.log('Found guest by phone:', matchingGuest);
+          return matchingGuest;
+        }
       }
 
+      console.log('No existing guest found');
       return null;
     } catch (error) {
       console.error('Error finding existing guest:', error);
@@ -178,18 +200,23 @@ export const ManualBookingModal: React.FC<ManualBookingModalProps> = ({
   };
 
   const checkForExistingGuest = async (email?: string, phone?: string) => {
+    console.log('checkForExistingGuest called with:', { email, phone });
+    
     // Check individually for email or phone
     let guest = null;
     
     if (email && email.trim()) {
+      console.log('Checking for existing guest by email...');
       guest = await findExistingGuest(email.trim());
     }
     
     if (!guest && phone && phone.trim()) {
+      console.log('Checking for existing guest by phone...');
       guest = await findExistingGuest(undefined, phone.trim());
     }
     
     if (guest) {
+      console.log('Found existing guest:', guest);
       setExistingGuest(guest);
       setShowGuestMatch(true);
       // Auto-populate guest name if it matches
@@ -202,6 +229,7 @@ export const ManualBookingModal: React.FC<ManualBookingModalProps> = ({
         description: `Found existing guest: ${guest.first_name} ${guest.last_name}. This booking will be linked to their profile.`,
       });
     } else {
+      console.log('No existing guest found');
       setExistingGuest(null);
       setShowGuestMatch(false);
     }
@@ -452,6 +480,7 @@ export const ManualBookingModal: React.FC<ManualBookingModalProps> = ({
                     value={guestEmail}
                     onChange={(e) => setGuestEmail(e.target.value)}
                     onBlur={(e) => {
+                      console.log('Email field blurred with value:', e.target.value);
                       // Check for existing guest when user leaves the email field
                       if (e.target.value.trim()) {
                         checkForExistingGuest(e.target.value.trim());
@@ -472,6 +501,7 @@ export const ManualBookingModal: React.FC<ManualBookingModalProps> = ({
                     value={guestPhone}
                     onChange={(e) => setGuestPhone(e.target.value)}
                     onBlur={(e) => {
+                      console.log('Phone field blurred with value:', e.target.value);
                       // Check for existing guest when user leaves the phone field
                       if (e.target.value.trim()) {
                         checkForExistingGuest(undefined, e.target.value.trim());
