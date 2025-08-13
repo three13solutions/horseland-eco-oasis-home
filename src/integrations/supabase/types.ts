@@ -322,6 +322,9 @@ export type Database = {
           id: string
           notes: string | null
           package_id: string | null
+          payment_id: string | null
+          payment_method: string | null
+          payment_order_id: string | null
           payment_status: string
           room_type_id: string | null
           room_unit_id: string | null
@@ -345,6 +348,9 @@ export type Database = {
           id?: string
           notes?: string | null
           package_id?: string | null
+          payment_id?: string | null
+          payment_method?: string | null
+          payment_order_id?: string | null
           payment_status?: string
           room_type_id?: string | null
           room_unit_id?: string | null
@@ -368,6 +374,9 @@ export type Database = {
           id?: string
           notes?: string | null
           package_id?: string | null
+          payment_id?: string | null
+          payment_method?: string | null
+          payment_order_id?: string | null
           payment_status?: string
           room_type_id?: string | null
           room_unit_id?: string | null

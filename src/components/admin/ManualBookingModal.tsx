@@ -13,7 +13,7 @@ import { format, differenceInDays } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { PaymentModal } from '@/components/PaymentModal';
+import { PaymentOptionsModal } from '@/components/PaymentOptionsModal';
 import { calculateBookingAmount, formatCurrency } from '@/lib/razorpay';
 
 interface ManualBookingModalProps {
@@ -60,9 +60,9 @@ export const ManualBookingModal: React.FC<ManualBookingModalProps> = ({
   const [selectedSpaServices, setSelectedSpaServices] = useState<any[]>([]);
   
   // Payment related state
-  const [showPaymentModal, setShowPaymentModal] = useState(false);
+  const [showPaymentOptionsModal, setShowPaymentOptionsModal] = useState(false);
   const [roomPrice, setRoomPrice] = useState(0);
-  const [currentBookingId, setCurrentBookingId] = useState<string | null>(null);
+  const [createdBooking, setCreatedBooking] = useState<any>(null);
   
   const { toast } = useToast();
 
@@ -329,39 +329,30 @@ export const ManualBookingModal: React.FC<ManualBookingModalProps> = ({
     return breakdown.totalAmount;
   };
 
-  const handlePaymentSuccess = async (paymentId: string, orderId: string) => {
-    if (!currentBookingId) return;
+  const handlePaymentComplete = () => {
+    setShowPaymentOptionsModal(false);
+    setCreatedBooking(null);
     
-    try {
-      // Update booking with payment details
-      const { error } = await supabase
-        .from('bookings')
-        .update({
-          payment_status: 'completed',
-          payment_id: paymentId,
-          payment_order_id: orderId,
-        })
-        .eq('id', currentBookingId);
-
-      if (error) throw error;
-
-      toast({
-        title: "Payment Successful",
-        description: `Payment completed for booking ${currentBookingId}`,
-      });
-
-      setShowPaymentModal(false);
-      onClose();
-      if (onBookingCreated) {
-        onBookingCreated();
-      }
-    } catch (error) {
-      console.error('Error updating payment:', error);
-      toast({
-        title: "Payment Update Failed",
-        description: "Payment was successful but failed to update booking status",
-        variant: "destructive",
-      });
+    // Reset form
+    setCheckInDate(undefined);
+    setCheckOutDate(undefined);
+    setGuestName('');
+    setGuestEmail('');
+    setGuestPhone('');
+    setGuestsCount(2);
+    setPaymentStatus('pending');
+    setTotalAmount(0);
+    setNotes('');
+    setSelectedPackage('no-package');
+    setSelectedMeals([]);
+    setSelectedActivities([]);
+    setSelectedSpaServices([]);
+    setExistingGuest(null);
+    setShowGuestMatch(false);
+    
+    onClose();
+    if (onBookingCreated) {
+      onBookingCreated();
     }
   };
 
@@ -512,11 +503,11 @@ export const ManualBookingModal: React.FC<ManualBookingModalProps> = ({
       }
       
       console.log('Booking created successfully');
-      setCurrentBookingId(insertedBooking.id);
+      setCreatedBooking(insertedBooking);
 
-      // If payment status is confirmed, show payment modal
+      // If payment status is confirmed, show payment options modal
       if (paymentStatus === 'confirmed') {
-        setShowPaymentModal(true);
+        setShowPaymentOptionsModal(true);
         return; // Don't close modal or reset form yet
       }
 
@@ -541,7 +532,7 @@ export const ManualBookingModal: React.FC<ManualBookingModalProps> = ({
       setSelectedSpaServices([]);
       setExistingGuest(null);
       setShowGuestMatch(false);
-      setCurrentBookingId(null);
+      setCreatedBooking(null);
       
       onClose();
       if (onBookingCreated) {
@@ -962,22 +953,22 @@ export const ManualBookingModal: React.FC<ManualBookingModalProps> = ({
         </form>
       </DialogContent>
 
-      {/* Payment Modal */}
-      {showPaymentModal && checkInDate && checkOutDate && (
-        <PaymentModal
-          isOpen={showPaymentModal}
-          onClose={() => setShowPaymentModal(false)}
-          onSuccess={handlePaymentSuccess}
-          bookingDetails={{
-            roomName: roomName,
-            roomPrice: roomPrice,
-            nights: getNights(),
-            addonTotal: calculateAddonTotal(),
-            guestName: guestName,
-            guestEmail: guestEmail,
-            guestPhone: guestPhone,
-            checkIn: format(checkInDate, 'PPP'),
-            checkOut: format(checkOutDate, 'PPP'),
+      {/* Payment Options Modal */}
+      {showPaymentOptionsModal && createdBooking && (
+        <PaymentOptionsModal
+          isOpen={showPaymentOptionsModal}
+          onClose={() => setShowPaymentOptionsModal(false)}
+          onPaymentComplete={handlePaymentComplete}
+          booking={{
+            id: createdBooking.id,
+            booking_id: createdBooking.booking_id,
+            guest_name: createdBooking.guest_name,
+            guest_email: createdBooking.guest_email,
+            guest_phone: createdBooking.guest_phone,
+            total_amount: createdBooking.total_amount,
+            check_in: createdBooking.check_in,
+            check_out: createdBooking.check_out,
+            room_units: { unit_name: roomName, unit_number: roomName },
           }}
         />
       )}

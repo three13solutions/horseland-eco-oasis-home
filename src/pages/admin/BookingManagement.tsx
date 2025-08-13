@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Calendar, Eye, Search, Filter, Users, IndianRupee, ArrowLeft, Clock, CheckCircle, XCircle, AlertCircle, Bot, RefreshCw, Edit, Plus, Phone, CalendarIcon, Home, RotateCcw, CreditCard } from 'lucide-react';
+import { Calendar, Eye, Search, Filter, Users, IndianRupee, ArrowLeft, Clock, CheckCircle, XCircle, AlertCircle, Bot, RefreshCw, Edit, Plus, Phone, CalendarIcon, Home, RotateCcw, CreditCard, Check } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
@@ -19,7 +19,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { format, parseISO, isAfter, isBefore, isToday } from 'date-fns';
 import { RoomAvailabilityGrid } from '@/components/admin/RoomAvailabilityGrid';
 import { BookingRoomCell } from '@/components/admin/BookingRoomCell';
-import { PaymentModal } from '@/components/PaymentModal';
+import { PaymentOptionsModal } from '@/components/PaymentOptionsModal';
 import { formatCurrency, calculateBookingAmount } from '@/lib/razorpay';
 import { differenceInDays } from 'date-fns';
 
@@ -34,6 +34,9 @@ interface Booking {
   guests_count: number;
   total_amount: number;
   payment_status: string;
+  payment_method?: string;
+  payment_id?: string;
+  payment_order_id?: string;
   notes?: string;
   created_at: string;
   room_unit_id?: string;
@@ -100,7 +103,7 @@ export default function BookingManagement() {
   const [selectedNewRoomType, setSelectedNewRoomType] = useState<string>('');
   
   // Payment modal state
-  const [showPaymentModal, setShowPaymentModal] = useState(false);
+  const [showPaymentOptionsModal, setShowPaymentOptionsModal] = useState(false);
   const [selectedBookingForPayment, setSelectedBookingForPayment] = useState<Booking | null>(null);
   
   const [stats, setStats] = useState<BookingStats>({
@@ -290,62 +293,42 @@ export default function BookingManagement() {
     });
   };
 
-  const getPaymentStatusBadge = (status: string) => {
-    const statusConfig = {
-      pending: { variant: 'secondary' as const, icon: Clock, label: 'Pending' },
-      confirmed: { variant: 'default' as const, icon: CheckCircle, label: 'Confirmed' },
-      cancelled: { variant: 'destructive' as const, icon: XCircle, label: 'Cancelled' },
-      completed: { variant: 'default' as const, icon: CheckCircle, label: 'Completed' },
-    };
-
-    const config = statusConfig[status as keyof typeof statusConfig] || statusConfig.pending;
-    const Icon = config.icon;
-
-    return (
-      <Badge variant={config.variant} className="flex items-center gap-1">
-        <Icon className="h-3 w-3" />
-        {config.label}
-      </Badge>
-    );
+  const getPaymentStatusBadge = (booking: Booking) => {
+    const { payment_status, payment_method, payment_id } = booking;
+    
+    switch (payment_status) {
+      case 'completed':
+        return (
+          <div className="flex items-center gap-1">
+            <Badge className="bg-green-100 text-green-800 flex items-center gap-1">
+              <Check className="h-3 w-3" />
+              Paid
+            </Badge>
+            {payment_method && (
+              <span className="text-xs text-muted-foreground">
+                ({payment_method === 'razorpay' ? 'Online' : 'Cash'})
+              </span>
+            )}
+          </div>
+        );
+      case 'pending':
+        return <Badge className="bg-yellow-100 text-yellow-800">Pending</Badge>;
+      case 'cancelled':
+        return <Badge className="bg-red-100 text-red-800">Cancelled</Badge>;
+      default:
+        return <Badge className="bg-gray-100 text-gray-800">{payment_status}</Badge>;
+    }
   };
 
   const handleProcessPayment = (booking: Booking) => {
     setSelectedBookingForPayment(booking);
-    setShowPaymentModal(true);
+    setShowPaymentOptionsModal(true);
   };
 
-  const handlePaymentSuccess = async (paymentId: string, orderId: string) => {
-    if (!selectedBookingForPayment) return;
-    
-    try {
-      // Update booking with payment details
-      const { error } = await supabase
-        .from('bookings')
-        .update({
-          payment_status: 'completed',
-          payment_id: paymentId,
-          payment_order_id: orderId,
-        })
-        .eq('id', selectedBookingForPayment.id);
-
-      if (error) throw error;
-
-      toast({
-        title: "Payment Successful",
-        description: `Payment completed for booking ${selectedBookingForPayment.booking_id}`,
-      });
-
-      setShowPaymentModal(false);
-      setSelectedBookingForPayment(null);
-      loadBookings(); // Reload bookings to reflect updated status
-    } catch (error) {
-      console.error('Error updating payment:', error);
-      toast({
-        title: "Payment Update Failed",
-        description: "Payment was successful but failed to update booking status",
-        variant: "destructive",
-      });
-    }
+  const handlePaymentComplete = () => {
+    setShowPaymentOptionsModal(false);
+    setSelectedBookingForPayment(null);
+    loadBookings(); // Reload bookings to reflect updated status
   };
 
   const getBookingNights = (booking: Booking) => {
@@ -1488,7 +1471,7 @@ export default function BookingManagement() {
                             </div>
                           ) : (
                             <div className="flex items-center gap-2">
-                              {getPaymentStatusBadge(booking.payment_status)}
+                              {getPaymentStatusBadge(booking)}
                               <Button
                                 size="sm"
                                 variant="ghost"
@@ -1562,7 +1545,7 @@ export default function BookingManagement() {
                                   </div>
                                   <div>
                                     <Label className="text-sm font-medium">Payment Status</Label>
-                                    <div className="mt-1">{getPaymentStatusBadge(booking.payment_status)}</div>
+                                    <div className="mt-1">{getPaymentStatusBadge(booking)}</div>
                                   </div>
                                 </div>
                                 {booking.notes && (
@@ -2088,28 +2071,16 @@ export default function BookingManagement() {
         </DialogContent>
       </Dialog>
       
-      {/* Payment Modal */}
-      {showPaymentModal && selectedBookingForPayment && (
-        <PaymentModal
-          isOpen={showPaymentModal}
+      {/* Payment Options Modal */}
+      {showPaymentOptionsModal && selectedBookingForPayment && (
+        <PaymentOptionsModal
+          isOpen={showPaymentOptionsModal}
           onClose={() => {
-            setShowPaymentModal(false);
+            setShowPaymentOptionsModal(false);
             setSelectedBookingForPayment(null);
           }}
-          onSuccess={handlePaymentSuccess}
-          bookingDetails={{
-            roomName: selectedBookingForPayment.room_units?.unit_name || 
-                     selectedBookingForPayment.room_types?.name || 
-                     'Room',
-            roomPrice: selectedBookingForPayment.total_amount / getBookingNights(selectedBookingForPayment) || 0,
-            nights: getBookingNights(selectedBookingForPayment),
-            addonTotal: calculateBookingAddonTotal(selectedBookingForPayment),
-            guestName: selectedBookingForPayment.guest_name,
-            guestEmail: selectedBookingForPayment.guest_email || '',
-            guestPhone: selectedBookingForPayment.guest_phone || '',
-            checkIn: format(parseISO(selectedBookingForPayment.check_in), 'PPP'),
-            checkOut: format(parseISO(selectedBookingForPayment.check_out), 'PPP'),
-          }}
+          onPaymentComplete={handlePaymentComplete}
+          booking={selectedBookingForPayment}
         />
       )}
     </div>
