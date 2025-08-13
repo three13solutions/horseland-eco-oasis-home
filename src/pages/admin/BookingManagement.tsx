@@ -716,10 +716,37 @@ export default function BookingManagement() {
       return;
     }
 
-    // Check for existing guest with same email or phone
-    console.log('=== CHECKING FOR EXISTING GUEST ===');
+    // Initialize guest ID variable
+    let finalGuestId = null;
+
+    console.log('=== BOOKING CREATION STARTED ===');
+    console.log('Guest Name:', createFormData.guest_name);
+    console.log('Guest Email:', createFormData.guest_email);
+    console.log('Guest Phone:', createFormData.guest_phone);
+
+    if (!createFormData.guest_name || !createFormData.check_in || !createFormData.check_out) {
+      toast({
+        title: "Validation Error",
+        description: "Please fill in guest name, check-in, and check-out dates",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Check for existing guest and handle data merging
+    console.log('=== CHECKING FOR EXISTING GUEST WITH DATA MERGING ===');
     try {
       let existingGuest = null;
+      let matchType = '';
+      
+      // Normalize phone number function
+      const normalizePhone = (phone: string) => {
+        const digitsOnly = phone.replace(/\D/g, '');
+        if (digitsOnly.startsWith('91') && digitsOnly.length === 12) {
+          return digitsOnly.substring(2);
+        }
+        return digitsOnly;
+      };
       
       // Check by email first
       if (createFormData.guest_email && createFormData.guest_email.trim()) {
@@ -734,6 +761,7 @@ export default function BookingManagement() {
           console.error('Email check error:', emailError);
         } else if (emailGuests && emailGuests.length > 0) {
           existingGuest = emailGuests[0];
+          matchType = 'email';
           console.log('Found existing guest by email:', existingGuest);
         }
       }
@@ -741,15 +769,6 @@ export default function BookingManagement() {
       // Check by phone if no email match
       if (!existingGuest && createFormData.guest_phone && createFormData.guest_phone.trim()) {
         console.log('Checking phone:', createFormData.guest_phone.trim());
-        
-        // Normalize phone number
-        const normalizePhone = (phone: string) => {
-          const digitsOnly = phone.replace(/\D/g, '');
-          if (digitsOnly.startsWith('91') && digitsOnly.length === 12) {
-            return digitsOnly.substring(2);
-          }
-          return digitsOnly;
-        };
         
         const normalizedInputPhone = normalizePhone(createFormData.guest_phone.trim());
         console.log('Normalized input phone:', normalizedInputPhone);
@@ -771,24 +790,79 @@ export default function BookingManagement() {
           });
           
           if (existingGuest) {
+            matchType = 'phone';
             console.log('Found existing guest by phone:', existingGuest);
           }
         }
       }
       
-      // If existing guest found, show warning and stop
+      
       if (existingGuest) {
-        console.log('DUPLICATE DETECTED - STOPPING BOOKING CREATION');
-        toast({
-          title: "Duplicate Guest Detected!",
-          description: `A guest with this ${existingGuest.email === createFormData.guest_email?.trim() ? 'email' : 'phone number'} already exists: ${existingGuest.first_name} ${existingGuest.last_name}. This booking will be linked to their profile.`,
-          variant: "destructive",
-        });
+        console.log('EXISTING GUEST FOUND - MERGING DATA');
         
-        // Still create the booking but link it to existing guest
-        console.log('Will link booking to existing guest ID:', existingGuest.id);
+        // Prepare data to merge
+        const updateData: any = {};
+        const conflicts: string[] = [];
+        
+        // Check for conflicts and prepare updates
+        const formName = `${createFormData.guest_name}`;
+        const existingName = `${existingGuest.first_name} ${existingGuest.last_name}`;
+        
+        if (formName !== existingName) {
+          conflicts.push(`Name differs: "${existingName}" vs "${formName}"`);
+        }
+        
+        // Update missing email
+        if (createFormData.guest_email && createFormData.guest_email.trim() && !existingGuest.email) {
+          updateData.email = createFormData.guest_email.trim();
+          console.log('Adding missing email to existing guest');
+        } else if (createFormData.guest_email && createFormData.guest_email.trim() && 
+                   existingGuest.email && existingGuest.email !== createFormData.guest_email.trim()) {
+          conflicts.push(`Email differs: "${existingGuest.email}" vs "${createFormData.guest_email.trim()}"`);
+        }
+        
+        // Update missing phone
+        if (createFormData.guest_phone && createFormData.guest_phone.trim() && !existingGuest.phone) {
+          updateData.phone = createFormData.guest_phone.trim();
+          console.log('Adding missing phone to existing guest');
+        } else if (createFormData.guest_phone && createFormData.guest_phone.trim() && 
+                   existingGuest.phone && normalizePhone(existingGuest.phone) !== normalizePhone(createFormData.guest_phone.trim())) {
+          conflicts.push(`Phone differs: "${existingGuest.phone}" vs "${createFormData.guest_phone.trim()}"`);
+        }
+        
+        // Update guest profile with missing information
+        if (Object.keys(updateData).length > 0) {
+          console.log('Updating guest with missing data:', updateData);
+          const { error: updateError } = await supabase
+            .from('guests')
+            .update(updateData)
+            .eq('id', existingGuest.id);
+            
+          if (updateError) {
+            console.error('Error updating guest:', updateError);
+          } else {
+            console.log('Guest profile updated successfully');
+          }
+        }
+        
+        // Show conflict warning if any
+        if (conflicts.length > 0) {
+          toast({
+            title: "Guest Data Conflicts Detected",
+            description: `Matched by ${matchType}. Conflicts: ${conflicts.join(', ')}. Booking linked to existing profile.`,
+            variant: "destructive",
+          });
+        } else {
+          toast({
+            title: "Existing Guest Found",
+            description: `Matched by ${matchType}: ${existingGuest.first_name} ${existingGuest.last_name}. Booking linked and profile updated.`,
+          });
+        }
+        
+        finalGuestId = existingGuest.id;
+        
       } else {
-        console.log('No existing guest found - proceeding with new booking');
+        console.log('No existing guest found - will create new booking without guest profile');
       }
       
     } catch (error) {
@@ -802,6 +876,7 @@ export default function BookingManagement() {
 
       const bookingData = {
         booking_id: bookingId,
+        guest_id: finalGuestId, // Link to existing guest if found
         guest_name: createFormData.guest_name,
         guest_email: createFormData.guest_email || null,
         guest_phone: createFormData.guest_phone || null,
