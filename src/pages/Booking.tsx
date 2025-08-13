@@ -1,12 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
-import { Calendar, Users, Clock, MapPin, Wifi, Coffee, Car, Utensils } from 'lucide-react';
+import { Calendar, Users, Clock, MapPin, Wifi, Coffee, Car, Utensils, Plus, Minus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import NavigationV5 from '@/components/v5/NavigationV5';
 import DynamicFooter from '@/components/DynamicFooter';
 import { supabase } from '@/integrations/supabase/client';
@@ -17,9 +19,9 @@ interface RoomType {
   name: string;
   description?: string;
   hero_image?: string;
-  gallery: any; // JSON field
+  gallery: any;
   max_guests: number;
-  features: any; // JSON field
+  features: any;
   base_price: number;
   is_published: boolean;
   seasonal_pricing: any;
@@ -28,27 +30,22 @@ interface RoomType {
   updated_at: string;
 }
 
-interface RoomUnit {
-  id: string;
-  unit_number: string;
-  unit_name?: string;
-  floor_number?: number;
-  area_sqft?: number;
-  special_features?: any; // JSON field
-  bed_configuration?: any; // JSON field
-  max_occupancy?: number;
-  room_type_id: string;
-  status: string;
-  is_active: boolean;
-  notes?: string;
-  created_at: string;
-  updated_at: string;
-}
-
 interface AvailableRoom {
   roomType: RoomType;
-  availableUnits: RoomUnit[];
   availableCount: number;
+}
+
+interface Addon {
+  id: string;
+  title: string;
+  price: number;
+  description?: string;
+  image?: string;
+  type: 'meal' | 'activity' | 'spa';
+}
+
+interface SelectedAddon extends Addon {
+  quantity: number;
 }
 
 const Booking = () => {
@@ -60,7 +57,7 @@ const Booking = () => {
   const checkIn = searchParams.get('checkIn') || '';
   const checkOut = searchParams.get('checkOut') || '';
   const guests = parseInt(searchParams.get('guests') || '2');
-  const roomTypeId = searchParams.get('roomTypeId'); // Optional filter for specific room type
+  const roomTypeId = searchParams.get('roomTypeId');
   
   // State
   const [availableRooms, setAvailableRooms] = useState<AvailableRoom[]>([]);
@@ -68,21 +65,29 @@ const Booking = () => {
   const [searchCheckIn, setSearchCheckIn] = useState(checkIn);
   const [searchCheckOut, setSearchCheckOut] = useState(checkOut);
   const [searchGuests, setSearchGuests] = useState(guests.toString());
+  
+  // Addon states
+  const [meals, setMeals] = useState<Addon[]>([]);
+  const [activities, setActivities] = useState<Addon[]>([]);
+  const [spaServices, setSpaServices] = useState<Addon[]>([]);
+  const [selectedAddons, setSelectedAddons] = useState<SelectedAddon[]>([]);
+  const [selectedRoomType, setSelectedRoomType] = useState<RoomType | null>(null);
+  const [showBookingForm, setShowBookingForm] = useState(false);
 
-  // Load available rooms
+  // Load available rooms and addons
   useEffect(() => {
     if (checkIn && checkOut) {
       loadAvailableRooms();
     } else {
       setLoading(false);
     }
+    loadAddons();
   }, [checkIn, checkOut, guests, roomTypeId]);
 
   const loadAvailableRooms = async () => {
     try {
       setLoading(true);
       
-      // Get all published room types
       let query = supabase
         .from('room_types')
         .select('*')
@@ -90,7 +95,6 @@ const Booking = () => {
         .gte('max_guests', guests)
         .order('base_price');
 
-      // Filter by specific room type if provided
       if (roomTypeId) {
         query = query.eq('id', roomTypeId);
       }
@@ -109,7 +113,6 @@ const Booking = () => {
 
       const availableRoomsData: AvailableRoom[] = [];
 
-      // Check availability for each room type
       for (const roomType of roomTypes || []) {
         const { data: availabilityData, error: availabilityError } = await supabase
           .rpc('check_room_availability', {
@@ -125,29 +128,12 @@ const Booking = () => {
 
         if (availabilityData && availabilityData.length > 0) {
           const availableCount = availabilityData[0].available_units;
-          const unitIds = availabilityData[0].unit_ids;
 
-          if (availableCount > 0 && unitIds) {
-            // Get unit details
-            const { data: units, error: unitsError } = await supabase
-              .from('room_units')
-              .select('*')
-              .in('id', unitIds)
-              .eq('is_active', true)
-              .gte('max_occupancy', guests);
-
-            if (unitsError) {
-              console.error('Error loading units:', unitsError);
-              continue;
-            }
-
-            if (units && units.length > 0) {
-              availableRoomsData.push({
-                roomType,
-                availableUnits: units,
-                availableCount: units.length
-              });
-            }
+          if (availableCount > 0) {
+            availableRoomsData.push({
+              roomType,
+              availableCount
+            });
           }
         }
       }
@@ -162,6 +148,60 @@ const Booking = () => {
       });
     } finally {
       setLoading(false);
+    }
+  };
+
+  const loadAddons = async () => {
+    try {
+      // Load meals
+      const { data: mealsData } = await supabase
+        .from('meals')
+        .select('*')
+        .eq('is_active', true)
+        .order('title');
+
+      // Load activities  
+      const { data: activitiesData } = await supabase
+        .from('activities')
+        .select('*')
+        .eq('is_active', true)
+        .order('title');
+
+      // Load spa services
+      const { data: spaData } = await supabase
+        .from('spa_services')
+        .select('*')
+        .eq('is_active', true)
+        .order('title');
+
+      setMeals(mealsData?.map(m => ({ 
+        id: m.id,
+        title: m.title,
+        price: m.price,
+        description: m.description,
+        image: m.featured_media,
+        type: 'meal' as const 
+      })) || []);
+      
+      setActivities(activitiesData?.map(a => ({ 
+        id: a.id,
+        title: a.title,
+        price: a.price_amount || 0,
+        description: a.description,
+        image: a.image,
+        type: 'activity' as const 
+      })) || []);
+      
+      setSpaServices(spaData?.map(s => ({ 
+        id: s.id,
+        title: s.title,
+        price: s.price,
+        description: s.description,
+        image: s.image,
+        type: 'spa' as const 
+      })) || []);
+    } catch (error) {
+      console.error('Error loading addons:', error);
     }
   };
 
@@ -183,20 +223,30 @@ const Booking = () => {
     navigate(`/booking?${newSearchParams.toString()}`);
   };
 
-  const handleBookRoom = (roomType: RoomType, unit: RoomUnit) => {
-    // Navigate to detailed booking modal or page
-    const bookingParams = new URLSearchParams({
-      roomTypeId: roomType.id,
-      unitId: unit.id,
-      checkIn: checkIn,
-      checkOut: checkOut,
-      guests: guests.toString()
-    });
-    
-    // For now, we'll show a toast. Later this can open a booking modal
-    toast({
-      title: "Booking",
-      description: `Proceeding to book ${roomType.name} - ${unit.unit_number}`,
+  const handleSelectRoom = (roomType: RoomType) => {
+    setSelectedRoomType(roomType);
+    setShowBookingForm(true);
+  };
+
+  const addAddon = (addon: Addon) => {
+    const existingAddon = selectedAddons.find(a => a.id === addon.id);
+    if (existingAddon) {
+      setSelectedAddons(prev => 
+        prev.map(a => a.id === addon.id ? { ...a, quantity: a.quantity + 1 } : a)
+      );
+    } else {
+      setSelectedAddons(prev => [...prev, { ...addon, quantity: 1 }]);
+    }
+  };
+
+  const removeAddon = (addonId: string) => {
+    setSelectedAddons(prev => {
+      const addon = prev.find(a => a.id === addonId);
+      if (addon && addon.quantity > 1) {
+        return prev.map(a => a.id === addonId ? { ...a, quantity: a.quantity - 1 } : a);
+      } else {
+        return prev.filter(a => a.id !== addonId);
+      }
     });
   };
 
@@ -205,6 +255,14 @@ const Booking = () => {
     const start = new Date(checkIn);
     const end = new Date(checkOut);
     return Math.ceil((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24));
+  };
+
+  const calculateTotal = () => {
+    if (!selectedRoomType) return 0;
+    const nights = calculateNights();
+    const roomTotal = selectedRoomType.base_price * nights;
+    const addonsTotal = selectedAddons.reduce((total, addon) => total + (addon.price * addon.quantity), 0);
+    return roomTotal + addonsTotal;
   };
 
   const formatDate = (dateString: string) => {
@@ -226,11 +284,252 @@ const Booking = () => {
     return <MapPin className="h-4 w-4" />;
   };
 
+  const handleProceedToBooking = () => {
+    toast({
+      title: "Booking Confirmation",
+      description: `Proceeding to book ${selectedRoomType?.name} with ${selectedAddons.length} addons. Total: ₹${calculateTotal().toLocaleString()}`,
+    });
+  };
+
   const nights = calculateNights();
+
+  if (showBookingForm && selectedRoomType) {
+    return (
+      <div className="min-h-screen bg-background">
+        <NavigationV5 />
+        
+        {/* Banner */}
+        <section className="relative h-64 bg-gradient-to-r from-primary to-accent">
+          <div className="absolute inset-0 bg-black/20"></div>
+          <div className="relative z-10 h-full flex items-center">
+            <div className="max-w-6xl mx-auto px-4 text-white">
+              <h1 className="text-3xl md:text-4xl font-heading font-bold mb-2">Complete Your Booking</h1>
+              <p className="text-lg opacity-90">{selectedRoomType.name} • {formatDate(checkIn)} - {formatDate(checkOut)}</p>
+            </div>
+          </div>
+        </section>
+
+        {/* Booking Form */}
+        <section className="py-8">
+          <div className="max-w-6xl mx-auto px-4">
+            <div className="grid lg:grid-cols-3 gap-8">
+              {/* Room & Addons Selection */}
+              <div className="lg:col-span-2 space-y-6">
+                {/* Selected Room */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Selected Room</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="flex items-center gap-4">
+                      <img
+                        src={selectedRoomType.hero_image || 'https://images.unsplash.com/photo-1571896349842-33c89424de2d?auto=format&fit=crop&w=200&q=80'}
+                        alt={selectedRoomType.name}
+                        className="w-20 h-20 object-cover rounded-lg"
+                      />
+                      <div className="flex-1">
+                        <h3 className="font-semibold">{selectedRoomType.name}</h3>
+                        <p className="text-sm text-muted-foreground">Up to {selectedRoomType.max_guests} guests</p>
+                        <p className="text-lg font-semibold">₹{selectedRoomType.base_price.toLocaleString()}/night</p>
+                      </div>
+                      <Button variant="outline" onClick={() => setShowBookingForm(false)}>
+                        Change Room
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* Addons Selection */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Add Services & Experiences</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <Tabs defaultValue="meals" className="w-full">
+                      <TabsList className="grid w-full grid-cols-3">
+                        <TabsTrigger value="meals">Meals</TabsTrigger>
+                        <TabsTrigger value="activities">Activities</TabsTrigger>
+                        <TabsTrigger value="spa">Spa Services</TabsTrigger>
+                      </TabsList>
+                      
+                      <TabsContent value="meals" className="space-y-4">
+                        {meals.map((meal) => (
+                          <div key={meal.id} className="flex items-center justify-between p-4 border rounded-lg">
+                            <div className="flex-1">
+                              <h4 className="font-medium">{meal.title}</h4>
+                              <p className="text-sm text-muted-foreground">{meal.description}</p>
+                              <p className="text-lg font-semibold">₹{meal.price}</p>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => removeAddon(meal.id)}
+                                disabled={!selectedAddons.find(a => a.id === meal.id)}
+                              >
+                                <Minus className="h-4 w-4" />
+                              </Button>
+                              <span className="w-8 text-center">
+                                {selectedAddons.find(a => a.id === meal.id)?.quantity || 0}
+                              </span>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => addAddon(meal)}
+                              >
+                                <Plus className="h-4 w-4" />
+                              </Button>
+                            </div>
+                          </div>
+                        ))}
+                      </TabsContent>
+                      
+                      <TabsContent value="activities" className="space-y-4">
+                        {activities.map((activity) => (
+                          <div key={activity.id} className="flex items-center justify-between p-4 border rounded-lg">
+                            <div className="flex-1">
+                              <h4 className="font-medium">{activity.title}</h4>
+                              <p className="text-sm text-muted-foreground">{activity.description}</p>
+                              <p className="text-lg font-semibold">₹{activity.price}</p>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => removeAddon(activity.id)}
+                                disabled={!selectedAddons.find(a => a.id === activity.id)}
+                              >
+                                <Minus className="h-4 w-4" />
+                              </Button>
+                              <span className="w-8 text-center">
+                                {selectedAddons.find(a => a.id === activity.id)?.quantity || 0}
+                              </span>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => addAddon(activity)}
+                              >
+                                <Plus className="h-4 w-4" />
+                              </Button>
+                            </div>
+                          </div>
+                        ))}
+                      </TabsContent>
+                      
+                      <TabsContent value="spa" className="space-y-4">
+                        {spaServices.map((spa) => (
+                          <div key={spa.id} className="flex items-center justify-between p-4 border rounded-lg">
+                            <div className="flex-1">
+                              <h4 className="font-medium">{spa.title}</h4>
+                              <p className="text-sm text-muted-foreground">{spa.description}</p>
+                              <p className="text-lg font-semibold">₹{spa.price}</p>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => removeAddon(spa.id)}
+                                disabled={!selectedAddons.find(a => a.id === spa.id)}
+                              >
+                                <Minus className="h-4 w-4" />
+                              </Button>
+                              <span className="w-8 text-center">
+                                {selectedAddons.find(a => a.id === spa.id)?.quantity || 0}
+                              </span>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => addAddon(spa)}
+                              >
+                                <Plus className="h-4 w-4" />
+                              </Button>
+                            </div>
+                          </div>
+                        ))}
+                      </TabsContent>
+                    </Tabs>
+                  </CardContent>
+                </Card>
+              </div>
+
+              {/* Booking Summary */}
+              <div className="space-y-6">
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Booking Summary</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div className="space-y-2">
+                      <div className="flex justify-between">
+                        <span>Check-in:</span>
+                        <span>{formatDate(checkIn)}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>Check-out:</span>
+                        <span>{formatDate(checkOut)}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>Guests:</span>
+                        <span>{guests}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>Nights:</span>
+                        <span>{nights}</span>
+                      </div>
+                    </div>
+
+                    <Separator />
+
+                    <div className="space-y-2">
+                      <div className="flex justify-between">
+                        <span>Room ({nights} nights):</span>
+                        <span>₹{(selectedRoomType.base_price * nights).toLocaleString()}</span>
+                      </div>
+                      
+                      {selectedAddons.map((addon) => (
+                        <div key={addon.id} className="flex justify-between text-sm">
+                          <span>{addon.title} x{addon.quantity}:</span>
+                          <span>₹{(addon.price * addon.quantity).toLocaleString()}</span>
+                        </div>
+                      ))}
+                    </div>
+
+                    <Separator />
+
+                    <div className="flex justify-between font-semibold text-lg">
+                      <span>Total:</span>
+                      <span>₹{calculateTotal().toLocaleString()}</span>
+                    </div>
+
+                    <Button onClick={handleProceedToBooking} className="w-full">
+                      Proceed to Payment
+                    </Button>
+                  </CardContent>
+                </Card>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <DynamicFooter />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background">
       <NavigationV5 />
+      
+      {/* Banner */}
+      <section className="relative h-64 bg-gradient-to-r from-primary to-accent">
+        <div className="absolute inset-0 bg-black/20"></div>
+        <div className="relative z-10 h-full flex items-center">
+          <div className="max-w-6xl mx-auto px-4 text-white">
+            <h1 className="text-3xl md:text-4xl font-heading font-bold mb-2">Find Your Perfect Stay</h1>
+            <p className="text-lg opacity-90">Search and book your ideal mountain retreat</p>
+          </div>
+        </div>
+      </section>
       
       {/* Search Bar */}
       <section className="bg-muted/30 py-6">
@@ -343,7 +642,7 @@ const Booking = () => {
               </div>
 
               <div className="space-y-6">
-                {availableRooms.map(({ roomType, availableUnits, availableCount }) => (
+                {availableRooms.map(({ roomType, availableCount }) => (
                   <Card key={roomType.id}>
                     <CardContent className="p-6">
                       <div className="grid md:grid-cols-3 gap-6">
@@ -390,8 +689,8 @@ const Booking = () => {
                             }
                           </div>
 
-                          <div className="text-sm text-muted-foreground">
-                            {availableCount} unit{availableCount !== 1 ? 's' : ''} available
+                          <div className="text-sm text-green-600 font-medium">
+                            {availableCount} room{availableCount !== 1 ? 's' : ''} available
                           </div>
                         </div>
 
@@ -412,28 +711,15 @@ const Booking = () => {
                           <Separator />
 
                           <div className="space-y-2">
-                            <Label className="text-sm font-medium">Available Units:</Label>
-                            <div className="space-y-2 max-h-32 overflow-y-auto">
-                              {availableUnits.map((unit) => (
-                                <div key={unit.id} className="flex items-center justify-between p-2 border rounded">
-                                  <div>
-                                    <div className="font-medium">{unit.unit_number}</div>
-                                    {unit.unit_name && (
-                                      <div className="text-xs text-muted-foreground">{unit.unit_name}</div>
-                                    )}
-                                    {unit.floor_number && (
-                                      <div className="text-xs text-muted-foreground">Floor: {unit.floor_number}</div>
-                                    )}
-                                  </div>
-                                  <Button 
-                                    size="sm"
-                                    onClick={() => handleBookRoom(roomType, unit)}
-                                  >
-                                    Book
-                                  </Button>
-                                </div>
-                              ))}
-                            </div>
+                            <p className="text-sm text-muted-foreground">
+                              Room will be automatically assigned upon booking
+                            </p>
+                            <Button 
+                              onClick={() => handleSelectRoom(roomType)}
+                              className="w-full"
+                            >
+                              Select Room & Add Services
+                            </Button>
                           </div>
                         </div>
                       </div>
