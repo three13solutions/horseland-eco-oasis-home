@@ -232,15 +232,30 @@ export default function BookingManagement() {
   };
 
   const calculateStats = (bookingData: Booking[]) => {
-    const totalBookings = bookingData.length;
-    const totalRevenue = bookingData.reduce((sum, booking) => sum + Number(booking.total_amount), 0);
-    const pendingPayments = bookingData.filter(b => b.payment_status === 'pending').length;
-    
-    // Calculate accurate occupancy rate - rooms currently occupied
     const today = new Date();
+    
+    // Filter bookings to only include today's data
+    const todayBookings = bookingData.filter(booking => {
+      const checkIn = parseISO(booking.check_in);
+      const checkOut = parseISO(booking.check_out);
+      
+      // Include bookings that:
+      // 1. Check in today
+      // 2. Are currently active (checked in before or today, checking out after today)
+      // 3. Check out today
+      return isToday(checkIn) || 
+             isToday(checkOut) || 
+             ((isBefore(checkIn, today) || isToday(checkIn)) && isAfter(checkOut, today));
+    });
+    
+    const totalBookings = todayBookings.length;
+    const totalRevenue = todayBookings.reduce((sum, booking) => sum + Number(booking.total_amount), 0);
+    const pendingPayments = todayBookings.filter(b => b.payment_status === 'pending').length;
+    
+    // Calculate accurate occupancy rate - rooms currently occupied today
     const occupiedRooms = new Set();
     
-    bookingData.forEach(booking => {
+    todayBookings.forEach(booking => {
       if (!booking.room_unit_id) return;
       
       const checkIn = parseISO(booking.check_in);
