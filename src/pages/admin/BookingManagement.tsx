@@ -700,6 +700,11 @@ export default function BookingManagement() {
   const handleCreateBooking = async (e: React.FormEvent) => {
     e.preventDefault();
 
+    console.log('=== BOOKING CREATION STARTED ===');
+    console.log('Guest Name:', createFormData.guest_name);
+    console.log('Guest Email:', createFormData.guest_email);
+    console.log('Guest Phone:', createFormData.guest_phone);
+
     if (!createFormData.guest_name || !createFormData.check_in || !createFormData.check_out) {
       toast({
         title: "Validation Error",
@@ -709,7 +714,87 @@ export default function BookingManagement() {
       return;
     }
 
+    // Check for existing guest with same email or phone
+    console.log('=== CHECKING FOR EXISTING GUEST ===');
     try {
+      let existingGuest = null;
+      
+      // Check by email first
+      if (createFormData.guest_email && createFormData.guest_email.trim()) {
+        console.log('Checking email:', createFormData.guest_email.trim());
+        const { data: emailGuests, error: emailError } = await supabase
+          .from('guests')
+          .select('*')
+          .eq('email', createFormData.guest_email.trim())
+          .limit(1);
+          
+        if (emailError) {
+          console.error('Email check error:', emailError);
+        } else if (emailGuests && emailGuests.length > 0) {
+          existingGuest = emailGuests[0];
+          console.log('Found existing guest by email:', existingGuest);
+        }
+      }
+      
+      // Check by phone if no email match
+      if (!existingGuest && createFormData.guest_phone && createFormData.guest_phone.trim()) {
+        console.log('Checking phone:', createFormData.guest_phone.trim());
+        
+        // Normalize phone number
+        const normalizePhone = (phone: string) => {
+          const digitsOnly = phone.replace(/\D/g, '');
+          if (digitsOnly.startsWith('91') && digitsOnly.length === 12) {
+            return digitsOnly.substring(2);
+          }
+          return digitsOnly;
+        };
+        
+        const normalizedInputPhone = normalizePhone(createFormData.guest_phone.trim());
+        console.log('Normalized input phone:', normalizedInputPhone);
+        
+        const { data: allGuests, error: phoneError } = await supabase
+          .from('guests')
+          .select('*')
+          .not('phone', 'is', null);
+          
+        if (phoneError) {
+          console.error('Phone check error:', phoneError);
+        } else if (allGuests) {
+          console.log('All guests with phones:', allGuests.length);
+          existingGuest = allGuests.find(guest => {
+            if (!guest.phone) return false;
+            const normalizedGuestPhone = normalizePhone(guest.phone);
+            console.log('Comparing:', normalizedInputPhone, 'vs', normalizedGuestPhone);
+            return normalizedInputPhone === normalizedGuestPhone;
+          });
+          
+          if (existingGuest) {
+            console.log('Found existing guest by phone:', existingGuest);
+          }
+        }
+      }
+      
+      // If existing guest found, show warning and stop
+      if (existingGuest) {
+        console.log('DUPLICATE DETECTED - STOPPING BOOKING CREATION');
+        toast({
+          title: "Duplicate Guest Detected!",
+          description: `A guest with this ${existingGuest.email === createFormData.guest_email?.trim() ? 'email' : 'phone number'} already exists: ${existingGuest.first_name} ${existingGuest.last_name}. This booking will be linked to their profile.`,
+          variant: "destructive",
+        });
+        
+        // Still create the booking but link it to existing guest
+        console.log('Will link booking to existing guest ID:', existingGuest.id);
+      } else {
+        console.log('No existing guest found - proceeding with new booking');
+      }
+      
+    } catch (error) {
+      console.error('Error during guest check:', error);
+    }
+
+    try {
+      console.log('=== CREATING BOOKING ===');
       // Generate booking ID
       const bookingId = `BK${Date.now().toString().slice(-6)}`;
 
@@ -730,6 +815,8 @@ export default function BookingManagement() {
         selected_spa_services: createFormData.selected_spa_services,
         selected_bedding: createFormData.selected_bedding,
       };
+      
+      console.log('Booking data to insert:', bookingData);
 
       const { data: newBooking, error } = await supabase
         .from('bookings')
