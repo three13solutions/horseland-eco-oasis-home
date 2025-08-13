@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Calendar, Eye, Search, Filter, Users, IndianRupee, ArrowLeft, Clock, CheckCircle, XCircle, AlertCircle, Bot, RefreshCw, Edit, Plus, Phone, CalendarIcon, Home, RotateCcw } from 'lucide-react';
+import { Calendar, Eye, Search, Filter, Users, IndianRupee, ArrowLeft, Clock, CheckCircle, XCircle, AlertCircle, Bot, RefreshCw, Edit, Plus, Phone, CalendarIcon, Home, RotateCcw, CreditCard } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
@@ -19,6 +19,9 @@ import { Link, useNavigate } from 'react-router-dom';
 import { format, parseISO, isAfter, isBefore, isToday } from 'date-fns';
 import { RoomAvailabilityGrid } from '@/components/admin/RoomAvailabilityGrid';
 import { BookingRoomCell } from '@/components/admin/BookingRoomCell';
+import { PaymentModal } from '@/components/PaymentModal';
+import { formatCurrency, calculateBookingAmount } from '@/lib/razorpay';
+import { differenceInDays } from 'date-fns';
 
 interface Booking {
   id: string;
@@ -95,6 +98,11 @@ export default function BookingManagement() {
   const [changingRoomType, setChangingRoomType] = useState<string | null>(null);
   const [selectedNewRoomUnit, setSelectedNewRoomUnit] = useState<string>('');
   const [selectedNewRoomType, setSelectedNewRoomType] = useState<string>('');
+  
+  // Payment modal state
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
+  const [selectedBookingForPayment, setSelectedBookingForPayment] = useState<Booking | null>(null);
+  
   const [stats, setStats] = useState<BookingStats>({
     totalBookings: 0,
     totalRevenue: 0,
@@ -299,6 +307,76 @@ export default function BookingManagement() {
         {config.label}
       </Badge>
     );
+  };
+
+  const handleProcessPayment = (booking: Booking) => {
+    setSelectedBookingForPayment(booking);
+    setShowPaymentModal(true);
+  };
+
+  const handlePaymentSuccess = async (paymentId: string, orderId: string) => {
+    if (!selectedBookingForPayment) return;
+    
+    try {
+      // Update booking with payment details
+      const { error } = await supabase
+        .from('bookings')
+        .update({
+          payment_status: 'completed',
+          payment_id: paymentId,
+          payment_order_id: orderId,
+        })
+        .eq('id', selectedBookingForPayment.id);
+
+      if (error) throw error;
+
+      toast({
+        title: "Payment Successful",
+        description: `Payment completed for booking ${selectedBookingForPayment.booking_id}`,
+      });
+
+      setShowPaymentModal(false);
+      setSelectedBookingForPayment(null);
+      loadBookings(); // Reload bookings to reflect updated status
+    } catch (error) {
+      console.error('Error updating payment:', error);
+      toast({
+        title: "Payment Update Failed",
+        description: "Payment was successful but failed to update booking status",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const getBookingNights = (booking: Booking) => {
+    return differenceInDays(new Date(booking.check_out), new Date(booking.check_in));
+  };
+
+  const calculateBookingAddonTotal = (booking: Booking) => {
+    let total = 0;
+    
+    if (booking.selected_meals) {
+      const meals = Array.isArray(booking.selected_meals) ? booking.selected_meals : [];
+      meals.forEach((meal: any) => {
+        total += (meal.price || 0) * (meal.quantity || 1);
+      });
+    }
+    
+    if (booking.selected_activities) {
+      const activities = Array.isArray(booking.selected_activities) ? booking.selected_activities : [];
+      activities.forEach((activity: any) => {
+        total += (activity.price || 0) * (activity.quantity || 1);
+      });
+    }
+    
+    if (booking.selected_spa_services) {
+      const spa = Array.isArray(booking.selected_spa_services) ? booking.selected_spa_services : [];
+      spa.forEach((service: any) => {
+        total += (service.price || 0) * (service.quantity || 1);
+      });
+    }
+    
+    return total;
   };
 
   const getBookingStatusForToday = (booking: Booking) => {
@@ -1426,12 +1504,24 @@ export default function BookingManagement() {
                           )}
                         </TableCell>
                         <TableCell>
-                          <Dialog>
-                            <DialogTrigger asChild>
-                              <Button variant="ghost" size="sm">
-                                <Eye className="h-4 w-4" />
+                          <div className="flex items-center gap-2">
+                            {booking.payment_status === 'pending' && (
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => handleProcessPayment(booking)}
+                                className="text-blue-600 border-blue-200 hover:bg-blue-50"
+                              >
+                                <CreditCard className="h-4 w-4 mr-1" />
+                                Pay
                               </Button>
-                            </DialogTrigger>
+                            )}
+                            <Dialog>
+                              <DialogTrigger asChild>
+                                <Button variant="ghost" size="sm">
+                                  <Eye className="h-4 w-4" />
+                                </Button>
+                              </DialogTrigger>
                             <DialogContent className="max-w-2xl">
                               <DialogHeader>
                                 <DialogTitle>Booking Details - {booking.booking_id}</DialogTitle>
@@ -1498,6 +1588,7 @@ export default function BookingManagement() {
                               </div>
                             </DialogContent>
                           </Dialog>
+                          </div>
                         </TableCell>
                       </TableRow>
                     ))
@@ -1996,6 +2087,31 @@ export default function BookingManagement() {
           </form>
         </DialogContent>
       </Dialog>
+      
+      {/* Payment Modal */}
+      {showPaymentModal && selectedBookingForPayment && (
+        <PaymentModal
+          isOpen={showPaymentModal}
+          onClose={() => {
+            setShowPaymentModal(false);
+            setSelectedBookingForPayment(null);
+          }}
+          onSuccess={handlePaymentSuccess}
+          bookingDetails={{
+            roomName: selectedBookingForPayment.room_units?.unit_name || 
+                     selectedBookingForPayment.room_types?.name || 
+                     'Room',
+            roomPrice: selectedBookingForPayment.total_amount / getBookingNights(selectedBookingForPayment) || 0,
+            nights: getBookingNights(selectedBookingForPayment),
+            addonTotal: calculateBookingAddonTotal(selectedBookingForPayment),
+            guestName: selectedBookingForPayment.guest_name,
+            guestEmail: selectedBookingForPayment.guest_email || '',
+            guestPhone: selectedBookingForPayment.guest_phone || '',
+            checkIn: format(parseISO(selectedBookingForPayment.check_in), 'PPP'),
+            checkOut: format(parseISO(selectedBookingForPayment.check_out), 'PPP'),
+          }}
+        />
+      )}
     </div>
   );
 }
