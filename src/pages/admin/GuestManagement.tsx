@@ -97,7 +97,7 @@ export default function GuestManagement() {
   const [creditNotes, setCreditNotes] = useState<CreditNote[]>([]);
   const [allBookings, setAllBookings] = useState<GuestBooking[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
-  const [viewMode, setViewMode] = useState<'card' | 'list'>('card');
+  const [viewMode, setViewMode] = useState<'card' | 'list'>('list');
   const [showGuestDialog, setShowGuestDialog] = useState(false);
   const [showCreditDialog, setShowCreditDialog] = useState(false);
   const [showDocumentDialog, setShowDocumentDialog] = useState(false);
@@ -325,6 +325,34 @@ export default function GuestManagement() {
       blacklist_reason: guest.blacklist_reason || ''
     });
     setShowGuestDialog(true);
+  };
+
+  const toggleBlacklist = async (guest: Guest) => {
+    try {
+      const { error } = await supabase
+        .from('guests')
+        .update({ 
+          is_blacklisted: !guest.is_blacklisted,
+          blacklist_reason: !guest.is_blacklisted ? 'Blacklisted from admin' : ''
+        })
+        .eq('id', guest.id);
+
+      if (error) throw error;
+
+      toast({
+        title: guest.is_blacklisted ? "Guest Unblacklisted" : "Guest Blacklisted",
+        description: `${guest.first_name} ${guest.last_name} has been ${guest.is_blacklisted ? 'removed from' : 'added to'} the blacklist.`,
+      });
+
+      loadGuests();
+    } catch (error: any) {
+      console.error('Error toggling blacklist:', error);
+      toast({
+        title: "Error",
+        description: "Failed to update guest status",
+        variant: "destructive",
+      });
+    }
   };
 
   const saveGuest = async () => {
@@ -558,10 +586,26 @@ export default function GuestManagement() {
                       Blacklisted
                     </Badge>
                   )}
-                  <Button onClick={() => handleGuestSelect(guest)} className="ml-auto">
-                    <Eye className="h-4 w-4 mr-2" />
-                    View Details
-                  </Button>
+                  <div className="flex items-center gap-2 ml-auto">
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      onClick={() => handleEditGuest(guest)}
+                    >
+                      <Edit className="h-4 w-4" />
+                    </Button>
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      onClick={() => toggleBlacklist(guest)}
+                      className={guest.is_blacklisted ? "text-green-600 hover:text-green-700" : "text-destructive hover:text-destructive"}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                    <Button size="sm" onClick={() => handleGuestSelect(guest)}>
+                      <Eye className="h-4 w-4" />
+                    </Button>
+                  </div>
                 </div>
               </CardContent>
             </Card>
@@ -621,12 +665,29 @@ export default function GuestManagement() {
                     )}
                   </TableCell>
                   <TableCell>
-                    <Button
-                      size="sm"
-                      onClick={() => handleGuestSelect(guest)}
-                    >
-                      <Eye className="h-4 w-4" />
-                    </Button>
+                    <div className="flex items-center gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleEditGuest(guest)}
+                      >
+                        <Edit className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => toggleBlacklist(guest)}
+                        className={guest.is_blacklisted ? "text-green-600 hover:text-green-700" : "text-destructive hover:text-destructive"}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        size="sm"
+                        onClick={() => handleGuestSelect(guest)}
+                      >
+                        <Eye className="h-4 w-4" />
+                      </Button>
+                    </div>
                   </TableCell>
                 </TableRow>
               ))}
