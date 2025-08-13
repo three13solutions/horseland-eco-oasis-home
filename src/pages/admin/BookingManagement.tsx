@@ -298,6 +298,7 @@ export default function BookingManagement() {
     
     switch (payment_status) {
       case 'completed':
+      case 'confirmed':
         return (
           <div className="flex items-center gap-1">
             <Badge className="bg-green-100 text-green-800 flex items-center gap-1">
@@ -1488,31 +1489,20 @@ export default function BookingManagement() {
                         </TableCell>
                         <TableCell>
                           <div className="flex items-center gap-2">
-                            {booking.payment_status === 'pending' && (
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() => handleProcessPayment(booking)}
-                                className="text-blue-600 border-blue-200 hover:bg-blue-50"
-                              >
-                                <CreditCard className="h-4 w-4 mr-1" />
-                                Pay
-                              </Button>
-                            )}
                             <Dialog>
                               <DialogTrigger asChild>
                                 <Button variant="ghost" size="sm">
                                   <Eye className="h-4 w-4" />
                                 </Button>
                               </DialogTrigger>
-                            <DialogContent className="max-w-2xl">
-                              <DialogHeader>
-                                <DialogTitle>Booking Details - {booking.booking_id}</DialogTitle>
-                              </DialogHeader>
-                              <div className="space-y-4">
-                                <div className="grid grid-cols-2 gap-4">
-                                  <div>
-                                    <Label className="text-sm font-medium">Guest Name</Label>
+                              <DialogContent className="max-w-2xl">
+                                <DialogHeader>
+                                  <DialogTitle>Booking Details - {booking.booking_id}</DialogTitle>
+                                </DialogHeader>
+                                <div className="space-y-4">
+                                  <div className="grid grid-cols-2 gap-4">
+                                    <div>
+                                      <Label className="text-sm font-medium">Guest Name</Label>
                                     <p className="text-sm text-muted-foreground">{booking.guest_name}</p>
                                   </div>
                                   <div>
@@ -1571,6 +1561,18 @@ export default function BookingManagement() {
                               </div>
                             </DialogContent>
                           </Dialog>
+                          
+                          {(booking.payment_status === 'pending') && (
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handleProcessPayment(booking)}
+                              className="text-blue-600 border-blue-200 hover:bg-blue-50"
+                            >
+                              <CreditCard className="h-4 w-4 mr-1" />
+                              Pay
+                            </Button>
+                          )}
                           </div>
                         </TableCell>
                       </TableRow>
