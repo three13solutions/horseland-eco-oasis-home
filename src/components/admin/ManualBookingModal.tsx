@@ -307,6 +307,26 @@ export const ManualBookingModal: React.FC<ManualBookingModalProps> = ({
       return;
     }
 
+    // Check for existing guest before submitting
+    console.log('Checking for existing guest before submission...');
+    if ((guestEmail && guestEmail.trim()) || (guestPhone && guestPhone.trim())) {
+      const existingGuestCheck = await findExistingGuest(
+        guestEmail && guestEmail.trim() ? guestEmail.trim() : undefined,
+        guestPhone && guestPhone.trim() ? guestPhone.trim() : undefined
+      );
+      
+      if (existingGuestCheck) {
+        console.log('Found existing guest during submission:', existingGuestCheck);
+        setExistingGuest(existingGuestCheck);
+        setShowGuestMatch(true);
+        
+        toast({
+          title: "Existing Guest Found",
+          description: `This will be linked to existing guest: ${existingGuestCheck.first_name} ${existingGuestCheck.last_name}`,
+        });
+      }
+    }
+
     setIsSubmitting(true);
     
     try {
@@ -479,11 +499,11 @@ export const ManualBookingModal: React.FC<ManualBookingModalProps> = ({
                     type="email"
                     value={guestEmail}
                     onChange={(e) => setGuestEmail(e.target.value)}
-                    onBlur={(e) => {
+                    onBlur={async (e) => {
                       console.log('Email field blurred with value:', e.target.value);
                       // Check for existing guest when user leaves the email field
                       if (e.target.value.trim()) {
-                        checkForExistingGuest(e.target.value.trim());
+                        await checkForExistingGuest(e.target.value.trim());
                       }
                     }}
                     placeholder="guest@example.com"
@@ -500,11 +520,11 @@ export const ManualBookingModal: React.FC<ManualBookingModalProps> = ({
                     id="guestPhone"
                     value={guestPhone}
                     onChange={(e) => setGuestPhone(e.target.value)}
-                    onBlur={(e) => {
+                    onBlur={async (e) => {
                       console.log('Phone field blurred with value:', e.target.value);
                       // Check for existing guest when user leaves the phone field
                       if (e.target.value.trim()) {
-                        checkForExistingGuest(undefined, e.target.value.trim());
+                        await checkForExistingGuest(undefined, e.target.value.trim());
                       }
                     }}
                     placeholder="+91 98765 43210"
