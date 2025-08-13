@@ -329,18 +329,6 @@ export default function BookingManagement() {
         return <Badge className="bg-gray-100 text-gray-800">{status}</Badge>;
     }
   };
-  const getBookingStatusBadge = (status: string) => {
-    switch (status) {
-      case 'confirmed':
-        return <Badge className="bg-blue-100 text-blue-800">Confirmed</Badge>;
-      case 'pending':
-        return <Badge className="bg-yellow-100 text-yellow-800">Pending</Badge>;
-      case 'cancelled':
-        return <Badge className="bg-red-100 text-red-800">Cancelled</Badge>;
-      default:
-        return <Badge className="bg-gray-100 text-gray-800">{status}</Badge>;
-    }
-  };
 
   const handleProcessPayment = (booking: Booking) => {
     setSelectedBookingForPayment(booking);
@@ -1479,8 +1467,8 @@ export default function BookingManagement() {
                              </Button>
                            )}
                          </TableCell>
-                         {/* Actions Column */}
-                          <div className="flex items-center gap-2">
+                         <TableCell>
+                           <div className="flex items-center gap-2">
                             <Dialog>
                               <DialogTrigger asChild>
                                 <Button variant="ghost" size="sm">
@@ -1551,11 +1539,22 @@ export default function BookingManagement() {
                                   </div>
                                 )}
                               </div>
-                            </DialogContent>
-                          </Dialog>
-                          
-                          </div>
-                        </TableCell>
+                             </DialogContent>
+                           </Dialog>
+                           
+                           {!(booking.payment_method || booking.payment_id) && (
+                             <Button
+                               variant="outline"
+                               size="sm"
+                               onClick={() => handleProcessPayment(booking)}
+                               className="text-blue-600 border-blue-200 hover:bg-blue-50"
+                             >
+                               <CreditCard className="h-4 w-4 mr-1" />
+                               Pay
+                             </Button>
+                           )}
+                           </div>
+                         </TableCell>
                       </TableRow>
                     ))
                   )}
