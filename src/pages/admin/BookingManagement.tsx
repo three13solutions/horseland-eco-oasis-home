@@ -1445,81 +1445,33 @@ export default function BookingManagement() {
                               </div>
                             )}
                           </TableCell>
-                         <TableCell>
-                           <div className="flex items-center gap-2">
-                            <Dialog>
-                              <DialogTrigger asChild>
-                                <Button variant="ghost" size="sm">
-                                  <Eye className="h-4 w-4" />
-                                </Button>
-                              </DialogTrigger>
-                              <DialogContent className="max-w-2xl">
-                                <DialogHeader>
-                                  <DialogTitle>Booking Details - {booking.booking_id}</DialogTitle>
-                                </DialogHeader>
-                                <div className="space-y-4">
-                                  <div className="grid grid-cols-2 gap-4">
-                                    <div>
-                                      <Label className="text-sm font-medium">Guest Name</Label>
-                                    <p className="text-sm text-muted-foreground">{booking.guest_name}</p>
-                                  </div>
-                                  <div>
-                                    <Label className="text-sm font-medium">Email</Label>
-                                    <p className="text-sm text-muted-foreground">{booking.guest_email || '-'}</p>
-                                  </div>
-                                  <div>
-                                    <Label className="text-sm font-medium">Phone</Label>
-                                    <p className="text-sm text-muted-foreground">{booking.guest_phone || '-'}</p>
-                                  </div>
-                                  <div>
-                                    <Label className="text-sm font-medium">Guests Count</Label>
-                                    <p className="text-sm text-muted-foreground">{booking.guests_count}</p>
-                                  </div>
-                                  <div>
-                                    <Label className="text-sm font-medium">Check-in</Label>
-                                    <p className="text-sm text-muted-foreground">
-                                      {format(parseISO(booking.check_in), 'EEEE, MMMM dd, yyyy')}
-                                    </p>
-                                  </div>
-                                  <div>
-                                    <Label className="text-sm font-medium">Check-out</Label>
-                                    <p className="text-sm text-muted-foreground">
-                                      {format(parseISO(booking.check_out), 'EEEE, MMMM dd, yyyy')}
-                                    </p>
-                                  </div>
-                                  <div>
-                                    <Label className="text-sm font-medium">Total Amount</Label>
-                                    <p className="text-sm text-muted-foreground">₹{Number(booking.total_amount).toLocaleString()}</p>
-                                  </div>
-                                  <div>
-                                    <Label className="text-sm font-medium">Payment Status</Label>
-                                    <div className="mt-1">{getPaymentStatusBadge(booking)}</div>
-                                  </div>
-                                </div>
-                                {booking.notes && (
-                                  <div>
-                                    <Label className="text-sm font-medium">Notes</Label>
-                                    <p className="text-sm text-muted-foreground mt-1">{booking.notes}</p>
-                                  </div>
-                                )}
-                                <div>
-                                  <Label className="text-sm font-medium">Booking Created</Label>
-                                  <p className="text-sm text-muted-foreground">
-                                    {format(parseISO(booking.created_at), 'MMMM dd, yyyy at h:mm a')}
-                                  </p>
-                                </div>
-
-                                {/* Combined Services & Packages */}
-                                {renderAddons(booking) && (
-                                  <div>
-                                    <Label className="text-sm font-medium">Services & Add-ons</Label>
-                                    {renderAddons(booking)}
-                                  </div>
-                                )}
-                              </div>
-                             </DialogContent>
-                           </Dialog>
-                           </div>
+                         <TableCell className="relative">
+                           <BookingActions
+                             booking={booking}
+                             roomUnits={roomUnits}
+                             roomTypes={roomTypes}
+                             autoAssigning={autoAssigning}
+                             overrideBookingId={overrideBookingId}
+                             changingRoomUnit={changingRoomUnit}
+                             changingRoomType={changingRoomType}
+                             selectedRoomOverride={selectedRoomOverride}
+                             selectedNewRoomUnit={selectedNewRoomUnit}
+                             selectedNewRoomType={selectedNewRoomType}
+                             onAutoAssign={handleAutoAssign}
+                             onManualOverride={handleManualOverride}
+                             onChangeRoomUnit={handleChangeRoomUnit}
+                             onChangeRoomType={handleChangeRoomType}
+                             setOverrideBookingId={setOverrideBookingId}
+                             setChangingRoomUnit={setChangingRoomUnit}
+                             setChangingRoomType={setChangingRoomType}
+                             setSelectedRoomOverride={setSelectedRoomOverride}
+                             setSelectedNewRoomUnit={setSelectedNewRoomUnit}
+                             setSelectedNewRoomType={setSelectedNewRoomType}
+                             renderAddons={renderAddons}
+                             getAvailableUnitsForBooking={getAvailableUnitsForBooking}
+                             onProcessPayment={handleProcessPayment}
+                             getPaymentStatusBadge={getPaymentStatusBadge}
+                           />
                          </TableCell>
                       </TableRow>
                     ))
