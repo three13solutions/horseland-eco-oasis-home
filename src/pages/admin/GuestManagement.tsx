@@ -91,6 +91,7 @@ interface CreditNote {
 export default function GuestManagement() {
   const [guests, setGuests] = useState<Guest[]>([]);
   const [selectedGuest, setSelectedGuest] = useState<Guest | null>(null);
+  const [editingGuest, setEditingGuest] = useState<Guest | null>(null);
   const [guestDocuments, setGuestDocuments] = useState<GuestDocument[]>([]);
   const [guestBookings, setGuestBookings] = useState<GuestBooking[]>([]);
   const [creditNotes, setCreditNotes] = useState<CreditNote[]>([]);
@@ -104,6 +105,22 @@ export default function GuestManagement() {
   const [loading, setLoading] = useState(false);
   const [activeTab, setActiveTab] = useState('active-stay');
   const { toast } = useToast();
+
+  // Guest form state
+  const [guestForm, setGuestForm] = useState({
+    first_name: '',
+    last_name: '',
+    email: '',
+    phone: '',
+    address: '',
+    date_of_birth: '',
+    nationality: '',
+    emergency_contact_name: '',
+    emergency_contact_phone: '',
+    special_requirements: '',
+    is_blacklisted: false,
+    blacklist_reason: ''
+  });
 
   // Document form state
   const [documentForm, setDocumentForm] = useState({
@@ -267,6 +284,85 @@ export default function GuestManagement() {
       toast({
         title: "Error",
         description: "Failed to add document",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleAddGuest = () => {
+    setEditingGuest(null);
+    setGuestForm({
+      first_name: '',
+      last_name: '',
+      email: '',
+      phone: '',
+      address: '',
+      date_of_birth: '',
+      nationality: '',
+      emergency_contact_name: '',
+      emergency_contact_phone: '',
+      special_requirements: '',
+      is_blacklisted: false,
+      blacklist_reason: ''
+    });
+    setShowGuestDialog(true);
+  };
+
+  const handleEditGuest = (guest: Guest) => {
+    setEditingGuest(guest);
+    setGuestForm({
+      first_name: guest.first_name,
+      last_name: guest.last_name,
+      email: guest.email || '',
+      phone: guest.phone || '',
+      address: guest.address || '',
+      date_of_birth: guest.date_of_birth || '',
+      nationality: guest.nationality || '',
+      emergency_contact_name: guest.emergency_contact_name || '',
+      emergency_contact_phone: guest.emergency_contact_phone || '',
+      special_requirements: guest.special_requirements || '',
+      is_blacklisted: guest.is_blacklisted,
+      blacklist_reason: guest.blacklist_reason || ''
+    });
+    setShowGuestDialog(true);
+  };
+
+  const saveGuest = async () => {
+    try {
+      if (editingGuest) {
+        // Update existing guest
+        const { error } = await supabase
+          .from('guests')
+          .update(guestForm)
+          .eq('id', editingGuest.id);
+
+        if (error) throw error;
+
+        toast({
+          title: "Guest Updated",
+          description: "Guest information has been updated successfully.",
+        });
+      } else {
+        // Create new guest
+        const { error } = await supabase
+          .from('guests')
+          .insert([guestForm]);
+
+        if (error) throw error;
+
+        toast({
+          title: "Guest Added",
+          description: "New guest has been added successfully.",
+        });
+      }
+
+      setShowGuestDialog(false);
+      loadGuests();
+    } catch (error: any) {
+      console.error('Error saving guest:', error);
+      toast({
+        title: "Error",
+        description: error.message || "Failed to save guest",
         variant: "destructive",
       });
     }
@@ -555,7 +651,7 @@ export default function GuestManagement() {
               }
             </p>
             {!searchTerm && activeTab === 'all-guests' && (
-              <Button onClick={() => setShowGuestDialog(true)}>
+              <Button onClick={() => handleAddGuest()}>
                 <Plus className="h-4 w-4 mr-2" />
                 Add First Guest
               </Button>
@@ -622,7 +718,11 @@ export default function GuestManagement() {
             )}
             
             <div className="flex gap-2">
-              <Button variant="outline" size="sm">
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={() => handleEditGuest(selectedGuest!)}
+              >
                 <Edit className="h-4 w-4 mr-1" />
                 Edit
               </Button>
@@ -825,7 +925,7 @@ export default function GuestManagement() {
             Manage guest profiles, identity documents, booking history, and credit wallet
           </p>
         </div>
-        <Button onClick={() => setShowGuestDialog(true)}>
+        <Button onClick={() => handleAddGuest()}>
           <Plus className="h-4 w-4 mr-2" />
           Add Guest
         </Button>
@@ -911,6 +1011,175 @@ export default function GuestManagement() {
               </Button>
             </div>
           </form>
+        </DialogContent>
+      </Dialog>
+
+      {/* Add/Edit Guest Dialog */}
+      <Dialog open={showGuestDialog} onOpenChange={setShowGuestDialog}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>
+              {editingGuest ? 'Edit Guest' : 'Add New Guest'}
+            </DialogTitle>
+            <DialogDescription>
+              {editingGuest 
+                ? 'Update guest information and details.'
+                : 'Add a new guest to the system with their personal information.'
+              }
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            {/* Basic Information */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="first_name">First Name *</Label>
+                <Input
+                  id="first_name"
+                  value={guestForm.first_name}
+                  onChange={(e) => setGuestForm(prev => ({ ...prev, first_name: e.target.value }))}
+                  placeholder="Enter first name"
+                  required
+                />
+              </div>
+              <div>
+                <Label htmlFor="last_name">Last Name *</Label>
+                <Input
+                  id="last_name"
+                  value={guestForm.last_name}
+                  onChange={(e) => setGuestForm(prev => ({ ...prev, last_name: e.target.value }))}
+                  placeholder="Enter last name"
+                  required
+                />
+              </div>
+            </div>
+
+            {/* Contact Information */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="email">Email</Label>
+                <Input
+                  id="email"
+                  type="email"
+                  value={guestForm.email}
+                  onChange={(e) => setGuestForm(prev => ({ ...prev, email: e.target.value }))}
+                  placeholder="Enter email address"
+                />
+              </div>
+              <div>
+                <Label htmlFor="phone">Phone</Label>
+                <Input
+                  id="phone"
+                  value={guestForm.phone}
+                  onChange={(e) => setGuestForm(prev => ({ ...prev, phone: e.target.value }))}
+                  placeholder="Enter phone number"
+                />
+              </div>
+            </div>
+
+            {/* Address and Personal Details */}
+            <div>
+              <Label htmlFor="address">Address</Label>
+              <Textarea
+                id="address"
+                value={guestForm.address}
+                onChange={(e) => setGuestForm(prev => ({ ...prev, address: e.target.value }))}
+                placeholder="Enter full address"
+                rows={3}
+              />
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="date_of_birth">Date of Birth</Label>
+                <Input
+                  id="date_of_birth"
+                  type="date"
+                  value={guestForm.date_of_birth}
+                  onChange={(e) => setGuestForm(prev => ({ ...prev, date_of_birth: e.target.value }))}
+                />
+              </div>
+              <div>
+                <Label htmlFor="nationality">Nationality</Label>
+                <Input
+                  id="nationality"
+                  value={guestForm.nationality}
+                  onChange={(e) => setGuestForm(prev => ({ ...prev, nationality: e.target.value }))}
+                  placeholder="Enter nationality"
+                />
+              </div>
+            </div>
+
+            {/* Emergency Contact */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="emergency_contact_name">Emergency Contact Name</Label>
+                <Input
+                  id="emergency_contact_name"
+                  value={guestForm.emergency_contact_name}
+                  onChange={(e) => setGuestForm(prev => ({ ...prev, emergency_contact_name: e.target.value }))}
+                  placeholder="Enter emergency contact name"
+                />
+              </div>
+              <div>
+                <Label htmlFor="emergency_contact_phone">Emergency Contact Phone</Label>
+                <Input
+                  id="emergency_contact_phone"
+                  value={guestForm.emergency_contact_phone}
+                  onChange={(e) => setGuestForm(prev => ({ ...prev, emergency_contact_phone: e.target.value }))}
+                  placeholder="Enter emergency contact phone"
+                />
+              </div>
+            </div>
+
+            {/* Special Requirements */}
+            <div>
+              <Label htmlFor="special_requirements">Special Requirements</Label>
+              <Textarea
+                id="special_requirements"
+                value={guestForm.special_requirements}
+                onChange={(e) => setGuestForm(prev => ({ ...prev, special_requirements: e.target.value }))}
+                placeholder="Any special requirements or notes"
+                rows={3}
+              />
+            </div>
+
+            {/* Blacklist Section */}
+            <div className="space-y-3 p-4 border rounded-lg">
+              <div className="flex items-center space-x-2">
+                <input
+                  type="checkbox"
+                  id="is_blacklisted"
+                  checked={guestForm.is_blacklisted}
+                  onChange={(e) => setGuestForm(prev => ({ ...prev, is_blacklisted: e.target.checked }))}
+                />
+                <Label htmlFor="is_blacklisted" className="font-medium text-destructive">
+                  Blacklist this guest
+                </Label>
+              </div>
+              {guestForm.is_blacklisted && (
+                <div>
+                  <Label htmlFor="blacklist_reason">Blacklist Reason *</Label>
+                  <Textarea
+                    id="blacklist_reason"
+                    value={guestForm.blacklist_reason}
+                    onChange={(e) => setGuestForm(prev => ({ ...prev, blacklist_reason: e.target.value }))}
+                    placeholder="Enter reason for blacklisting this guest"
+                    required={guestForm.is_blacklisted}
+                    rows={2}
+                  />
+                </div>
+              )}
+            </div>
+
+            <div className="flex justify-end gap-2 pt-4">
+              <Button variant="outline" onClick={() => setShowGuestDialog(false)}>
+                Cancel
+              </Button>
+              <Button onClick={saveGuest} disabled={!guestForm.first_name || !guestForm.last_name}>
+                {editingGuest ? 'Update Guest' : 'Add Guest'}
+              </Button>
+            </div>
+          </div>
         </DialogContent>
       </Dialog>
 
