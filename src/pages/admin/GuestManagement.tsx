@@ -359,84 +359,115 @@ export default function GuestManagement() {
   // Guest List Content Component
   const GuestListContent = () => (
     <>
-      {/* Search and View Controls */}
+      {/* Header Controls */}
       <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
-        <div className="flex items-center gap-4 flex-1">
-          <div className="relative flex-1 max-w-md">
+        {/* Tab Filter */}
+        <div className="flex items-center gap-2">
+          <Button
+            variant={activeTab === 'active-stay' ? 'default' : 'outline'}
+            size="sm"
+            onClick={() => setActiveTab('active-stay')}
+          >
+            Active Stay
+          </Button>
+          <Button
+            variant={activeTab === 'upcoming' ? 'default' : 'outline'}
+            size="sm"
+            onClick={() => setActiveTab('upcoming')}
+          >
+            Upcoming
+          </Button>
+          <Button
+            variant={activeTab === 'all-guests' ? 'default' : 'outline'}
+            size="sm"
+            onClick={() => setActiveTab('all-guests')}
+          >
+            All Guests
+          </Button>
+        </div>
+        
+        {/* Search and View Controls */}
+        <div className="flex items-center gap-4">
+          <div className="relative">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
             <Input
               placeholder="Search by name, email, or phone..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10"
+              className="pl-10 w-72"
             />
           </div>
-        </div>
-        
-        <div className="flex items-center gap-2">
-          <Button
-            variant={viewMode === 'card' ? 'default' : 'outline'}
-            size="sm"
-            onClick={() => setViewMode('card')}
-          >
-            <Grid className="w-4 h-4" />
-          </Button>
-          <Button
-            variant={viewMode === 'list' ? 'default' : 'outline'}
-            size="sm"
-            onClick={() => setViewMode('list')}
-          >
-            <List className="w-4 h-4" />
-          </Button>
+          
+          <div className="flex items-center gap-2">
+            <Button
+              variant={viewMode === 'card' ? 'default' : 'outline'}
+              size="sm"
+              onClick={() => setViewMode('card')}
+            >
+              <Grid className="w-4 h-4" />
+            </Button>
+            <Button
+              variant={viewMode === 'list' ? 'default' : 'outline'}
+              size="sm"
+              onClick={() => setViewMode('list')}
+            >
+              <List className="w-4 h-4" />
+            </Button>
+          </div>
         </div>
       </div>
 
       {/* Guest List Content */}
       {viewMode === 'card' ? (
-        <div className="grid gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {filteredGuests.map((guest) => (
-            <Card key={guest.id} className="p-4">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-4">
+            <Card key={guest.id} className="hover:shadow-lg transition-shadow duration-200">
+              <CardHeader className="pb-3">
+                <div className="flex items-center gap-3">
                   <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center">
                     <User className="h-6 w-6 text-primary" />
                   </div>
-                  <div>
-                    <h3 className="font-semibold">{guest.first_name} {guest.last_name}</h3>
-                    <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                      {guest.email && (
-                        <div className="flex items-center gap-1">
-                          <Mail className="h-3 w-3" />
-                          {guest.email}
-                        </div>
-                      )}
-                      {guest.phone && (
-                        <div className="flex items-center gap-1">
-                          <Phone className="h-3 w-3" />
-                          {guest.phone}
-                        </div>
-                      )}
-                    </div>
-                    <div className="flex items-center gap-2 text-xs text-muted-foreground mt-1">
-                      <span>Joined {format(new Date(guest.created_at), 'MMM yyyy')}</span>
-                      <Badge variant="outline" className="text-xs">
-                        {getGuestBookingStatus(guest.id).replace('-', ' ')}
-                      </Badge>
-                    </div>
+                  <div className="flex-1">
+                    <CardTitle className="text-lg">{guest.first_name} {guest.last_name}</CardTitle>
+                    <Badge variant="outline" className="text-xs capitalize">
+                      {getGuestBookingStatus(guest.id).replace('-', ' ')}
+                    </Badge>
                   </div>
                 </div>
-                <div className="flex items-center gap-2">
+              </CardHeader>
+              <CardContent className="pt-0">
+                <div className="space-y-2">
+                  {guest.email && (
+                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                      <Mail className="h-4 w-4" />
+                      <span className="truncate">{guest.email}</span>
+                    </div>
+                  )}
+                  {guest.phone && (
+                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                      <Phone className="h-4 w-4" />
+                      {guest.phone}
+                    </div>
+                  )}
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                    <Calendar className="h-4 w-4" />
+                    Joined {format(new Date(guest.created_at), 'MMM yyyy')}
+                  </div>
+                </div>
+                
+                <div className="flex items-center justify-between mt-4">
                   {guest.is_blacklisted && (
                     <Badge variant="destructive">
                       <AlertTriangle className="h-3 w-3 mr-1" />
                       Blacklisted
                     </Badge>
                   )}
-                  <Button onClick={() => handleGuestSelect(guest)}>
+                  <Button onClick={() => handleGuestSelect(guest)} className="ml-auto">
+                    <Eye className="h-4 w-4 mr-2" />
                     View Details
                   </Button>
                 </div>
-              </div>
+              </CardContent>
             </Card>
           ))}
         </div>
