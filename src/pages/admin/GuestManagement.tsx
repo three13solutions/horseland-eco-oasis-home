@@ -29,7 +29,8 @@ import {
   ArrowLeft,
   Grid,
   List,
-  Trash2
+  Ban,
+  Users
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -102,6 +103,9 @@ export default function GuestManagement() {
   const [showCreditDialog, setShowCreditDialog] = useState(false);
   const [showDocumentDialog, setShowDocumentDialog] = useState(false);
   const [showGuestDetails, setShowGuestDetails] = useState(false);
+  const [showMergeDialog, setShowMergeDialog] = useState(false);
+  const [mergeSourceGuest, setMergeSourceGuest] = useState<Guest | null>(null);
+  const [mergeTargetGuest, setMergeTargetGuest] = useState<Guest | null>(null);
   const [loading, setLoading] = useState(false);
   const [activeTab, setActiveTab] = useState('active-stay');
   const { toast } = useToast();
@@ -355,6 +359,108 @@ export default function GuestManagement() {
     }
   };
 
+  const handleMergeGuests = (sourceGuest: Guest) => {
+    setMergeSourceGuest(sourceGuest);
+    setShowMergeDialog(true);
+  };
+
+  const mergeGuestProfiles = async () => {
+    if (!mergeSourceGuest || !mergeTargetGuest) return;
+
+    try {
+      // Update all bookings from source to target
+      await supabase
+        .from('bookings')
+        .update({ guest_id: mergeTargetGuest.id })
+        .eq('guest_id', mergeSourceGuest.id);
+
+      // Update all documents from source to target
+      await supabase
+        .from('guest_identity_documents')
+        .update({ guest_id: mergeTargetGuest.id })
+        .eq('guest_id', mergeSourceGuest.id);
+
+      // Update all credit notes from source to target
+      await supabase
+        .from('guest_credit_notes')
+        .update({ guest_id: mergeTargetGuest.id })
+        .eq('guest_id', mergeSourceGuest.id);
+
+      // Merge contact information if missing in target
+      const updateData: Partial<Guest> = {};
+      if (!mergeTargetGuest.email && mergeSourceGuest.email) {
+        updateData.email = mergeSourceGuest.email;
+      }
+      if (!mergeTargetGuest.phone && mergeSourceGuest.phone) {
+        updateData.phone = mergeSourceGuest.phone;
+      }
+      if (!mergeTargetGuest.address && mergeSourceGuest.address) {
+        updateData.address = mergeSourceGuest.address;
+      }
+      if (!mergeTargetGuest.emergency_contact_name && mergeSourceGuest.emergency_contact_name) {
+        updateData.emergency_contact_name = mergeSourceGuest.emergency_contact_name;
+      }
+      if (!mergeTargetGuest.emergency_contact_phone && mergeSourceGuest.emergency_contact_phone) {
+        updateData.emergency_contact_phone = mergeSourceGuest.emergency_contact_phone;
+      }
+
+      // Update target guest with merged information
+      if (Object.keys(updateData).length > 0) {
+        await supabase
+          .from('guests')
+          .update(updateData)
+          .eq('id', mergeTargetGuest.id);
+      }
+
+      // Delete the source guest
+      await supabase
+        .from('guests')
+        .delete()
+        .eq('id', mergeSourceGuest.id);
+
+      toast({
+        title: "Guests Merged Successfully",
+        description: `${mergeSourceGuest.first_name} ${mergeSourceGuest.last_name} has been merged into ${mergeTargetGuest.first_name} ${mergeTargetGuest.last_name}`,
+      });
+
+      setShowMergeDialog(false);
+      setMergeSourceGuest(null);
+      setMergeTargetGuest(null);
+      loadGuests();
+    } catch (error: any) {
+      console.error('Error merging guests:', error);
+      toast({
+        title: "Error",
+        description: "Failed to merge guest profiles",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const findExistingGuestByContact = async (email?: string, phone?: string) => {
+    try {
+      let query = supabase.from('guests').select('*');
+      
+      if (email && phone) {
+        query = query.or(`email.eq.${email},phone.eq.${phone}`);
+      } else if (email) {
+        query = query.eq('email', email);
+      } else if (phone) {
+        query = query.eq('phone', phone);
+      } else {
+        return null;
+      }
+
+      const { data, error } = await query.limit(1);
+      
+      if (error) throw error;
+      return data && data.length > 0 ? data[0] : null;
+    } catch (error) {
+      console.error('Error finding existing guest:', error);
+      return null;
+    }
+  };
+
   const saveGuest = async () => {
     try {
       if (editingGuest) {
@@ -600,7 +706,14 @@ export default function GuestManagement() {
                       onClick={() => toggleBlacklist(guest)}
                       className={guest.is_blacklisted ? "text-green-600 hover:text-green-700" : "text-destructive hover:text-destructive"}
                     >
-                      <Trash2 className="h-4 w-4" />
+                      <Ban className="h-4 w-4" />
+                    </Button>
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      onClick={() => handleMergeGuests(guest)}
+                    >
+                      <Users className="h-4 w-4" />
                     </Button>
                     <Button size="sm" onClick={() => handleGuestSelect(guest)}>
                       <Eye className="h-4 w-4" />
@@ -679,7 +792,14 @@ export default function GuestManagement() {
                         onClick={() => toggleBlacklist(guest)}
                         className={guest.is_blacklisted ? "text-green-600 hover:text-green-700" : "text-destructive hover:text-destructive"}
                       >
-                        <Trash2 className="h-4 w-4" />
+                        <Ban className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleMergeGuests(guest)}
+                      >
+                        <Users className="h-4 w-4" />
                       </Button>
                       <Button
                         size="sm"
@@ -1319,6 +1439,119 @@ export default function GuestManagement() {
               </Button>
               <Button onClick={createDocument}>
                 Add Document
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Merge Guests Dialog */}
+      <Dialog open={showMergeDialog} onOpenChange={setShowMergeDialog}>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Merge Guest Profiles</DialogTitle>
+            <DialogDescription>
+              Merge {mergeSourceGuest?.first_name} {mergeSourceGuest?.last_name} into another guest profile. 
+              All bookings, documents, and credit notes will be transferred to the target guest.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {/* Source Guest */}
+              <div className="space-y-4">
+                <h3 className="text-lg font-medium">Source Guest (will be deleted)</h3>
+                {mergeSourceGuest && (
+                  <Card>
+                    <CardContent className="p-4">
+                      <h4 className="font-medium">{mergeSourceGuest.first_name} {mergeSourceGuest.last_name}</h4>
+                      {mergeSourceGuest.email && (
+                        <p className="text-sm text-muted-foreground">📧 {mergeSourceGuest.email}</p>
+                      )}
+                      {mergeSourceGuest.phone && (
+                        <p className="text-sm text-muted-foreground">📞 {mergeSourceGuest.phone}</p>
+                      )}
+                      <p className="text-xs text-muted-foreground mt-2">
+                        Joined: {format(new Date(mergeSourceGuest.created_at), 'PPP')}
+                      </p>
+                    </CardContent>
+                  </Card>
+                )}
+              </div>
+
+              {/* Target Guest Selection */}
+              <div className="space-y-4">
+                <h3 className="text-lg font-medium">Target Guest (will receive all data)</h3>
+                <div className="space-y-2">
+                  <Label>Search for target guest:</Label>
+                  <Input
+                    placeholder="Search by name, email, or phone..."
+                    onChange={(e) => {
+                      const searchValue = e.target.value.toLowerCase();
+                      // Filter guests but exclude the source guest
+                      const filteredTargets = guests.filter(guest => 
+                        guest.id !== mergeSourceGuest?.id &&
+                        (`${guest.first_name} ${guest.last_name}`.toLowerCase().includes(searchValue) ||
+                         guest.email?.toLowerCase().includes(searchValue) ||
+                         guest.phone?.includes(searchValue))
+                      );
+                      // For simplicity, we'll show the first few matches
+                    }}
+                  />
+                </div>
+                
+                <div className="max-h-64 overflow-y-auto space-y-2">
+                  {guests
+                    .filter(guest => guest.id !== mergeSourceGuest?.id)
+                    .slice(0, 10)
+                    .map((guest) => (
+                      <Card 
+                        key={guest.id} 
+                        className={`cursor-pointer transition-colors ${mergeTargetGuest?.id === guest.id ? 'bg-primary/10 border-primary' : 'hover:bg-muted'}`}
+                        onClick={() => setMergeTargetGuest(guest)}
+                      >
+                        <CardContent className="p-3">
+                          <h4 className="font-medium">{guest.first_name} {guest.last_name}</h4>
+                          {guest.email && (
+                            <p className="text-sm text-muted-foreground">📧 {guest.email}</p>
+                          )}
+                          {guest.phone && (
+                            <p className="text-sm text-muted-foreground">📞 {guest.phone}</p>
+                          )}
+                        </CardContent>
+                      </Card>
+                    ))}
+                </div>
+              </div>
+            </div>
+
+            {/* Merge Preview */}
+            {mergeTargetGuest && (
+              <div className="space-y-4 p-4 bg-muted rounded-lg">
+                <h3 className="text-lg font-medium">Merge Preview</h3>
+                <div className="text-sm space-y-2">
+                  <p>• All bookings from <strong>{mergeSourceGuest?.first_name} {mergeSourceGuest?.last_name}</strong> will be transferred to <strong>{mergeTargetGuest.first_name} {mergeTargetGuest.last_name}</strong></p>
+                  <p>• All identity documents will be transferred</p>
+                  <p>• All credit notes will be transferred</p>
+                  <p>• Missing contact information will be filled in from source guest</p>
+                  <p className="text-destructive">• The source guest profile will be permanently deleted</p>
+                </div>
+              </div>
+            )}
+
+            <div className="flex justify-end gap-2">
+              <Button variant="outline" onClick={() => {
+                setShowMergeDialog(false);
+                setMergeSourceGuest(null);
+                setMergeTargetGuest(null);
+              }}>
+                Cancel
+              </Button>
+              <Button 
+                variant="destructive"
+                onClick={mergeGuestProfiles}
+                disabled={!mergeTargetGuest}
+              >
+                Merge Guests
               </Button>
             </div>
           </div>

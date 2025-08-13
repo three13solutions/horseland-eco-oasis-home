@@ -44,6 +44,8 @@ export const ManualBookingModal: React.FC<ManualBookingModalProps> = ({
   const [totalAmount, setTotalAmount] = useState(0);
   const [notes, setNotes] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [existingGuest, setExistingGuest] = useState<any>(null);
+  const [showGuestMatch, setShowGuestMatch] = useState(false);
   
   // Addon services state
   const [availablePackages, setAvailablePackages] = useState<any[]>([]);
@@ -132,6 +134,45 @@ export const ManualBookingModal: React.FC<ManualBookingModalProps> = ({
     }
   };
 
+  const findExistingGuest = async (email?: string, phone?: string) => {
+    if (!email && !phone) return null;
+
+    try {
+      let query = supabase.from('guests').select('*');
+      
+      if (email && phone) {
+        query = query.or(`email.eq.${email},phone.eq.${phone}`);
+      } else if (email) {
+        query = query.eq('email', email);
+      } else if (phone) {
+        query = query.eq('phone', phone);
+      }
+
+      const { data, error } = await query.limit(1);
+      
+      if (error) throw error;
+      return data && data.length > 0 ? data[0] : null;
+    } catch (error) {
+      console.error('Error finding existing guest:', error);
+      return null;
+    }
+  };
+
+  const checkForExistingGuest = async (email: string, phone: string) => {
+    const guest = await findExistingGuest(email, phone);
+    if (guest) {
+      setExistingGuest(guest);
+      setShowGuestMatch(true);
+      // Auto-populate guest name if it matches
+      if (!guestName.trim()) {
+        setGuestName(`${guest.first_name} ${guest.last_name}`);
+      }
+    } else {
+      setExistingGuest(null);
+      setShowGuestMatch(false);
+    }
+  };
+
   const generateBookingId = () => {
     const prefix = 'BK';
     const timestamp = Date.now().toString().slice(-6);
@@ -207,10 +248,17 @@ export const ManualBookingModal: React.FC<ManualBookingModalProps> = ({
     setIsSubmitting(true);
     
     try {
+      // Check if we need to link to existing guest
+      let guestId = null;
+      if (existingGuest) {
+        guestId = existingGuest.id;
+      }
+
       const bookingData = {
         booking_id: generateBookingId(),
         room_unit_id: roomUnitId,
         package_id: (selectedPackage && selectedPackage !== 'no-package') ? selectedPackage : null,
+        guest_id: guestId,
         guest_name: guestName.trim(),
         guest_email: guestEmail.trim() || null,
         guest_phone: guestPhone.trim() || null,
@@ -233,7 +281,7 @@ export const ManualBookingModal: React.FC<ManualBookingModalProps> = ({
 
       toast({
         title: "Booking Created",
-        description: `Manual booking ${bookingData.booking_id} created successfully`,
+        description: `Manual booking ${bookingData.booking_id} created successfully${existingGuest ? ' and linked to existing guest' : ''}`,
       });
 
       // Reset form
@@ -250,6 +298,8 @@ export const ManualBookingModal: React.FC<ManualBookingModalProps> = ({
       setSelectedMeals([]);
       setSelectedActivities([]);
       setSelectedSpaServices([]);
+      setExistingGuest(null);
+      setShowGuestMatch(false);
       
       onClose();
       if (onBookingCreated) {
@@ -366,7 +416,13 @@ export const ManualBookingModal: React.FC<ManualBookingModalProps> = ({
                     id="guestEmail"
                     type="email"
                     value={guestEmail}
-                    onChange={(e) => setGuestEmail(e.target.value)}
+                    onChange={(e) => {
+                      setGuestEmail(e.target.value);
+                      // Check for existing guest when email changes
+                      if (e.target.value.trim()) {
+                        checkForExistingGuest(e.target.value.trim(), guestPhone);
+                      }
+                    }}
                     placeholder="guest@example.com"
                     className="pl-9"
                   />
@@ -380,13 +436,52 @@ export const ManualBookingModal: React.FC<ManualBookingModalProps> = ({
                   <Input
                     id="guestPhone"
                     value={guestPhone}
-                    onChange={(e) => setGuestPhone(e.target.value)}
+                    onChange={(e) => {
+                      setGuestPhone(e.target.value);
+                      // Check for existing guest when phone changes
+                      if (e.target.value.trim()) {
+                        checkForExistingGuest(guestEmail, e.target.value.trim());
+                      }
+                    }}
                     placeholder="+91 98765 43210"
                     className="pl-9"
                   />
                 </div>
               </div>
             </div>
+
+            {/* Existing Guest Match Alert */}
+            {showGuestMatch && existingGuest && (
+              <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                <div className="flex items-start gap-3">
+                  <User className="h-5 w-5 text-blue-600 mt-0.5" />
+                  <div className="flex-1">
+                    <h4 className="font-medium text-blue-900">Existing Guest Found</h4>
+                    <p className="text-sm text-blue-700 mt-1">
+                      Found existing guest: <strong>{existingGuest.first_name} {existingGuest.last_name}</strong>
+                    </p>
+                    {existingGuest.email && (
+                      <p className="text-xs text-blue-600">📧 {existingGuest.email}</p>
+                    )}
+                    {existingGuest.phone && (
+                      <p className="text-xs text-blue-600">📞 {existingGuest.phone}</p>
+                    )}
+                    <p className="text-xs text-blue-600 mt-2">
+                      This booking will be automatically linked to the existing guest profile.
+                    </p>
+                  </div>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setShowGuestMatch(false)}
+                    className="text-blue-600 hover:text-blue-700"
+                  >
+                    ✕
+                  </Button>
+                </div>
+              </div>
+            )}
 
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
