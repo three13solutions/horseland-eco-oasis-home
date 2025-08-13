@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Calendar, Eye, Search, Filter, Users, IndianRupee, ArrowLeft, Clock, CheckCircle, XCircle, AlertCircle, Bot, RefreshCw, Edit, Plus, Phone, CalendarIcon } from 'lucide-react';
+import { Calendar, Eye, Search, Filter, Users, IndianRupee, ArrowLeft, Clock, CheckCircle, XCircle, AlertCircle, Bot, RefreshCw, Edit, Plus, Phone, CalendarIcon, Home, RotateCcw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
@@ -90,6 +90,10 @@ export default function BookingManagement() {
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [editingPaymentStatus, setEditingPaymentStatus] = useState<string | null>(null);
   const [selectedPaymentStatus, setSelectedPaymentStatus] = useState<string>('');
+  const [changingRoomUnit, setChangingRoomUnit] = useState<string | null>(null);
+  const [changingRoomType, setChangingRoomType] = useState<string | null>(null);
+  const [selectedNewRoomUnit, setSelectedNewRoomUnit] = useState<string>('');
+  const [selectedNewRoomType, setSelectedNewRoomType] = useState<string>('');
   const [stats, setStats] = useState<BookingStats>({
     totalBookings: 0,
     totalRevenue: 0,
@@ -420,6 +424,119 @@ export default function BookingManagement() {
       toast({
         title: "Error",
         description: "Failed to update room assignment",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleChangeRoomUnit = async (bookingId: string, newRoomUnitId: string) => {
+    try {
+      // Validate the room change using the validation service
+      const booking = bookings.find(b => b.id === bookingId);
+      if (!booking) return;
+
+      const validateResponse = await supabase.functions.invoke('validate-booking', {
+        body: {
+          roomUnitId: newRoomUnitId,
+          checkIn: booking.check_in,
+          checkOut: booking.check_out,
+          guestsCount: booking.guests_count,
+          bookingId: bookingId // Exclude current booking from validation
+        }
+      });
+
+      if (validateResponse.error || !validateResponse.data?.isValid) {
+        toast({
+          title: "Room Change Failed",
+          description: validateResponse.data?.message || "The selected room is not available for the booking dates",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      const { error } = await supabase
+        .from('bookings')
+        .update({ room_unit_id: newRoomUnitId })
+        .eq('id', bookingId);
+
+      if (error) throw error;
+
+      toast({
+        title: "Room Changed Successfully",
+        description: "Room unit has been changed",
+      });
+
+      setChangingRoomUnit(null);
+      setSelectedNewRoomUnit('');
+      loadBookings();
+    } catch (error: any) {
+      console.error('Change room unit error:', error);
+      toast({
+        title: "Error",
+        description: "Failed to change room unit",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleChangeRoomType = async (bookingId: string, newRoomTypeId: string) => {
+    try {
+      // Validate the room type change
+      const booking = bookings.find(b => b.id === bookingId);
+      if (!booking) return;
+
+      const validateResponse = await supabase.functions.invoke('validate-booking', {
+        body: {
+          roomTypeId: newRoomTypeId,
+          checkIn: booking.check_in,
+          checkOut: booking.check_out,
+          guestsCount: booking.guests_count,
+          bookingId: bookingId // Exclude current booking from validation
+        }
+      });
+
+      if (validateResponse.error || !validateResponse.data?.isValid) {
+        toast({
+          title: "Room Type Change Failed",
+          description: validateResponse.data?.message || "No rooms available for the selected type during the booking dates",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // Auto-assign a room unit from the new room type
+      const autoAssignResponse = await supabase.functions.invoke('auto-assign-room', {
+        body: {
+          bookingId: bookingId,
+          roomTypeId: newRoomTypeId,
+          checkIn: booking.check_in,
+          checkOut: booking.check_out,
+          guestsCount: booking.guests_count
+        }
+      });
+
+      if (autoAssignResponse.error || autoAssignResponse.data?.error) {
+        toast({
+          title: "Room Type Change Failed",
+          description: autoAssignResponse.data?.error || "Failed to assign room from new type",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      toast({
+        title: "Room Type Changed Successfully",
+        description: "Room type has been changed and a new unit assigned",
+      });
+
+      setChangingRoomType(null);
+      setSelectedNewRoomType('');
+      loadBookings();
+    } catch (error: any) {
+      console.error('Change room type error:', error);
+      toast({
+        title: "Error",
+        description: "Failed to change room type",
         variant: "destructive",
       });
     }
@@ -1249,18 +1366,97 @@ export default function BookingManagement() {
                                       Cancel
                                     </Button>
                                   </div>
-                                ) : (
-                                  <Button
-                                    size="sm"
-                                    variant="outline"
-                                    className="mt-1"
-                                    onClick={() => setOverrideBookingId(booking.id)}
-                                  >
-                                    <Edit className="h-3 w-3 mr-1" />
-                                    Change Room
-                                  </Button>
-                                )}
-                              </div>
+                                 ) : (
+                                   <div className="flex gap-2 mt-1">
+                                     {changingRoomUnit === booking.id ? (
+                                       <div className="flex gap-2">
+                                         <Select value={selectedNewRoomUnit} onValueChange={setSelectedNewRoomUnit}>
+                                           <SelectTrigger className="w-40">
+                                             <SelectValue placeholder="Select unit" />
+                                           </SelectTrigger>
+                                           <SelectContent>
+                                             {roomUnits
+                                               .filter(unit => unit.room_type_id === booking.room_type_id && unit.is_active)
+                                               .map((unit) => (
+                                                 <SelectItem key={unit.id} value={unit.id}>
+                                                   {unit.unit_number} - {unit.unit_name || 'No name'}
+                                                 </SelectItem>
+                                               ))}
+                                           </SelectContent>
+                                         </Select>
+                                         <Button
+                                           size="sm"
+                                           onClick={() => handleChangeRoomUnit(booking.id, selectedNewRoomUnit)}
+                                           disabled={!selectedNewRoomUnit}
+                                         >
+                                           Change
+                                         </Button>
+                                         <Button
+                                           size="sm"
+                                           variant="outline"
+                                           onClick={() => {
+                                             setChangingRoomUnit(null);
+                                             setSelectedNewRoomUnit('');
+                                           }}
+                                         >
+                                           Cancel
+                                         </Button>
+                                       </div>
+                                     ) : changingRoomType === booking.id ? (
+                                       <div className="flex gap-2">
+                                         <Select value={selectedNewRoomType} onValueChange={setSelectedNewRoomType}>
+                                           <SelectTrigger className="w-40">
+                                             <SelectValue placeholder="Select type" />
+                                           </SelectTrigger>
+                                           <SelectContent>
+                                             {roomTypes.map((type) => (
+                                               <SelectItem key={type.id} value={type.id}>
+                                                 {type.name}
+                                               </SelectItem>
+                                             ))}
+                                           </SelectContent>
+                                         </Select>
+                                         <Button
+                                           size="sm"
+                                           onClick={() => handleChangeRoomType(booking.id, selectedNewRoomType)}
+                                           disabled={!selectedNewRoomType}
+                                         >
+                                           Change
+                                         </Button>
+                                         <Button
+                                           size="sm"
+                                           variant="outline"
+                                           onClick={() => {
+                                             setChangingRoomType(null);
+                                             setSelectedNewRoomType('');
+                                           }}
+                                         >
+                                           Cancel
+                                         </Button>
+                                       </div>
+                                     ) : (
+                                       <>
+                                         <Button
+                                           size="sm"
+                                           variant="outline"
+                                           onClick={() => setChangingRoomUnit(booking.id)}
+                                         >
+                                           <RotateCcw className="h-3 w-3 mr-1" />
+                                           Change Unit
+                                         </Button>
+                                         <Button
+                                           size="sm"
+                                           variant="outline"
+                                           onClick={() => setChangingRoomType(booking.id)}
+                                         >
+                                           <Home className="h-3 w-3 mr-1" />
+                                           Change Type
+                                         </Button>
+                                       </>
+                                     )}
+                                   </div>
+                                 )}
+                               </div>
                             ) : booking.room_type_id ? (
                               <div>
                                 <div className="text-sm font-medium text-muted-foreground">
@@ -1268,19 +1464,27 @@ export default function BookingManagement() {
                                 </div>
                                 {renderAddons(booking)}
                                 <div className="flex gap-2 mt-2">
-                                  <Button
-                                    size="sm"
-                                    onClick={() => handleAutoAssign(booking)}
-                                    disabled={autoAssigning === booking.id}
-                                    className="bg-blue-600 hover:bg-blue-700"
-                                  >
-                                    {autoAssigning === booking.id ? (
-                                      <RefreshCw className="h-3 w-3 mr-1 animate-spin" />
-                                    ) : (
-                                      <Bot className="h-3 w-3 mr-1" />
-                                    )}
-                                    Auto-assign
-                                  </Button>
+                                   <Button
+                                     size="sm"
+                                     onClick={() => handleAutoAssign(booking)}
+                                     disabled={autoAssigning === booking.id}
+                                     className="bg-blue-600 hover:bg-blue-700"
+                                   >
+                                     {autoAssigning === booking.id ? (
+                                       <RefreshCw className="h-3 w-3 mr-1 animate-spin" />
+                                     ) : (
+                                       <Bot className="h-3 w-3 mr-1" />
+                                     )}
+                                     Auto-assign
+                                   </Button>
+                                   <Button
+                                     size="sm"
+                                     variant="outline"
+                                     onClick={() => setOverrideBookingId(booking.id)}
+                                   >
+                                     <Edit className="h-3 w-3 mr-1" />
+                                     Manual
+                                   </Button>
                                   <Button
                                     size="sm"
                                     variant="outline"
