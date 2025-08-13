@@ -289,6 +289,10 @@ export const ManualBookingModal: React.FC<ManualBookingModalProps> = ({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
+    console.log('=== FORM SUBMISSION STARTED ===');
+    console.log('Guest Email:', guestEmail);
+    console.log('Guest Phone:', guestPhone);
+    
     if (!checkInDate || !checkOutDate) {
       toast({
         title: "Error",
@@ -307,33 +311,91 @@ export const ManualBookingModal: React.FC<ManualBookingModalProps> = ({
       return;
     }
 
-    // Check for existing guest before submitting
-    console.log('Checking for existing guest before submission...');
-    if ((guestEmail && guestEmail.trim()) || (guestPhone && guestPhone.trim())) {
-      const existingGuestCheck = await findExistingGuest(
-        guestEmail && guestEmail.trim() ? guestEmail.trim() : undefined,
-        guestPhone && guestPhone.trim() ? guestPhone.trim() : undefined
-      );
+    // MANDATORY check for existing guest before creating booking
+    console.log('=== CHECKING FOR EXISTING GUEST ===');
+    try {
+      let existingGuestCheck = null;
       
+      // Check by email first
+      if (guestEmail && guestEmail.trim()) {
+        console.log('Checking email:', guestEmail.trim());
+        const { data: emailGuests, error: emailError } = await supabase
+          .from('guests')
+          .select('*')
+          .eq('email', guestEmail.trim())
+          .limit(1);
+          
+        if (emailError) {
+          console.error('Email check error:', emailError);
+        } else if (emailGuests && emailGuests.length > 0) {
+          existingGuestCheck = emailGuests[0];
+          console.log('Found existing guest by email:', existingGuestCheck);
+        }
+      }
+      
+      // Check by phone if no email match
+      if (!existingGuestCheck && guestPhone && guestPhone.trim()) {
+        console.log('Checking phone:', guestPhone.trim());
+        const normalizedInputPhone = normalizePhoneNumber(guestPhone.trim());
+        console.log('Normalized input phone:', normalizedInputPhone);
+        
+        const { data: allGuests, error: phoneError } = await supabase
+          .from('guests')
+          .select('*')
+          .not('phone', 'is', null);
+          
+        if (phoneError) {
+          console.error('Phone check error:', phoneError);
+        } else if (allGuests) {
+          console.log('All guests with phones:', allGuests.length);
+          existingGuestCheck = allGuests.find(guest => {
+            if (!guest.phone) return false;
+            const normalizedGuestPhone = normalizePhoneNumber(guest.phone);
+            console.log('Comparing:', normalizedInputPhone, 'vs', normalizedGuestPhone);
+            return normalizedInputPhone === normalizedGuestPhone;
+          });
+          
+          if (existingGuestCheck) {
+            console.log('Found existing guest by phone:', existingGuestCheck);
+          }
+        }
+      }
+      
+      // If we found an existing guest, show confirmation and link
       if (existingGuestCheck) {
-        console.log('Found existing guest during submission:', existingGuestCheck);
         setExistingGuest(existingGuestCheck);
         setShowGuestMatch(true);
         
         toast({
-          title: "Existing Guest Found",
-          description: `This will be linked to existing guest: ${existingGuestCheck.first_name} ${existingGuestCheck.last_name}`,
+          title: "Existing Guest Found!",
+          description: `This booking will be linked to ${existingGuestCheck.first_name} ${existingGuestCheck.last_name}`,
         });
+        
+        console.log('Will link to existing guest:', existingGuestCheck.id);
+      } else {
+        console.log('No existing guest found - will create new booking');
       }
+      
+    } catch (error) {
+      console.error('Error during guest check:', error);
+      toast({
+        title: "Warning",
+        description: "Could not check for existing guests, but proceeding with booking creation",
+        variant: "destructive",
+      });
     }
 
     setIsSubmitting(true);
     
     try {
+      console.log('=== CREATING BOOKING ===');
       // Check if we need to link to existing guest
       let guestId = null;
       if (existingGuest) {
         guestId = existingGuest.id;
+        console.log('Linking to existing guest ID:', guestId);
+      } else {
+        console.log('No existing guest to link to');
       }
 
       const bookingData = {
@@ -355,11 +417,18 @@ export const ManualBookingModal: React.FC<ManualBookingModalProps> = ({
         selected_spa_services: selectedSpaServices,
       };
 
+      console.log('Booking data to insert:', bookingData);
+      
       const { error } = await supabase
         .from('bookings')
         .insert([bookingData]);
 
-      if (error) throw error;
+      if (error) {
+        console.error('Supabase insert error:', error);
+        throw error;
+      }
+      
+      console.log('Booking created successfully');
 
       toast({
         title: "Booking Created",
