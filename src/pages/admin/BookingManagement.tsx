@@ -18,7 +18,8 @@ import { useToast } from '@/hooks/use-toast';
 import { Link, useNavigate } from 'react-router-dom';
 import { format, parseISO, isAfter, isBefore, isToday } from 'date-fns';
 import { RoomAvailabilityGrid } from '@/components/admin/RoomAvailabilityGrid';
-import { BookingRoomCell } from '@/components/admin/BookingRoomCell';
+import { BookingActions } from '@/components/admin/BookingActions';
+import { SimplifiedRoomCell } from '@/components/admin/SimplifiedRoomCell';
 import { PaymentOptionsModal } from '@/components/PaymentOptionsModal';
 import { formatCurrency, calculateBookingAmount } from '@/lib/razorpay';
 import { differenceInDays } from 'date-fns';
@@ -1414,32 +1415,12 @@ export default function BookingManagement() {
                             )}
                           </div>
                         </TableCell>
-                        <TableCell>
-                          <BookingRoomCell
-                            booking={booking}
-                            roomUnits={roomUnits}
-                            roomTypes={roomTypes}
-                            autoAssigning={autoAssigning}
-                            overrideBookingId={overrideBookingId}
-                            changingRoomUnit={changingRoomUnit}
-                            changingRoomType={changingRoomType}
-                            selectedRoomOverride={selectedRoomOverride}
-                            selectedNewRoomUnit={selectedNewRoomUnit}
-                            selectedNewRoomType={selectedNewRoomType}
-                            onAutoAssign={handleAutoAssign}
-                            onManualOverride={handleManualOverride}
-                            onChangeRoomUnit={handleChangeRoomUnit}
-                            onChangeRoomType={handleChangeRoomType}
-                            setOverrideBookingId={setOverrideBookingId}
-                            setChangingRoomUnit={setChangingRoomUnit}
-                            setChangingRoomType={setChangingRoomType}
-                            setSelectedRoomOverride={setSelectedRoomOverride}
-                            setSelectedNewRoomUnit={setSelectedNewRoomUnit}
-                            setSelectedNewRoomType={setSelectedNewRoomType}
-                            renderAddons={renderAddons}
-                            getAvailableUnitsForBooking={getAvailableUnitsForBooking}
-                          />
-                        </TableCell>
+                         <TableCell>
+                           <SimplifiedRoomCell
+                             booking={booking}
+                             renderAddons={renderAddons}
+                           />
+                         </TableCell>
                         <TableCell>{format(parseISO(booking.check_in), 'MMM dd, yyyy')}</TableCell>
                         <TableCell>{format(parseISO(booking.check_out), 'MMM dd, yyyy')}</TableCell>
                         <TableCell>{booking.guests_count}</TableCell>
