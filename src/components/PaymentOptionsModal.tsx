@@ -41,7 +41,7 @@ export const PaymentOptionsModal: React.FC<PaymentOptionsModalProps> = ({
       const { error } = await supabase
         .from('bookings')
         .update({
-          payment_status: 'completed',
+          payment_status: 'confirmed',
           payment_method: 'cash',
           updated_at: new Date().toISOString(),
         })
@@ -77,7 +77,7 @@ export const PaymentOptionsModal: React.FC<PaymentOptionsModalProps> = ({
       const { error } = await supabase
         .from('bookings')
         .update({
-          payment_status: 'completed',
+          payment_status: 'confirmed',
           payment_method: 'razorpay',
           payment_id: paymentId,
           payment_order_id: orderId,

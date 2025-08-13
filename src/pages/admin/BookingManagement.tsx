@@ -20,6 +20,7 @@ import { format, parseISO, isAfter, isBefore, isToday } from 'date-fns';
 import { RoomAvailabilityGrid } from '@/components/admin/RoomAvailabilityGrid';
 import { CollapsibleBookingRow } from '@/components/admin/CollapsibleBookingRow';
 import { PaymentOptionsModal } from '@/components/PaymentOptionsModal';
+import { UpdateBookingModal } from '@/components/admin/UpdateBookingModal';
 import { formatCurrency, calculateBookingAmount } from '@/lib/razorpay';
 import { differenceInDays } from 'date-fns';
 
@@ -105,6 +106,10 @@ export default function BookingManagement() {
   // Payment modal state
   const [showPaymentOptionsModal, setShowPaymentOptionsModal] = useState(false);
   const [selectedBookingForPayment, setSelectedBookingForPayment] = useState<Booking | null>(null);
+  
+  // Update booking modal state
+  const [showUpdateBookingModal, setShowUpdateBookingModal] = useState(false);
+  const [selectedBookingForUpdate, setSelectedBookingForUpdate] = useState<Booking | null>(null);
   
   const [stats, setStats] = useState<BookingStats>({
     totalBookings: 0,
@@ -338,6 +343,17 @@ export default function BookingManagement() {
   const handlePaymentComplete = () => {
     setShowPaymentOptionsModal(false);
     setSelectedBookingForPayment(null);
+    loadBookings(); // Reload bookings to reflect updated status
+  };
+
+  const handleUpdateBooking = (booking: Booking) => {
+    setSelectedBookingForUpdate(booking);
+    setShowUpdateBookingModal(true);
+  };
+
+  const handleUpdateBookingComplete = () => {
+    setShowUpdateBookingModal(false);
+    setSelectedBookingForUpdate(null);
     loadBookings(); // Reload bookings to reflect updated status
   };
 
@@ -1423,6 +1439,7 @@ export default function BookingManagement() {
                         renderAddons={renderAddons}
                         getAvailableUnitsForBooking={getAvailableUnitsForBooking}
                         onProcessPayment={handleProcessPayment}
+                        onUpdateBooking={handleUpdateBooking}
                         getPaymentStatusBadge={getPaymentStatusBadge}
                         getBookingStatusBadge={getBookingStatusBadge}
                         onReloadBookings={loadBookings}
@@ -1934,6 +1951,19 @@ export default function BookingManagement() {
           }}
           onPaymentComplete={handlePaymentComplete}
           booking={selectedBookingForPayment}
+        />
+      )}
+      
+      {/* Update Booking Modal */}
+      {showUpdateBookingModal && selectedBookingForUpdate && (
+        <UpdateBookingModal
+          isOpen={showUpdateBookingModal}
+          onClose={() => {
+            setShowUpdateBookingModal(false);
+            setSelectedBookingForUpdate(null);
+          }}
+          onSuccess={handleUpdateBookingComplete}
+          booking={selectedBookingForUpdate}
         />
       )}
     </div>

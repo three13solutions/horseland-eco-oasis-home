@@ -1,8 +1,8 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { Bot, RefreshCw, Edit, Home, RotateCcw, MoreVertical, Eye, CreditCard } from 'lucide-react';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from '@/components/ui/dropdown-menu';
+import { Bot, RefreshCw, Edit, Home, RotateCcw, MoreVertical, Eye, CreditCard, Edit3 } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { format, parseISO } from 'date-fns';
@@ -31,6 +31,7 @@ interface BookingActionsProps {
   renderAddons: (booking: any) => React.ReactNode;
   getAvailableUnitsForBooking: (booking: any) => any[];
   onProcessPayment: (booking: any) => void;
+  onUpdateBooking: (booking: any) => void;
   getPaymentStatusBadge: (booking: any) => React.ReactNode;
 }
 
@@ -58,6 +59,7 @@ export function BookingActions({
   renderAddons,
   getAvailableUnitsForBooking,
   onProcessPayment,
+  onUpdateBooking,
   getPaymentStatusBadge,
 }: BookingActionsProps) {
   const hasPaymentMethod = booking.payment_method || booking.payment_id;
@@ -161,6 +163,22 @@ export function BookingActions({
           <DropdownMenuItem onClick={() => setChangingRoomType(booking.id)}>
             <Home className="h-4 w-4 mr-2" />
             {booking.room_type_id ? 'Change Room Type' : 'Set Room Type'}
+          </DropdownMenuItem>
+          
+          <DropdownMenuSeparator />
+          
+          {/* Payment option */}
+          {needsPaymentButton && (
+            <DropdownMenuItem onClick={() => onProcessPayment(booking)}>
+              <CreditCard className="h-4 w-4 mr-2" />
+              Process Payment
+            </DropdownMenuItem>
+          )}
+          
+          {/* Update booking option */}
+          <DropdownMenuItem onClick={() => onUpdateBooking(booking)}>
+            <Edit3 className="h-4 w-4 mr-2" />
+            Update Booking
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>

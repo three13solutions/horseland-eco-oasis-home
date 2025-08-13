@@ -33,6 +33,7 @@ interface CollapsibleBookingRowProps {
   renderAddons: (booking: any) => React.ReactNode;
   getAvailableUnitsForBooking: (booking: any) => any[];
   onProcessPayment: (booking: any) => void;
+  onUpdateBooking: (booking: any) => void;
   getPaymentStatusBadge: (booking: any) => React.ReactNode;
   getBookingStatusBadge: (status: string) => React.ReactNode;
   onReloadBookings: () => void;
@@ -62,6 +63,7 @@ export function CollapsibleBookingRow({
   renderAddons,
   getAvailableUnitsForBooking,
   onProcessPayment,
+  onUpdateBooking,
   getPaymentStatusBadge,
   getBookingStatusBadge,
   onReloadBookings,
@@ -150,20 +152,12 @@ export function CollapsibleBookingRow({
               setSelectedRoomOverride={setSelectedRoomOverride}
               setSelectedNewRoomUnit={setSelectedNewRoomUnit}
               setSelectedNewRoomType={setSelectedNewRoomType}
-              renderAddons={renderAddons}
-              getAvailableUnitsForBooking={getAvailableUnitsForBooking}
-              onProcessPayment={onProcessPayment}
-              getPaymentStatusBadge={getPaymentStatusBadge}
+            renderAddons={renderAddons}
+            getAvailableUnitsForBooking={getAvailableUnitsForBooking}
+            onProcessPayment={onProcessPayment}
+            onUpdateBooking={onUpdateBooking}
+            getPaymentStatusBadge={getPaymentStatusBadge}
             />
-            
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setShowUpdateModal(true)}
-              className="text-primary hover:bg-primary/10"
-            >
-              Update
-            </Button>
           </div>
         </TableCell>
       </TableRow>

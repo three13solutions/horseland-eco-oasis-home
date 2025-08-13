@@ -52,7 +52,8 @@ export function UpdateBookingModal({ isOpen, onClose, booking, onSuccess }: Upda
       const { data: activities, error: activitiesError } = await supabase
         .from('activities')
         .select('id, title, price_amount as price')
-        .eq('is_active', true);
+        .eq('is_active', true)
+        .eq('price_type', 'paid');
 
       // Load spa services
       const { data: spa, error: spaError } = await supabase
@@ -275,42 +276,73 @@ export function UpdateBookingModal({ isOpen, onClose, booking, onSuccess }: Upda
               </CardHeader>
               <CardContent>
                 <div className="space-y-6">
-                  {['meal', 'activity', 'spa'].map((type) => {
+                  {[
+                    { type: 'meal', title: 'Meals', icon: '🍽️' },
+                    { type: 'activity', title: 'Activities', icon: '🎯' },
+                    { type: 'spa', title: 'Spa Services', icon: '💆' }
+                  ].map(({ type, title, icon }) => {
                     const typeAddons = availableAddons.filter(addon => addon.type === type);
                     if (typeAddons.length === 0) return null;
 
                     return (
-                      <div key={type} className="space-y-3">
-                        <h4 className="font-medium capitalize">{type}s</h4>
-                        <div className="space-y-2">
-                          {typeAddons.map((addon) => (
-                            <div key={addon.id} className="flex items-center justify-between p-3 border rounded-lg">
-                              <div className="flex-1">
-                                <p className="font-medium">{addon.title}</p>
-                                <p className="text-sm text-muted-foreground">₹{addon.price.toLocaleString()}</p>
+                      <Card key={type} className="border-l-4 border-l-primary/20">
+                        <CardHeader className="pb-3">
+                          <CardTitle className="text-base flex items-center gap-2">
+                            <span>{icon}</span>
+                            {title}
+                          </CardTitle>
+                        </CardHeader>
+                        <CardContent className="space-y-3">
+                          {typeAddons.map((addon) => {
+                            const quantity = selectedAddons[addon.id] || 0;
+                            return (
+                              <div
+                                key={addon.id}
+                                className={cn(
+                                  "flex items-center justify-between p-4 rounded-lg border transition-all",
+                                  quantity > 0 
+                                    ? "border-primary/30 bg-primary/5" 
+                                    : "border-border hover:border-primary/20"
+                                )}
+                              >
+                                <div className="flex-1">
+                                  <h4 className="font-medium text-sm">{addon.title}</h4>
+                                  <p className="text-xs text-muted-foreground mt-1">
+                                    ₹{addon.price.toLocaleString()} per {type === 'meal' ? 'serving' : 'session'}
+                                  </p>
+                                </div>
+                                <div className="flex items-center gap-3">
+                                  <div className="flex items-center gap-2">
+                                    <Button
+                                      variant="outline"
+                                      size="sm"
+                                      onClick={() => handleAddonQuantityChange(addon.id, -1)}
+                                      disabled={quantity === 0}
+                                      className="h-8 w-8 p-0"
+                                    >
+                                      <Minus className="h-3 w-3" />
+                                    </Button>
+                                    <span className="w-8 text-center text-sm font-medium">{quantity}</span>
+                                    <Button
+                                      variant="outline"
+                                      size="sm"
+                                      onClick={() => handleAddonQuantityChange(addon.id, 1)}
+                                      className="h-8 w-8 p-0"
+                                    >
+                                      <Plus className="h-3 w-3" />
+                                    </Button>
+                                  </div>
+                                  {quantity > 0 && (
+                                    <div className="text-sm font-medium text-primary">
+                                      ₹{(addon.price * quantity).toLocaleString()}
+                                    </div>
+                                  )}
+                                </div>
                               </div>
-                              <div className="flex items-center gap-2">
-                                <Button
-                                  variant="outline"
-                                  size="sm"
-                                  onClick={() => handleAddonQuantityChange(addon.id, -1)}
-                                  disabled={!selectedAddons[addon.id]}
-                                >
-                                  <Minus className="h-4 w-4" />
-                                </Button>
-                                <span className="w-8 text-center">{selectedAddons[addon.id] || 0}</span>
-                                <Button
-                                  variant="outline"
-                                  size="sm"
-                                  onClick={() => handleAddonQuantityChange(addon.id, 1)}
-                                >
-                                  <Plus className="h-4 w-4" />
-                                </Button>
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
+                            );
+                          })}
+                        </CardContent>
+                      </Card>
                     );
                   })}
                 </div>
