@@ -21,7 +21,9 @@ import {
   DollarSign,
   UserCog,
   Image as ImageIcon,
-  Languages
+  Languages,
+  Receipt,
+  CreditCard
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
@@ -192,6 +194,20 @@ const AdminDashboard = () => {
       icon: Calendar, 
       path: '/admin/bookings',
       color: 'bg-green-500'
+    },
+    { 
+      title: 'Invoices', 
+      description: 'Manage invoices and billing',
+      icon: Receipt, 
+      path: '/admin/invoices',
+      color: 'bg-blue-600'
+    },
+    { 
+      title: 'Payments', 
+      description: 'Track payment transactions',
+      icon: CreditCard, 
+      path: '/admin/payments',
+      color: 'bg-emerald-600'
     },
     { 
       title: 'Activities', 

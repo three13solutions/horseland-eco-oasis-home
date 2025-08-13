@@ -34,6 +34,8 @@ import ActivitiesManagement from "./pages/admin/ActivitiesManagement";
 import SpaManagement from "./pages/admin/SpaManagement";
 import DiningManagement from "./pages/admin/DiningManagement";
 import PackageManagement from "./pages/admin/PackageManagement";
+import InvoiceManagement from "./pages/admin/InvoiceManagement";
+import PaymentManagement from "./pages/admin/PaymentManagement";
 
 import UserManagement from "./pages/admin/UserManagement";
 import GuestManagement from "./pages/admin/GuestManagement";
@@ -79,6 +81,8 @@ const App = () => (
           <Route path="/admin/spa" element={<SpaManagement />} />
           <Route path="/admin/dining" element={<DiningManagement />} />
           <Route path="/admin/packages" element={<PackageManagement />} />
+          <Route path="/admin/invoices" element={<InvoiceManagement />} />
+          <Route path="/admin/payments" element={<PaymentManagement />} />
           
           <Route path="/admin/users" element={<UserManagement />} />
           <Route path="/admin/guests" element={<GuestManagement />} />
