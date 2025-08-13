@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
-import { Calendar, Users, Clock, MapPin, Wifi, Coffee, Car, Utensils, Plus, Minus } from 'lucide-react';
+import { Calendar, Users, Clock, MapPin, Wifi, Coffee, Car, Utensils, Plus, Minus, Bed, CarFront } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -59,10 +59,19 @@ interface GuestDetails {
 
 interface PickupService {
   id: string;
-  from: 'mumbai' | 'pune';
-  to: 'property';
+  from: 'mumbai' | 'pune' | 'property';
+  to: 'property' | 'mumbai' | 'pune';
+  direction: 'pickup' | 'drop' | 'two-way';
+  carType: 'sedan' | 'suv' | 'luxury';
   price: number;
-  type: 'pickup';
+  type: 'transport';
+}
+
+interface BeddingOption {
+  id: string;
+  title: string;
+  price: number;
+  type: 'bedding';
 }
 
 const Booking = () => {
@@ -100,6 +109,7 @@ const Booking = () => {
     specialRequests: ''
   });
   const [selectedPickup, setSelectedPickup] = useState<PickupService | null>(null);
+  const [selectedBedding, setSelectedBedding] = useState<BeddingOption[]>([]);
 
   // Load available rooms and addons
   useEffect(() => {
@@ -290,7 +300,8 @@ const Booking = () => {
     const roomTotal = selectedRoomType.base_price * nights;
     const addonsTotal = selectedAddons.reduce((total, addon) => total + (addon.price * addon.quantity), 0);
     const pickupTotal = selectedPickup ? selectedPickup.price : 0;
-    return roomTotal + addonsTotal + pickupTotal;
+    const beddingTotal = selectedBedding.reduce((total, bed) => total + bed.price, 0);
+    return roomTotal + addonsTotal + pickupTotal + beddingTotal;
   };
 
   const formatDate = (dateString: string) => {
@@ -335,9 +346,38 @@ const Booking = () => {
   };
 
   const pickupServices: PickupService[] = [
-    { id: 'pickup-mumbai', from: 'mumbai', to: 'property', price: 5000, type: 'pickup' },
-    { id: 'pickup-pune', from: 'pune', to: 'property', price: 3000, type: 'pickup' }
+    // Pickup only
+    { id: 'pickup-mumbai-sedan', from: 'mumbai', to: 'property', direction: 'pickup', carType: 'sedan', price: 4000, type: 'transport' },
+    { id: 'pickup-mumbai-suv', from: 'mumbai', to: 'property', direction: 'pickup', carType: 'suv', price: 5000, type: 'transport' },
+    { id: 'pickup-mumbai-luxury', from: 'mumbai', to: 'property', direction: 'pickup', carType: 'luxury', price: 8000, type: 'transport' },
+    { id: 'pickup-pune-sedan', from: 'pune', to: 'property', direction: 'pickup', carType: 'sedan', price: 2500, type: 'transport' },
+    { id: 'pickup-pune-suv', from: 'pune', to: 'property', direction: 'pickup', carType: 'suv', price: 3000, type: 'transport' },
+    { id: 'pickup-pune-luxury', from: 'pune', to: 'property', direction: 'pickup', carType: 'luxury', price: 5000, type: 'transport' },
+    
+    // Drop only
+    { id: 'drop-mumbai-sedan', from: 'property', to: 'mumbai', direction: 'drop', carType: 'sedan', price: 4000, type: 'transport' },
+    { id: 'drop-mumbai-suv', from: 'property', to: 'mumbai', direction: 'drop', carType: 'suv', price: 5000, type: 'transport' },
+    { id: 'drop-mumbai-luxury', from: 'property', to: 'mumbai', direction: 'drop', carType: 'luxury', price: 8000, type: 'transport' },
+    { id: 'drop-pune-sedan', from: 'property', to: 'pune', direction: 'drop', carType: 'sedan', price: 2500, type: 'transport' },
+    { id: 'drop-pune-suv', from: 'property', to: 'pune', direction: 'drop', carType: 'suv', price: 3000, type: 'transport' },
+    { id: 'drop-pune-luxury', from: 'property', to: 'pune', direction: 'drop', carType: 'luxury', price: 5000, type: 'transport' },
+    
+    // Two-way
+    { id: 'twoway-mumbai-sedan', from: 'mumbai', to: 'mumbai', direction: 'two-way', carType: 'sedan', price: 7500, type: 'transport' },
+    { id: 'twoway-mumbai-suv', from: 'mumbai', to: 'mumbai', direction: 'two-way', carType: 'suv', price: 9500, type: 'transport' },
+    { id: 'twoway-mumbai-luxury', from: 'mumbai', to: 'mumbai', direction: 'two-way', carType: 'luxury', price: 15000, type: 'transport' },
+    { id: 'twoway-pune-sedan', from: 'pune', to: 'pune', direction: 'two-way', carType: 'sedan', price: 4500, type: 'transport' },
+    { id: 'twoway-pune-suv', from: 'pune', to: 'pune', direction: 'two-way', carType: 'suv', price: 5500, type: 'transport' },
+    { id: 'twoway-pune-luxury', from: 'pune', to: 'pune', direction: 'two-way', carType: 'luxury', price: 9000, type: 'transport' }
   ];
+
+  const beddingOptions: BeddingOption[] = [
+    { id: 'extra-bed-1', title: 'Extra Bed', price: 500, type: 'bedding' },
+    { id: 'extra-mattress-1', title: 'Extra Mattress', price: 300, type: 'bedding' },
+    { id: 'baby-crib-1', title: 'Baby Crib', price: 200, type: 'bedding' }
+  ];
+
+  const needsExtraBedding = selectedRoomType && guests > selectedRoomType.max_guests;
 
   const handleProceedToPayment = () => {
     if (!guestDetails.name || !guestDetails.email || !guestDetails.phone) {
@@ -413,14 +453,168 @@ const Booking = () => {
                     <CardTitle>Add Services & Experiences</CardTitle>
                   </CardHeader>
                   <CardContent>
-                     <Tabs defaultValue="meals" className="w-full">
-                      <TabsList className="grid w-full grid-cols-4">
-                        <TabsTrigger value="meals">Meals</TabsTrigger>
+                     <Tabs defaultValue={needsExtraBedding ? "bedding" : "pickup"} className="w-full">
+                      <TabsList className={`grid w-full ${needsExtraBedding ? 'grid-cols-5' : 'grid-cols-4'}`}>
+                        {needsExtraBedding && <TabsTrigger value="bedding">Extra Bed</TabsTrigger>}
                         <TabsTrigger value="pickup">Pickup/Drop</TabsTrigger>
+                        <TabsTrigger value="meals">Meals</TabsTrigger>
                         <TabsTrigger value="activities">Activities</TabsTrigger>
                         <TabsTrigger value="spa">Spa</TabsTrigger>
                       </TabsList>
                       
+                      
+                      {needsExtraBedding && (
+                        <TabsContent value="bedding" className="space-y-4">
+                          <div className="text-sm text-yellow-600 bg-yellow-50 p-3 rounded-lg mb-4">
+                            You have {guests} guests but this room accommodates only {selectedRoomType?.max_guests}. 
+                            Please select additional bedding options.
+                          </div>
+                          <div className="space-y-4">
+                            {beddingOptions.map((bedding) => {
+                              const isSelected = selectedBedding.find(b => b.id === bedding.id);
+                              return (
+                                <div key={bedding.id} className="p-4 border rounded-lg">
+                                  <div className="flex items-center justify-between">
+                                    <div className="flex items-center gap-3">
+                                      <Bed className="h-5 w-5 text-primary" />
+                                      <div className="flex-1">
+                                        <h4 className="font-medium">{bedding.title}</h4>
+                                        <p className="text-lg font-semibold">₹{bedding.price}</p>
+                                      </div>
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                      <input
+                                        type="checkbox"
+                                        className="h-4 w-4"
+                                        checked={!!isSelected}
+                                        onChange={(e) => {
+                                          if (e.target.checked) {
+                                            setSelectedBedding(prev => [...prev, bedding]);
+                                          } else {
+                                            setSelectedBedding(prev => prev.filter(b => b.id !== bedding.id));
+                                          }
+                                        }}
+                                      />
+                                      <label className="text-sm">Select</label>
+                                    </div>
+                                  </div>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        </TabsContent>
+                      )}
+
+                      <TabsContent value="pickup" className="space-y-4">
+                        <div className="space-y-6">
+                          {/* Pickup Only */}
+                          <div>
+                            <h4 className="font-medium mb-3 flex items-center gap-2">
+                              <CarFront className="h-4 w-4" />
+                              Pickup Only
+                            </h4>
+                            <div className="grid md:grid-cols-2 gap-4">
+                              {pickupServices.filter(p => p.direction === 'pickup').map((pickup) => (
+                                <div key={pickup.id} className="p-4 border rounded-lg">
+                                  <div className="flex items-center justify-between">
+                                    <div className="flex-1">
+                                      <h5 className="font-medium capitalize">
+                                        {pickup.from} → Property
+                                      </h5>
+                                      <p className="text-sm text-muted-foreground capitalize">
+                                        {pickup.carType} • One-way
+                                      </p>
+                                      <p className="text-lg font-semibold">₹{pickup.price.toLocaleString()}</p>
+                                    </div>
+                                    <input
+                                      type="radio"
+                                      name="transport"
+                                      className="h-4 w-4"
+                                      checked={selectedPickup?.id === pickup.id}
+                                      onChange={() => setSelectedPickup(pickup)}
+                                    />
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+
+                          {/* Drop Only */}
+                          <div>
+                            <h4 className="font-medium mb-3 flex items-center gap-2">
+                              <CarFront className="h-4 w-4 rotate-180" />
+                              Drop Only
+                            </h4>
+                            <div className="grid md:grid-cols-2 gap-4">
+                              {pickupServices.filter(p => p.direction === 'drop').map((pickup) => (
+                                <div key={pickup.id} className="p-4 border rounded-lg">
+                                  <div className="flex items-center justify-between">
+                                    <div className="flex-1">
+                                      <h5 className="font-medium capitalize">
+                                        Property → {pickup.to}
+                                      </h5>
+                                      <p className="text-sm text-muted-foreground capitalize">
+                                        {pickup.carType} • One-way
+                                      </p>
+                                      <p className="text-lg font-semibold">₹{pickup.price.toLocaleString()}</p>
+                                    </div>
+                                    <input
+                                      type="radio"
+                                      name="transport"
+                                      className="h-4 w-4"
+                                      checked={selectedPickup?.id === pickup.id}
+                                      onChange={() => setSelectedPickup(pickup)}
+                                    />
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+
+                          {/* Two-way */}
+                          <div>
+                            <h4 className="font-medium mb-3 flex items-center gap-2">
+                              <Car className="h-4 w-4" />
+                              Two-Way Transfer
+                            </h4>
+                            <div className="grid md:grid-cols-2 gap-4">
+                              {pickupServices.filter(p => p.direction === 'two-way').map((pickup) => (
+                                <div key={pickup.id} className="p-4 border rounded-lg">
+                                  <div className="flex items-center justify-between">
+                                    <div className="flex-1">
+                                      <h5 className="font-medium capitalize">
+                                        {pickup.from} ↔ Property
+                                      </h5>
+                                      <p className="text-sm text-muted-foreground capitalize">
+                                        {pickup.carType} • Round trip
+                                      </p>
+                                      <p className="text-lg font-semibold">₹{pickup.price.toLocaleString()}</p>
+                                    </div>
+                                    <input
+                                      type="radio"
+                                      name="transport"
+                                      className="h-4 w-4"
+                                      checked={selectedPickup?.id === pickup.id}
+                                      onChange={() => setSelectedPickup(pickup)}
+                                    />
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+
+                          {selectedPickup && (
+                            <Button
+                              variant="outline"
+                              onClick={() => setSelectedPickup(null)}
+                              className="w-full"
+                            >
+                              Remove Transport Service
+                            </Button>
+                          )}
+                        </div>
+                      </TabsContent>
+
                       <TabsContent value="meals" className="space-y-4">
                         {guestDetails.dietaryPreference !== 'no-preference' && (
                           <div className="text-sm text-muted-foreground mb-4">
@@ -620,11 +814,31 @@ const Booking = () => {
                           {selectedPickup && (
                             <div className="space-y-2">
                               <Separator />
-                              <div className="font-medium">Pickup Service:</div>
+                              <div className="font-medium">Transport Service:</div>
                               <div className="flex justify-between text-sm">
-                                <span>Pickup from {selectedPickup.from}</span>
+                                <span>
+                                  {selectedPickup.direction === 'two-way' 
+                                    ? `${selectedPickup.from} ↔ Property (${selectedPickup.carType})`
+                                    : selectedPickup.direction === 'pickup'
+                                    ? `Pickup from ${selectedPickup.from} (${selectedPickup.carType})`
+                                    : `Drop to ${selectedPickup.to} (${selectedPickup.carType})`
+                                  }
+                                </span>
                                 <span>₹{selectedPickup.price.toLocaleString()}</span>
                               </div>
+                            </div>
+                          )}
+                          
+                          {selectedBedding.length > 0 && (
+                            <div className="space-y-2">
+                              <Separator />
+                              <div className="font-medium">Extra Bedding:</div>
+                              {selectedBedding.map((bed) => (
+                                <div key={bed.id} className="flex justify-between text-sm">
+                                  <span>{bed.title}</span>
+                                  <span>₹{bed.price.toLocaleString()}</span>
+                                </div>
+                              ))}
                             </div>
                           )}
                      </div>
