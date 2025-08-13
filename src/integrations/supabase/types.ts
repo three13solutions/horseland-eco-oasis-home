@@ -691,6 +691,8 @@ export type Database = {
         Row: {
           address: string | null
           blacklist_reason: string | null
+          contact_emails: Json | null
+          contact_phones: Json | null
           created_at: string
           date_of_birth: string | null
           email: string | null
@@ -708,6 +710,8 @@ export type Database = {
         Insert: {
           address?: string | null
           blacklist_reason?: string | null
+          contact_emails?: Json | null
+          contact_phones?: Json | null
           created_at?: string
           date_of_birth?: string | null
           email?: string | null
@@ -725,6 +729,8 @@ export type Database = {
         Update: {
           address?: string | null
           blacklist_reason?: string | null
+          contact_emails?: Json | null
+          contact_phones?: Json | null
           created_at?: string
           date_of_birth?: string | null
           email?: string | null

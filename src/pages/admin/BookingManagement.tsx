@@ -812,22 +812,33 @@ export default function BookingManagement() {
           conflicts.push(`Name differs: "${existingName}" vs "${formName}"`);
         }
         
-        // Update missing email
-        if (createFormData.guest_email && createFormData.guest_email.trim() && !existingGuest.email) {
-          updateData.email = createFormData.guest_email.trim();
-          console.log('Adding missing email to existing guest');
-        } else if (createFormData.guest_email && createFormData.guest_email.trim() && 
-                   existingGuest.email && existingGuest.email !== createFormData.guest_email.trim()) {
-          conflicts.push(`Email differs: "${existingGuest.email}" vs "${createFormData.guest_email.trim()}"`);
+        // Handle email collection - add to array if new
+        let contactEmails = Array.isArray(existingGuest.contact_emails) ? [...existingGuest.contact_emails] : [];
+        if (existingGuest.email && !contactEmails.includes(existingGuest.email)) {
+          contactEmails.push(existingGuest.email);
+        }
+        if (createFormData.guest_email && createFormData.guest_email.trim() && !contactEmails.includes(createFormData.guest_email.trim())) {
+          contactEmails.push(createFormData.guest_email.trim());
+          updateData.email = createFormData.guest_email.trim(); // Keep primary email as the latest
+          updateData.contact_emails = contactEmails;
+          console.log('Adding new email to guest contact list');
         }
         
-        // Update missing phone
-        if (createFormData.guest_phone && createFormData.guest_phone.trim() && !existingGuest.phone) {
-          updateData.phone = createFormData.guest_phone.trim();
-          console.log('Adding missing phone to existing guest');
-        } else if (createFormData.guest_phone && createFormData.guest_phone.trim() && 
-                   existingGuest.phone && normalizePhone(existingGuest.phone) !== normalizePhone(createFormData.guest_phone.trim())) {
-          conflicts.push(`Phone differs: "${existingGuest.phone}" vs "${createFormData.guest_phone.trim()}"`);
+        // Handle phone collection - add to array if new
+        let contactPhones = Array.isArray(existingGuest.contact_phones) ? [...existingGuest.contact_phones] : [];
+        if (existingGuest.phone && !contactPhones.includes(existingGuest.phone)) {
+          contactPhones.push(existingGuest.phone);
+        }
+        if (createFormData.guest_phone && createFormData.guest_phone.trim()) {
+          const normalizedNewPhone = normalizePhone(createFormData.guest_phone.trim());
+          const existingNormalizedPhones = contactPhones.map(p => normalizePhone(p));
+          
+          if (!existingNormalizedPhones.includes(normalizedNewPhone)) {
+            contactPhones.push(createFormData.guest_phone.trim());
+            updateData.phone = createFormData.guest_phone.trim(); // Keep primary phone as the latest
+            updateData.contact_phones = contactPhones;
+            console.log('Adding new phone to guest contact list');
+          }
         }
         
         // Update guest profile with missing information
@@ -845,17 +856,28 @@ export default function BookingManagement() {
           }
         }
         
-        // Show conflict warning if any
-        if (conflicts.length > 0) {
+        // Show informational message about contact updates
+        const totalEmails = contactEmails.length;
+        const totalPhones = contactPhones.length;
+        
+        if (totalEmails > 1 || totalPhones > 1) {
           toast({
-            title: "Guest Data Conflicts Detected",
-            description: `Matched by ${matchType}. Conflicts: ${conflicts.join(', ')}. Booking linked to existing profile.`,
-            variant: "destructive",
+            title: "Contact Information Added",
+            description: `Guest now has ${totalEmails} email(s) and ${totalPhones} phone number(s) on file. Booking linked successfully.`,
           });
         } else {
           toast({
             title: "Existing Guest Found",
             description: `Matched by ${matchType}: ${existingGuest.first_name} ${existingGuest.last_name}. Booking linked and profile updated.`,
+          });
+        }
+
+        // Show naming conflicts if any
+        if (conflicts.length > 0) {
+          toast({
+            title: "Name Difference Noted",
+            description: `${conflicts.join(', ')}. All contact information preserved.`,
+            variant: "destructive",
           });
         }
         
