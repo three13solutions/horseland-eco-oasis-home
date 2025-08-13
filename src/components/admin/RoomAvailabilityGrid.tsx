@@ -69,8 +69,11 @@ export const RoomAvailabilityGrid: React.FC<RoomAvailabilityGridProps> = ({
     originalDate: Date;
     targetDate: Date;
     targetRoomId: string;
+    isActive: boolean;
   } | null>(null);
   const [isBookingDragConfirmOpen, setIsBookingDragConfirmOpen] = useState(false);
+  const [longPressTimer, setLongPressTimer] = useState<NodeJS.Timeout | null>(null);
+  const [longPressStarted, setLongPressStarted] = useState(false);
   const { toast } = useToast();
 
   // Generate date range based on timeframe and timeline position
@@ -233,20 +236,26 @@ export const RoomAvailabilityGrid: React.FC<RoomAvailabilityGridProps> = ({
       setDragStart({ roomId, date });
       setDragEnd({ roomId, date });
     } else if (booking && (status === 'confirmed' || status === 'pending')) {
-      // Start booking drag
-      setBookingDrag({
-        booking,
-        originalDate: date,
-        targetDate: date,
-        targetRoomId: roomId
-      });
+      // Start long press timer for booking drag
+      const timer = setTimeout(() => {
+        setLongPressStarted(true);
+        setBookingDrag({
+          booking,
+          originalDate: date,
+          targetDate: date,
+          targetRoomId: roomId,
+          isActive: true
+        });
+      }, 500); // 500ms long press
+      
+      setLongPressTimer(timer);
     }
   };
 
   const handleMouseEnter = (roomId: string, date: Date, status: string) => {
     if (isDragging && dragStart && status === 'available' && roomId === dragStart.roomId) {
       setDragEnd({ roomId, date });
-    } else if (bookingDrag && status === 'available') {
+    } else if (bookingDrag?.isActive && status === 'available') {
       // Update booking drag target
       setBookingDrag(prev => prev ? {
         ...prev,
@@ -256,7 +265,21 @@ export const RoomAvailabilityGrid: React.FC<RoomAvailabilityGridProps> = ({
     }
   };
 
-  const handleMouseUp = () => {
+  const handleMouseLeave = () => {
+    // Cancel long press if mouse leaves before timer completes
+    if (longPressTimer && !longPressStarted) {
+      clearTimeout(longPressTimer);
+      setLongPressTimer(null);
+    }
+  };
+
+  const handleMouseUp = (roomId: string, date: Date, status: string, booking?: Booking | null) => {
+    // Clear long press timer
+    if (longPressTimer) {
+      clearTimeout(longPressTimer);
+      setLongPressTimer(null);
+    }
+
     if (isDragging && dragStart && dragEnd) {
       const startDate = dragStart.date < dragEnd.date ? dragStart.date : dragEnd.date;
       const endDate = dragStart.date < dragEnd.date ? dragEnd.date : dragStart.date;
@@ -268,21 +291,38 @@ export const RoomAvailabilityGrid: React.FC<RoomAvailabilityGridProps> = ({
         selectedEndDate: endDate
       });
       setIsManualBookingOpen(true);
-    } else if (bookingDrag) {
+    } else if (bookingDrag?.isActive) {
       // Check if booking was moved to a different date or room
       const originalCheckIn = startOfDay(parseISO(bookingDrag.booking.check_in));
       const isSamePosition = isSameDay(bookingDrag.targetDate, originalCheckIn) && 
                             bookingDrag.targetRoomId === bookingDrag.booking.room_unit_id;
       
       if (!isSamePosition) {
-        setIsBookingDragConfirmOpen(true);
+        // Check for conflicts before showing confirmation
+        const hasConflict = checkBookingConflict(bookingDrag);
+        if (hasConflict) {
+          toast({
+            title: "Cannot move booking",
+            description: "There is already a booking at the target date and room",
+            variant: "destructive",
+          });
+          setBookingDrag(null);
+        } else {
+          setIsBookingDragConfirmOpen(true);
+        }
       } else {
         setBookingDrag(null);
       }
+    } else if (!longPressStarted && booking && (status === 'confirmed' || status === 'pending')) {
+      // Single click - show booking details
+      setSelectedBooking(booking);
     }
+
+    // Reset states
     setIsDragging(false);
     setDragStart(null);
     setDragEnd(null);
+    setLongPressStarted(false);
   };
 
   const isInDragRange = (roomId: string, date: Date) => {
@@ -290,6 +330,63 @@ export const RoomAvailabilityGrid: React.FC<RoomAvailabilityGridProps> = ({
     const startDate = dragStart.date < dragEnd.date ? dragStart.date : dragEnd.date;
     const endDate = dragStart.date < dragEnd.date ? dragEnd.date : dragStart.date;
     return date >= startDate && date <= endDate;
+  };
+
+  const isBookingBeingDragged = (roomId: string, date: Date) => {
+    if (!bookingDrag?.isActive) return false;
+    
+    const checkIn = startOfDay(parseISO(bookingDrag.booking.check_in));
+    const checkOut = startOfDay(parseISO(bookingDrag.booking.check_out));
+    const targetDate = startOfDay(date);
+    
+    // Check if this date is part of the booking's date range
+    const isInOriginalRange = targetDate >= checkIn && targetDate < checkOut && 
+                             roomId === bookingDrag.booking.room_unit_id;
+    
+    return isInOriginalRange;
+  };
+
+  const isDropTarget = (roomId: string, date: Date) => {
+    if (!bookingDrag?.isActive) return false;
+    
+    const bookingDuration = Math.ceil(
+      (parseISO(bookingDrag.booking.check_out).getTime() - 
+       parseISO(bookingDrag.booking.check_in).getTime()) / 
+      (1000 * 60 * 60 * 24)
+    );
+    
+    const targetStartDate = startOfDay(bookingDrag.targetDate);
+    const targetEndDate = addDays(targetStartDate, bookingDuration);
+    const currentDate = startOfDay(date);
+    
+    return currentDate >= targetStartDate && currentDate < targetEndDate && 
+           roomId === bookingDrag.targetRoomId;
+  };
+
+  const checkBookingConflict = (dragData: typeof bookingDrag) => {
+    if (!dragData) return false;
+    
+    const bookingDuration = Math.ceil(
+      (parseISO(dragData.booking.check_out).getTime() - 
+       parseISO(dragData.booking.check_in).getTime()) / 
+      (1000 * 60 * 60 * 24)
+    );
+    
+    const targetCheckIn = startOfDay(dragData.targetDate);
+    const targetCheckOut = addDays(targetCheckIn, bookingDuration);
+    
+    // Check for existing bookings in the target date range
+    return bookings.some(booking => {
+      if (booking.id === dragData.booking.id) return false; // Skip the booking being moved
+      if (booking.room_unit_id !== dragData.targetRoomId) return false;
+      if (booking.payment_status === 'cancelled') return false;
+      
+      const existingCheckIn = startOfDay(parseISO(booking.check_in));
+      const existingCheckOut = startOfDay(parseISO(booking.check_out));
+      
+      // Check for overlap
+      return (targetCheckIn < existingCheckOut && targetCheckOut > existingCheckIn);
+    });
   };
 
   const moveBooking = async () => {
@@ -350,7 +447,7 @@ export const RoomAvailabilityGrid: React.FC<RoomAvailabilityGridProps> = ({
           <CardHeader className="pb-3">
             <CardTitle className="text-lg">Room Availability Calendar</CardTitle>
             <CardDescription>
-              Click on any booking block for details, drag bookings to move them to different dates, or click and drag on green (available) slots to select date range for manual booking
+              Long press and drag bookings to move them between dates/rooms. Single click shows booking details. Click and drag green slots to create new bookings.
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -407,11 +504,11 @@ export const RoomAvailabilityGrid: React.FC<RoomAvailabilityGridProps> = ({
               </div>
               <div className="flex items-center gap-2">
                 <div className="w-4 h-4 bg-red-500 rounded"></div>
-                <span>Confirmed Booking (Drag to move)</span>
+                <span>Confirmed Booking (Long press to drag)</span>
               </div>
               <div className="flex items-center gap-2">
                 <div className="w-4 h-4 bg-orange-500 rounded"></div>
-                <span>Pending Payment (Drag to move)</span>
+                <span>Pending Payment (Long press to drag)</span>
               </div>
               <div className="flex items-center gap-2">
                 <div className="w-4 h-4 bg-gray-400 rounded"></div>
@@ -472,19 +569,18 @@ export const RoomAvailabilityGrid: React.FC<RoomAvailabilityGridProps> = ({
                                         className={`w-full h-12 ${getStatusColor(status)} text-xs transition-colors relative select-none ${
                                           isInDragRange(room.id, date) ? 'ring-2 ring-blue-500' : ''
                                         } ${
-                                          bookingDrag && bookingDrag.targetRoomId === room.id && isSameDay(bookingDrag.targetDate, date) 
-                                            ? 'ring-2 ring-purple-500' : ''
+                                          isBookingBeingDragged(room.id, date) ? 'ring-2 ring-yellow-500 opacity-50' : ''
+                                        } ${
+                                          isDropTarget(room.id, date) ? 'ring-2 ring-purple-500 bg-purple-100' : ''
                                         } ${
                                           (status === 'confirmed' || status === 'pending') ? 'cursor-move' : ''
                                         }`}
                                         onMouseDown={() => handleMouseDown(room.id, date, status, booking)}
                                         onMouseEnter={() => handleMouseEnter(room.id, date, status)}
-                                        onMouseUp={handleMouseUp}
+                                        onMouseLeave={handleMouseLeave}
+                                        onMouseUp={() => handleMouseUp(room.id, date, status, booking)}
                                         onClick={(e) => {
                                           e.preventDefault();
-                                          if (!isDragging && !bookingDrag && booking) {
-                                            setSelectedBooking(booking);
-                                          }
                                         }}
                                       >
                                        {booking && (
@@ -702,7 +798,15 @@ export const RoomAvailabilityGrid: React.FC<RoomAvailabilityGridProps> = ({
                         (parseISO(bookingDrag.booking.check_out).getTime() - 
                          parseISO(bookingDrag.booking.check_in).getTime()) / 
                         (1000 * 60 * 60 * 24)
-                      )} nights).
+                      )} nights). Check-out will be on{' '}
+                      {format(
+                        addDays(bookingDrag.targetDate, 
+                          Math.ceil((parseISO(bookingDrag.booking.check_out).getTime() - 
+                                   parseISO(bookingDrag.booking.check_in).getTime()) / 
+                                  (1000 * 60 * 60 * 24))
+                        ), 
+                        'MMM d, yyyy'
+                      )}.
                     </div>
                   </>
                 )}
