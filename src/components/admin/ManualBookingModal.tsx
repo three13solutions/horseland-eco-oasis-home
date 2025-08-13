@@ -141,25 +141,54 @@ export const ManualBookingModal: React.FC<ManualBookingModalProps> = ({
       let query = supabase.from('guests').select('*');
       
       if (email && phone) {
-        query = query.or(`email.eq.${email},phone.eq.${phone}`);
+        // Check for either email OR phone match
+        const { data, error } = await supabase
+          .from('guests')
+          .select('*')
+          .or(`email.eq.${email},phone.eq.${phone}`)
+          .limit(1);
+        
+        if (error) throw error;
+        return data && data.length > 0 ? data[0] : null;
       } else if (email) {
-        query = query.eq('email', email);
+        const { data, error } = await supabase
+          .from('guests')
+          .select('*')
+          .eq('email', email)
+          .limit(1);
+        
+        if (error) throw error;
+        return data && data.length > 0 ? data[0] : null;
       } else if (phone) {
-        query = query.eq('phone', phone);
+        const { data, error } = await supabase
+          .from('guests')
+          .select('*')
+          .eq('phone', phone)
+          .limit(1);
+        
+        if (error) throw error;
+        return data && data.length > 0 ? data[0] : null;
       }
 
-      const { data, error } = await query.limit(1);
-      
-      if (error) throw error;
-      return data && data.length > 0 ? data[0] : null;
+      return null;
     } catch (error) {
       console.error('Error finding existing guest:', error);
       return null;
     }
   };
 
-  const checkForExistingGuest = async (email: string, phone: string) => {
-    const guest = await findExistingGuest(email, phone);
+  const checkForExistingGuest = async (email?: string, phone?: string) => {
+    // Check individually for email or phone
+    let guest = null;
+    
+    if (email && email.trim()) {
+      guest = await findExistingGuest(email.trim());
+    }
+    
+    if (!guest && phone && phone.trim()) {
+      guest = await findExistingGuest(undefined, phone.trim());
+    }
+    
     if (guest) {
       setExistingGuest(guest);
       setShowGuestMatch(true);
@@ -167,6 +196,11 @@ export const ManualBookingModal: React.FC<ManualBookingModalProps> = ({
       if (!guestName.trim()) {
         setGuestName(`${guest.first_name} ${guest.last_name}`);
       }
+      
+      toast({
+        title: "Existing Guest Found",
+        description: `Found existing guest: ${guest.first_name} ${guest.last_name}. This booking will be linked to their profile.`,
+      });
     } else {
       setExistingGuest(null);
       setShowGuestMatch(false);
@@ -416,11 +450,11 @@ export const ManualBookingModal: React.FC<ManualBookingModalProps> = ({
                     id="guestEmail"
                     type="email"
                     value={guestEmail}
-                    onChange={(e) => {
-                      setGuestEmail(e.target.value);
-                      // Check for existing guest when email changes
+                    onChange={(e) => setGuestEmail(e.target.value)}
+                    onBlur={(e) => {
+                      // Check for existing guest when user leaves the email field
                       if (e.target.value.trim()) {
-                        checkForExistingGuest(e.target.value.trim(), guestPhone);
+                        checkForExistingGuest(e.target.value.trim());
                       }
                     }}
                     placeholder="guest@example.com"
@@ -436,11 +470,11 @@ export const ManualBookingModal: React.FC<ManualBookingModalProps> = ({
                   <Input
                     id="guestPhone"
                     value={guestPhone}
-                    onChange={(e) => {
-                      setGuestPhone(e.target.value);
-                      // Check for existing guest when phone changes
+                    onChange={(e) => setGuestPhone(e.target.value)}
+                    onBlur={(e) => {
+                      // Check for existing guest when user leaves the phone field
                       if (e.target.value.trim()) {
-                        checkForExistingGuest(guestEmail, e.target.value.trim());
+                        checkForExistingGuest(undefined, e.target.value.trim());
                       }
                     }}
                     placeholder="+91 98765 43210"
