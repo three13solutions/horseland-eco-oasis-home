@@ -7,7 +7,7 @@ export type Json =
   | Json[]
 
 export type Database = {
-  // Allows to automatically instanciate createClient with right options
+  // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
     PostgrestVersion: "12.2.3 (519615d)"
@@ -1377,16 +1377,16 @@ export type Database = {
       calculate_invoice_totals: {
         Args: { p_subtotal: number }
         Returns: {
-          subtotal: number
           gst_amount: number
+          subtotal: number
           total_amount: number
         }[]
       }
       check_room_availability: {
         Args: {
-          p_room_type_id: string
           p_check_in: string
           p_check_out: string
+          p_room_type_id: string
         }
         Returns: {
           available_units: number
@@ -1416,10 +1416,10 @@ export type Database = {
       log_admin_action: {
         Args: {
           action_type: string
-          table_name?: string
-          record_id?: string
-          old_data?: Json
           new_data?: Json
+          old_data?: Json
+          record_id?: string
+          table_name?: string
         }
         Returns: undefined
       }
