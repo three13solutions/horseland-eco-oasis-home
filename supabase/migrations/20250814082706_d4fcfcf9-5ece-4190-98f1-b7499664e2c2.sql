@@ -1,0 +1,18 @@
+-- Insert room units batch 1 (Pool Deck, Loftscapes, first part of Balcony Bliss)
+WITH room_type_mapping AS (
+  SELECT id, name FROM public.room_types
+)
+INSERT INTO public.room_units (
+  unit_number, unit_name, floor_number, room_type_id, bed_configuration, max_occupancy, notes, status
+) VALUES 
+-- Pool Deck Rooms
+('101 A/B', 'Eclipse Bay', 0, (SELECT id FROM room_type_mapping WHERE name = 'Pool Deck Rooms'), '[{"type": "Double Bed", "count": 2}, {"type": "Sofa Cum Bed", "count": 1}]'::jsonb, 5, 'Located facing the swimming pool with a veranda for a relaxing sit-out. Well furnished with 2 double beds, equipped with air-conditioning, LCD TV, tea/coffee maker, Refrigerator and telephone.', 'available'),
+('102', 'Black Caviar Cove', 0, (SELECT id FROM room_type_mapping WHERE name = 'Pool Deck Rooms'), '[{"type": "Double Bed", "count": 2}, {"type": "Sofa Cum Bed", "count": 1}]'::jsonb, 5, 'Located facing the swimming pool with a veranda for a relaxing sit-out. Well furnished with 2 double beds, equipped with air-conditioning, LCD TV, tea/coffee maker, Refrigerator and telephone.', 'available'),
+('103', 'Frankel Waters', 0, (SELECT id FROM room_type_mapping WHERE name = 'Pool Deck Rooms'), '[{"type": "Double Bed", "count": 2}]'::jsonb, 4, 'Located facing the swimming pool with a veranda for a relaxing sit-out. Well furnished with 2 double beds, equipped with air-conditioning, LCD TV, tea/coffee maker, Refrigerator and telephone.', 'available'),
+('104', 'Ruffian Springs', 0, (SELECT id FROM room_type_mapping WHERE name = 'Pool Deck Rooms'), '[{"type": "Double Bed", "count": 1}, {"type": "Sofa Cum Bed", "count": 1}]'::jsonb, 3, 'Located facing the swimming pool with a veranda for a relaxing sit-out. Well furnished with beds, equipped with air-conditioning, LCD TV, tea/coffee maker, Refrigerator and telephone.', 'available'),
+('105', 'Citation Lagoon', 0, (SELECT id FROM room_type_mapping WHERE name = 'Pool Deck Rooms'), '[{"type": "Double Bed", "count": 2}]'::jsonb, 4, 'Located facing the swimming pool with a veranda for a relaxing sit-out. Well furnished with 2 double beds, equipped with air-conditioning, LCD TV, tea/coffee maker, Refrigerator and telephone.', 'available'),
+('106', 'Kelso Tide', 0, (SELECT id FROM room_type_mapping WHERE name = 'Pool Deck Rooms'), '[{"type": "Double Bed", "count": 2}]'::jsonb, 4, 'Located facing the swimming pool with a veranda for a relaxing sit-out. Well furnished with 2 double beds, equipped with air-conditioning, LCD TV, tea/coffee maker, Refrigerator and telephone.', 'available'),
+('109', 'Arkle Reef', 0, (SELECT id FROM room_type_mapping WHERE name = 'Pool Deck Rooms'), '[{"type": "Double Bed", "count": 2}, {"type": "Roll on Bed", "count": 1}]'::jsonb, 5, 'Located facing the swimming pool with a veranda for a relaxing sit-out. Well furnished with 2 double beds, equipped with air-conditioning, LCD TV, tea/coffee maker, Refrigerator and telephone.', 'available'),
+-- Loftscapes
+('107', 'Valegro Loftscape', 0, (SELECT id FROM room_type_mapping WHERE name = 'Loftscapes'), '[{"type": "Double Bed", "count": 3}]'::jsonb, 6, 'Spacious loft-style room with premium amenities and pool views.', 'available'),
+('108', 'Totilas Loftscape', 0, (SELECT id FROM room_type_mapping WHERE name = 'Loftscapes'), '[{"type": "Double Bed", "count": 3}]'::jsonb, 6, 'Spacious loft-style room with premium amenities and pool views.', 'available');
