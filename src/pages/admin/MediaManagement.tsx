@@ -293,12 +293,12 @@ const MediaManagement = () => {
                 </SelectContent>
               </Select>
 
-              <Select value={filters.categoryId} onValueChange={(value) => setFilters({ ...filters, categoryId: value })}>
+              <Select value={filters.categoryId || "all-categories"} onValueChange={(value) => setFilters({ ...filters, categoryId: value === "all-categories" ? "" : value })}>
                 <SelectTrigger className="w-32">
                   <SelectValue placeholder="Category" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">All Categories</SelectItem>
+                  <SelectItem value="all-categories">All Categories</SelectItem>
                   {categories.map((category) => (
                     <SelectItem key={category.id} value={category.id}>
                       {category.name}
