@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -354,7 +353,7 @@ const MediaManagement = () => {
                       size="sm"
                       variant="secondary"
                       onClick={() => {
-                        setEditingImage(image);
+                        setEditingImage(image as GalleryImage);
                         setIsDialogOpen(true);
                       }}
                     >

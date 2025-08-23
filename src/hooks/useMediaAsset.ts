@@ -48,7 +48,7 @@ export const useMediaAsset = (hardcodedKey?: string, fallbackUrl?: string) => {
             image_url: fallbackUrl,
             media_type: 'image',
             source_type: 'hardcoded',
-            hardcoded_key
+            hardcoded_key: hardcodedKey
           });
         } else {
           setAsset(null);
@@ -62,7 +62,7 @@ export const useMediaAsset = (hardcodedKey?: string, fallbackUrl?: string) => {
             image_url: fallbackUrl,
             media_type: 'image',
             source_type: 'hardcoded',
-            hardcoded_key
+            hardcoded_key: hardcodedKey
           });
         }
       } finally {
