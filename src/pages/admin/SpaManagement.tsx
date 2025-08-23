@@ -494,14 +494,6 @@ const SpaManagement = () => {
     <div className="container mx-auto p-6">
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-4">
-          <Link 
-            to="/admin"
-            className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors"
-          >
-            <ArrowLeft className="h-4 w-4" />
-            Back to Dashboard
-          </Link>
-          <div className="h-6 w-px bg-border" />
           <h1 className="text-3xl font-bold">Spa Services Management</h1>
         </div>
         

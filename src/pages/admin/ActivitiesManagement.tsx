@@ -373,14 +373,6 @@ const ActivitiesManagement = () => {
     <div className="container mx-auto py-8 px-4">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
         <div className="flex items-center gap-4">
-          <Link
-            to="/admin"
-            className="inline-flex items-center text-sm text-muted-foreground hover:text-foreground"
-          >
-            <ArrowLeft className="w-4 h-4 mr-2" />
-            Back to Dashboard
-          </Link>
-          <div className="h-6 w-px bg-border" />
           <h1 className="text-3xl font-bold">Activities Management</h1>
         </div>
         

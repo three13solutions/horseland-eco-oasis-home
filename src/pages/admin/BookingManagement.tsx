@@ -1241,15 +1241,6 @@ export default function BookingManagement() {
       {/* Header */}
       <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div className="flex items-center gap-4">
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => navigate('/admin')}
-            className="flex items-center gap-2"
-          >
-            <ArrowLeft className="h-4 w-4" />
-            Back to Dashboard
-          </Button>
           <div>
             <h1 className="text-3xl font-bold tracking-tight">Booking Management</h1>
             <p className="text-muted-foreground">
