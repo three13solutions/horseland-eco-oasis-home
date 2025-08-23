@@ -25,6 +25,7 @@ import Policies from "./pages/Policies";
 
 // Admin imports
 import AdminLogin from "./pages/AdminLogin";
+import AdminLayout from "./components/admin/AdminLayout";
 import AdminDashboard from "./pages/AdminDashboard";
 import BookingManagement from "./pages/admin/BookingManagement";
 import GuestManagement from "./pages/admin/GuestManagement";
@@ -70,21 +71,23 @@ function App() {
 
               {/* Admin Routes */}
               <Route path="/admin/login" element={<AdminLogin />} />
-              <Route path="/admin" element={<AdminDashboard />} />
-              <Route path="/admin/bookings" element={<BookingManagement />} />
-              <Route path="/admin/guests" element={<GuestManagement />} />
-              <Route path="/admin/payments" element={<PaymentManagement />} />
-              <Route path="/admin/invoices" element={<InvoiceManagement />} />
-              <Route path="/admin/rooms" element={<RoomManagement />} />
-              <Route path="/admin/packages" element={<PackageManagement />} />
-              <Route path="/admin/dining" element={<DiningManagement />} />
-              <Route path="/admin/activities" element={<ActivitiesManagement />} />
-              <Route path="/admin/spa" element={<SpaManagement />} />
-              <Route path="/admin/media" element={<MediaManagement />} />
-              <Route path="/admin/content" element={<ContentManagement />} />
-              <Route path="/admin/integrations" element={<IntegrationsManagement />} /> {/* Added */}
-              <Route path="/admin/users" element={<UserManagement />} />
-              <Route path="/admin/settings" element={<SiteSettings />} />
+              <Route path="/admin" element={<AdminLayout />}>
+                <Route index element={<AdminDashboard />} />
+                <Route path="bookings" element={<BookingManagement />} />
+                <Route path="guests" element={<GuestManagement />} />
+                <Route path="payments" element={<PaymentManagement />} />
+                <Route path="invoices" element={<InvoiceManagement />} />
+                <Route path="rooms" element={<RoomManagement />} />
+                <Route path="packages" element={<PackageManagement />} />
+                <Route path="dining" element={<DiningManagement />} />
+                <Route path="activities" element={<ActivitiesManagement />} />
+                <Route path="spa" element={<SpaManagement />} />
+                <Route path="media" element={<MediaManagement />} />
+                <Route path="content" element={<ContentManagement />} />
+                <Route path="integrations" element={<IntegrationsManagement />} />
+                <Route path="users" element={<UserManagement />} />
+                <Route path="settings" element={<SiteSettings />} />
+              </Route>
               
               {/* Catch All Route */}
               <Route path="*" element={<NotFound />} />
