@@ -24,49 +24,68 @@ const AdminLogin = () => {
   useEffect(() => {
     let mounted = true;
 
-    // Set up auth state listener
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      if (!mounted) return;
-      
-      if (session) {
-        // Check if user is admin
-        const { data: profile } = await supabase
-          .from('admin_profiles')
-          .select('*')
-          .eq('user_id', session.user.id)
-          .single();
+    // Check initial session first
+    const checkAuth = async () => {
+      try {
+        const { data: { session }, error } = await supabase.auth.getSession();
         
-        if (profile && mounted) {
-          navigate('/admin');
-        }
-      }
-      
-      if (mounted) {
-        setAuthChecking(false);
-      }
-    });
-
-    // Initial session check
-    const checkInitialAuth = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (session && mounted) {
-        const { data: profile } = await supabase
-          .from('admin_profiles')
-          .select('*')
-          .eq('user_id', session.user.id)
-          .single();
-        
-        if (profile) {
-          navigate('/admin');
+        if (error) {
+          console.error('Auth error:', error);
+          if (mounted) setAuthChecking(false);
           return;
         }
-      }
-      if (mounted) {
-        setAuthChecking(false);
+
+        if (session?.user) {
+          // Check if user is admin
+          const { data: profile, error: profileError } = await supabase
+            .from('admin_profiles')
+            .select('*')
+            .eq('user_id', session.user.id)
+            .single();
+          
+          if (profile && !profileError && mounted) {
+            navigate('/admin');
+            return;
+          }
+        }
+        
+        if (mounted) {
+          setAuthChecking(false);
+        }
+      } catch (error) {
+        console.error('Error checking auth:', error);
+        if (mounted) setAuthChecking(false);
       }
     };
 
-    checkInitialAuth();
+    // Set up auth state listener
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      console.log('Auth state changed:', event, session?.user?.id);
+      
+      if (!mounted) return;
+      
+      if (session?.user) {
+        try {
+          // Check if user is admin
+          const { data: profile, error: profileError } = await supabase
+            .from('admin_profiles')
+            .select('*')
+            .eq('user_id', session.user.id)
+            .single();
+          
+          if (profile && !profileError) {
+            navigate('/admin');
+            return;
+          }
+        } catch (error) {
+          console.error('Error checking admin profile:', error);
+        }
+      }
+      
+      setAuthChecking(false);
+    });
+
+    checkAuth();
 
     return () => {
       mounted = false;
