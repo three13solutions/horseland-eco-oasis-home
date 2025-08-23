@@ -17,13 +17,17 @@ const AdminLogin = () => {
   const [resetLoading, setResetLoading] = useState(false);
   const [error, setError] = useState('');
   const [resetEmailSent, setResetEmailSent] = useState(false);
+  const [authChecking, setAuthChecking] = useState(true);
   const navigate = useNavigate();
   const { toast } = useToast();
 
   useEffect(() => {
-    // Check if user is already logged in
-    const checkAuth = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
+    let mounted = true;
+
+    // Set up auth state listener
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (!mounted) return;
+      
       if (session) {
         // Check if user is admin
         const { data: profile } = await supabase
@@ -32,13 +36,58 @@ const AdminLogin = () => {
           .eq('user_id', session.user.id)
           .single();
         
-        if (profile) {
+        if (profile && mounted) {
           navigate('/admin');
         }
       }
+      
+      if (mounted) {
+        setAuthChecking(false);
+      }
+    });
+
+    // Initial session check
+    const checkInitialAuth = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session && mounted) {
+        const { data: profile } = await supabase
+          .from('admin_profiles')
+          .select('*')
+          .eq('user_id', session.user.id)
+          .single();
+        
+        if (profile) {
+          navigate('/admin');
+          return;
+        }
+      }
+      if (mounted) {
+        setAuthChecking(false);
+      }
     };
-    checkAuth();
+
+    checkInitialAuth();
+
+    return () => {
+      mounted = false;
+      subscription.unsubscribe();
+    };
   }, [navigate]);
+
+  if (authChecking) {
+    return (
+      <div className="min-h-screen bg-gradient-subtle flex items-center justify-center p-4">
+        <Card className="w-full max-w-md backdrop-blur-sm bg-card/95 border-white/20 shadow-elegant">
+          <CardContent className="flex items-center justify-center py-16">
+            <div className="text-center">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+              <p className="text-muted-foreground">Checking authentication...</p>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
