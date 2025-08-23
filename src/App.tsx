@@ -7,26 +7,20 @@ import i18n from '@/lib/i18n';
 import ScrollToTop from './components/ScrollToTop';
 
 // General
-import Home from "./pages/Home";
+import Index from "./pages/Index";
 import About from "./pages/About";
 import Contact from "./pages/Contact";
-import Rooms from "./pages/Rooms";
+import Stay from "./pages/Stay";
 import Dining from "./pages/Dining";
 import Activities from "./pages/Activities";
 import Spa from "./pages/Spa";
-import Gallery from "./pages/Gallery";
-import Offers from "./pages/Offers";
-import Blog from "./pages/Blog";
-import BlogPost from "./pages/BlogPost";
-import Bookings from "./pages/Bookings";
+import Experiences from "./pages/Experiences";
+import Journal from "./pages/Journal";
+import Booking from "./pages/Booking";
 import NotFound from "./pages/NotFound";
-import Testimonials from "./pages/Testimonials";
+import FAQ from "./pages/FAQ";
 import Packages from "./pages/Packages";
-import PackageDetails from "./pages/PackageDetails";
-
-// Auth
-import PasswordReset from "./pages/PasswordReset";
-import UpdatePassword from "./pages/UpdatePassword";
+import Policies from "./pages/Policies";
 
 // Admin imports
 import AdminLogin from "./pages/AdminLogin";
@@ -58,25 +52,19 @@ function App() {
             <ScrollToTop />
             <Routes>
               {/* General Routes */}
-              <Route path="/" element={<Home />} />
+              <Route path="/" element={<Index />} />
               <Route path="/about" element={<About />} />
               <Route path="/contact" element={<Contact />} />
-              <Route path="/rooms" element={<Rooms />} />
+              <Route path="/stay" element={<Stay />} />
               <Route path="/dining" element={<Dining />} />
               <Route path="/activities" element={<Activities />} />
               <Route path="/spa" element={<Spa />} />
-              <Route path="/gallery" element={<Gallery />} />
-              <Route path="/offers" element={<Offers />} />
-              <Route path="/blog" element={<Blog />} />
-              <Route path="/blog/:slug" element={<BlogPost />} />
-              <Route path="/bookings" element={<Bookings />} />
+              <Route path="/experiences" element={<Experiences />} />
+              <Route path="/journal" element={<Journal />} />
+              <Route path="/booking" element={<Booking />} />
               <Route path="/packages" element={<Packages />} />
-              <Route path="/packages/:id" element={<PackageDetails />} />
-              <Route path="/testimonials" element={<Testimonials />} />
-
-              {/* Auth Routes */}
-              <Route path="/password-reset" element={<PasswordReset />} />
-              <Route path="/update-password" element={<UpdatePassword />} />
+              <Route path="/faq" element={<FAQ />} />
+              <Route path="/policies" element={<Policies />} />
 
               {/* Admin Routes */}
               <Route path="/admin/login" element={<AdminLogin />} />
