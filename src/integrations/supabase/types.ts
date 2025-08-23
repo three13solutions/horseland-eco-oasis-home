@@ -206,6 +206,89 @@ export type Database = {
         }
         Relationships: []
       }
+      api_integration_secrets: {
+        Row: {
+          created_at: string
+          id: string
+          integration_id: string
+          key: string
+          updated_at: string
+          value_encrypted: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          integration_id: string
+          key: string
+          updated_at?: string
+          value_encrypted: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          integration_id?: string
+          key?: string
+          updated_at?: string
+          value_encrypted?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "api_integration_secrets_integration_id_fkey"
+            columns: ["integration_id"]
+            isOneToOne: false
+            referencedRelation: "api_integrations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      api_integrations: {
+        Row: {
+          category: string
+          config_keys: Json
+          created_at: string
+          description: string | null
+          id: string
+          integration_key: string
+          is_enabled: boolean
+          last_verified_at: string | null
+          name: string
+          public_config: Json
+          secret_keys: Json
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          category: string
+          config_keys?: Json
+          created_at?: string
+          description?: string | null
+          id?: string
+          integration_key: string
+          is_enabled?: boolean
+          last_verified_at?: string | null
+          name: string
+          public_config?: Json
+          secret_keys?: Json
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          category?: string
+          config_keys?: Json
+          created_at?: string
+          description?: string | null
+          id?: string
+          integration_key?: string
+          is_enabled?: boolean
+          last_verified_at?: string | null
+          name?: string
+          public_config?: Json
+          secret_keys?: Json
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       blog_posts: {
         Row: {
           author: string

@@ -1,103 +1,109 @@
-
-import { Toaster } from "@/components/ui/toaster";
-import { Toaster as Sonner } from "@/components/ui/sonner";
+import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import { TranslationProvider } from "./components/admin/TranslationProvider";
-import ScrollToTop from "./components/ScrollToTop";
-import "./lib/i18n";
-import Index from "./pages/Index";
-import IndexV2 from "./pages/IndexV2";
-import IndexV3 from "./pages/IndexV3";
-import IndexV4 from "./pages/IndexV4";
-import IndexV5 from "./pages/IndexV5";
+import { I18nextProvider } from 'react-i18next';
+import i18n from '@/lib/i18n';
+import ScrollToTop from './components/ScrollToTop';
+
+// General
+import Home from "./pages/Home";
 import About from "./pages/About";
-import Stay from "./pages/Stay";
-import Experiences from "./pages/Experiences";
-import Activities from "./pages/Activities";
-import Dining from "./pages/Dining";
-import Spa from "./pages/Spa";
-import Packages from "./pages/Packages";
-import Journal from "./pages/Journal";
-import FAQ from "./pages/FAQ";
 import Contact from "./pages/Contact";
-import Policies from "./pages/Policies";
-import RoomDetail from "./pages/RoomDetail";
-import CategoryDetail from "./pages/CategoryDetail";
-import Booking from "./pages/Booking";
+import Rooms from "./pages/Rooms";
+import Dining from "./pages/Dining";
+import Activities from "./pages/Activities";
+import Spa from "./pages/Spa";
+import Gallery from "./pages/Gallery";
+import Offers from "./pages/Offers";
+import Blog from "./pages/Blog";
+import BlogPost from "./pages/BlogPost";
+import Bookings from "./pages/Bookings";
 import NotFound from "./pages/NotFound";
+import Testimonials from "./pages/Testimonials";
+import Packages from "./pages/Packages";
+import PackageDetails from "./pages/PackageDetails";
+
+// Auth
+import PasswordReset from "./pages/PasswordReset";
+import UpdatePassword from "./pages/UpdatePassword";
+
+// Admin imports
 import AdminLogin from "./pages/AdminLogin";
 import AdminDashboard from "./pages/AdminDashboard";
-import RoomManagement from "./pages/admin/RoomManagement";
 import BookingManagement from "./pages/admin/BookingManagement";
+import GuestManagement from "./pages/admin/GuestManagement";
+import PaymentManagement from "./pages/admin/PaymentManagement";
+import InvoiceManagement from "./pages/admin/InvoiceManagement";
+import RoomManagement from "./pages/admin/RoomManagement";
+import PackageManagement from "./pages/admin/PackageManagement";
+import DiningManagement from "./pages/admin/DiningManagement";
 import ActivitiesManagement from "./pages/admin/ActivitiesManagement";
 import SpaManagement from "./pages/admin/SpaManagement";
-import DiningManagement from "./pages/admin/DiningManagement";
-import PackageManagement from "./pages/admin/PackageManagement";
-import InvoiceManagement from "./pages/admin/InvoiceManagement";
-import PaymentManagement from "./pages/admin/PaymentManagement";
-
-import UserManagement from "./pages/admin/UserManagement";
-import GuestManagement from "./pages/admin/GuestManagement";
-import SiteSettings from "./pages/admin/SiteSettings";
-import ContentManagement from "./pages/admin/ContentManagement";
 import MediaManagement from "./pages/admin/MediaManagement";
+import ContentManagement from "./pages/admin/ContentManagement";
+import IntegrationsManagement from "./pages/admin/IntegrationsManagement"; // Added
+import UserManagement from "./pages/admin/UserManagement";
+import SiteSettings from "./pages/admin/SiteSettings";
 
 const queryClient = new QueryClient();
 
-const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <TranslationProvider>
-        <Toaster />
-        <Sonner />
-        <BrowserRouter>
-          <ScrollToTop />
-        <Routes>
-          <Route path="/" element={<IndexV5 />} />
-          <Route path="/v1" element={<Index />} />
-          <Route path="/v2" element={<IndexV2 />} />
-          <Route path="/v3" element={<IndexV3 />} />
-          <Route path="/v4" element={<IndexV4 />} />
-          <Route path="/v5" element={<IndexV5 />} />
-          <Route path="/about" element={<About />} />
-          <Route path="/stay" element={<Stay />} />
-          <Route path="/stay/:categoryId" element={<CategoryDetail />} />
-          <Route path="/booking" element={<Booking />} />
-          <Route path="/room/:roomId" element={<RoomDetail />} />
-          <Route path="/experiences" element={<Experiences />} />
-          <Route path="/experiences/activities" element={<Activities />} />
-          <Route path="/experiences/dining" element={<Dining />} />
-          <Route path="/experiences/spa" element={<Spa />} />
-          <Route path="/packages" element={<Packages />} />
-          <Route path="/journal" element={<Journal />} />
-          <Route path="/faq" element={<FAQ />} />
-          <Route path="/contact" element={<Contact />} />
-          <Route path="/policies" element={<Policies />} />
-          <Route path="/admin/login" element={<AdminLogin />} />
-          <Route path="/admin" element={<AdminDashboard />} />
-          <Route path="/admin/rooms" element={<RoomManagement />} />
-          <Route path="/admin/bookings" element={<BookingManagement />} />
-          <Route path="/admin/activities" element={<ActivitiesManagement />} />
-          <Route path="/admin/spa" element={<SpaManagement />} />
-          <Route path="/admin/dining" element={<DiningManagement />} />
-          <Route path="/admin/packages" element={<PackageManagement />} />
-          <Route path="/admin/invoices" element={<InvoiceManagement />} />
-          <Route path="/admin/payments" element={<PaymentManagement />} />
-          
-          <Route path="/admin/users" element={<UserManagement />} />
-          <Route path="/admin/guests" element={<GuestManagement />} />
-          <Route path="/admin/media" element={<MediaManagement />} />
-          <Route path="/admin/settings" element={<SiteSettings />} />
-          <Route path="/admin/content" element={<ContentManagement />} />
-          {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-          <Route path="*" element={<NotFound />} />
-        </Routes>
-      </BrowserRouter>
-      </TranslationProvider>
-    </TooltipProvider>
-  </QueryClientProvider>
-);
+function App() {
+  return (
+    <QueryClientProvider client={queryClient}>
+      <I18nextProvider i18n={i18n}>
+        <TooltipProvider>
+          <Toaster />
+          <BrowserRouter>
+            <ScrollToTop />
+            <Routes>
+              {/* General Routes */}
+              <Route path="/" element={<Home />} />
+              <Route path="/about" element={<About />} />
+              <Route path="/contact" element={<Contact />} />
+              <Route path="/rooms" element={<Rooms />} />
+              <Route path="/dining" element={<Dining />} />
+              <Route path="/activities" element={<Activities />} />
+              <Route path="/spa" element={<Spa />} />
+              <Route path="/gallery" element={<Gallery />} />
+              <Route path="/offers" element={<Offers />} />
+              <Route path="/blog" element={<Blog />} />
+              <Route path="/blog/:slug" element={<BlogPost />} />
+              <Route path="/bookings" element={<Bookings />} />
+              <Route path="/packages" element={<Packages />} />
+              <Route path="/packages/:id" element={<PackageDetails />} />
+              <Route path="/testimonials" element={<Testimonials />} />
+
+              {/* Auth Routes */}
+              <Route path="/password-reset" element={<PasswordReset />} />
+              <Route path="/update-password" element={<UpdatePassword />} />
+
+              {/* Admin Routes */}
+              <Route path="/admin/login" element={<AdminLogin />} />
+              <Route path="/admin" element={<AdminDashboard />} />
+              <Route path="/admin/bookings" element={<BookingManagement />} />
+              <Route path="/admin/guests" element={<GuestManagement />} />
+              <Route path="/admin/payments" element={<PaymentManagement />} />
+              <Route path="/admin/invoices" element={<InvoiceManagement />} />
+              <Route path="/admin/rooms" element={<RoomManagement />} />
+              <Route path="/admin/packages" element={<PackageManagement />} />
+              <Route path="/admin/dining" element={<DiningManagement />} />
+              <Route path="/admin/activities" element={<ActivitiesManagement />} />
+              <Route path="/admin/spa" element={<SpaManagement />} />
+              <Route path="/admin/media" element={<MediaManagement />} />
+              <Route path="/admin/content" element={<ContentManagement />} />
+              <Route path="/admin/integrations" element={<IntegrationsManagement />} /> {/* Added */}
+              <Route path="/admin/users" element={<UserManagement />} />
+              <Route path="/admin/settings" element={<SiteSettings />} />
+              
+              {/* Catch All Route */}
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </BrowserRouter>
+        </TooltipProvider>
+      </I18nextProvider>
+    </QueryClientProvider>
+  );
+}
 
 export default App;
