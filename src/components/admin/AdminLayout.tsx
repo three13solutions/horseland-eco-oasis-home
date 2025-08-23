@@ -106,6 +106,7 @@ export default function AdminLayout() {
     if (path.startsWith('/admin/dining')) return { label: 'Dining', description: 'Meals & menus' };
     if (path.startsWith('/admin/activities')) return { label: 'Activities', description: 'Activity management' };
     if (path.startsWith('/admin/spa')) return { label: 'Spa', description: 'Spa services' };
+    if (path.startsWith('/admin/addons')) return { label: 'Addons', description: 'Additional services' };
     if (path.startsWith('/admin/media')) return { label: 'Media', description: 'Gallery & uploads' };
     if (path.startsWith('/admin/content')) return { label: 'Content', description: 'Website content' };
     if (path.startsWith('/admin/integrations')) return { label: 'Integrations', description: 'API connections' };

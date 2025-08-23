@@ -36,6 +36,7 @@ import PackageManagement from "./pages/admin/PackageManagement";
 import DiningManagement from "./pages/admin/DiningManagement";
 import ActivitiesManagement from "./pages/admin/ActivitiesManagement";
 import SpaManagement from "./pages/admin/SpaManagement";
+import AddonsManagement from "./pages/admin/AddonsManagement";
 import MediaManagement from "./pages/admin/MediaManagement";
 import ContentManagement from "./pages/admin/ContentManagement";
 import IntegrationsManagement from "./pages/admin/IntegrationsManagement"; // Added
@@ -82,6 +83,7 @@ function App() {
                 <Route path="dining" element={<DiningManagement />} />
                 <Route path="activities" element={<ActivitiesManagement />} />
                 <Route path="spa" element={<SpaManagement />} />
+                <Route path="addons" element={<AddonsManagement />} />
                 <Route path="media" element={<MediaManagement />} />
                 <Route path="content" element={<ContentManagement />} />
                 <Route path="integrations" element={<IntegrationsManagement />} />
