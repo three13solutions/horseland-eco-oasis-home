@@ -5,6 +5,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { I18nextProvider } from 'react-i18next';
 import i18n from '@/lib/i18n';
 import ScrollToTop from './components/ScrollToTop';
+import { TranslationProvider } from './components/admin/TranslationProvider';
 
 // General
 import Index from "./pages/Index";
@@ -46,11 +47,12 @@ function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <I18nextProvider i18n={i18n}>
-        <TooltipProvider>
-          <Toaster />
-          <BrowserRouter>
-            <ScrollToTop />
-            <Routes>
+        <TranslationProvider>
+          <TooltipProvider>
+            <Toaster />
+            <BrowserRouter>
+              <ScrollToTop />
+              <Routes>
               {/* General Routes */}
               <Route path="/" element={<Index />} />
               <Route path="/about" element={<About />} />
@@ -86,9 +88,10 @@ function App() {
               
               {/* Catch All Route */}
               <Route path="*" element={<NotFound />} />
-            </Routes>
-          </BrowserRouter>
-        </TooltipProvider>
+              </Routes>
+            </BrowserRouter>
+          </TooltipProvider>
+        </TranslationProvider>
       </I18nextProvider>
     </QueryClientProvider>
   );
