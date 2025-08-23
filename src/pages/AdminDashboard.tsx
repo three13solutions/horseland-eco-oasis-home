@@ -49,54 +49,67 @@ interface AdminProfile {
 
 export default function AdminDashboard() {
   const location = useLocation();
-  const [isAdmin, setIsAdmin] = useState(false);
-  const [adminProfile, setAdminProfile] = useState<AdminProfile | null>(null);
 
-  const { data: session } = useQuery({
+  // Query for session
+  const { data: sessionData, isLoading: sessionLoading, error: sessionError } = useQuery({
     queryKey: ['adminSession'],
     queryFn: async () => {
-      return await supabase.auth.getSession();
+      const result = await supabase.auth.getSession();
+      console.debug('[AdminDashboard] Session check:', result.data.session?.user?.id);
+      return result;
     },
   });
 
-  useEffect(() => {
-    const checkAdminStatus = async () => {
-      if (session?.data?.session?.user?.id) {
-        const { data: profile, error } = await supabase
-          .from('admin_profiles')
-          .select('*')
-          .eq('user_id', session?.data?.session?.user?.id)
-          .single();
+  // Query for admin profile (only runs if session exists)
+  const { data: adminProfile, isLoading: profileLoading, error: profileError } = useQuery({
+    queryKey: ['adminProfile', sessionData?.data?.session?.user?.id],
+    queryFn: async () => {
+      if (!sessionData?.data?.session?.user?.id) return null;
+      
+      console.debug('[AdminDashboard] Checking admin profile for:', sessionData.data.session.user.id);
+      const { data: profile, error } = await supabase
+        .from('admin_profiles')
+        .select('*')
+        .eq('user_id', sessionData.data.session.user.id)
+        .single();
 
-        if (error) {
-          console.error('Error fetching admin profile:', error);
-          setIsAdmin(false);
-          return;
-        }
-
-        if (profile) {
-          setIsAdmin(true);
-          setAdminProfile(profile);
-        } else {
-          setIsAdmin(false);
-        }
-      } else {
-        setIsAdmin(false);
+      if (error) {
+        console.debug('[AdminDashboard] Admin profile error:', error.message);
+        return null;
       }
-    };
 
-    checkAdminStatus();
-  }, [session]);
+      console.debug('[AdminDashboard] Admin profile found:', profile?.role);
+      return profile;
+    },
+    enabled: !!sessionData?.data?.session?.user?.id,
+  });
 
   const handleSignOut = async () => {
     await supabase.auth.signOut();
   };
 
-  if (!session?.data?.session && location.pathname !== '/admin/login') {
+  // Show loading while checking session and profile
+  if (sessionLoading || profileLoading) {
+    console.debug('[AdminDashboard] Loading state - session:', sessionLoading, 'profile:', profileLoading);
+    return (
+      <div className="min-h-screen bg-gradient-subtle flex items-center justify-center p-4">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+          <p className="text-muted-foreground">Loading dashboard...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Redirect to login if no session
+  if (!sessionData?.data?.session && location.pathname !== '/admin/login') {
+    console.debug('[AdminDashboard] No session, redirecting to login');
     return <Navigate to="/admin/login" replace />;
   }
 
-  if (session?.data?.session && !isAdmin && location.pathname !== '/admin/login') {
+  // Redirect to login if session exists but user is not an admin
+  if (sessionData?.data?.session && !adminProfile && !profileLoading && location.pathname !== '/admin/login') {
+    console.debug('[AdminDashboard] Session exists but no admin profile, redirecting to login');
     return <Navigate to="/admin/login" replace />;
   }
 

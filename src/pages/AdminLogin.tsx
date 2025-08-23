@@ -23,72 +23,83 @@ const AdminLogin = () => {
 
   useEffect(() => {
     let mounted = true;
+    let timeoutId: NodeJS.Timeout;
 
-    // Check initial session first
-    const checkAuth = async () => {
-      try {
-        const { data: { session }, error } = await supabase.auth.getSession();
+    console.debug('[AdminLogin] Setting up auth check');
+
+    // Helper function to check admin status with deferred Supabase calls
+    const handleSession = (session: any) => {
+      if (!session?.user) {
+        console.debug('[AdminLogin] No session, stopping auth check');
+        setAuthChecking(false);
+        return;
+      }
+
+      console.debug('[AdminLogin] Session found, deferring admin check');
+      // Defer admin profile check to avoid deadlock
+      setTimeout(async () => {
+        if (!mounted) return;
+        
+        try {
+          const { data: profile, error: profileError } = await supabase
+            .from('admin_profiles')
+            .select('*')
+            .eq('user_id', session.user.id)
+            .single();
+            
+          if (!mounted) return;
+          
+          if (profile && !profileError) {
+            console.debug('[AdminLogin] Admin profile found, redirecting');
+            navigate('/admin', { replace: true });
+          } else {
+            console.debug('[AdminLogin] No admin profile found');
+            setAuthChecking(false);
+          }
+        } catch (error) {
+          console.error('[AdminLogin] Error checking admin profile:', error);
+          if (mounted) setAuthChecking(false);
+        }
+      }, 0);
+    };
+
+    // Set up auth state listener (MUST be synchronous to avoid deadlocks)
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      console.debug('[AdminLogin] Auth state changed:', event, session?.user?.id);
+      
+      if (!mounted) return;
+      handleSession(session);
+    });
+
+    // Check initial session
+    supabase.auth.getSession()
+      .then(({ data: { session }, error }) => {
+        if (!mounted) return;
         
         if (error) {
-          console.error('Auth error:', error);
-          if (mounted) setAuthChecking(false);
+          console.error('[AdminLogin] Session error:', error);
+          setAuthChecking(false);
           return;
         }
 
-        if (session?.user) {
-          // Check if user is admin
-          const { data: profile, error: profileError } = await supabase
-            .from('admin_profiles')
-            .select('*')
-            .eq('user_id', session.user.id)
-            .single();
-          
-          if (profile && !profileError && mounted) {
-            navigate('/admin');
-            return;
-          }
-        }
-        
-        if (mounted) {
-          setAuthChecking(false);
-        }
-      } catch (error) {
-        console.error('Error checking auth:', error);
+        handleSession(session);
+      })
+      .catch((error) => {
+        console.error('[AdminLogin] Error getting session:', error);
         if (mounted) setAuthChecking(false);
-      }
-    };
+      });
 
-    // Set up auth state listener
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      console.log('Auth state changed:', event, session?.user?.id);
-      
-      if (!mounted) return;
-      
-      if (session?.user) {
-        try {
-          // Check if user is admin
-          const { data: profile, error: profileError } = await supabase
-            .from('admin_profiles')
-            .select('*')
-            .eq('user_id', session.user.id)
-            .single();
-          
-          if (profile && !profileError) {
-            navigate('/admin');
-            return;
-          }
-        } catch (error) {
-          console.error('Error checking admin profile:', error);
-        }
+    // Fallback timeout to prevent infinite loading
+    timeoutId = setTimeout(() => {
+      if (mounted) {
+        console.warn('[AdminLogin] Auth check timeout, stopping');
+        setAuthChecking(false);
       }
-      
-      setAuthChecking(false);
-    });
-
-    checkAuth();
+    }, 4000);
 
     return () => {
       mounted = false;
+      clearTimeout(timeoutId);
       subscription.unsubscribe();
     };
   }, [navigate]);
