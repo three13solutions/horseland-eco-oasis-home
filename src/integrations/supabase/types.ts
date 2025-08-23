@@ -724,10 +724,13 @@ export type Database = {
           is_hardcoded: boolean | null
           likes_count: number | null
           location: string | null
+          media_type: string
           sort_order: number | null
+          source_type: string
           tags: Json | null
           title: string
           updated_at: string
+          video_url: string | null
         }
         Insert: {
           alt_text?: string | null
@@ -744,10 +747,13 @@ export type Database = {
           is_hardcoded?: boolean | null
           likes_count?: number | null
           location?: string | null
+          media_type?: string
           sort_order?: number | null
+          source_type?: string
           tags?: Json | null
           title: string
           updated_at?: string
+          video_url?: string | null
         }
         Update: {
           alt_text?: string | null
@@ -764,10 +770,13 @@ export type Database = {
           is_hardcoded?: boolean | null
           likes_count?: number | null
           location?: string | null
+          media_type?: string
           sort_order?: number | null
+          source_type?: string
           tags?: Json | null
           title?: string
           updated_at?: string
+          video_url?: string | null
         }
         Relationships: [
           {

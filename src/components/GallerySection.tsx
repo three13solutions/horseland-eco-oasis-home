@@ -2,35 +2,24 @@
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
+import { useMediaList } from '@/hooks/useMediaList';
+import { Skeleton } from '@/components/ui/skeleton';
 
 const GallerySection = () => {
   const [activeTab, setActiveTab] = useState('official');
 
-  const officialPhotos = [
-    'https://images.unsplash.com/photo-1469474968028-56623f02e42e?w=300&h=300&fit=crop',
-    'https://images.unsplash.com/photo-1482938289607-e9573fc25ebb?w=300&h=300&fit=crop',
-    'https://images.unsplash.com/photo-1501854140801-50d01698950b?w=300&h=300&fit=crop',
-    'https://images.unsplash.com/photo-1509316975850-ff9c5deb0cd9?w=300&h=300&fit=crop',
-    'https://images.unsplash.com/photo-1513836279014-a89f7a76ae86?w=300&h=300&fit=crop',
-    'https://images.unsplash.com/photo-1615729947596-a598e5de0ab3?w=300&h=300&fit=crop',
-    'https://images.unsplash.com/photo-1439886183900-e79ec0057170?w=300&h=300&fit=crop',
-    'https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05?w=300&h=300&fit=crop',
-    'https://images.unsplash.com/photo-1472396961693-142e6e269027?w=300&h=300&fit=crop'
-  ];
+  const { data: officialPhotos = [], isLoading: officialLoading } = useMediaList({
+    categoryId: '', // You'll need to set the actual category ID for official photos
+    mediaType: 'image'
+  });
 
-  const ugcPhotos = [
-    'https://images.unsplash.com/photo-1472396961693-142e6e269027?w=300&h=300&fit=crop',
-    'https://images.unsplash.com/photo-1439886183900-e79ec0057170?w=300&h=300&fit=crop',
-    'https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05?w=300&h=300&fit=crop',
-    'https://images.unsplash.com/photo-1615729947596-a598e5de0ab3?w=300&h=300&fit=crop',
-    'https://images.unsplash.com/photo-1513836279014-a89f7a76ae86?w=300&h=300&fit=crop',
-    'https://images.unsplash.com/photo-1509316975850-ff9c5deb0cd9?w=300&h=300&fit=crop',
-    'https://images.unsplash.com/photo-1501854140801-50d01698950b?w=300&h=300&fit=crop',
-    'https://images.unsplash.com/photo-1482938289607-e9573fc25ebb?w=300&h=300&fit=crop',
-    'https://images.unsplash.com/photo-1469474968028-56623f02e42e?w=300&h=300&fit=crop'
-  ];
+  const { data: ugcPhotos = [], isLoading: ugcLoading } = useMediaList({
+    sourceType: 'all', // Guest photos from all sources
+    mediaType: 'image'
+  });
 
   const currentPhotos = activeTab === 'official' ? officialPhotos : ugcPhotos;
+  const isLoading = activeTab === 'official' ? officialLoading : ugcLoading;
 
   return (
     <section className="py-16 bg-muted/20">
@@ -51,14 +40,14 @@ const GallerySection = () => {
                 onClick={() => setActiveTab('official')}
                 className="px-6"
               >
-                Official Photos
+                Official Photos ({officialPhotos.length})
               </Button>
               <Button
                 variant={activeTab === 'ugc' ? 'default' : 'ghost'}
                 onClick={() => setActiveTab('ugc')}
                 className="px-6"
               >
-                Guest Photos
+                Guest Photos ({ugcPhotos.length})
               </Button>
             </div>
           </div>
@@ -66,17 +55,24 @@ const GallerySection = () => {
 
         {/* Gallery Grid */}
         <div className="grid grid-cols-2 md:grid-cols-3 gap-4 max-w-4xl mx-auto mb-8">
-          {currentPhotos.map((photo, index) => (
-            <Card key={index} className="overflow-hidden group cursor-pointer">
-              <div className="aspect-square overflow-hidden">
-                <img
-                  src={photo}
-                  alt={`Gallery ${index + 1}`}
-                  className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
-                />
-              </div>
-            </Card>
-          ))}
+          {isLoading ? (
+            // Loading skeletons
+            Array.from({ length: 9 }).map((_, index) => (
+              <Skeleton key={index} className="aspect-square" />
+            ))
+          ) : (
+            currentPhotos.slice(0, 9).map((photo, index) => (
+              <Card key={photo.id} className="overflow-hidden group cursor-pointer">
+                <div className="aspect-square overflow-hidden">
+                  <img
+                    src={photo.image_url}
+                    alt={photo.caption || photo.title}
+                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
+                  />
+                </div>
+              </Card>
+            ))
+          )}
         </div>
 
         <div className="text-center">
