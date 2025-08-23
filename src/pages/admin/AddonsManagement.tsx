@@ -48,7 +48,7 @@ export default function AddonsManagement() {
   const { data: addons, isLoading } = useQuery({
     queryKey: ['addons'],
     queryFn: async () => {
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from('addons')
         .select('*')
         .order('created_at', { ascending: false });
@@ -61,7 +61,7 @@ export default function AddonsManagement() {
   // Create addon mutation
   const createAddonMutation = useMutation({
     mutationFn: async (addon: Omit<Addon, 'id' | 'created_at' | 'updated_at'>) => {
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from('addons')
         .insert([addon])
         .select()
@@ -83,7 +83,7 @@ export default function AddonsManagement() {
   // Update addon mutation
   const updateAddonMutation = useMutation({
     mutationFn: async ({ id, ...addon }: Partial<Addon> & { id: string }) => {
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from('addons')
         .update(addon)
         .eq('id', id)
@@ -106,7 +106,7 @@ export default function AddonsManagement() {
   // Delete addon mutation
   const deleteAddonMutation = useMutation({
     mutationFn: async (id: string) => {
-      const { error } = await supabase
+      const { error } = await (supabase as any)
         .from('addons')
         .delete()
         .eq('id', id);
