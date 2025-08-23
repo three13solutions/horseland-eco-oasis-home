@@ -1,7 +1,10 @@
 
 import React from 'react';
+import { useMediaAsset } from '@/hooks/useMediaAsset';
 
 const TrustLogos = () => {
+  const { asset: primaryLogo } = useMediaAsset('branding.logo.primary', '/lovable-uploads/24f5ee9b-ce5a-4b86-a2d8-7ca42e0a78cf.png');
+
   const logos = [
     { name: 'TripAdvisor', width: 120 },
     { name: 'Times Travel', width: 100 },
@@ -35,6 +38,17 @@ const TrustLogos = () => {
             </div>
           ))}
         </div>
+
+        {/* Example of using branded logo asset */}
+        {primaryLogo && (
+          <div className="text-center mt-8 opacity-50">
+            <img 
+              src={primaryLogo.image_url} 
+              alt={primaryLogo.title}
+              className="h-8 mx-auto"
+            />
+          </div>
+        )}
       </div>
     </section>
   );

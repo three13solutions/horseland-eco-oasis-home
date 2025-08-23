@@ -1,172 +1,115 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { useTranslationContext } from '@/components/admin/TranslationProvider';
+
+import React from 'react';
+import { ArrowRight, Calendar, Users } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { ArrowRight, Mountain, Utensils, Flower2, Activity } from 'lucide-react';
+import { Card, CardContent } from '@/components/ui/card';
+import { useNavigate } from 'react-router-dom';
+import { useTranslationContext } from '@/components/admin/TranslationProvider';
+import { useMediaAsset } from '@/hooks/useMediaAsset';
 
 const ExperiencesTeaserV5 = () => {
+  const navigate = useNavigate();
   const { getTranslation } = useTranslationContext();
-  const [activeIndex, setActiveIndex] = useState(0);
-  const [isAutoplay, setIsAutoplay] = useState(true);
-  const autoplayRef = useRef(null);
 
-  const experiences = [
+  // Use media assets for experience cards
+  const { asset: experienceCard1 } = useMediaAsset('experiences.card1', 'https://images.unsplash.com/photo-1439886183900-e79ec0057170?w=400&h=300&fit=crop');
+  const { asset: experienceCard2 } = useMediaAsset('experiences.card2', 'https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05?w=400&h=300&fit=crop');
+  const { asset: experienceCard3 } = useMediaAsset('experiences.card3', 'https://images.unsplash.com/photo-1482938289607-e9573fc25ebb?w=400&h=300&fit=crop');
+
+  const experienceCategories = [
     {
-      id: 'activities',
-      icon: Activity,
-      title: 'Mountain Adventures',
-      subtitle: 'Embrace the Wild',
-      description: 'From horseback rides along red-earth trails to guided forest walks and heritage toy train journeys, discover Matheran\'s natural wonders through curated adventures.',
-      image: 'https://images.unsplash.com/photo-1439886183900-e79ec0057170?w=800&h=600&fit=crop',
-      features: ['Horse Riding', 'Forest Walks', 'Toy Train', 'Nature Photography']
+      title: getTranslation('experiences.nature.title', 'Nature Immersion'),
+      description: getTranslation('experiences.nature.description', 'Connect with pristine wilderness through guided nature walks and eco-adventures'),
+      image: experienceCard1?.image_url || 'https://images.unsplash.com/photo-1439886183900-e79ec0057170?w=400&h=300&fit=crop',
+      activities: ['Nature Walks', 'Bird Watching', 'Photography Tours'],
+      duration: '2-4 hours',
+      groupSize: '2-8 people'
     },
     {
-      id: 'dining',
-      icon: Utensils,
-      title: 'Culinary Excellence',
-      subtitle: 'Buffet Only, Cooked with Purpose',
-      description: 'Our zero-waste kitchen philosophy meets gourmet excellence. Savor locally-sourced ingredients transformed into memorable dining experiences with panoramic mountain views.',
-      image: 'https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05?w=800&h=600&fit=crop',
-      features: ['Farm-to-Table', 'Zero Waste', 'Local Ingredients', 'Mountain Views']
+      title: getTranslation('experiences.wellness.title', 'Wellness & Mindfulness'),
+      description: getTranslation('experiences.wellness.description', 'Rejuvenate your mind and body with yoga sessions and spa treatments'),
+      image: experienceCard2?.image_url || 'https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05?w=400&h=300&fit=crop',
+      activities: ['Morning Yoga', 'Meditation', 'Spa Treatments'],
+      duration: '1-2 hours',
+      groupSize: '1-6 people'
     },
     {
-      id: 'wellness',
-      icon: Flower2,
-      title: 'Spa & Wellness',
-      subtitle: 'Rejuvenate Your Soul',
-      description: 'Ancient Ayurvedic traditions meet modern wellness techniques in our mountain spa. Experience therapeutic treatments designed to restore balance and vitality.',
-      image: 'https://images.unsplash.com/photo-1482938289607-e9573fc25ebb?w=800&h=600&fit=crop',
-      features: ['Ayurvedic Treatments', 'Yoga Sessions', 'Meditation', 'Therapeutic Massage']
+      title: getTranslation('experiences.adventure.title', 'Local Adventures'),
+      description: getTranslation('experiences.adventure.description', 'Explore Matheran\'s unique attractions and cultural experiences'),
+      image: experienceCard3?.image_url || 'https://images.unsplash.com/photo-1482938289607-e9573fc25ebb?w=400&h=300&fit=crop',
+      activities: ['Toy Train Rides', 'Sunset Points', 'Local Markets'],
+      duration: '3-6 hours',
+      groupSize: '2-10 people'
     }
   ];
 
-  // Autoplay functionality
-  useEffect(() => {
-    if (isAutoplay) {
-      autoplayRef.current = setInterval(() => {
-        setActiveIndex((prev) => (prev + 1) % experiences.length);
-      }, 3000);
-    }
-
-    return () => {
-      if (autoplayRef.current) {
-        clearInterval(autoplayRef.current);
-      }
-    };
-  }, [isAutoplay, experiences.length]);
-
-  // Handle manual tab selection
-  const handleTabClick = (index) => {
-    setActiveIndex(index);
-    setIsAutoplay(false); // Stop autoplay when user manually interacts
-    
-    // Clear existing interval
-    if (autoplayRef.current) {
-      clearInterval(autoplayRef.current);
-    }
-  };
-
   return (
-    <section className="py-24 bg-background relative">
-      <div className="container mx-auto px-6">
-        {/* Section Header */}
+    <section className="py-24 bg-gradient-to-b from-background to-muted/20">
+      <div className="container mx-auto px-4">
         <div className="text-center mb-16">
-          <h2 className="text-4xl md:text-6xl font-bold text-foreground mb-6">
-            {getTranslation('experiences.title', 'Curated')}
-            <span className="block text-primary italic">{getTranslation('experiences.titleHighlight', 'Experiences')}</span>
+          <h2 className="text-4xl md:text-5xl font-heading font-bold text-foreground mb-6">
+            {getTranslation('experiences.title', 'Curated Experiences')}
           </h2>
-          <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
-            {getTranslation('experiences.subtitle', 'Discover the essence of Matheran through thoughtfully designed experiences that connect you with nature, culture, and wellness.')}
+          <p className="text-xl text-muted-foreground max-w-3xl mx-auto font-body">
+            {getTranslation('experiences.subtitle', 'Discover the magic of Matheran through thoughtfully designed experiences that connect you with nature, wellness, and local culture.')}
           </p>
         </div>
 
-        {/* Experience Tabs */}
-        <div className="flex justify-center mb-12">
-          <div className="flex space-x-4 bg-muted/50 rounded-full p-2">
-            {experiences.map((exp, index) => (
-              <button
-                key={exp.id}
-                onClick={() => handleTabClick(index)}
-                className={`flex items-center space-x-2 px-6 py-3 rounded-full transition-all duration-300 ${
-                  activeIndex === index
-                    ? 'bg-primary text-primary-foreground shadow-lg'
-                    : 'text-muted-foreground hover:text-foreground'
-                }`}
-              >
-                <exp.icon className="w-5 h-5" />
-                <span className="font-medium">{getTranslation(`experiences.${exp.id}.title`, exp.title)}</span>
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {/* Active Experience Display */}
-        <div className="max-w-7xl mx-auto">
-          {experiences.map((exp, index) => (
-            <div
-              key={exp.id}
-              className={`grid grid-cols-1 lg:grid-cols-2 gap-12 items-center transition-all duration-500 ${
-                activeIndex === index ? 'opacity-100' : 'opacity-0 absolute invisible'
-              }`}
-            >
-              {/* Content */}
-              <div className="space-y-8">
-                <div>
-                  <div className="flex items-center space-x-3 mb-4">
-                    <exp.icon className="w-8 h-8 text-primary" />
-                    <span className="text-primary font-medium tracking-wider uppercase text-sm">
-                      {getTranslation(`experiences.${exp.id}.subtitle`, exp.subtitle)}
-                    </span>
+        <div className="grid md:grid-cols-3 gap-8 mb-12">
+          {experienceCategories.map((category, index) => (
+            <Card key={index} className="group overflow-hidden hover:shadow-2xl transition-all duration-500 border-0 bg-white/80 backdrop-blur-sm">
+              <div className="relative overflow-hidden">
+                <img
+                  src={category.image}
+                  alt={category.title}
+                  className="w-full h-64 object-cover group-hover:scale-110 transition-transform duration-700"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+              </div>
+              
+              <CardContent className="p-8">
+                <h3 className="text-2xl font-heading font-bold text-foreground mb-4 group-hover:text-primary transition-colors">
+                  {category.title}
+                </h3>
+                <p className="text-muted-foreground mb-6 font-body leading-relaxed">
+                  {category.description}
+                </p>
+                
+                <div className="space-y-4 mb-6">
+                  <div className="flex items-center text-sm text-muted-foreground">
+                    <Calendar className="w-4 h-4 mr-2 text-primary" />
+                    <span className="font-medium">{category.duration}</span>
                   </div>
-                  
-                  <h3 className="text-4xl md:text-5xl font-bold text-foreground mb-6">
-                    {getTranslation(`experiences.${exp.id}.title`, exp.title)}
-                  </h3>
-                  
-                  <p className="text-lg text-muted-foreground leading-relaxed mb-8">
-                    {getTranslation(`experiences.${exp.id}.description`, exp.description)}
-                  </p>
+                  <div className="flex items-center text-sm text-muted-foreground">
+                    <Users className="w-4 h-4 mr-2 text-primary" />
+                    <span className="font-medium">{category.groupSize}</span>
+                  </div>
                 </div>
 
-                {/* Features Grid */}
-                <div className="grid grid-cols-2 gap-4">
-                  {exp.features.map((feature, featureIndex) => (
-                    <div key={featureIndex} className="flex items-center space-x-2">
-                      <div className="w-2 h-2 bg-primary rounded-full"></div>
-                      <span className="text-foreground font-medium">{feature}</span>
-                    </div>
+                <div className="flex flex-wrap gap-2 mb-6">
+                  {category.activities.map((activity, idx) => (
+                    <span
+                      key={idx}
+                      className="px-3 py-1 bg-primary/10 text-primary text-xs font-medium rounded-full"
+                    >
+                      {activity}
+                    </span>
                   ))}
                 </div>
-
-                <Button className="bg-gradient-to-r from-primary to-accent hover:shadow-xl transform hover:scale-105 transition-all duration-300 text-lg px-8 py-3">
-                  {getTranslation('experiences.explore', 'Explore')} {getTranslation(`experiences.${exp.id}.title`, exp.title)}
-                  <ArrowRight className="ml-2 h-5 w-5" />
-                </Button>
-              </div>
-
-              {/* Image */}
-              <div className="relative">
-                <div className="aspect-[4/3] rounded-3xl overflow-hidden shadow-2xl">
-                  <img
-                    src={exp.image}
-                    alt={exp.title}
-                    className="w-full h-full object-cover hover:scale-105 transform transition-transform duration-700"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent"></div>
-                </div>
-                
-                {/* Floating Badge */}
-                <div className="absolute -bottom-6 -left-6 bg-white rounded-2xl p-4 shadow-xl">
-                  <div className="flex items-center space-x-3">
-                    <exp.icon className="w-6 h-6 text-primary" />
-                    <div>
-                      <div className="font-bold text-foreground">{getTranslation(`experiences.${exp.id}.title`, exp.title)}</div>
-                      <div className="text-sm text-muted-foreground">{getTranslation('experiences.premiumExperience', 'Premium Experience')}</div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
+              </CardContent>
+            </Card>
           ))}
+        </div>
+
+        <div className="text-center">
+          <Button
+            onClick={() => navigate('/experiences')}
+            size="lg"
+            className="bg-gradient-to-r from-primary to-accent hover:shadow-2xl transform hover:scale-105 transition-all duration-300 text-lg px-8 py-6 rounded-xl font-semibold"
+          >
+            {getTranslation('experiences.cta', 'Explore All Experiences')}
+            <ArrowRight className="ml-2 h-5 w-5" />
+          </Button>
         </div>
       </div>
     </section>

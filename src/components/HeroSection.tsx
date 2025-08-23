@@ -12,6 +12,7 @@ import {
   CarouselNext,
   CarouselPrevious,
 } from '@/components/ui/carousel';
+import { useMediaAsset } from '@/hooks/useMediaAsset';
 
 const HeroSection = () => {
   const navigate = useNavigate();
@@ -19,10 +20,15 @@ const HeroSection = () => {
   const [checkOut, setCheckOut] = useState('');
   const [guests, setGuests] = useState('2');
 
+  // Use media assets for hero slides with fallback URLs
+  const { asset: heroSlide1 } = useMediaAsset('hero.v4.slide1', 'https://images.unsplash.com/photo-1469474968028-56623f02e42e?w=1920&h=1080&fit=crop');
+  const { asset: heroSlide2 } = useMediaAsset('hero.v4.slide2', 'https://images.unsplash.com/photo-1482938289607-e9573fc25ebb?w=1920&h=1080&fit=crop');
+  const { asset: heroSlide3 } = useMediaAsset('hero.v4.slide3', 'https://images.unsplash.com/photo-1501854140801-50d01698950b?w=1920&h=1080&fit=crop');
+
   const heroImages = [
-    'https://images.unsplash.com/photo-1469474968028-56623f02e42e?w=1920&h=1080&fit=crop',
-    'https://images.unsplash.com/photo-1482938289607-e9573fc25ebb?w=1920&h=1080&fit=crop',
-    'https://images.unsplash.com/photo-1501854140801-50d01698950b?w=1920&h=1080&fit=crop',
+    heroSlide1?.image_url || 'https://images.unsplash.com/photo-1469474968028-56623f02e42e?w=1920&h=1080&fit=crop',
+    heroSlide2?.image_url || 'https://images.unsplash.com/photo-1482938289607-e9573fc25ebb?w=1920&h=1080&fit=crop',
+    heroSlide3?.image_url || 'https://images.unsplash.com/photo-1501854140801-50d01698950b?w=1920&h=1080&fit=crop',
   ];
 
   const handleCheckAvailability = () => {

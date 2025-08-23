@@ -1,9 +1,11 @@
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Calendar, Users, ArrowRight, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useTranslationContext } from '@/components/admin/TranslationProvider';
+import { useMediaAsset } from '@/hooks/useMediaAsset';
 
 const HeroSectionV5 = () => {
   const navigate = useNavigate();
@@ -13,26 +15,32 @@ const HeroSectionV5 = () => {
   const [checkOut, setCheckOut] = useState('');
   const [guests, setGuests] = useState('2');
 
+  // Use media assets for hero slides
+  const { asset: slide1 } = useMediaAsset('hero.v5.slide1', "/lovable-uploads/9699e81e-78aa-4ce4-b652-cf46c4bd7075.png");
+  const { asset: slide2 } = useMediaAsset('hero.v5.slide2', "/lovable-uploads/d4df921c-30f4-4f92-92f2-c84dbcd5b591.png");
+  const { asset: slide3 } = useMediaAsset('hero.v5.slide3', "/lovable-uploads/b7049d8c-bd59-4733-b040-30b3f79f881c.png");
+  const { asset: slide4 } = useMediaAsset('hero.v5.slide4', "/lovable-uploads/6df7505d-8906-4590-b67e-a18c9f9da7f5.png");
+
   const slides = [
     {
       type: 'image',
-      content: "/lovable-uploads/9699e81e-78aa-4ce4-b652-cf46c4bd7075.png",
-      alt: "Horse riding on red mud trails in Matheran"
+      content: slide1?.image_url || "/lovable-uploads/9699e81e-78aa-4ce4-b652-cf46c4bd7075.png",
+      alt: slide1?.title || "Horse riding on red mud trails in Matheran"
     },
     {
       type: 'image',
-      content: "/lovable-uploads/d4df921c-30f4-4f92-92f2-c84dbcd5b591.png",
-      alt: "Beautiful lake with red earth shores in Matheran"
+      content: slide2?.image_url || "/lovable-uploads/d4df921c-30f4-4f92-92f2-c84dbcd5b591.png",
+      alt: slide2?.title || "Beautiful lake with red earth shores in Matheran"
     },
     {
       type: 'image',
-      content: "/lovable-uploads/b7049d8c-bd59-4733-b040-30b3f79f881c.png",
-      alt: "Winding mountain roads leading to Matheran"
+      content: slide3?.image_url || "/lovable-uploads/b7049d8c-bd59-4733-b040-30b3f79f881c.png",
+      alt: slide3?.title || "Winding mountain roads leading to Matheran"
     },
     {
       type: 'image',
-      content: "/lovable-uploads/6df7505d-8906-4590-b67e-a18c9f9da7f5.png",
-      alt: "Matheran toy train through misty mountains"
+      content: slide4?.image_url || "/lovable-uploads/6df7505d-8906-4590-b67e-a18c9f9da7f5.png",
+      alt: slide4?.title || "Matheran toy train through misty mountains"
     }
   ];
 
