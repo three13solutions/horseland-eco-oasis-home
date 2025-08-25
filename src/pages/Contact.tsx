@@ -109,8 +109,9 @@ const Contact = () => {
                         <h3 className="font-semibold text-foreground mb-2">Address</h3>
                         <p className="text-muted-foreground">
                           Horseland Hotel<br />
-                          Near Dasturi Point, Matheran<br />
-                          Maharashtra 410102, India
+                          Vithalrao Kotwal Road,<br/>
+                          Near Dasturi Point, Matheran<br/>
+                          Maharashtra 410102, India<br/>
                         </p>
                       </div>
                     </div>
@@ -126,9 +127,8 @@ const Contact = () => {
                       <div>
                         <h3 className="font-semibold text-foreground mb-2">Phone</h3>
                         <p className="text-muted-foreground">
-                          Reservations: +91 98765 43210<br />
-                          Reception: +91 98765 43211<br />
-                          Emergency: +91 98765 43212
+                          Mahesh: +91 9404224600<br />
+                          Sachin: +91 9004424567<br />
                         </p>
                       </div>
                     </div>
@@ -144,9 +144,7 @@ const Contact = () => {
                       <div>
                         <h3 className="font-semibold text-foreground mb-2">Email</h3>
                         <p className="text-muted-foreground">
-                          reservations@horselandhotel.com<br />
                           info@horselandhotel.com<br />
-                          spa@horselandhotel.com
                         </p>
                       </div>
                     </div>
@@ -162,7 +160,7 @@ const Contact = () => {
                       <div>
                         <h3 className="font-semibold text-foreground mb-2">Operating Hours</h3>
                         <p className="text-muted-foreground">
-                          Reception: 24/7<br />
+                          Reservation: 10:00 AM to 09:00 PM<br />
                           Restaurant: 7:00 AM - 11:00 PM<br />
                           Spa: 8:00 AM - 8:00 PM
                         </p>
