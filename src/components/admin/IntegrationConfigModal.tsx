@@ -55,7 +55,7 @@ export function IntegrationConfigModal({
 
       // Save secrets via edge function
       if (Object.keys(data.secrets).length > 0) {
-        const response = await fetch('/functions/v1/save-integration-secret', {
+        const response = await fetch(`https://mmmogqappdtnwqkvzxih.supabase.co/functions/v1/save-integration-secret`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',

@@ -91,7 +91,7 @@ export default function IntegrationsManagement() {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) throw new Error('Not authenticated');
 
-      const response = await fetch('/functions/v1/verify-integration', {
+      const response = await fetch(`https://mmmogqappdtnwqkvzxih.supabase.co/functions/v1/verify-integration`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
