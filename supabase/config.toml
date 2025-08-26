@@ -42,3 +42,9 @@ verify_jwt = true
 
 [functions.auto-translate]
 verify_jwt = true
+
+[functions.save-integration-secret]
+verify_jwt = true
+
+[functions.verify-integration]
+verify_jwt = true

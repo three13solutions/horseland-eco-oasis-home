@@ -1,4 +1,3 @@
-
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2"
 
@@ -165,6 +164,7 @@ serve(async (req) => {
       )
     }
 
+    console.log('Getting integration and secrets...')
     // Get integration and its secrets
     const { data: integration } = await supabaseClient
       .from('api_integrations')
@@ -175,6 +175,7 @@ serve(async (req) => {
       .eq('id', integrationId)
       .single()
 
+    console.log('Integration found:', !!integration)
     if (!integration) {
       return new Response(
         JSON.stringify({ error: 'Integration not found' }),
@@ -184,6 +185,8 @@ serve(async (req) => {
 
     // Get encryption key
     const encryptionKey = Deno.env.get('INTEGRATIONS_ENCRYPTION_KEY')
+    console.log('Encryption key present:', !!encryptionKey)
+    
     if (!encryptionKey) {
       return new Response(
         JSON.stringify({ error: 'Encryption key not configured' }),
@@ -193,9 +196,12 @@ serve(async (req) => {
 
     // Decrypt secrets
     const secrets: Record<string, string> = {}
-    for (const secret of integration.api_integration_secrets) {
+    console.log('Decrypting secrets, count:', integration.api_integration_secrets?.length || 0)
+    
+    for (const secret of integration.api_integration_secrets || []) {
       try {
         secrets[secret.key] = await decryptSecret(secret.value_encrypted, encryptionKey)
+        console.log('Decrypted secret:', secret.key)
       } catch (error) {
         console.error(`Failed to decrypt secret ${secret.key}:`, error)
       }
@@ -203,6 +209,7 @@ serve(async (req) => {
 
     // Verify based on integration type
     let result: { success: boolean, message: string }
+    console.log('Verifying integration type:', integration.integration_key)
 
     switch (integration.integration_key) {
       case 'razorpay':
@@ -215,6 +222,8 @@ serve(async (req) => {
         result = { success: false, message: 'Verification not implemented for this integration' }
     }
 
+    console.log('Verification result:', result)
+
     // Update integration status
     await supabaseClient
       .from('api_integrations')
@@ -224,6 +233,7 @@ serve(async (req) => {
       })
       .eq('id', integrationId)
 
+    console.log('Status updated, returning result')
     return new Response(
       JSON.stringify(result),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
