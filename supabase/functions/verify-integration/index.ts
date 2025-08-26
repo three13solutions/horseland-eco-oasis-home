@@ -82,20 +82,26 @@ async function verifyMapbox(secrets: Record<string, string>): Promise<{ success:
 }
 
 serve(async (req) => {
+  console.log('Verify integration function called with method:', req.method)
+  
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders })
   }
 
   try {
+    console.log('Parsing request body...')
     const { integrationId } = await req.json()
+    console.log('Integration ID:', integrationId)
 
     if (!integrationId) {
+      console.log('Missing integrationId')
       return new Response(
         JSON.stringify({ error: 'Missing integrationId' }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       )
     }
 
+    console.log('Creating Supabase client...')
     const supabaseClient = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
@@ -103,7 +109,10 @@ serve(async (req) => {
 
     // Get the JWT from the Authorization header
     const authHeader = req.headers.get('Authorization')
+    console.log('Auth header present:', !!authHeader)
+    
     if (!authHeader) {
+      console.log('Missing authorization header')
       return new Response(
         JSON.stringify({ error: 'Missing authorization header' }),
         { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -111,6 +120,7 @@ serve(async (req) => {
     }
 
     const token = authHeader.replace('Bearer ', '')
+    console.log('Token extracted, length:', token.length)
     
     // Create user client to verify the user
     const userClient = createClient(
@@ -125,15 +135,20 @@ serve(async (req) => {
       }
     )
 
+    console.log('Getting user from JWT...')
     // Get the user from the JWT
     const { data: { user }, error: userError } = await userClient.auth.getUser()
+    console.log('User retrieved:', !!user, 'Error:', userError?.message)
+    
     if (userError || !user) {
+      console.log('Invalid token or user error')
       return new Response(
         JSON.stringify({ error: 'Invalid token' }),
         { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       )
     }
 
+    console.log('Checking admin profile for user:', user.id)
     // Verify user is admin
     const { data: profile } = await supabaseClient
       .from('admin_profiles')
@@ -141,7 +156,9 @@ serve(async (req) => {
       .eq('user_id', user.id)
       .single()
 
+    console.log('Admin profile found:', !!profile)
     if (!profile) {
+      console.log('User is not admin')
       return new Response(
         JSON.stringify({ error: 'Unauthorized' }),
         { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
