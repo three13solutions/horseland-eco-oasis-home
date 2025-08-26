@@ -110,15 +110,35 @@ serve(async (req) => {
       )
     }
 
-    // Set the auth token for the client
     const token = authHeader.replace('Bearer ', '')
-    supabaseClient.auth.setAuth(token)
+    
+    // Create user client to verify the user
+    const userClient = createClient(
+      Deno.env.get('SUPABASE_URL') ?? '',
+      Deno.env.get('SUPABASE_ANON_KEY') ?? '',
+      {
+        global: {
+          headers: {
+            Authorization: authHeader,
+          },
+        },
+      }
+    )
+
+    // Get the user from the JWT
+    const { data: { user }, error: userError } = await userClient.auth.getUser()
+    if (userError || !user) {
+      return new Response(
+        JSON.stringify({ error: 'Invalid token' }),
+        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      )
+    }
 
     // Verify user is admin
     const { data: profile } = await supabaseClient
       .from('admin_profiles')
       .select('role')
-      .eq('user_id', (await supabaseClient.auth.getUser()).data.user?.id)
+      .eq('user_id', user.id)
       .single()
 
     if (!profile) {
