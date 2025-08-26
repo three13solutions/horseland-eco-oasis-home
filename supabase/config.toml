@@ -48,3 +48,6 @@ verify_jwt = true
 
 [functions.verify-integration]
 verify_jwt = true
+
+[functions.get-razorpay-public-key]
+verify_jwt = false

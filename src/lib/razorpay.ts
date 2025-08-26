@@ -1,10 +1,28 @@
 // Razorpay configuration and utilities
-export const RAZORPAY_CONFIG = {
-  // Test keys for development - replace with actual keys later
-  KEY_ID: 'rzp_test_1DP5mmOlF5G5ag', // Demo test key
+let razorpayConfig = {
+  KEY_ID: 'rzp_test_1DP5mmOlF5G5ag', // Default test key
   CURRENCY: 'INR',
   GST_RATE: 0.18, // 18% GST
-} as const;
+};
+
+// Function to load Razorpay config from integrations
+export const loadRazorpayConfig = async () => {
+  try {
+    const response = await fetch(`https://mmmogqappdtnwqkvzxih.supabase.co/functions/v1/get-razorpay-public-key`);
+
+    if (response.ok) {
+      const data = await response.json();
+      if (data.key_id) {
+        razorpayConfig.KEY_ID = data.key_id;
+      }
+    }
+  } catch (error) {
+    console.log('Using default Razorpay config');
+  }
+  return razorpayConfig;
+};
+
+export const RAZORPAY_CONFIG = razorpayConfig
 
 export interface PaymentData {
   amount: number; // in paise (multiply by 100)

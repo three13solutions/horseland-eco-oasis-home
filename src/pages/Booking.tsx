@@ -11,6 +11,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import NavigationV5 from '@/components/v5/NavigationV5';
 import DynamicFooter from '@/components/DynamicFooter';
+import { PaymentModal } from '@/components/PaymentModal';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 
@@ -110,6 +111,7 @@ const Booking = () => {
   });
   const [selectedPickup, setSelectedPickup] = useState<PickupService | null>(null);
   const [selectedBedding, setSelectedBedding] = useState<BeddingOption[]>([]);
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
 
   // Load available rooms and addons
   useEffect(() => {
@@ -389,10 +391,76 @@ const Booking = () => {
       return;
     }
     
-    toast({
-      title: "Booking Confirmation",
-      description: `Proceeding to payment for ${selectedRoomType?.name}. Total: ₹${calculateTotal().toLocaleString()}`,
-    });
+    setShowPaymentModal(true);
+  };
+
+  const handlePaymentSuccess = async (paymentId: string, orderId: string) => {
+    try {
+      // Save booking to database
+      const bookingData = {
+        booking_id: `BOOK_${Date.now()}`,
+        guest_name: guestDetails.name,
+        guest_email: guestDetails.email,
+        guest_phone: guestDetails.phone,
+        room_type_id: selectedRoomType?.id,
+        check_in: checkIn,
+        check_out: checkOut,
+        guests_count: guests,
+        total_amount: calculateTotal(),
+        payment_status: 'completed',
+        payment_id: paymentId,
+        payment_order_id: orderId,
+        payment_method: 'razorpay',
+        selected_meals: selectedAddons.filter(a => a.type === 'meal').map(a => ({
+          id: a.id,
+          title: a.title,
+          price: a.price,
+          quantity: a.quantity
+        })),
+        selected_activities: selectedAddons.filter(a => a.type === 'activity').map(a => ({
+          id: a.id,
+          title: a.title,
+          price: a.price,
+          quantity: a.quantity
+        })),
+        selected_spa_services: selectedAddons.filter(a => a.type === 'spa').map(a => ({
+          id: a.id,
+          title: a.title,
+          price: a.price,
+          quantity: a.quantity
+        })),
+        notes: guestDetails.specialRequests
+      };
+
+      const { error } = await supabase
+        .from('bookings')
+        .insert([bookingData]);
+
+      if (error) {
+        console.error('Error saving booking:', error);
+        toast({
+          title: "Booking Error",
+          description: "Payment successful but booking couldn't be saved. Please contact support.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      toast({
+        title: "Booking Confirmed!",
+        description: `Your booking has been confirmed. Payment ID: ${paymentId}`,
+      });
+
+      // Redirect to confirmation page or home
+      navigate('/');
+    } catch (error) {
+      console.error('Error processing booking:', error);
+      toast({
+        title: "Booking Error",
+        description: "An error occurred while processing your booking. Please contact support.",
+        variant: "destructive",
+      });
+    }
   };
 
   const handleProceedToGuestDetails = () => {
@@ -1170,6 +1238,28 @@ const Booking = () => {
           )}
         </div>
       </section>
+
+      {/* Payment Modal */}
+      {showPaymentModal && selectedRoomType && (
+        <PaymentModal
+          isOpen={showPaymentModal}
+          onClose={() => setShowPaymentModal(false)}
+          onSuccess={handlePaymentSuccess}
+          bookingDetails={{
+            roomName: selectedRoomType.name,
+            roomPrice: selectedRoomType.base_price,
+            nights: nights,
+            addonTotal: selectedAddons.reduce((total, addon) => total + (addon.price * addon.quantity), 0) + 
+                       (selectedPickup ? selectedPickup.price : 0) + 
+                       selectedBedding.reduce((total, bed) => total + bed.price, 0),
+            guestName: guestDetails.name,
+            guestEmail: guestDetails.email,
+            guestPhone: guestDetails.phone,
+            checkIn: formatDate(checkIn),
+            checkOut: formatDate(checkOut),
+          }}
+        />
+      )}
 
       <DynamicFooter />
     </div>

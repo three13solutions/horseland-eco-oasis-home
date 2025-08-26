@@ -68,6 +68,10 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
     setIsProcessing(true);
 
     try {
+      // Load Razorpay configuration
+      const { loadRazorpayConfig } = await import('@/lib/razorpay');
+      const config = await loadRazorpayConfig();
+      
       const scriptLoaded = await loadRazorpayScript();
       if (!scriptLoaded) {
         throw new Error('Failed to load Razorpay SDK');
@@ -77,9 +81,9 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
       const orderId = `order_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
 
       const options = {
-        key: RAZORPAY_CONFIG.KEY_ID,
+        key: config.KEY_ID,
         amount: toPaise(paymentBreakdown.totalAmount),
-        currency: RAZORPAY_CONFIG.CURRENCY,
+        currency: config.CURRENCY,
         name: 'Hotel Booking',
         description: `${bookingDetails.roomName} - ${bookingDetails.nights} night(s)`,
         order_id: orderId,
