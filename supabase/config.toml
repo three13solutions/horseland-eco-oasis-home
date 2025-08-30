@@ -16,6 +16,12 @@ jwt_expiry = 3600
 refresh_token_rotation_enabled = true
 security_update_password_require_reauthentication = true
 enable_signup = true
+password_min_length = 8
+enable_password_limit = true
+password_lower_case = true
+password_upper_case = true
+password_numbers = true
+password_symbols = true
 
 [auth.email]
 enable_signup = true
@@ -37,6 +43,7 @@ port = 54324
 enabled = true
 port = 54325
 
+# Explicit JWT verification configuration for security
 [functions.migrate-json-to-db]
 verify_jwt = true
 
@@ -51,3 +58,15 @@ verify_jwt = true
 
 [functions.get-razorpay-public-key]
 verify_jwt = false
+
+[functions.create-razorpay-order]
+verify_jwt = true
+
+[functions.validate-booking]
+verify_jwt = true
+
+[functions.verify-razorpay-payment]
+verify_jwt = true
+
+[functions.auto-assign-room]
+verify_jwt = true
