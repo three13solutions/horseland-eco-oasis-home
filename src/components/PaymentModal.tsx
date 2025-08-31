@@ -3,6 +3,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from './ui/dialog';
 import { Button } from './ui/button';
 import { Separator } from './ui/separator';
 import { CreditCard, Loader2 } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
 import { 
   RAZORPAY_CONFIG, 
   calculateBookingAmount, 
@@ -68,7 +69,24 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
     setIsProcessing(true);
 
     try {
-      // Load Razorpay configuration
+      // Step 1: Create Razorpay order through secure edge function
+      const { data: orderData, error: orderError } = await supabase.functions.invoke('create-razorpay-order', {
+        body: {
+          amount: paymentBreakdown.totalAmount,
+          currency: 'INR',
+          notes: {
+            booking_guest: bookingDetails.guestName,
+            booking_room: bookingDetails.roomName,
+            booking_nights: bookingDetails.nights.toString()
+          }
+        }
+      });
+
+      if (orderError || !orderData?.order) {
+        throw new Error('Failed to create payment order');
+      }
+
+      // Step 2: Load Razorpay configuration and SDK
       const { loadRazorpayConfig } = await import('@/lib/razorpay');
       const config = await loadRazorpayConfig();
       
@@ -77,19 +95,37 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
         throw new Error('Failed to load Razorpay SDK');
       }
 
-      // Generate order ID (in production, this should come from backend)
-      const orderId = `order_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-
+      // Step 3: Open Razorpay checkout with server-generated order
       const options = {
         key: config.KEY_ID,
-        amount: toPaise(paymentBreakdown.totalAmount),
-        currency: config.CURRENCY,
+        amount: orderData.order.amount,
+        currency: orderData.order.currency,
         name: 'Hotel Booking',
         description: `${bookingDetails.roomName} - ${bookingDetails.nights} night(s)`,
-        order_id: orderId,
-        handler: function (response: any) {
-          onSuccess(response.razorpay_payment_id, orderId);
-          onClose();
+        order_id: orderData.order.id,
+        handler: async function (response: any) {
+          try {
+            // Step 4: Verify payment through secure edge function
+            const { data: verifyData, error: verifyError } = await supabase.functions.invoke('verify-razorpay-payment', {
+              body: {
+                order_id: orderData.order.id,
+                payment_id: response.razorpay_payment_id,
+                signature: response.razorpay_signature
+              }
+            });
+
+            if (verifyError || !verifyData?.verified) {
+              throw new Error('Payment verification failed');
+            }
+
+            // Payment verified successfully - call success handler
+            onSuccess(response.razorpay_payment_id, orderData.order.id);
+            onClose();
+          } catch (verificationError) {
+            console.error('Payment verification error:', verificationError);
+            setIsProcessing(false);
+            // Could show error toast here
+          }
         },
         prefill: {
           name: bookingDetails.guestName,
@@ -111,6 +147,7 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
     } catch (error) {
       console.error('Payment error:', error);
       setIsProcessing(false);
+      // Could show error toast here
     }
   };
 

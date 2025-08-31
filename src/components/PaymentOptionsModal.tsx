@@ -73,36 +73,16 @@ export const PaymentOptionsModal: React.FC<PaymentOptionsModalProps> = ({
   };
 
   const handleRazorpaySuccess = async (paymentId: string, orderId: string) => {
-    try {
-      const { error } = await supabase
-        .from('bookings')
-        .update({
-          payment_status: 'confirmed',
-          payment_method: 'razorpay',
-          payment_id: paymentId,
-          payment_order_id: orderId,
-          updated_at: new Date().toISOString(),
-        })
-        .eq('id', booking.id);
+    // Payment verification is now handled in PaymentModal
+    // No direct database updates needed here - the edge function handles it
+    toast({
+      title: "Online Payment Successful",
+      description: `Payment completed for booking ${booking.booking_id}`,
+    });
 
-      if (error) throw error;
-
-      toast({
-        title: "Online Payment Successful",
-        description: `Payment completed for booking ${booking.booking_id}`,
-      });
-
-      setShowRazorpayModal(false);
-      onPaymentComplete();
-      onClose();
-    } catch (error) {
-      console.error('Error updating payment:', error);
-      toast({
-        title: "Payment Update Failed",
-        description: "Payment was successful but failed to update booking status",
-        variant: "destructive",
-      });
-    }
+    setShowRazorpayModal(false);
+    onPaymentComplete();
+    onClose();
   };
 
   const calculateNights = () => {
