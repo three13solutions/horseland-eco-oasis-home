@@ -11,7 +11,6 @@ interface SocialNetwork {
   label: string;
   url: string;
   enabled: boolean;
-  icon: React.ReactNode;
 }
 
 interface SocialMediaManagerProps {
@@ -24,14 +23,27 @@ interface SocialMediaManagerProps {
 }
 
 const AVAILABLE_PLATFORMS = [
-  { platform: 'facebook', label: 'Facebook', icon: <Facebook className="w-4 h-4" /> },
-  { platform: 'instagram', label: 'Instagram', icon: <Instagram className="w-4 h-4" /> },
-  { platform: 'twitter', label: 'Twitter / X', icon: <Twitter className="w-4 h-4" /> },
-  { platform: 'youtube', label: 'YouTube', icon: <Youtube className="w-4 h-4" /> },
-  { platform: 'linkedin', label: 'LinkedIn', icon: <Linkedin className="w-4 h-4" /> },
-  { platform: 'tiktok', label: 'TikTok', icon: <Video className="w-4 h-4" /> },
-  { platform: 'whatsapp', label: 'WhatsApp', icon: <MessageCircle className="w-4 h-4" /> },
+  { platform: 'facebook', label: 'Facebook' },
+  { platform: 'instagram', label: 'Instagram' },
+  { platform: 'twitter', label: 'Twitter / X' },
+  { platform: 'youtube', label: 'YouTube' },
+  { platform: 'linkedin', label: 'LinkedIn' },
+  { platform: 'tiktok', label: 'TikTok' },
+  { platform: 'whatsapp', label: 'WhatsApp' },
 ];
+
+const getIconForPlatform = (platform: string) => {
+  switch (platform) {
+    case 'facebook': return <Facebook className="w-4 h-4" />;
+    case 'instagram': return <Instagram className="w-4 h-4" />;
+    case 'twitter': return <Twitter className="w-4 h-4" />;
+    case 'youtube': return <Youtube className="w-4 h-4" />;
+    case 'linkedin': return <Linkedin className="w-4 h-4" />;
+    case 'tiktok': return <Video className="w-4 h-4" />;
+    case 'whatsapp': return <MessageCircle className="w-4 h-4" />;
+    default: return <Globe className="w-4 h-4" />;
+  }
+};
 
 const SocialMediaManager: React.FC<SocialMediaManagerProps> = ({ section, onUpdate }) => {
   const networks = section.content.networks || AVAILABLE_PLATFORMS.map(platform => ({
@@ -76,7 +88,7 @@ const SocialMediaManager: React.FC<SocialMediaManagerProps> = ({ section, onUpda
             <CardHeader className="pb-3">
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-2">
-                  {network.icon}
+                  {getIconForPlatform(network.platform)}
                   <CardTitle className="text-sm">{network.label}</CardTitle>
                 </div>
                 <Switch
