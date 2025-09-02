@@ -8,9 +8,10 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
-import { Trash2, Plus, Save, Settings, GripVertical, ChevronRight } from 'lucide-react';
+import { Trash2, Plus, Save, Settings, GripVertical, ChevronRight, Facebook, Instagram, Twitter, Youtube, Linkedin, Github, Video, MessageCircle, Globe } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import ImageUpload from '@/components/ImageUpload';
+import SocialMediaManager from '@/components/admin/SocialMediaManager';
 import {
   DndContext,
   closestCenter,
@@ -624,22 +625,29 @@ const SiteSettings = () => {
                         />
                       </div>
                       
-                      <div>
-                        <Label>Content (JSON)</Label>
-                        <Textarea
-                          value={JSON.stringify(section.content, null, 2)}
-                          onChange={(e) => {
-                            try {
-                              const parsed = JSON.parse(e.target.value);
-                              updateFooterSection(index, 'content', parsed);
-                            } catch {
-                              // Invalid JSON, don't update
-                            }
-                          }}
-                          rows={6}
-                          className="font-mono text-sm"
+                      {section.section_key === 'social' ? (
+                        <SocialMediaManager 
+                          section={section}
+                          onUpdate={(content) => updateFooterSection(index, 'content', content)}
                         />
-                      </div>
+                      ) : (
+                        <div>
+                          <Label>Content (JSON)</Label>
+                          <Textarea
+                            value={JSON.stringify(section.content, null, 2)}
+                            onChange={(e) => {
+                              try {
+                                const parsed = JSON.parse(e.target.value);
+                                updateFooterSection(index, 'content', parsed);
+                              } catch {
+                                // Invalid JSON, don't update
+                              }
+                            }}
+                            rows={6}
+                            className="font-mono text-sm"
+                          />
+                        </div>
+                      )}
                       
                       <Button
                         variant="ghost"

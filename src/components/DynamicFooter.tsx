@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Facebook, Instagram, Twitter, Youtube, Mail, Phone, MapPin, Package, ExternalLink } from 'lucide-react';
+import { Facebook, Instagram, Twitter, Youtube, Mail, Phone, MapPin, Package, ExternalLink, Linkedin, Github, Video, MessageCircle } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 
 interface FooterSection {
@@ -82,6 +82,10 @@ const DynamicFooter = () => {
       case 'instagram': return <Instagram className="w-5 h-5" />;
       case 'twitter': return <Twitter className="w-5 h-5" />;
       case 'youtube': return <Youtube className="w-5 h-5" />;
+      case 'linkedin': return <Linkedin className="w-5 h-5" />;
+      case 'github': return <Github className="w-5 h-5" />;
+      case 'tiktok': return <Video className="w-5 h-5" />;
+      case 'whatsapp': return <MessageCircle className="w-5 h-5" />;
       default: return null;
     }
   };
@@ -255,15 +259,21 @@ const DynamicFooter = () => {
               <div className="md:col-span-2 lg:col-span-2 space-y-3">
                 <p className="text-background/80 text-sm">Follow Our Journey</p>
                 <div className="flex space-x-3">
-                  {Object.entries(socialSection.content).map(([platform, url]) => (
-                    <Link
-                      key={platform}
-                      to={url as string}
-                      className="p-2 bg-background/10 rounded-full hover:bg-background/20 transition-all duration-300 transform hover:scale-110 text-background/80 hover:text-primary"
-                    >
-                      {getSocialIcon(platform)}
-                    </Link>
-                  ))}
+                  {socialSection.content.networks && 
+                    socialSection.content.networks
+                      .filter((network: any) => network.enabled && network.url)
+                      .map((network: any) => (
+                        <a
+                          key={network.platform}
+                          href={network.url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="p-2 bg-background/10 rounded-full hover:bg-background/20 transition-all duration-300 transform hover:scale-110 text-background/80 hover:text-primary"
+                        >
+                          {getSocialIcon(network.platform)}
+                        </a>
+                      ))
+                  }
                 </div>
               </div>
             )}
