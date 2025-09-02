@@ -11,8 +11,6 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Progress } from '@/components/ui/progress';
 import { Loader2, Save, RefreshCw, Copy, Languages, Upload, Download, Globe, Zap, FileDown } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { MigrationControls } from '@/components/admin/MigrationControls';
-import PoliciesManager from '@/components/admin/PoliciesManager';
 
 interface Translation {
   id: string;
@@ -30,21 +28,24 @@ interface TranslationSection {
   description: string;
 }
 
+interface ContentPage {
+  key: string;
+  name: string;
+  description: string;
+  type: 'translation' | 'policy';
+}
+
 const ContentManagement = () => {
-  const [activeTab, setActiveTab] = useState<'translations' | 'policies'>('translations');
-  const [sections, setSections] = useState<TranslationSection[]>([]);
+  const [contentPages, setContentPages] = useState<ContentPage[]>([]);
   const [translations, setTranslations] = useState<Translation[]>([]);
-  const [selectedSection, setSelectedSection] = useState<string>('');
+  const [selectedPage, setSelectedPage] = useState<string>('');
   const [selectedLanguage, setSelectedLanguage] = useState<string>('en');
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState<string | null>(null);
   const [editingValues, setEditingValues] = useState<{ [key: string]: string }>({});
-  const [migrating, setMigrating] = useState(false);
   const [translating, setTranslating] = useState<string | null>(null);
-  const [showMigrateDialog, setShowMigrateDialog] = useState(false);
   const [showTranslateDialog, setShowTranslateDialog] = useState(false);
   const [translateProgress, setTranslateProgress] = useState(0);
-  const [exporting, setExporting] = useState(false);
   const { toast } = useToast();
 
   const languages = [
@@ -71,7 +72,7 @@ const ContentManagement = () => {
   const loadData = async () => {
     setLoading(true);
     try {
-      // Load sections
+      // Load translation sections
       const { data: sectionsData, error: sectionsError } = await supabase
         .from('translation_sections')
         .select('*')
@@ -79,6 +80,15 @@ const ContentManagement = () => {
         .order('sort_order');
 
       if (sectionsError) throw sectionsError;
+
+      // Load policies content
+      const { data: policiesData, error: policiesError } = await supabase
+        .from('policies_content')
+        .select('*')
+        .eq('is_active', true)
+        .order('sort_order');
+
+      if (policiesError) throw policiesError;
 
       // Load translations
       const { data: translationsData, error: translationsError } = await supabase
@@ -88,7 +98,23 @@ const ContentManagement = () => {
 
       if (translationsError) throw translationsError;
 
-      setSections(sectionsData || []);
+      // Combine sections and policies into content pages
+      const pages: ContentPage[] = [
+        ...(sectionsData || []).map(section => ({
+          key: section.section_key,
+          name: section.section_name,
+          description: section.description,
+          type: 'translation' as const
+        })),
+        ...(policiesData || []).map(policy => ({
+          key: policy.section_key,
+          name: policy.title,
+          description: policy.description,
+          type: 'policy' as const
+        }))
+      ];
+
+      setContentPages(pages);
       setTranslations(translationsData || []);
     } catch (error) {
       toast({
@@ -101,48 +127,6 @@ const ContentManagement = () => {
     }
   };
 
-  const migrateFromJSON = async () => {
-    setMigrating(true);
-    try {
-      // Load all JSON translations
-      const languages = ['en', 'hi', 'mr', 'gu', 'ta', 'te', 'bn', 'pa', 'ur', 'ar', 'zh', 'es', 'fr', 'ru'];
-      const translations: { [key: string]: any } = {};
-
-      for (const lang of languages) {
-        try {
-          const response = await fetch(`/locales/${lang}/common.json`);
-          if (response.ok) {
-            translations[lang] = await response.json();
-          }
-        } catch (error) {
-          console.warn(`Failed to load ${lang} translations:`, error);
-        }
-      }
-
-      // Call migration function
-      const { data, error } = await supabase.functions.invoke('migrate-json-to-db', {
-        body: { translations }
-      });
-
-      if (error) throw error;
-
-      toast({
-        title: "Success",
-        description: `Migrated ${data.migratedCount} translations to database`,
-      });
-
-      await loadData();
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to migrate translations",
-        variant: "destructive",
-      });
-    } finally {
-      setMigrating(false);
-      setShowMigrateDialog(false);
-    }
-  };
 
   const autoTranslate = async (key: string, sourceText: string) => {
     if (selectedLanguage === 'en') return;
@@ -183,12 +167,12 @@ const ContentManagement = () => {
     if (selectedLanguage === 'en') return;
     
     setShowTranslateDialog(true);
-    const sectionKeys = getSectionKeys();
+    const pageKeys = getPageKeys();
     let completed = 0;
     
-    for (const key of sectionKeys) {
+    for (const key of pageKeys) {
       const englishTranslation = translations.find(t => 
-        t.key === key && t.language_code === 'en' && t.section === selectedSection
+        t.key === key && t.language_code === 'en' && t.section === selectedPage
       );
       
       if (englishTranslation) {
@@ -210,7 +194,7 @@ const ContentManagement = () => {
       }
       
       completed++;
-      setTranslateProgress((completed / sectionKeys.length) * 100);
+      setTranslateProgress((completed / pageKeys.length) * 100);
     }
 
     toast({
@@ -223,62 +207,17 @@ const ContentManagement = () => {
     await loadData();
   };
 
-  const exportTranslations = async () => {
-    setExporting(true);
-    try {
-      const exported: { [lang: string]: any } = {};
-      const languages = ['en', 'hi', 'mr', 'gu', 'ta', 'te', 'bn', 'pa', 'ur', 'ar', 'zh', 'es', 'fr', 'ru'];
-      
-      for (const lang of languages) {
-        exported[lang] = {};
-        const langTranslations = translations.filter(t => t.language_code === lang);
-        
-        for (const translation of langTranslations) {
-          const keys = translation.key.split('.');
-          let current = exported[lang];
-          
-          for (let i = 0; i < keys.length - 1; i++) {
-            if (!current[keys[i]]) current[keys[i]] = {};
-            current = current[keys[i]];
-          }
-          
-          current[keys[keys.length - 1]] = translation.value;
-        }
-      }
-
-      const blob = new Blob([JSON.stringify(exported, null, 2)], { type: 'application/json' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = 'translations.json';
-      a.click();
-      URL.revokeObjectURL(url);
-
-      toast({
-        title: "Success",
-        description: "Translations exported successfully",
-      });
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to export translations",
-        variant: "destructive",
-      });
-    } finally {
-      setExporting(false);
-    }
-  };
 
   const getCurrentTranslations = () => {
     return translations.filter(t => 
-      t.section === selectedSection && t.language_code === selectedLanguage
+      t.section === selectedPage && t.language_code === selectedLanguage
     );
   };
 
-  const getSectionKeys = () => {
+  const getPageKeys = () => {
     const keys = new Set(
       translations
-        .filter(t => t.section === selectedSection)
+        .filter(t => t.section === selectedPage)
         .map(t => t.key)
     );
     return Array.from(keys).sort();
@@ -291,7 +230,7 @@ const ContentManagement = () => {
         .from('translations')
         .upsert({
           language_code: selectedLanguage,
-          section: selectedSection,
+          section: selectedPage,
           key,
           value
         }, {
@@ -304,7 +243,7 @@ const ContentManagement = () => {
       setTranslations(prev => {
         const existing = prev.find(t => 
           t.language_code === selectedLanguage && 
-          t.section === selectedSection && 
+          t.section === selectedPage && 
           t.key === key
         );
 
@@ -316,7 +255,7 @@ const ContentManagement = () => {
           return [...prev, {
             id: `temp-${Date.now()}`,
             language_code: selectedLanguage,
-            section: selectedSection,
+            section: selectedPage,
             key,
             value,
             created_at: new Date().toISOString(),
@@ -354,7 +293,7 @@ const ContentManagement = () => {
   const copyFromLanguage = async (sourceLang: string) => {
     try {
       const sourceTranslations = translations.filter(t => 
-        t.section === selectedSection && t.language_code === sourceLang
+        t.section === selectedPage && t.language_code === sourceLang
       );
 
       for (const sourceTranslation of sourceTranslations) {
@@ -392,117 +331,68 @@ const ContentManagement = () => {
       <div className="space-y-6">
         <div className="flex items-center justify-between">
           <h1 className="text-2xl font-bold">Content Management</h1>
-          <div className="flex gap-2">
-            <Button 
-              onClick={() => setActiveTab('translations')}
-              variant={activeTab === 'translations' ? 'default' : 'outline'}
-              size="sm"
-            >
-              Translations
-            </Button>
-            <Button 
-              onClick={() => setActiveTab('policies')}
-              variant={activeTab === 'policies' ? 'default' : 'outline'}
-              size="sm"
-            >
-              Policies
-            </Button>
-            {activeTab === 'translations' && (
-              <>
-                <Button 
-                  onClick={() => setShowMigrateDialog(true)} 
-                  variant="outline" 
-                  size="sm"
-                  disabled={migrating}
-                >
-                  <Upload className="h-4 w-4 mr-2" />
-                  {migrating ? 'Migrating...' : 'Import JSON'}
-                </Button>
-                <Button 
-                  onClick={exportTranslations} 
-                  variant="outline" 
-                  size="sm"
-                  disabled={exporting}
-                >
-                  <FileDown className="h-4 w-4 mr-2" />
-                  {exporting ? 'Exporting...' : 'Export'}
-                </Button>
-                <Button onClick={loadData} variant="outline" size="sm">
-                  <RefreshCw className="h-4 w-4 mr-2" />
-                  Refresh
-                </Button>
-              </>
-            )}
+          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2">
+              <Label htmlFor="page-select" className="text-sm font-medium">
+                Select Page:
+              </Label>
+              <Select value={selectedPage} onValueChange={setSelectedPage}>
+                <SelectTrigger id="page-select" className="w-64 bg-background border shadow-sm">
+                  <SelectValue placeholder="Choose a page to edit content" />
+                </SelectTrigger>
+                <SelectContent className="bg-background border shadow-lg z-50">
+                  {contentPages.map((page) => (
+                    <SelectItem key={page.key} value={page.key}>
+                      <div className="flex flex-col">
+                        <span className="font-medium">{page.name}</span>
+                        <span className="text-xs text-muted-foreground">{page.description}</span>
+                      </div>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
           </div>
         </div>
 
-        {/* Migration Controls */}
-        {activeTab === 'translations' && <MigrationControls />}
-
-        {activeTab === 'policies' ? (
-          <PoliciesManager />
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-            {/* Sidebar */}
-            <Card className="md:col-span-1">
-              <CardHeader>
-                <CardTitle>Sections</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-2">
-                {sections.map((section) => (
-                  <button
-                    key={section.section_key}
-                    onClick={() => setSelectedSection(section.section_key)}
-                    className={`w-full text-left p-2 rounded ${
-                      selectedSection === section.section_key 
-                        ? 'bg-primary text-primary-foreground' 
-                        : 'hover:bg-secondary'
-                    }`}
-                  >
-                    <div className="font-medium">{section.section_name}</div>
-                    <div className="text-sm text-muted-foreground">{section.description}</div>
-                  </button>
-                ))}
-              </CardContent>
-            </Card>
-
-            {/* Main content */}
-            <Card className="md:col-span-3">
-              <CardHeader>
-                <div className="flex justify-between items-center">
-                  <div>
-                    <CardTitle>Translations</CardTitle>
-                    <CardDescription>
-                      Manage content for {selectedSection || 'selected section'}
-                    </CardDescription>
-                  </div>
-                  <Select value={selectedLanguage} onValueChange={setSelectedLanguage}>
-                    <SelectTrigger className="w-32">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {languages.map((lang) => (
-                        <SelectItem key={lang.code} value={lang.code}>
-                          {lang.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+        <div className="grid grid-cols-1 gap-6">
+          {/* Main content */}
+          <Card>
+            <CardHeader>
+              <div className="flex justify-between items-center">
+                <div>
+                  <CardTitle>Content Translations</CardTitle>
+                  <CardDescription>
+                    Manage content for {contentPages.find(p => p.key === selectedPage)?.name || 'selected page'}
+                  </CardDescription>
                 </div>
-              </CardHeader>
-              <CardContent>
-                {selectedSection ? (
+                <Select value={selectedLanguage} onValueChange={setSelectedLanguage}>
+                  <SelectTrigger className="w-32 bg-background border shadow-sm">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent className="bg-background border shadow-lg z-50">
+                    {languages.map((lang) => (
+                      <SelectItem key={lang.code} value={lang.code}>
+                        {lang.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </CardHeader>
+            <CardContent>
+              {selectedPage ? (
                   <>
                     <div className="flex justify-between items-center mb-4">
-                      <div className="flex items-center gap-2">
-                        <Languages className="h-5 w-5" />
-                        <span className="text-lg font-medium">
-                          {selectedSection} ({selectedLanguage.toUpperCase()})
-                        </span>
-                        <Badge variant="secondary">
-                          {getSectionKeys().length} keys
-                        </Badge>
-                      </div>
+                  <div className="flex items-center gap-2">
+                    <Languages className="h-5 w-5" />
+                    <span className="text-lg font-medium">
+                      {contentPages.find(p => p.key === selectedPage)?.name} ({selectedLanguage.toUpperCase()})
+                    </span>
+                    <Badge variant="secondary">
+                      {getPageKeys().length} keys
+                    </Badge>
+                  </div>
                       <div className="flex gap-2">
                         {selectedLanguage !== 'en' && (
                           <Button
@@ -526,126 +416,104 @@ const ContentManagement = () => {
                       </div>
                     </div>
 
-                    <div className="space-y-4">
-                      {getSectionKeys().map((key) => {
-                        const currentTranslation = getCurrentTranslations().find(t => t.key === key);
-                        const englishTranslation = translations.find(t => 
-                          t.key === key && t.language_code === 'en' && t.section === selectedSection
-                        );
+                <div className="space-y-4">
+                  {getPageKeys().map((key) => {
+                    const currentTranslation = getCurrentTranslations().find(t => t.key === key);
+                    const englishTranslation = translations.find(t => 
+                      t.key === key && t.language_code === 'en' && t.section === selectedPage
+                    );
 
-                        return (
-                          <div key={key} className="border rounded-lg p-4">
-                            <div className="flex items-start justify-between mb-2">
-                              <Label className="font-medium">{key}</Label>
-                              <div className="flex items-center gap-2">
-                                {currentTranslation ? (
-                                  <Badge variant="default">Translated</Badge>
-                                ) : (
-                                  <Badge variant="destructive">Missing</Badge>
-                                )}
-                              </div>
-                            </div>
-                            <Input
-                              value={editingValues[key] ?? currentTranslation?.value ?? ''}
-                              onChange={(e) => setEditingValues(prev => ({
-                                ...prev,
-                                [key]: e.target.value
-                              }))}
-                              placeholder={`Enter ${selectedLanguage} translation for ${key}`}
-                              className="mb-2"
-                            />
-                            <div className="flex justify-between items-center">
-                              <span className="text-sm text-muted-foreground">
-                                {englishTranslation ? `EN: ${englishTranslation.value}` : 'No English version'}
-                              </span>
-                              <div className="flex gap-2">
-                                {selectedLanguage !== 'en' && englishTranslation && (
-                                  <Button
-                                    onClick={() => autoTranslate(key, englishTranslation.value)}
-                                    disabled={translating === key}
-                                    variant="outline"
-                                    size="sm"
-                                  >
-                                    {translating === key ? (
-                                      <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                                    ) : (
-                                      <Globe className="h-4 w-4 mr-2" />
-                                    )}
-                                    Auto-translate
-                                  </Button>
-                                )}
-                                <Button
-                                  onClick={() => saveTranslation(key, editingValues[key] ?? currentTranslation?.value ?? '')}
-                                  disabled={saving === key || (!editingValues[key] && !currentTranslation?.value)}
-                                  size="sm"
-                                >
-                                  {saving === key ? (
-                                    <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                                  ) : (
-                                    <Save className="h-4 w-4 mr-2" />
-                                  )}
-                                  Save
-                                </Button>
-                              </div>
-                            </div>
+                    return (
+                      <div key={key} className="border rounded-lg p-4">
+                        <div className="flex items-start justify-between mb-2">
+                          <Label className="font-medium">{key}</Label>
+                          <div className="flex items-center gap-2">
+                            {currentTranslation ? (
+                              <Badge variant="default">Translated</Badge>
+                            ) : (
+                              <Badge variant="destructive">Missing</Badge>
+                            )}
                           </div>
-                        );
-                      })}
-                    </div>
+                        </div>
+                        <Input
+                          value={editingValues[key] ?? currentTranslation?.value ?? ''}
+                          onChange={(e) => setEditingValues(prev => ({
+                            ...prev,
+                            [key]: e.target.value
+                          }))}
+                          placeholder={`Enter ${selectedLanguage} translation for ${key}`}
+                          className="mb-2"
+                        />
+                        <div className="flex justify-between items-center">
+                          <span className="text-sm text-muted-foreground">
+                            {englishTranslation ? `EN: ${englishTranslation.value}` : 'No English version'}
+                          </span>
+                          <div className="flex gap-2">
+                            {selectedLanguage !== 'en' && englishTranslation && (
+                              <Button
+                                onClick={() => autoTranslate(key, englishTranslation.value)}
+                                disabled={translating === key}
+                                variant="outline"
+                                size="sm"
+                              >
+                                {translating === key ? (
+                                  <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                                ) : (
+                                  <Globe className="h-4 w-4 mr-2" />
+                                )}
+                                Auto-translate
+                              </Button>
+                            )}
+                            <Button
+                              onClick={() => saveTranslation(key, editingValues[key] ?? currentTranslation?.value ?? '')}
+                              disabled={saving === key || (!editingValues[key] && !currentTranslation?.value)}
+                              size="sm"
+                            >
+                              {saving === key ? (
+                                <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                              ) : (
+                                <Save className="h-4 w-4 mr-2" />
+                              )}
+                              Save
+                            </Button>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
 
-                    {getSectionKeys().length === 0 && (
-                      <div className="text-center py-8 text-muted-foreground">
-                        <p>No content keys found for this section.</p>
-                        <p className="text-sm mt-2">Import JSON data to get started.</p>
-                      </div>
-                    )}
-                  </>
-                ) : (
-                  <div className="text-center py-8 text-muted-foreground space-y-4">
-                    <div className="max-w-md mx-auto">
-                      <h3 className="text-lg font-medium text-foreground mb-2">Content Management</h3>
-                      <p className="mb-4">Select a section from the left sidebar to view and edit content keys.</p>
-                      <div className="bg-muted p-4 rounded-lg text-left space-y-2">
-                        <p className="font-medium text-foreground">Current Status:</p>
-                        <p>📁 {sections.length} sections available</p>
-                        <p>🌐 {translations.length} total translations</p>
-                        <p>🔤 {languages.length} languages supported</p>
-                      </div>
-                      {sections.length > 0 && (
-                        <p className="mt-4 text-sm">
-                          👈 Click on a section like <strong>"{sections[0]?.section_name}"</strong> to get started
-                        </p>
-                      )}
-                    </div>
+                {getPageKeys().length === 0 && selectedPage && (
+                  <div className="text-center py-8 text-muted-foreground">
+                    <p>No content keys found for this page.</p>
+                    <p className="text-sm mt-2">Add translations to get started.</p>
                   </div>
                 )}
-              </CardContent>
-            </Card>
-          </div>
-        )}
+                  </>
+              ) : (
+                <div className="text-center py-8 text-muted-foreground space-y-4">
+                  <div className="max-w-md mx-auto">
+                    <h3 className="text-lg font-medium text-foreground mb-2">Content Management</h3>
+                    <p className="mb-4">Select a page from the dropdown above to view and edit content translations.</p>
+                    <div className="bg-muted p-4 rounded-lg text-left space-y-2">
+                      <p className="font-medium text-foreground">Current Status:</p>
+                      <p>📄 {contentPages.length} content pages available</p>
+                      <p>🌐 {translations.length} total translations</p>
+                      <p>🔤 {languages.length} languages supported</p>
+                    </div>
+                    {contentPages.length > 0 && (
+                      <p className="mt-4 text-sm">
+                        ☝️ Use the dropdown above to select a page like <strong>"{contentPages[0]?.name}"</strong> to get started
+                      </p>
+                    )}
+                  </div>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </div>
       </div>
 
-      {/* Migration Dialog */}
-      <Dialog open={showMigrateDialog} onOpenChange={setShowMigrateDialog}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Import Translations from JSON</DialogTitle>
-            <DialogDescription>
-              This will import all translations from the JSON files in the public/locales folder 
-              to the database. This will overwrite existing translations.
-            </DialogDescription>
-          </DialogHeader>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setShowMigrateDialog(false)}>
-              Cancel
-            </Button>
-            <Button onClick={migrateFromJSON} disabled={migrating}>
-              {migrating && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
-              Import Translations
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
 
       {/* Auto-translate Dialog */}
       <Dialog open={showTranslateDialog} onOpenChange={setShowTranslateDialog}>
