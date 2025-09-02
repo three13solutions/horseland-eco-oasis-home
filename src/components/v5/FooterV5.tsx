@@ -160,7 +160,7 @@ const FooterV5 = () => {
             
             {/* Show policies on desktop, or when expanded on mobile */}
             <div className={`${isPoliciesOpen ? 'block' : 'hidden'} md:block`}>
-              <div className="flex items-center justify-center md:justify-start space-x-2 text-xs">
+              <div className="flex items-center justify-center md:justify-start space-x-3 text-sm">
                 <a href="/policies#booking" className="text-primary-foreground/60 hover:text-accent transition-colors font-body whitespace-nowrap">
                   Booking
                 </a>

@@ -149,7 +149,7 @@ const FooterV2 = () => {
         {/* Bottom Bar */}
         <div className="border-t border-background/20 py-8">
           <div className="flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
-            <div className="flex items-center space-x-2 text-xs">
+            <div className="flex items-center space-x-3 text-sm">
               {policies.map((policy, index) => (
                 <a
                   key={index}

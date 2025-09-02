@@ -123,7 +123,7 @@ const FooterV3 = () => {
           <div className="border-t border-border/20 mt-12 pt-8">
             <div className="flex flex-col space-y-4">
               {/* Policies */}
-              <div className="flex items-center justify-center md:justify-start space-x-2 text-xs text-muted-foreground">
+              <div className="flex items-center justify-center md:justify-start space-x-3 text-sm text-muted-foreground">
                 <a href="/policies#booking" className="hover:text-primary transition-colors whitespace-nowrap">Booking</a>
                 <a href="/policies#cancellation" className="hover:text-primary transition-colors whitespace-nowrap">Cancellation</a>
                 <a href="/policies#payment" className="hover:text-primary transition-colors whitespace-nowrap">Payment</a>
