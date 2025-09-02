@@ -27,11 +27,11 @@ const FooterV4 = () => {
 
   const policies = [
     { name: 'Booking', href: '/policies#booking' },
-    { name: 'Cancel', href: '/policies#cancellation' },
+    { name: 'Cancellation', href: '/policies#cancellation' },
     { name: 'Payment', href: '/policies#payment' },
     { name: 'Privacy', href: '/policies#privacy' },
     { name: 'Terms', href: '/policies#terms' },
-    { name: 'Conduct', href: '/policies#guest' }
+    { name: 'Guest Conduct', href: '/policies#guest' }
   ];
 
   const socialLinks = [

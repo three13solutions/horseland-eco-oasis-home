@@ -160,12 +160,12 @@ const FooterV5 = () => {
             
             {/* Show policies on desktop, or when expanded on mobile */}
             <div className={`${isPoliciesOpen ? 'block' : 'hidden'} md:block`}>
-              <div className="flex items-center justify-center md:justify-start space-x-3 text-sm">
+              <div className="flex items-center justify-center md:justify-start space-x-2 text-xs">
                 <a href="/policies#booking" className="text-primary-foreground/60 hover:text-accent transition-colors font-body whitespace-nowrap">
                   Booking
                 </a>
                 <a href="/policies#cancellation" className="text-primary-foreground/60 hover:text-accent transition-colors font-body whitespace-nowrap">
-                  Cancel
+                  Cancellation
                 </a>
                 <a href="/policies#payment" className="text-primary-foreground/60 hover:text-accent transition-colors font-body whitespace-nowrap">
                   Payment
@@ -177,7 +177,7 @@ const FooterV5 = () => {
                   Terms
                 </a>
                 <a href="/policies#guest" className="text-primary-foreground/60 hover:text-accent transition-colors font-body whitespace-nowrap">
-                  Conduct
+                  Guest Conduct
                 </a>
               </div>
             </div>

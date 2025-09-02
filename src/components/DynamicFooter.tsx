@@ -229,20 +229,20 @@ const DynamicFooter = () => {
         <div className="mt-8 pt-6">
           <div className="grid grid-cols-1 md:grid-cols-6 lg:grid-cols-8 gap-8">
             {/* Policies - Left Side - Spans 2 columns like brand section */}
-            <div className="md:col-span-3 lg:col-span-3">
+            <div className="md:col-span-4 lg:col-span-4">
               <h4 className="text-sm font-semibold text-background mb-3">Policies</h4>
-              <div className="flex items-center space-x-3 text-sm text-background/60">
+              <div className="flex items-center space-x-2 text-xs text-background/60">
                 <Link to="/policies#booking" className="hover:text-primary transition-colors whitespace-nowrap">Booking</Link>
-                <Link to="/policies#cancellation" className="hover:text-primary transition-colors whitespace-nowrap">Cancel</Link>
+                <Link to="/policies#cancellation" className="hover:text-primary transition-colors whitespace-nowrap">Cancellation</Link>
                 <Link to="/policies#payment" className="hover:text-primary transition-colors whitespace-nowrap">Payment</Link>
                 <Link to="/policies#privacy" className="hover:text-primary transition-colors whitespace-nowrap">Privacy</Link>
                 <Link to="/policies#terms" className="hover:text-primary transition-colors whitespace-nowrap">Terms</Link>
-                <Link to="/policies#guest" className="hover:text-primary transition-colors whitespace-nowrap">Conduct</Link>
+                <Link to="/policies#guest" className="hover:text-primary transition-colors whitespace-nowrap">Guest Conduct</Link>
               </div>
             </div>
             
             {/* Empty spaces to align with Connect column */}
-            <div className="md:col-span-1 lg:col-span-3"></div>
+            <div className="md:col-span-0 lg:col-span-2"></div>
             
             {/* Social Icons - Right Side - Aligned with Connect column */}
             {socialSection && (
