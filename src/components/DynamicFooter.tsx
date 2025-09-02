@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Facebook, Instagram, Twitter, Youtube, Mail, Phone, MapPin, Package, ExternalLink, Linkedin, Video, MessageCircle } from 'lucide-react';
@@ -29,6 +29,8 @@ const DynamicFooter = () => {
     copyright_text: '© 2024 Horseland Hotel. All rights reserved.',
     tagline: 'Crafted with care for sustainable comfort'
   });
+  const location = useLocation();
+  const isOnPoliciesPage = location.pathname === '/policies';
 
   useEffect(() => {
     loadFooterData();
@@ -75,6 +77,34 @@ const DynamicFooter = () => {
   const socialSection = getSocialSection();
   const policiesSection = getPoliciesSection();
   const newsletterSection = getNewsletterSection();
+
+  const handlePolicyClick = (sectionKey: string) => {
+    if (isOnPoliciesPage) {
+      // If already on policies page, just update hash and trigger tab change
+      window.location.hash = sectionKey;
+      // Dispatch a hashchange event to trigger the tab change
+      window.dispatchEvent(new HashChangeEvent('hashchange'));
+    }
+  };
+
+  const PolicyLink = ({ sectionKey, children, className }: { sectionKey: string; children: React.ReactNode; className: string }) => {
+    if (isOnPoliciesPage) {
+      return (
+        <button
+          onClick={() => handlePolicyClick(sectionKey)}
+          className={className}
+        >
+          {children}
+        </button>
+      );
+    } else {
+      return (
+        <Link to={`/policies#${sectionKey}`} className={className}>
+          {children}
+        </Link>
+      );
+    }
+  };
 
   const getSocialIcon = (platform: string) => {
     switch (platform) {
@@ -232,12 +262,12 @@ const DynamicFooter = () => {
             <div className="md:col-span-6 lg:col-span-6">
               <h4 className="text-sm font-semibold text-background mb-3">Policies</h4>
               <div className="flex items-center space-x-3 text-sm text-background/60">
-                <Link to="/policies#booking" className="hover:text-primary transition-colors whitespace-nowrap">Booking</Link>
-                <Link to="/policies#cancellation" className="hover:text-primary transition-colors whitespace-nowrap">Cancellation</Link>
-                <Link to="/policies#payment" className="hover:text-primary transition-colors whitespace-nowrap">Payment</Link>
-                <Link to="/policies#privacy" className="hover:text-primary transition-colors whitespace-nowrap">Privacy</Link>
-                <Link to="/policies#terms" className="hover:text-primary transition-colors whitespace-nowrap">Terms</Link>
-                <Link to="/policies#guest" className="hover:text-primary transition-colors whitespace-nowrap">Guest Conduct</Link>
+                <PolicyLink sectionKey="booking" className="hover:text-primary transition-colors whitespace-nowrap">Booking</PolicyLink>
+                <PolicyLink sectionKey="cancellation" className="hover:text-primary transition-colors whitespace-nowrap">Cancellation</PolicyLink>
+                <PolicyLink sectionKey="payment" className="hover:text-primary transition-colors whitespace-nowrap">Payment</PolicyLink>
+                <PolicyLink sectionKey="privacy" className="hover:text-primary transition-colors whitespace-nowrap">Privacy</PolicyLink>
+                <PolicyLink sectionKey="terms" className="hover:text-primary transition-colors whitespace-nowrap">Terms</PolicyLink>
+                <PolicyLink sectionKey="guest" className="hover:text-primary transition-colors whitespace-nowrap">Guest Conduct</PolicyLink>
               </div>
             </div>
             
