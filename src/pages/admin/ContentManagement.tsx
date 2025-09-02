@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -35,9 +36,18 @@ interface ContentPage {
   type: 'translation' | 'policy';
 }
 
+interface PolicyContent {
+  id: string;
+  section_key: string;
+  title: string;
+  description: string;
+  content: any;
+}
+
 const ContentManagement = () => {
   const [contentPages, setContentPages] = useState<ContentPage[]>([]);
   const [translations, setTranslations] = useState<Translation[]>([]);
+  const [policiesContent, setPoliciesContent] = useState<PolicyContent[]>([]);
   const [selectedPage, setSelectedPage] = useState<string>('');
   const [selectedLanguage, setSelectedLanguage] = useState<string>('en');
   const [loading, setLoading] = useState(true);
@@ -231,12 +241,12 @@ const ContentManagement = () => {
 
       setContentPages(sortedPages);
       setTranslations(translationsData || []);
+      setPoliciesContent(policiesData || []);
 
       // Store sections for later use
       (window as any).globalContentSections = globalContentSections;
       (window as any).policyContentSections = policyContentSections;
       (window as any).homePageSections = homePageSections;
-      (window as any).policiesData = policiesData;
     } catch (error) {
       toast({
         title: "Error",
@@ -390,27 +400,8 @@ const ContentManagement = () => {
       );
       return Array.from(keys).sort();
     } else if (selectedPage === 'policies') {
-      // For policies page, get content keys from policies_content table
-      const policiesData = (window as any).policiesData || [];
-      const keys = new Set();
-      
-      policiesData.forEach((policy: any) => {
-        // Add main content keys for each policy section
-        keys.add(`${policy.section_key}_title`);
-        keys.add(`${policy.section_key}_description`);
-        
-        // Add keys for each section within the policy
-        if (policy.content && policy.content.sections) {
-          policy.content.sections.forEach((section: any, sectionIndex: number) => {
-            keys.add(`${policy.section_key}_section_${sectionIndex}_title`);
-            section.items.forEach((item: any, itemIndex: number) => {
-              keys.add(`${policy.section_key}_section_${sectionIndex}_item_${itemIndex}`);
-            });
-          });
-        }
-      });
-      
-      return Array.from(keys).sort();
+      // For policies page, return just the section keys
+      return policiesContent.map(policy => policy.section_key).sort();
     } else {
       // For specific pages, get keys from that section only
       const keys = new Set(
@@ -422,10 +413,51 @@ const ContentManagement = () => {
     }
   };
 
+  const savePolicyContent = async (sectionKey: string, content: any) => {
+    setSaving(sectionKey);
+    try {
+      const { error } = await supabase
+        .from('policies_content')
+        .update({ content })
+        .eq('section_key', sectionKey);
+
+      if (error) throw error;
+
+      // Update local state
+      setPoliciesContent(prev => 
+        prev.map(policy => 
+          policy.section_key === sectionKey 
+            ? { ...policy, content }
+            : policy
+        )
+      );
+
+      // Clear editing value
+      setEditingValues(prev => {
+        const updated = { ...prev };
+        delete updated[sectionKey];
+        return updated;
+      });
+
+      toast({
+        title: "Success",
+        description: "Policy content updated successfully",
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to update policy content",
+        variant: "destructive",
+      });
+    } finally {
+      setSaving(null);
+    }
+  };
+
   const saveTranslation = async (key: string, value: string, showToast = true, targetSection?: string) => {
     setSaving(key);
     try {
-      // For global content or policies, determine which section this key belongs to
+      // For global content, determine which section this key belongs to
       let sectionToUse = selectedPage;
       if (selectedPage === 'global_content') {
         if (targetSection) {
@@ -441,22 +473,6 @@ const ContentManagement = () => {
             // Fallback to first global section
             const globalSections = (window as any).globalContentSections || [];
             sectionToUse = globalSections[0] || selectedPage;
-          }
-        }
-      } else if (selectedPage === 'policies') {
-        if (targetSection) {
-          sectionToUse = targetSection;
-        } else {
-          // Find the section from existing translations
-          const existingTranslation = translations.find(t => 
-            t.key === key && t.language_code === 'en'
-          );
-          if (existingTranslation) {
-            sectionToUse = existingTranslation.section;
-          } else {
-            // Fallback to first policy section
-            const policySections = (window as any).policyContentSections || [];
-            sectionToUse = policySections[0] || selectedPage;
           }
         }
       }
@@ -669,97 +685,143 @@ const ContentManagement = () => {
                     </div>
 
                 <div className="space-y-4">
-                  {getPageKeys().map((key) => {
-                    const currentTranslation = getCurrentTranslations().find(t => t.key === key as string);
-                    let englishTranslation;
-                    
-                    if (selectedPage === 'global_content') {
-                      // For global content, find English translation from any global section
-                      const globalSections = (window as any).globalContentSections || [];
-                      englishTranslation = translations.find(t => 
-                        t.key === key && t.language_code === 'en' && globalSections.includes(t.section)
-                      );
-                    } else if (selectedPage === 'home') {
-                      // For home page, find English translation from any home section
-                      const homePageSections = (window as any).homePageSections || [];
-                      englishTranslation = translations.find(t => 
-                        t.key === key && t.language_code === 'en' && homePageSections.includes(t.section)
-                      );
-                    } else if (selectedPage === 'policies') {
-                      // For policies page, generate English content from policies_content
-                      const policiesData = (window as any).policiesData || [];
-                      const englishContent = getPolicyEnglishContent(key as string, policiesData);
-                      if (englishContent) {
-                        englishTranslation = {
-                          value: englishContent,
-                          section: 'policies'
-                        };
-                      }
-                    } else {
-                      // For specific pages, find English translation from that section
-                      englishTranslation = translations.find(t => 
-                        t.key === key && t.language_code === 'en' && t.section === selectedPage
-                      );
-                    }
+                  {selectedPage === 'policies' ? (
+                    // Special handling for policies content
+                    getPageKeys().map((sectionKey) => {
+                      const policy = policiesContent.find(p => p.section_key === sectionKey);
+                      if (!policy) return null;
 
-                    return (
-                       <div key={key as string} className="border rounded-lg p-4">
-                         <div className="flex items-start justify-between mb-2">
-                           <Label className="font-medium">{key as string}</Label>
-                          <div className="flex items-center gap-2">
-                            {currentTranslation ? (
-                              <Badge variant="default">Translated</Badge>
-                            ) : (
-                              <Badge variant="destructive">Missing</Badge>
-                            )}
+                      const contentString = editingValues[sectionKey] ?? JSON.stringify(policy.content, null, 2);
+
+                      return (
+                        <div key={sectionKey} className="border rounded-lg p-4">
+                          <div className="flex items-start justify-between mb-2">
+                            <div>
+                              <Label className="font-medium text-lg">{policy.title}</Label>
+                              <p className="text-sm text-muted-foreground mt-1">{policy.description}</p>
+                            </div>
                           </div>
-                        </div>
-                         <Input
-                           value={editingValues[key as string] ?? currentTranslation?.value ?? ''}
-                           onChange={(e) => setEditingValues(prev => ({
-                             ...prev,
-                             [key as string]: e.target.value
-                           }))}
-                           placeholder={`Enter ${selectedLanguage} translation for ${key as string}`}
-                           className="mb-2"
-                         />
-                        <div className="flex justify-between items-center">
-                          <span className="text-sm text-muted-foreground">
-                            {englishTranslation ? `EN: ${englishTranslation.value}` : 'No English version'}
-                          </span>
-                          <div className="flex gap-2">
-                             {selectedLanguage !== 'en' && englishTranslation && (
-                               <Button
-                                 onClick={() => autoTranslate(key as string, (englishTranslation as any).value)}
-                                 disabled={translating === key}
-                                 variant="outline"
-                                 size="sm"
-                               >
-                                 {translating === key ? (
-                                   <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                                 ) : (
-                                   <Globe className="h-4 w-4 mr-2" />
-                                 )}
-                                 Auto-translate
-                               </Button>
-                             )}
-                             <Button
-                               onClick={() => saveTranslation(key as string, editingValues[key as string] ?? currentTranslation?.value ?? '', true, (englishTranslation as any)?.section)}
-                               disabled={saving === key || (!editingValues[key as string] && !currentTranslation?.value)}
-                               size="sm"
-                             >
-                              {saving === key ? (
+                          <Textarea
+                            value={contentString}
+                            onChange={(e) => setEditingValues(prev => ({
+                              ...prev,
+                              [sectionKey]: e.target.value
+                            }))}
+                            placeholder={`Edit ${policy.title} content (JSON format)`}
+                            className="mb-2 min-h-[200px] font-mono text-sm"
+                          />
+                          <div className="flex justify-end">
+                            <Button
+                              onClick={() => {
+                                try {
+                                  const parsedContent = JSON.parse(contentString);
+                                  savePolicyContent(sectionKey, parsedContent);
+                                } catch (error) {
+                                  toast({
+                                    title: "Error",
+                                    description: "Invalid JSON format. Please check your syntax.",
+                                    variant: "destructive",
+                                  });
+                                }
+                              }}
+                              disabled={saving === sectionKey}
+                              size="sm"
+                            >
+                              {saving === sectionKey ? (
                                 <Loader2 className="h-4 w-4 animate-spin mr-2" />
                               ) : (
                                 <Save className="h-4 w-4 mr-2" />
                               )}
-                              Save
+                              Save Content
                             </Button>
                           </div>
                         </div>
-                      </div>
-                    );
-                  })}
+                      );
+                    })
+                  ) : (
+                    // Regular translation handling for other pages
+                    getPageKeys().map((key) => {
+                      const currentTranslation = getCurrentTranslations().find(t => t.key === key as string);
+                      let englishTranslation;
+                      
+                      if (selectedPage === 'global_content') {
+                        // For global content, find English translation from any global section
+                        const globalSections = (window as any).globalContentSections || [];
+                        englishTranslation = translations.find(t => 
+                          t.key === key && t.language_code === 'en' && globalSections.includes(t.section)
+                        );
+                      } else if (selectedPage === 'home') {
+                        // For home page, find English translation from any home section
+                        const homePageSections = (window as any).homePageSections || [];
+                        englishTranslation = translations.find(t => 
+                          t.key === key && t.language_code === 'en' && homePageSections.includes(t.section)
+                        );
+                      } else {
+                        // For specific pages, find English translation from that section
+                        englishTranslation = translations.find(t => 
+                          t.key === key && t.language_code === 'en' && t.section === selectedPage
+                        );
+                      }
+
+                      return (
+                         <div key={key as string} className="border rounded-lg p-4">
+                           <div className="flex items-start justify-between mb-2">
+                             <Label className="font-medium">{key as string}</Label>
+                            <div className="flex items-center gap-2">
+                              {currentTranslation ? (
+                                <Badge variant="default">Translated</Badge>
+                              ) : (
+                                <Badge variant="destructive">Missing</Badge>
+                              )}
+                            </div>
+                          </div>
+                           <Input
+                             value={editingValues[key as string] ?? currentTranslation?.value ?? ''}
+                             onChange={(e) => setEditingValues(prev => ({
+                               ...prev,
+                               [key as string]: e.target.value
+                             }))}
+                             placeholder={`Enter ${selectedLanguage} translation for ${key as string}`}
+                             className="mb-2"
+                           />
+                          <div className="flex justify-between items-center">
+                            <span className="text-sm text-muted-foreground">
+                              {englishTranslation ? `EN: ${englishTranslation.value}` : 'No English version'}
+                            </span>
+                            <div className="flex gap-2">
+                               {selectedLanguage !== 'en' && englishTranslation && (
+                                 <Button
+                                   onClick={() => autoTranslate(key as string, (englishTranslation as any).value)}
+                                   disabled={translating === key}
+                                   variant="outline"
+                                   size="sm"
+                                 >
+                                   {translating === key ? (
+                                     <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                                   ) : (
+                                     <Globe className="h-4 w-4 mr-2" />
+                                   )}
+                                   Auto-translate
+                                 </Button>
+                               )}
+                               <Button
+                                 onClick={() => saveTranslation(key as string, editingValues[key as string] ?? currentTranslation?.value ?? '', true, (englishTranslation as any)?.section)}
+                                 disabled={saving === key || (!editingValues[key as string] && !currentTranslation?.value)}
+                                 size="sm"
+                               >
+                                {saving === key ? (
+                                  <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                                ) : (
+                                  <Save className="h-4 w-4 mr-2" />
+                                )}
+                                Save
+                              </Button>
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })
+                  )}
                 </div>
 
                 {getPageKeys().length === 0 && selectedPage && (
