@@ -98,8 +98,8 @@ const ContentManagement = () => {
 
       if (translationsError) throw translationsError;
 
-      // Page name mappings for better UX
-      const pageNameMappings: { [key: string]: string } = {
+      // Define the specific pages and their mappings
+      const specificPageMappings: { [key: string]: string } = {
         'home': 'Home',
         'homepage': 'Home',
         'about': 'About',
@@ -120,47 +120,76 @@ const ContentManagement = () => {
         'guest': 'Guest Conduct Policy'
       };
 
-      // Combine sections and policies into content pages
-      const pages: ContentPage[] = [
-        // Translation sections
-        ...(sectionsData || []).map(section => ({
-          key: section.section_key,
-          name: pageNameMappings[section.section_key] || section.section_name,
-          description: section.description,
+      const specificPages: ContentPage[] = [];
+      const globalContentSections: string[] = [];
+
+      // Process translation sections
+      (sectionsData || []).forEach(section => {
+        const mappedName = specificPageMappings[section.section_key];
+        if (mappedName) {
+          specificPages.push({
+            key: section.section_key,
+            name: mappedName,
+            description: section.description,
+            type: 'translation' as const
+          });
+        } else {
+          globalContentSections.push(section.section_key);
+        }
+      });
+
+      // Process policy sections
+      (policiesData || []).forEach(policy => {
+        const mappedName = specificPageMappings[policy.section_key];
+        if (mappedName) {
+          specificPages.push({
+            key: policy.section_key,
+            name: mappedName,
+            description: policy.description,
+            type: 'policy' as const
+          });
+        } else {
+          globalContentSections.push(policy.section_key);
+        }
+      });
+
+      // Create the final pages array
+      const pages: ContentPage[] = [...specificPages];
+
+      // Add Global Content if there are unmapped sections
+      if (globalContentSections.length > 0) {
+        pages.push({
+          key: 'global_content',
+          name: 'Global Content',
+          description: `Shared content, navigation, footer and other global elements (${globalContentSections.length} sections)`,
           type: 'translation' as const
-        })),
-        // Policy sections
-        ...(policiesData || []).map(policy => ({
-          key: policy.section_key,
-          name: pageNameMappings[policy.section_key] || policy.title,
-          description: policy.description,
-          type: 'policy' as const
-        }))
-      ];
+        });
+      }
 
       // Sort pages by the desired order
       const pageOrder = [
         'Home', 'About', 'Stay', 'Experiences', 'Packages', 'Journal', 'FAQ', 'Contact',
-        'Booking Policy', 'Cancellation & Refunds', 'Payment Policy', 'Privacy Policy', 'Terms & Conditions', 'Guest Conduct Policy'
+        'Booking Policy', 'Cancellation & Refunds', 'Payment Policy', 'Privacy Policy', 
+        'Terms & Conditions', 'Guest Conduct Policy', 'Global Content'
       ];
 
       const sortedPages = pages.sort((a, b) => {
         const aIndex = pageOrder.indexOf(a.name);
         const bIndex = pageOrder.indexOf(b.name);
         
-        // If both pages are in the order array, sort by that order
         if (aIndex !== -1 && bIndex !== -1) {
           return aIndex - bIndex;
         }
-        // If only one is in the order array, prioritize it
         if (aIndex !== -1) return -1;
         if (bIndex !== -1) return 1;
-        // If neither is in the order array, sort alphabetically
         return a.name.localeCompare(b.name);
       });
 
       setContentPages(sortedPages);
       setTranslations(translationsData || []);
+
+      // Store global content sections for later use
+      (window as any).globalContentSections = globalContentSections;
     } catch (error) {
       toast({
         title: "Error",
@@ -216,9 +245,20 @@ const ContentManagement = () => {
     let completed = 0;
     
     for (const key of pageKeys) {
-      const englishTranslation = translations.find(t => 
-        t.key === key && t.language_code === 'en' && t.section === selectedPage
-      );
+      let englishTranslation;
+      
+      if (selectedPage === 'global_content') {
+        // For global content, find the English translation from any of the global sections
+        const globalSections = (window as any).globalContentSections || [];
+        englishTranslation = translations.find(t => 
+          t.key === key && t.language_code === 'en' && globalSections.includes(t.section)
+        );
+      } else {
+        // For specific pages, find the English translation from that section
+        englishTranslation = translations.find(t => 
+          t.key === key && t.language_code === 'en' && t.section === selectedPage
+        );
+      }
       
       if (englishTranslation) {
         try {
@@ -231,7 +271,7 @@ const ContentManagement = () => {
           });
 
           if (!error && data.translatedText) {
-            await saveTranslation(key, data.translatedText, false);
+            await saveTranslation(key, data.translatedText, false, englishTranslation.section);
           }
         } catch (error) {
           console.warn(`Failed to translate ${key}:`, error);
@@ -254,28 +294,69 @@ const ContentManagement = () => {
 
 
   const getCurrentTranslations = () => {
-    return translations.filter(t => 
-      t.section === selectedPage && t.language_code === selectedLanguage
-    );
+    if (selectedPage === 'global_content') {
+      // For global content, get translations from all unmapped sections
+      const globalSections = (window as any).globalContentSections || [];
+      return translations.filter(t => 
+        globalSections.includes(t.section) && t.language_code === selectedLanguage
+      );
+    } else {
+      // For specific pages, get translations from that section only
+      return translations.filter(t => 
+        t.section === selectedPage && t.language_code === selectedLanguage
+      );
+    }
   };
 
   const getPageKeys = () => {
-    const keys = new Set(
-      translations
-        .filter(t => t.section === selectedPage)
-        .map(t => t.key)
-    );
-    return Array.from(keys).sort();
+    if (selectedPage === 'global_content') {
+      // For global content, get keys from all unmapped sections
+      const globalSections = (window as any).globalContentSections || [];
+      const keys = new Set(
+        translations
+          .filter(t => globalSections.includes(t.section))
+          .map(t => t.key)
+      );
+      return Array.from(keys).sort();
+    } else {
+      // For specific pages, get keys from that section only
+      const keys = new Set(
+        translations
+          .filter(t => t.section === selectedPage)
+          .map(t => t.key)
+      );
+      return Array.from(keys).sort();
+    }
   };
 
-  const saveTranslation = async (key: string, value: string, showToast = true) => {
+  const saveTranslation = async (key: string, value: string, showToast = true, targetSection?: string) => {
     setSaving(key);
     try {
+      // For global content, determine which section this key belongs to
+      let sectionToUse = selectedPage;
+      if (selectedPage === 'global_content') {
+        if (targetSection) {
+          sectionToUse = targetSection;
+        } else {
+          // Find the section from existing translations
+          const existingTranslation = translations.find(t => 
+            t.key === key && t.language_code === 'en'
+          );
+          if (existingTranslation) {
+            sectionToUse = existingTranslation.section;
+          } else {
+            // Fallback to first global section
+            const globalSections = (window as any).globalContentSections || [];
+            sectionToUse = globalSections[0] || selectedPage;
+          }
+        }
+      }
+
       const { error } = await supabase
         .from('translations')
         .upsert({
           language_code: selectedLanguage,
-          section: selectedPage,
+          section: sectionToUse,
           key,
           value
         }, {
@@ -288,7 +369,7 @@ const ContentManagement = () => {
       setTranslations(prev => {
         const existing = prev.find(t => 
           t.language_code === selectedLanguage && 
-          t.section === selectedPage && 
+          t.section === sectionToUse && 
           t.key === key
         );
 
@@ -300,7 +381,7 @@ const ContentManagement = () => {
           return [...prev, {
             id: `temp-${Date.now()}`,
             language_code: selectedLanguage,
-            section: selectedPage,
+            section: sectionToUse,
             key,
             value,
             created_at: new Date().toISOString(),
@@ -337,12 +418,23 @@ const ContentManagement = () => {
 
   const copyFromLanguage = async (sourceLang: string) => {
     try {
-      const sourceTranslations = translations.filter(t => 
-        t.section === selectedPage && t.language_code === sourceLang
-      );
+      let sourceTranslations;
+      
+      if (selectedPage === 'global_content') {
+        // For global content, get translations from all unmapped sections
+        const globalSections = (window as any).globalContentSections || [];
+        sourceTranslations = translations.filter(t => 
+          globalSections.includes(t.section) && t.language_code === sourceLang
+        );
+      } else {
+        // For specific pages, get translations from that section only
+        sourceTranslations = translations.filter(t => 
+          t.section === selectedPage && t.language_code === sourceLang
+        );
+      }
 
       for (const sourceTranslation of sourceTranslations) {
-        await saveTranslation(sourceTranslation.key, sourceTranslation.value, false);
+        await saveTranslation(sourceTranslation.key, sourceTranslation.value, false, sourceTranslation.section);
       }
 
       toast({
@@ -464,9 +556,20 @@ const ContentManagement = () => {
                 <div className="space-y-4">
                   {getPageKeys().map((key) => {
                     const currentTranslation = getCurrentTranslations().find(t => t.key === key);
-                    const englishTranslation = translations.find(t => 
-                      t.key === key && t.language_code === 'en' && t.section === selectedPage
-                    );
+                    let englishTranslation;
+                    
+                    if (selectedPage === 'global_content') {
+                      // For global content, find English translation from any global section
+                      const globalSections = (window as any).globalContentSections || [];
+                      englishTranslation = translations.find(t => 
+                        t.key === key && t.language_code === 'en' && globalSections.includes(t.section)
+                      );
+                    } else {
+                      // For specific pages, find English translation from that section
+                      englishTranslation = translations.find(t => 
+                        t.key === key && t.language_code === 'en' && t.section === selectedPage
+                      );
+                    }
 
                     return (
                       <div key={key} className="border rounded-lg p-4">
@@ -510,7 +613,7 @@ const ContentManagement = () => {
                               </Button>
                             )}
                             <Button
-                              onClick={() => saveTranslation(key, editingValues[key] ?? currentTranslation?.value ?? '')}
+                              onClick={() => saveTranslation(key, editingValues[key] ?? currentTranslation?.value ?? '', true, englishTranslation?.section)}
                               disabled={saving === key || (!editingValues[key] && !currentTranslation?.value)}
                               size="sm"
                             >
