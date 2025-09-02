@@ -98,23 +98,68 @@ const ContentManagement = () => {
 
       if (translationsError) throw translationsError;
 
+      // Page name mappings for better UX
+      const pageNameMappings: { [key: string]: string } = {
+        'home': 'Home',
+        'homepage': 'Home',
+        'about': 'About',
+        'stay': 'Stay',
+        'rooms': 'Stay',
+        'experiences': 'Experiences',
+        'activities': 'Experiences',
+        'packages': 'Packages',
+        'journal': 'Journal',
+        'blog': 'Journal',
+        'faq': 'FAQ',
+        'contact': 'Contact',
+        'booking': 'Booking Policy',
+        'cancellation': 'Cancellation & Refunds',
+        'payment': 'Payment Policy',
+        'privacy': 'Privacy Policy',
+        'terms': 'Terms & Conditions',
+        'guest': 'Guest Conduct Policy'
+      };
+
       // Combine sections and policies into content pages
       const pages: ContentPage[] = [
+        // Translation sections
         ...(sectionsData || []).map(section => ({
           key: section.section_key,
-          name: section.section_name,
+          name: pageNameMappings[section.section_key] || section.section_name,
           description: section.description,
           type: 'translation' as const
         })),
+        // Policy sections
         ...(policiesData || []).map(policy => ({
           key: policy.section_key,
-          name: policy.title,
+          name: pageNameMappings[policy.section_key] || policy.title,
           description: policy.description,
           type: 'policy' as const
         }))
       ];
 
-      setContentPages(pages);
+      // Sort pages by the desired order
+      const pageOrder = [
+        'Home', 'About', 'Stay', 'Experiences', 'Packages', 'Journal', 'FAQ', 'Contact',
+        'Booking Policy', 'Cancellation & Refunds', 'Payment Policy', 'Privacy Policy', 'Terms & Conditions', 'Guest Conduct Policy'
+      ];
+
+      const sortedPages = pages.sort((a, b) => {
+        const aIndex = pageOrder.indexOf(a.name);
+        const bIndex = pageOrder.indexOf(b.name);
+        
+        // If both pages are in the order array, sort by that order
+        if (aIndex !== -1 && bIndex !== -1) {
+          return aIndex - bIndex;
+        }
+        // If only one is in the order array, prioritize it
+        if (aIndex !== -1) return -1;
+        if (bIndex !== -1) return 1;
+        // If neither is in the order array, sort alphabetically
+        return a.name.localeCompare(b.name);
+      });
+
+      setContentPages(sortedPages);
       setTranslations(translationsData || []);
     } catch (error) {
       toast({
