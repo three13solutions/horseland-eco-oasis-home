@@ -62,6 +62,10 @@ const Policies = () => {
       const hash = window.location.hash.replace('#', '');
       if (hash && policies.some(p => p.section_key === hash)) {
         setActiveTab(hash);
+        // Scroll to top when tab changes
+        setTimeout(() => {
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+        }, 100);
       }
     };
 
@@ -71,13 +75,15 @@ const Policies = () => {
     // Listen for hash changes
     window.addEventListener('hashchange', handleHashChange);
     
-    // Scroll to top when component mounts or hash changes
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-    
     return () => {
       window.removeEventListener('hashchange', handleHashChange);
     };
   }, [policies]);
+
+  // Scroll to top when activeTab changes
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, [activeTab]);
 
   return (
     <div className="min-h-screen bg-background">
@@ -105,7 +111,15 @@ const Policies = () => {
               <p>Loading policies...</p>
             </div>
           ) : (
-            <Tabs value={activeTab} onValueChange={setActiveTab} className="max-w-4xl mx-auto">
+            <Tabs 
+              value={activeTab} 
+              onValueChange={(value) => {
+                setActiveTab(value);
+                // Update URL hash when tab changes
+                window.history.replaceState(null, '', `#${value}`);
+              }} 
+              className="max-w-4xl mx-auto"
+            >
               <TabsList className="grid w-full grid-cols-3 md:grid-cols-6">
                 {policies.map((policy) => (
                   <TabsTrigger key={policy.section_key} value={policy.section_key}>
