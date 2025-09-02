@@ -11,11 +11,11 @@ const FooterV2 = () => {
 
   const policies = [
     { name: 'Booking', href: '/policies#booking' },
-    { name: 'Cancellation', href: '/policies#cancellation' },
+    { name: 'Cancel', href: '/policies#cancellation' },
     { name: 'Payment', href: '/policies#payment' },
     { name: 'Privacy', href: '/policies#privacy' },
     { name: 'Terms', href: '/policies#terms' },
-    { name: 'Guest Conduct', href: '/policies#guest' }
+    { name: 'Conduct', href: '/policies#guest' }
   ];
 
   const socialLinks = [
@@ -149,12 +149,12 @@ const FooterV2 = () => {
         {/* Bottom Bar */}
         <div className="border-t border-background/20 py-8">
           <div className="flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
-            <div className="flex items-center space-x-4 md:space-x-6 text-sm overflow-x-auto">
+            <div className="flex items-center space-x-3 text-sm">
               {policies.map((policy, index) => (
                 <a
                   key={index}
                   href={policy.href}
-                  className="text-background/60 hover:text-primary transition-colors whitespace-nowrap flex-shrink-0"
+                  className="text-background/60 hover:text-primary transition-colors whitespace-nowrap"
                 >
                   {policy.name}
                 </a>
