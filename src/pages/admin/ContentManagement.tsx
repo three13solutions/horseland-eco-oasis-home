@@ -12,6 +12,7 @@ import { Progress } from '@/components/ui/progress';
 import { Loader2, Save, RefreshCw, Copy, Languages, Upload, Download, Globe, Zap, FileDown } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { MigrationControls } from '@/components/admin/MigrationControls';
+import PoliciesManager from '@/components/admin/PoliciesManager';
 
 interface Translation {
   id: string;
@@ -30,6 +31,7 @@ interface TranslationSection {
 }
 
 const ContentManagement = () => {
+  const [activeTab, setActiveTab] = useState<'translations' | 'policies'>('translations');
   const [sections, setSections] = useState<TranslationSection[]>([]);
   const [translations, setTranslations] = useState<Translation[]>([]);
   const [selectedSection, setSelectedSection] = useState<string>('');
@@ -392,213 +394,235 @@ const ContentManagement = () => {
           <h1 className="text-2xl font-bold">Content Management</h1>
           <div className="flex gap-2">
             <Button 
-              onClick={() => setShowMigrateDialog(true)} 
-              variant="outline" 
+              onClick={() => setActiveTab('translations')}
+              variant={activeTab === 'translations' ? 'default' : 'outline'}
               size="sm"
-              disabled={migrating}
             >
-              <Upload className="h-4 w-4 mr-2" />
-              {migrating ? 'Migrating...' : 'Import JSON'}
+              Translations
             </Button>
             <Button 
-              onClick={exportTranslations} 
-              variant="outline" 
+              onClick={() => setActiveTab('policies')}
+              variant={activeTab === 'policies' ? 'default' : 'outline'}
               size="sm"
-              disabled={exporting}
             >
-              <FileDown className="h-4 w-4 mr-2" />
-              {exporting ? 'Exporting...' : 'Export'}
+              Policies
             </Button>
-            <Button onClick={loadData} variant="outline" size="sm">
-              <RefreshCw className="h-4 w-4 mr-2" />
-              Refresh
-            </Button>
+            {activeTab === 'translations' && (
+              <>
+                <Button 
+                  onClick={() => setShowMigrateDialog(true)} 
+                  variant="outline" 
+                  size="sm"
+                  disabled={migrating}
+                >
+                  <Upload className="h-4 w-4 mr-2" />
+                  {migrating ? 'Migrating...' : 'Import JSON'}
+                </Button>
+                <Button 
+                  onClick={exportTranslations} 
+                  variant="outline" 
+                  size="sm"
+                  disabled={exporting}
+                >
+                  <FileDown className="h-4 w-4 mr-2" />
+                  {exporting ? 'Exporting...' : 'Export'}
+                </Button>
+                <Button onClick={loadData} variant="outline" size="sm">
+                  <RefreshCw className="h-4 w-4 mr-2" />
+                  Refresh
+                </Button>
+              </>
+            )}
           </div>
         </div>
 
         {/* Migration Controls */}
-        <MigrationControls />
+        {activeTab === 'translations' && <MigrationControls />}
 
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-          {/* Sidebar */}
-          <Card className="md:col-span-1">
-            <CardHeader>
-              <CardTitle>Sections</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-2">
-              {sections.map((section) => (
-                <button
-                  key={section.section_key}
-                  onClick={() => setSelectedSection(section.section_key)}
-                  className={`w-full text-left p-2 rounded ${
-                    selectedSection === section.section_key 
-                      ? 'bg-primary text-primary-foreground' 
-                      : 'hover:bg-secondary'
-                  }`}
-                >
-                  <div className="font-medium">{section.section_name}</div>
-                  <div className="text-sm text-muted-foreground">{section.description}</div>
-                </button>
-              ))}
-            </CardContent>
-          </Card>
+        {activeTab === 'policies' ? (
+          <PoliciesManager />
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+            {/* Sidebar */}
+            <Card className="md:col-span-1">
+              <CardHeader>
+                <CardTitle>Sections</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-2">
+                {sections.map((section) => (
+                  <button
+                    key={section.section_key}
+                    onClick={() => setSelectedSection(section.section_key)}
+                    className={`w-full text-left p-2 rounded ${
+                      selectedSection === section.section_key 
+                        ? 'bg-primary text-primary-foreground' 
+                        : 'hover:bg-secondary'
+                    }`}
+                  >
+                    <div className="font-medium">{section.section_name}</div>
+                    <div className="text-sm text-muted-foreground">{section.description}</div>
+                  </button>
+                ))}
+              </CardContent>
+            </Card>
 
-          {/* Main content */}
-          <Card className="md:col-span-3">
-            <CardHeader>
-              <div className="flex justify-between items-center">
-                <div>
-                  <CardTitle>Translations</CardTitle>
-                  <CardDescription>
-                    Manage content for {selectedSection || 'selected section'}
-                  </CardDescription>
+            {/* Main content */}
+            <Card className="md:col-span-3">
+              <CardHeader>
+                <div className="flex justify-between items-center">
+                  <div>
+                    <CardTitle>Translations</CardTitle>
+                    <CardDescription>
+                      Manage content for {selectedSection || 'selected section'}
+                    </CardDescription>
+                  </div>
+                  <Select value={selectedLanguage} onValueChange={setSelectedLanguage}>
+                    <SelectTrigger className="w-32">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {languages.map((lang) => (
+                        <SelectItem key={lang.code} value={lang.code}>
+                          {lang.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
-                <Select value={selectedLanguage} onValueChange={setSelectedLanguage}>
-                  <SelectTrigger className="w-32">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {languages.map((lang) => (
-                      <SelectItem key={lang.code} value={lang.code}>
-                        {lang.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            </CardHeader>
-            <CardContent>
-              {selectedSection ? (
-                <>
-                  <div className="flex justify-between items-center mb-4">
-                    <div className="flex items-center gap-2">
-                      <Languages className="h-5 w-5" />
-                      <span className="text-lg font-medium">
-                        {selectedSection} ({selectedLanguage.toUpperCase()})
-                      </span>
-                      <Badge variant="secondary">
-                        {getSectionKeys().length} keys
-                      </Badge>
-                    </div>
-                    <div className="flex gap-2">
-                      {selectedLanguage !== 'en' && (
+              </CardHeader>
+              <CardContent>
+                {selectedSection ? (
+                  <>
+                    <div className="flex justify-between items-center mb-4">
+                      <div className="flex items-center gap-2">
+                        <Languages className="h-5 w-5" />
+                        <span className="text-lg font-medium">
+                          {selectedSection} ({selectedLanguage.toUpperCase()})
+                        </span>
+                        <Badge variant="secondary">
+                          {getSectionKeys().length} keys
+                        </Badge>
+                      </div>
+                      <div className="flex gap-2">
+                        {selectedLanguage !== 'en' && (
+                          <Button
+                            onClick={autoTranslateAll}
+                            variant="outline"
+                            size="sm"
+                            disabled={translating !== null}
+                          >
+                            <Zap className="h-4 w-4 mr-2" />
+                            Auto-translate All
+                          </Button>
+                        )}
                         <Button
-                          onClick={autoTranslateAll}
+                          onClick={() => copyFromLanguage('en')}
                           variant="outline"
                           size="sm"
-                          disabled={translating !== null}
                         >
-                          <Zap className="h-4 w-4 mr-2" />
-                          Auto-translate All
+                          <Copy className="h-4 w-4 mr-2" />
+                          Copy from English
                         </Button>
-                      )}
-                      <Button
-                        onClick={() => copyFromLanguage('en')}
-                        variant="outline"
-                        size="sm"
-                      >
-                        <Copy className="h-4 w-4 mr-2" />
-                        Copy from English
-                      </Button>
+                      </div>
                     </div>
-                  </div>
 
-                  <div className="space-y-4">
-                    {getSectionKeys().map((key) => {
-                      const currentTranslation = getCurrentTranslations().find(t => t.key === key);
-                      const englishTranslation = translations.find(t => 
-                        t.key === key && t.language_code === 'en' && t.section === selectedSection
-                      );
+                    <div className="space-y-4">
+                      {getSectionKeys().map((key) => {
+                        const currentTranslation = getCurrentTranslations().find(t => t.key === key);
+                        const englishTranslation = translations.find(t => 
+                          t.key === key && t.language_code === 'en' && t.section === selectedSection
+                        );
 
-                      return (
-                        <div key={key} className="border rounded-lg p-4">
-                          <div className="flex items-start justify-between mb-2">
-                            <Label className="font-medium">{key}</Label>
-                            <div className="flex items-center gap-2">
-                              {currentTranslation ? (
-                                <Badge variant="default">Translated</Badge>
-                              ) : (
-                                <Badge variant="destructive">Missing</Badge>
-                              )}
+                        return (
+                          <div key={key} className="border rounded-lg p-4">
+                            <div className="flex items-start justify-between mb-2">
+                              <Label className="font-medium">{key}</Label>
+                              <div className="flex items-center gap-2">
+                                {currentTranslation ? (
+                                  <Badge variant="default">Translated</Badge>
+                                ) : (
+                                  <Badge variant="destructive">Missing</Badge>
+                                )}
+                              </div>
                             </div>
-                          </div>
-                          <Input
-                            value={editingValues[key] ?? currentTranslation?.value ?? ''}
-                            onChange={(e) => setEditingValues(prev => ({
-                              ...prev,
-                              [key]: e.target.value
-                            }))}
-                            placeholder={`Enter ${selectedLanguage} translation for ${key}`}
-                            className="mb-2"
-                          />
-                          <div className="flex justify-between items-center">
-                            <span className="text-sm text-muted-foreground">
-                              {englishTranslation ? `EN: ${englishTranslation.value}` : 'No English version'}
-                            </span>
-                            <div className="flex gap-2">
-                              {selectedLanguage !== 'en' && englishTranslation && (
+                            <Input
+                              value={editingValues[key] ?? currentTranslation?.value ?? ''}
+                              onChange={(e) => setEditingValues(prev => ({
+                                ...prev,
+                                [key]: e.target.value
+                              }))}
+                              placeholder={`Enter ${selectedLanguage} translation for ${key}`}
+                              className="mb-2"
+                            />
+                            <div className="flex justify-between items-center">
+                              <span className="text-sm text-muted-foreground">
+                                {englishTranslation ? `EN: ${englishTranslation.value}` : 'No English version'}
+                              </span>
+                              <div className="flex gap-2">
+                                {selectedLanguage !== 'en' && englishTranslation && (
+                                  <Button
+                                    onClick={() => autoTranslate(key, englishTranslation.value)}
+                                    disabled={translating === key}
+                                    variant="outline"
+                                    size="sm"
+                                  >
+                                    {translating === key ? (
+                                      <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                                    ) : (
+                                      <Globe className="h-4 w-4 mr-2" />
+                                    )}
+                                    Auto-translate
+                                  </Button>
+                                )}
                                 <Button
-                                  onClick={() => autoTranslate(key, englishTranslation.value)}
-                                  disabled={translating === key}
-                                  variant="outline"
+                                  onClick={() => saveTranslation(key, editingValues[key] ?? currentTranslation?.value ?? '')}
+                                  disabled={saving === key || (!editingValues[key] && !currentTranslation?.value)}
                                   size="sm"
                                 >
-                                  {translating === key ? (
+                                  {saving === key ? (
                                     <Loader2 className="h-4 w-4 animate-spin mr-2" />
                                   ) : (
-                                    <Globe className="h-4 w-4 mr-2" />
+                                    <Save className="h-4 w-4 mr-2" />
                                   )}
-                                  Auto-translate
+                                  Save
                                 </Button>
-                              )}
-                              <Button
-                                onClick={() => saveTranslation(key, editingValues[key] ?? currentTranslation?.value ?? '')}
-                                disabled={saving === key || (!editingValues[key] && !currentTranslation?.value)}
-                                size="sm"
-                              >
-                                {saving === key ? (
-                                  <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                                ) : (
-                                  <Save className="h-4 w-4 mr-2" />
-                                )}
-                                Save
-                              </Button>
+                              </div>
                             </div>
                           </div>
-                        </div>
-                      );
-                    })}
-                  </div>
+                        );
+                      })}
+                    </div>
 
-                  {getSectionKeys().length === 0 && (
-                    <div className="text-center py-8 text-muted-foreground">
-                      <p>No content keys found for this section.</p>
-                      <p className="text-sm mt-2">Import JSON data to get started.</p>
-                    </div>
-                  )}
-                </>
-              ) : (
-                <div className="text-center py-8 text-muted-foreground space-y-4">
-                  <div className="max-w-md mx-auto">
-                    <h3 className="text-lg font-medium text-foreground mb-2">Content Management</h3>
-                    <p className="mb-4">Select a section from the left sidebar to view and edit content keys.</p>
-                    <div className="bg-muted p-4 rounded-lg text-left space-y-2">
-                      <p className="font-medium text-foreground">Current Status:</p>
-                      <p>📁 {sections.length} sections available</p>
-                      <p>🌐 {translations.length} total translations</p>
-                      <p>🔤 {languages.length} languages supported</p>
-                    </div>
-                    {sections.length > 0 && (
-                      <p className="mt-4 text-sm">
-                        👈 Click on a section like <strong>"{sections[0]?.section_name}"</strong> to get started
-                      </p>
+                    {getSectionKeys().length === 0 && (
+                      <div className="text-center py-8 text-muted-foreground">
+                        <p>No content keys found for this section.</p>
+                        <p className="text-sm mt-2">Import JSON data to get started.</p>
+                      </div>
                     )}
+                  </>
+                ) : (
+                  <div className="text-center py-8 text-muted-foreground space-y-4">
+                    <div className="max-w-md mx-auto">
+                      <h3 className="text-lg font-medium text-foreground mb-2">Content Management</h3>
+                      <p className="mb-4">Select a section from the left sidebar to view and edit content keys.</p>
+                      <div className="bg-muted p-4 rounded-lg text-left space-y-2">
+                        <p className="font-medium text-foreground">Current Status:</p>
+                        <p>📁 {sections.length} sections available</p>
+                        <p>🌐 {translations.length} total translations</p>
+                        <p>🔤 {languages.length} languages supported</p>
+                      </div>
+                      {sections.length > 0 && (
+                        <p className="mt-4 text-sm">
+                          👈 Click on a section like <strong>"{sections[0]?.section_name}"</strong> to get started
+                        </p>
+                      )}
+                    </div>
                   </div>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        </div>
+                )}
+              </CardContent>
+            </Card>
+          </div>
+        )}
       </div>
 
       {/* Migration Dialog */}

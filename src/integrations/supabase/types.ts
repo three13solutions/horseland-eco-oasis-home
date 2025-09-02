@@ -1290,6 +1290,45 @@ export type Database = {
           },
         ]
       }
+      policies_content: {
+        Row: {
+          content: Json
+          created_at: string
+          description: string | null
+          icon: string | null
+          id: string
+          is_active: boolean
+          section_key: string
+          sort_order: number
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          content?: Json
+          created_at?: string
+          description?: string | null
+          icon?: string | null
+          id?: string
+          is_active?: boolean
+          section_key: string
+          sort_order?: number
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          content?: Json
+          created_at?: string
+          description?: string | null
+          icon?: string | null
+          id?: string
+          is_active?: boolean
+          section_key?: string
+          sort_order?: number
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       room_types: {
         Row: {
           availability_calendar: Json | null
