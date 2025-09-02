@@ -401,28 +401,8 @@ const ContentManagement = () => {
       );
       return Array.from(keys).sort();
     } else if (selectedPage === 'policies') {
-      // For policies page, generate individual translation keys from content structure
-      const keys = new Set<string>();
-      
-      policiesContent.forEach(policy => {
-        // Add main keys
-        keys.add(`${policy.section_key}_title`);
-        keys.add(`${policy.section_key}_description`);
-        
-        // Add section and item keys from content structure
-        if (policy.content && policy.content.sections) {
-          policy.content.sections.forEach((section: any, sectionIndex: number) => {
-            keys.add(`${policy.section_key}_section_${sectionIndex}_title`);
-            if (section.items && Array.isArray(section.items)) {
-              section.items.forEach((item: any, itemIndex: number) => {
-                keys.add(`${policy.section_key}_section_${sectionIndex}_item_${itemIndex}`);
-              });
-            }
-          });
-        }
-      });
-      
-      return Array.from(keys).sort();
+      // For policies page, return one key per policy section (6 keys total)
+      return policiesContent.map(policy => `${policy.section_key}_content`).sort();
     } else {
       // For specific pages, get keys from that section only
       const keys = new Set(
@@ -436,33 +416,27 @@ const ContentManagement = () => {
 
   const getEnglishContentForPolicy = (key: string) => {
     // Extract English content from policies_content table for the given key
-    for (const policy of policiesContent) {
-      if (key === `${policy.section_key}_title`) {
-        return policy.title;
-      }
-      if (key === `${policy.section_key}_description`) {
-        return policy.description;
-      }
-      
-      if (policy.content && policy.content.sections) {
-        for (let sectionIndex = 0; sectionIndex < policy.content.sections.length; sectionIndex++) {
-          const section = policy.content.sections[sectionIndex];
-          
-          if (key === `${policy.section_key}_section_${sectionIndex}_title`) {
-            return section.title;
-          }
-          
-          if (section.items && Array.isArray(section.items)) {
-            for (let itemIndex = 0; itemIndex < section.items.length; itemIndex++) {
-              if (key === `${policy.section_key}_section_${sectionIndex}_item_${itemIndex}`) {
-                return section.items[itemIndex];
-              }
-            }
-          }
+    const sectionKey = key.replace('_content', '');
+    const policy = policiesContent.find(p => p.section_key === sectionKey);
+    
+    if (!policy) return null;
+    
+    // Convert policy content to readable text format
+    let content = `${policy.title}\n\n${policy.description}\n\n`;
+    
+    if (policy.content && policy.content.sections) {
+      policy.content.sections.forEach((section: any) => {
+        content += `${section.title}:\n`;
+        if (section.items && Array.isArray(section.items)) {
+          section.items.forEach((item: any) => {
+            content += `• ${item}\n`;
+          });
         }
-      }
+        content += '\n';
+      });
     }
-    return null;
+    
+    return content.trim();
   };
 
   const saveTranslation = async (key: string, value: string, showToast = true, targetSection?: string) => {
@@ -739,7 +713,14 @@ const ContentManagement = () => {
                     return (
                        <div key={key as string} className="border rounded-lg p-4">
                          <div className="flex items-start justify-between mb-2">
-                           <Label className="font-medium">{key as string}</Label>
+                           <div>
+                             <Label className="font-medium text-lg">{key as string}</Label>
+                             {selectedPage === 'policies' && (
+                               <p className="text-sm text-muted-foreground mt-1">
+                                 {policiesContent.find(p => key.startsWith(p.section_key))?.description}
+                               </p>
+                             )}
+                           </div>
                           <div className="flex items-center gap-2">
                             {currentTranslation ? (
                               <Badge variant="default">Translated</Badge>
@@ -748,33 +729,23 @@ const ContentManagement = () => {
                             )}
                           </div>
                         </div>
-                        {isLongContent ? (
-                          <Textarea
-                            value={editingValues[key as string] ?? currentTranslation?.value ?? ''}
-                            onChange={(e) => setEditingValues(prev => ({
-                              ...prev,
-                              [key as string]: e.target.value
-                            }))}
-                            placeholder={`Enter ${selectedLanguage} translation for ${key as string}`}
-                            className="mb-2 min-h-[100px]"
-                          />
-                        ) : (
-                          <Input
-                            value={editingValues[key as string] ?? currentTranslation?.value ?? ''}
-                            onChange={(e) => setEditingValues(prev => ({
-                              ...prev,
-                              [key as string]: e.target.value
-                            }))}
-                            placeholder={`Enter ${selectedLanguage} translation for ${key as string}`}
-                            className="mb-2"
-                          />
-                        )}
+                        <Textarea
+                          value={editingValues[key as string] ?? currentTranslation?.value ?? ''}
+                          onChange={(e) => setEditingValues(prev => ({
+                            ...prev,
+                            [key as string]: e.target.value
+                          }))}
+                          placeholder={`Enter ${selectedLanguage} translation for ${key as string}`}
+                          className="mb-2 min-h-[200px]"
+                        />
                         <div className="flex justify-between items-start">
                           <div className="text-sm text-muted-foreground max-w-[60%]">
                             {englishTranslation ? (
                               <div>
                                 <span className="font-medium">EN: </span>
-                                <span className={isLongContent ? "block mt-1" : ""}>{englishTranslation.value}</span>
+                                <pre className="whitespace-pre-wrap text-xs mt-1 max-h-32 overflow-y-auto bg-muted p-2 rounded">
+                                  {englishTranslation.value}
+                                </pre>
                               </div>
                             ) : (
                               'No English version'
