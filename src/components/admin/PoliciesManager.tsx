@@ -64,7 +64,7 @@ const PoliciesManager = () => {
         .order('sort_order');
 
       if (error) throw error;
-      setPolicies((data || []) as PolicyContent[]);
+      setPolicies((data || []) as unknown as PolicyContent[]);
     } catch (error) {
       toast({
         title: "Error",
@@ -90,7 +90,7 @@ const PoliciesManager = () => {
 
       if (error) throw error;
 
-      setPolicies(prev => prev.map(p => p.id === policy.id ? policy : p));
+      setPolicies(prev => prev.map(p => p.id === policy.id ? policy as unknown as PolicyContent : p));
       setEditingContent(null);
       
       toast({

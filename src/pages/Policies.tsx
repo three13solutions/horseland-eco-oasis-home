@@ -49,7 +49,7 @@ const Policies = () => {
         .order('sort_order');
 
       if (error) throw error;
-      setPolicies((data || []) as PolicyContent[]);
+      setPolicies((data || []) as unknown as PolicyContent[]);
     } catch (error) {
       console.error('Error loading policies:', error);
     } finally {
