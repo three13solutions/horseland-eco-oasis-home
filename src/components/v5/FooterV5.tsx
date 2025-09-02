@@ -161,17 +161,23 @@ const FooterV5 = () => {
             {/* Show policies on desktop, or when expanded on mobile */}
             <div className={`${isPoliciesOpen ? 'block' : 'hidden'} md:block`}>
               <div className="flex flex-wrap items-center justify-center md:justify-start gap-4 text-sm">
-                <a href="#privacy-policy" className="text-primary-foreground/60 hover:text-accent transition-colors font-body">
-                  {t('footer.privacyPolicy')}
+                <a href="/policies#booking-policy" className="text-primary-foreground/60 hover:text-accent transition-colors font-body">
+                  Booking
                 </a>
-                <a href="#booking-terms" className="text-primary-foreground/60 hover:text-accent transition-colors font-body">
-                  {t('footer.bookingTerms')}
+                <a href="/policies#cancellation-refunds" className="text-primary-foreground/60 hover:text-accent transition-colors font-body">
+                  Cancellation
                 </a>
-                <a href="#cancellation" className="text-primary-foreground/60 hover:text-accent transition-colors font-body">
-                  {t('footer.cancellation')}
+                <a href="/policies#payment-policy" className="text-primary-foreground/60 hover:text-accent transition-colors font-body">
+                  Payment
                 </a>
-                <a href="#terms-of-service" className="text-primary-foreground/60 hover:text-accent transition-colors font-body">
-                  {t('footer.termsOfService')}
+                <a href="/policies#privacy-policy" className="text-primary-foreground/60 hover:text-accent transition-colors font-body">
+                  Privacy
+                </a>
+                <a href="/policies#terms-conditions" className="text-primary-foreground/60 hover:text-accent transition-colors font-body">
+                  Terms
+                </a>
+                <a href="/policies#guest-conduct-policy" className="text-primary-foreground/60 hover:text-accent transition-colors font-body">
+                  Guest Conduct
                 </a>
               </div>
             </div>

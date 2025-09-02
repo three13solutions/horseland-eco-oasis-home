@@ -10,7 +10,12 @@ const FooterV2 = () => {
   ];
 
   const policies = [
-    'Privacy Policy', 'Booking Terms', 'Cancellation', 'Sustainability'
+    { name: 'Booking', href: '/policies#booking-policy' },
+    { name: 'Cancellation', href: '/policies#cancellation-refunds' },
+    { name: 'Payment', href: '/policies#payment-policy' },
+    { name: 'Privacy', href: '/policies#privacy-policy' },
+    { name: 'Terms', href: '/policies#terms-conditions' },
+    { name: 'Guest Conduct', href: '/policies#guest-conduct-policy' }
   ];
 
   const socialLinks = [
@@ -148,10 +153,10 @@ const FooterV2 = () => {
               {policies.map((policy, index) => (
                 <a
                   key={index}
-                  href={`#${policy.toLowerCase().replace(' ', '-')}`}
+                  href={policy.href}
                   className="text-background/60 hover:text-primary transition-colors"
                 >
-                  {policy}
+                  {policy.name}
                 </a>
               ))}
             </div>

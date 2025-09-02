@@ -121,23 +121,35 @@ const FooterV3 = () => {
 
           {/* Bottom Bar */}
           <div className="border-t border-border/20 mt-12 pt-8">
-            <div className="flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
-              <div className="text-sm text-muted-foreground text-center md:text-left">
-                © 2024 Horseland Hotel. All rights reserved.
+            <div className="flex flex-col space-y-4">
+              {/* Policies */}
+              <div className="flex flex-wrap items-center justify-center md:justify-start gap-4 text-sm text-muted-foreground">
+                <a href="/policies#booking-policy" className="hover:text-primary transition-colors">Booking</a>
+                <a href="/policies#cancellation-refunds" className="hover:text-primary transition-colors">Cancellation</a>
+                <a href="/policies#payment-policy" className="hover:text-primary transition-colors">Payment</a>
+                <a href="/policies#privacy-policy" className="hover:text-primary transition-colors">Privacy</a>
+                <a href="/policies#terms-conditions" className="hover:text-primary transition-colors">Terms</a>
+                <a href="/policies#guest-conduct-policy" className="hover:text-primary transition-colors">Guest Conduct</a>
               </div>
               
-              <div className="flex items-center space-x-6">
-                <div className="text-center">
-                  <div className="text-lg font-bold text-primary">₹1,500</div>
-                  <div className="text-xs text-muted-foreground">Starting from</div>
+              <div className="flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
+                <div className="text-sm text-muted-foreground text-center md:text-left">
+                  © 2024 Horseland Hotel. All rights reserved.
                 </div>
-                <div className="text-center">
-                  <div className="text-lg font-bold text-primary">4.3★</div>
-                  <div className="text-xs text-muted-foreground">Guest Rating</div>
-                </div>
-                <div className="text-center">
-                  <div className="text-lg font-bold text-primary">500+</div>
-                  <div className="text-xs text-muted-foreground">Happy Guests</div>
+                
+                <div className="flex items-center space-x-6">
+                  <div className="text-center">
+                    <div className="text-lg font-bold text-primary">₹1,500</div>
+                    <div className="text-xs text-muted-foreground">Starting from</div>
+                  </div>
+                  <div className="text-center">
+                    <div className="text-lg font-bold text-primary">4.3★</div>
+                    <div className="text-xs text-muted-foreground">Guest Rating</div>
+                  </div>
+                  <div className="text-center">
+                    <div className="text-lg font-bold text-primary">500+</div>
+                    <div className="text-xs text-muted-foreground">Happy Guests</div>
+                  </div>
                 </div>
               </div>
             </div>

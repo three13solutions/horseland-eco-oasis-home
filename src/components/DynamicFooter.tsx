@@ -229,30 +229,17 @@ const DynamicFooter = () => {
         <div className="mt-8 pt-6">
           <div className="grid grid-cols-1 md:grid-cols-6 lg:grid-cols-8 gap-8">
             {/* Policies - Left Side - Spans 2 columns like brand section */}
-            {policiesSection && policiesSection.content.links && (
-              <div className="md:col-span-2 lg:col-span-2">
-                <h4 className="text-sm font-semibold text-background mb-3">Policies</h4>
-                <div className="flex flex-nowrap gap-1 text-sm text-background/60 whitespace-nowrap">
-                  {policiesSection.content.links.map((link: any, index: number) => (
-                    <React.Fragment key={index}>
-                      <Link 
-                        to={link.href}
-                        onClick={() => {
-                          // Scroll to top when navigating
-                          window.scrollTo({ top: 0, behavior: 'smooth' });
-                        }}
-                        className="hover:text-primary transition-colors"
-                      >
-                        {link.title}
-                      </Link>
-                      {index < policiesSection.content.links.length - 1 && (
-                        <span className="text-background/40 mx-1">|</span>
-                      )}
-                    </React.Fragment>
-                  ))}
-                </div>
+            <div className="md:col-span-2 lg:col-span-2">
+              <h4 className="text-sm font-semibold text-background mb-3">Policies</h4>
+              <div className="flex flex-wrap gap-4 text-sm text-background/60">
+                <Link to="/policies#booking-policy" className="hover:text-primary transition-colors">Booking</Link>
+                <Link to="/policies#cancellation-refunds" className="hover:text-primary transition-colors">Cancellation</Link>
+                <Link to="/policies#payment-policy" className="hover:text-primary transition-colors">Payment</Link>
+                <Link to="/policies#privacy-policy" className="hover:text-primary transition-colors">Privacy</Link>
+                <Link to="/policies#terms-conditions" className="hover:text-primary transition-colors">Terms</Link>
+                <Link to="/policies#guest-conduct-policy" className="hover:text-primary transition-colors">Guest Conduct</Link>
               </div>
-            )}
+            </div>
             
             {/* Empty spaces to align with Connect column */}
             <div className="md:col-span-2 lg:col-span-4"></div>

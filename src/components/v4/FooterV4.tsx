@@ -26,10 +26,12 @@ const FooterV4 = () => {
   ];
 
   const policies = [
-    { name: 'Privacy Policy', href: '/policies#privacy' },
-    { name: 'Cancellation Policy', href: '/policies#cancellation' },
-    { name: 'Terms & Conditions', href: '/policies#terms' },
-    { name: 'Guest Reviews', href: '#reviews' }
+    { name: 'Booking', href: '/policies#booking-policy' },
+    { name: 'Cancellation', href: '/policies#cancellation-refunds' },
+    { name: 'Payment', href: '/policies#payment-policy' },
+    { name: 'Privacy', href: '/policies#privacy-policy' },
+    { name: 'Terms', href: '/policies#terms-conditions' },
+    { name: 'Guest Conduct', href: '/policies#guest-conduct-policy' }
   ];
 
   const socialLinks = [
