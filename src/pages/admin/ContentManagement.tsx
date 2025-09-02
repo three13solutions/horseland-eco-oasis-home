@@ -48,6 +48,37 @@ const ContentManagement = () => {
   const [translateProgress, setTranslateProgress] = useState(0);
   const { toast } = useToast();
 
+  // Helper function to get English content for policy keys
+  const getPolicyEnglishContent = (key: string, policiesData: any[]) => {
+    for (const policy of policiesData) {
+      // Check for main policy keys
+      if (key === `${policy.section_key}_title`) {
+        return policy.title;
+      }
+      if (key === `${policy.section_key}_description`) {
+        return policy.description;
+      }
+      
+      // Check for section and item keys
+      if (policy.content && policy.content.sections) {
+        for (let sectionIndex = 0; sectionIndex < policy.content.sections.length; sectionIndex++) {
+          const section = policy.content.sections[sectionIndex];
+          
+          if (key === `${policy.section_key}_section_${sectionIndex}_title`) {
+            return section.title;
+          }
+          
+          for (let itemIndex = 0; itemIndex < section.items.length; itemIndex++) {
+            if (key === `${policy.section_key}_section_${sectionIndex}_item_${itemIndex}`) {
+              return section.items[itemIndex];
+            }
+          }
+        }
+      }
+    }
+    return null;
+  };
+
   const languages = [
     { code: 'en', name: 'English' },
     { code: 'hi', name: 'Hindi' },
@@ -100,8 +131,9 @@ const ContentManagement = () => {
 
       // Define the specific pages and their mappings
       const specificPageMappings: { [key: string]: string } = {
-        'home': 'Home',
-        'homepage': 'Home',
+        'hero': 'Home',
+        'welcome': 'Home', 
+        'matheran': 'Home',
         'about': 'About',
         'stay': 'Stay',
         'rooms': 'Stay',
@@ -111,28 +143,45 @@ const ContentManagement = () => {
         'journal': 'Journal',
         'blog': 'Journal',
         'faq': 'FAQ',
-        'contact': 'Contact',
-        'policies': 'Policies'
+        'contact': 'Contact'
       };
 
       const specificPages: ContentPage[] = [];
       const globalContentSections: string[] = [];
       const policyContentSections: string[] = [];
+      const homePageSections: string[] = [];
 
       // Process translation sections
       (sectionsData || []).forEach(section => {
         const mappedName = specificPageMappings[section.section_key];
-        if (mappedName) {
-          specificPages.push({
-            key: section.section_key,
-            name: mappedName,
-            description: section.description,
-            type: 'translation' as const
-          });
-        } else {
+        if (mappedName === 'Home') {
+          homePageSections.push(section.section_key);
+        } else if (mappedName && mappedName !== 'Home') {
+          // Check if this page already exists
+          const existingPage = specificPages.find(p => p.name === mappedName);
+          if (!existingPage) {
+            specificPages.push({
+              key: section.section_key,
+              name: mappedName,
+              description: section.description,
+              type: 'translation' as const
+            });
+          }
+        } else if (section.section_key !== 'policies') {
+          // Exclude the conflicting 'policies' translation section
           globalContentSections.push(section.section_key);
         }
       });
+
+      // Add Home page if there are home sections
+      if (homePageSections.length > 0) {
+        specificPages.push({
+          key: 'home',
+          name: 'Home',
+          description: `Homepage content including hero, welcome sections (${homePageSections.length} sections)`,
+          type: 'translation' as const
+        });
+      }
 
       // Process policy sections - collect them for the Policies page
       (policiesData || []).forEach(policy => {
@@ -183,9 +232,11 @@ const ContentManagement = () => {
       setContentPages(sortedPages);
       setTranslations(translationsData || []);
 
-      // Store global content sections and policy sections for later use
+      // Store sections for later use
       (window as any).globalContentSections = globalContentSections;
       (window as any).policyContentSections = policyContentSections;
+      (window as any).homePageSections = homePageSections;
+      (window as any).policiesData = policiesData;
     } catch (error) {
       toast({
         title: "Error",
@@ -273,7 +324,7 @@ const ContentManagement = () => {
           });
 
           if (!error && data.translatedText) {
-            await saveTranslation(key, data.translatedText, false, englishTranslation.section);
+            await saveTranslation(key as string, data.translatedText, false, (englishTranslation as any)?.section);
           }
         } catch (error) {
           console.warn(`Failed to translate ${key}:`, error);
@@ -302,12 +353,15 @@ const ContentManagement = () => {
       return translations.filter(t => 
         globalSections.includes(t.section) && t.language_code === selectedLanguage
       );
-    } else if (selectedPage === 'policies') {
-      // For policies page, get translations from all policy sections
-      const policySections = (window as any).policyContentSections || [];
+    } else if (selectedPage === 'home') {
+      // For home page, get translations from home sections
+      const homePageSections = (window as any).homePageSections || [];
       return translations.filter(t => 
-        policySections.includes(t.section) && t.language_code === selectedLanguage
+        homePageSections.includes(t.section) && t.language_code === selectedLanguage
       );
+    } else if (selectedPage === 'policies') {
+      // For policies page, return empty as we handle this differently
+      return [];
     } else {
       // For specific pages, get translations from that section only
       return translations.filter(t => 
@@ -326,14 +380,36 @@ const ContentManagement = () => {
           .map(t => t.key)
       );
       return Array.from(keys).sort();
-    } else if (selectedPage === 'policies') {
-      // For policies page, get keys from all policy sections
-      const policySections = (window as any).policyContentSections || [];
+    } else if (selectedPage === 'home') {
+      // For home page, get keys from home sections
+      const homePageSections = (window as any).homePageSections || [];
       const keys = new Set(
         translations
-          .filter(t => policySections.includes(t.section))
+          .filter(t => homePageSections.includes(t.section))
           .map(t => t.key)
       );
+      return Array.from(keys).sort();
+    } else if (selectedPage === 'policies') {
+      // For policies page, get content keys from policies_content table
+      const policiesData = (window as any).policiesData || [];
+      const keys = new Set();
+      
+      policiesData.forEach((policy: any) => {
+        // Add main content keys for each policy section
+        keys.add(`${policy.section_key}_title`);
+        keys.add(`${policy.section_key}_description`);
+        
+        // Add keys for each section within the policy
+        if (policy.content && policy.content.sections) {
+          policy.content.sections.forEach((section: any, sectionIndex: number) => {
+            keys.add(`${policy.section_key}_section_${sectionIndex}_title`);
+            section.items.forEach((item: any, itemIndex: number) => {
+              keys.add(`${policy.section_key}_section_${sectionIndex}_item_${itemIndex}`);
+            });
+          });
+        }
+      });
+      
       return Array.from(keys).sort();
     } else {
       // For specific pages, get keys from that section only
@@ -594,7 +670,7 @@ const ContentManagement = () => {
 
                 <div className="space-y-4">
                   {getPageKeys().map((key) => {
-                    const currentTranslation = getCurrentTranslations().find(t => t.key === key);
+                    const currentTranslation = getCurrentTranslations().find(t => t.key === key as string);
                     let englishTranslation;
                     
                     if (selectedPage === 'global_content') {
@@ -603,12 +679,22 @@ const ContentManagement = () => {
                       englishTranslation = translations.find(t => 
                         t.key === key && t.language_code === 'en' && globalSections.includes(t.section)
                       );
-                    } else if (selectedPage === 'policies') {
-                      // For policies page, find English translation from any policy section
-                      const policySections = (window as any).policyContentSections || [];
+                    } else if (selectedPage === 'home') {
+                      // For home page, find English translation from any home section
+                      const homePageSections = (window as any).homePageSections || [];
                       englishTranslation = translations.find(t => 
-                        t.key === key && t.language_code === 'en' && policySections.includes(t.section)
+                        t.key === key && t.language_code === 'en' && homePageSections.includes(t.section)
                       );
+                    } else if (selectedPage === 'policies') {
+                      // For policies page, generate English content from policies_content
+                      const policiesData = (window as any).policiesData || [];
+                      const englishContent = getPolicyEnglishContent(key as string, policiesData);
+                      if (englishContent) {
+                        englishTranslation = {
+                          value: englishContent,
+                          section: 'policies'
+                        };
+                      }
                     } else {
                       // For specific pages, find English translation from that section
                       englishTranslation = translations.find(t => 
@@ -617,9 +703,9 @@ const ContentManagement = () => {
                     }
 
                     return (
-                      <div key={key} className="border rounded-lg p-4">
-                        <div className="flex items-start justify-between mb-2">
-                          <Label className="font-medium">{key}</Label>
+                       <div key={key as string} className="border rounded-lg p-4">
+                         <div className="flex items-start justify-between mb-2">
+                           <Label className="font-medium">{key as string}</Label>
                           <div className="flex items-center gap-2">
                             {currentTranslation ? (
                               <Badge variant="default">Translated</Badge>
@@ -628,40 +714,40 @@ const ContentManagement = () => {
                             )}
                           </div>
                         </div>
-                        <Input
-                          value={editingValues[key] ?? currentTranslation?.value ?? ''}
-                          onChange={(e) => setEditingValues(prev => ({
-                            ...prev,
-                            [key]: e.target.value
-                          }))}
-                          placeholder={`Enter ${selectedLanguage} translation for ${key}`}
-                          className="mb-2"
-                        />
+                         <Input
+                           value={editingValues[key as string] ?? currentTranslation?.value ?? ''}
+                           onChange={(e) => setEditingValues(prev => ({
+                             ...prev,
+                             [key as string]: e.target.value
+                           }))}
+                           placeholder={`Enter ${selectedLanguage} translation for ${key as string}`}
+                           className="mb-2"
+                         />
                         <div className="flex justify-between items-center">
                           <span className="text-sm text-muted-foreground">
                             {englishTranslation ? `EN: ${englishTranslation.value}` : 'No English version'}
                           </span>
                           <div className="flex gap-2">
-                            {selectedLanguage !== 'en' && englishTranslation && (
-                              <Button
-                                onClick={() => autoTranslate(key, englishTranslation.value)}
-                                disabled={translating === key}
-                                variant="outline"
-                                size="sm"
-                              >
-                                {translating === key ? (
-                                  <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                                ) : (
-                                  <Globe className="h-4 w-4 mr-2" />
-                                )}
-                                Auto-translate
-                              </Button>
-                            )}
-                            <Button
-                              onClick={() => saveTranslation(key, editingValues[key] ?? currentTranslation?.value ?? '', true, englishTranslation?.section)}
-                              disabled={saving === key || (!editingValues[key] && !currentTranslation?.value)}
-                              size="sm"
-                            >
+                             {selectedLanguage !== 'en' && englishTranslation && (
+                               <Button
+                                 onClick={() => autoTranslate(key as string, (englishTranslation as any).value)}
+                                 disabled={translating === key}
+                                 variant="outline"
+                                 size="sm"
+                               >
+                                 {translating === key ? (
+                                   <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                                 ) : (
+                                   <Globe className="h-4 w-4 mr-2" />
+                                 )}
+                                 Auto-translate
+                               </Button>
+                             )}
+                             <Button
+                               onClick={() => saveTranslation(key as string, editingValues[key as string] ?? currentTranslation?.value ?? '', true, (englishTranslation as any)?.section)}
+                               disabled={saving === key || (!editingValues[key as string] && !currentTranslation?.value)}
+                               size="sm"
+                             >
                               {saving === key ? (
                                 <Loader2 className="h-4 w-4 animate-spin mr-2" />
                               ) : (
