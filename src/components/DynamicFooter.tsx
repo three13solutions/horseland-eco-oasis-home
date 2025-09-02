@@ -231,13 +231,13 @@ const DynamicFooter = () => {
             {/* Policies - Left Side - Spans 2 columns like brand section */}
             <div className="md:col-span-2 lg:col-span-2">
               <h4 className="text-sm font-semibold text-background mb-3">Policies</h4>
-              <div className="flex flex-wrap gap-3 md:gap-4 text-sm text-background/60">
-                <Link to="/policies#booking" className="hover:text-primary transition-colors whitespace-nowrap">Booking</Link>
-                <Link to="/policies#cancellation" className="hover:text-primary transition-colors whitespace-nowrap">Cancellation</Link>
-                <Link to="/policies#payment" className="hover:text-primary transition-colors whitespace-nowrap">Payment</Link>
-                <Link to="/policies#privacy" className="hover:text-primary transition-colors whitespace-nowrap">Privacy</Link>
-                <Link to="/policies#terms" className="hover:text-primary transition-colors whitespace-nowrap">Terms</Link>
-                <Link to="/policies#guest" className="hover:text-primary transition-colors whitespace-nowrap">Guest Conduct</Link>
+              <div className="flex items-center space-x-3 md:space-x-4 text-sm text-background/60 overflow-x-auto">
+                <Link to="/policies#booking" className="hover:text-primary transition-colors whitespace-nowrap flex-shrink-0">Booking</Link>
+                <Link to="/policies#cancellation" className="hover:text-primary transition-colors whitespace-nowrap flex-shrink-0">Cancellation</Link>
+                <Link to="/policies#payment" className="hover:text-primary transition-colors whitespace-nowrap flex-shrink-0">Payment</Link>
+                <Link to="/policies#privacy" className="hover:text-primary transition-colors whitespace-nowrap flex-shrink-0">Privacy</Link>
+                <Link to="/policies#terms" className="hover:text-primary transition-colors whitespace-nowrap flex-shrink-0">Terms</Link>
+                <Link to="/policies#guest" className="hover:text-primary transition-colors whitespace-nowrap flex-shrink-0">Guest Conduct</Link>
               </div>
             </div>
             
