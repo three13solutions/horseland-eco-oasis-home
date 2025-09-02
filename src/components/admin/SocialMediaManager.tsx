@@ -4,7 +4,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Facebook, Instagram, Twitter, Youtube, Linkedin, Github, Video, MessageCircle, Globe } from 'lucide-react';
+import { Facebook, Instagram, Twitter, Youtube, Linkedin, Video, MessageCircle, Globe } from 'lucide-react';
 
 interface SocialNetwork {
   platform: string;
@@ -29,7 +29,6 @@ const AVAILABLE_PLATFORMS = [
   { platform: 'twitter', label: 'Twitter / X', icon: <Twitter className="w-4 h-4" /> },
   { platform: 'youtube', label: 'YouTube', icon: <Youtube className="w-4 h-4" /> },
   { platform: 'linkedin', label: 'LinkedIn', icon: <Linkedin className="w-4 h-4" /> },
-  { platform: 'github', label: 'GitHub', icon: <Github className="w-4 h-4" /> },
   { platform: 'tiktok', label: 'TikTok', icon: <Video className="w-4 h-4" /> },
   { platform: 'whatsapp', label: 'WhatsApp', icon: <MessageCircle className="w-4 h-4" /> },
 ];

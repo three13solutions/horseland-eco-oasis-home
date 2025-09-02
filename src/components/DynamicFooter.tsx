@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Facebook, Instagram, Twitter, Youtube, Mail, Phone, MapPin, Package, ExternalLink, Linkedin, Github, Video, MessageCircle } from 'lucide-react';
+import { Facebook, Instagram, Twitter, Youtube, Mail, Phone, MapPin, Package, ExternalLink, Linkedin, Video, MessageCircle } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 
 interface FooterSection {
@@ -83,7 +83,6 @@ const DynamicFooter = () => {
       case 'twitter': return <Twitter className="w-5 h-5" />;
       case 'youtube': return <Youtube className="w-5 h-5" />;
       case 'linkedin': return <Linkedin className="w-5 h-5" />;
-      case 'github': return <Github className="w-5 h-5" />;
       case 'tiktok': return <Video className="w-5 h-5" />;
       case 'whatsapp': return <MessageCircle className="w-5 h-5" />;
       default: return null;

@@ -8,7 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
-import { Trash2, Plus, Save, Settings, GripVertical, ChevronRight, Facebook, Instagram, Twitter, Youtube, Linkedin, Github, Video, MessageCircle, Globe } from 'lucide-react';
+import { Trash2, Plus, Save, Settings, GripVertical, ChevronRight, Facebook, Instagram, Twitter, Youtube, Linkedin, Video, MessageCircle, Globe } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import ImageUpload from '@/components/ImageUpload';
 import SocialMediaManager from '@/components/admin/SocialMediaManager';
