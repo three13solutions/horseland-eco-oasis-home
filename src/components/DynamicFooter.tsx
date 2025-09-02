@@ -236,7 +236,11 @@ const DynamicFooter = () => {
                   {policiesSection.content.links.map((link: any, index: number) => (
                     <React.Fragment key={index}>
                       <Link 
-                        to={link.href} 
+                        to={link.href}
+                        onClick={() => {
+                          // Scroll to top when navigating
+                          window.scrollTo({ top: 0, behavior: 'smooth' });
+                        }}
                         className="hover:text-primary transition-colors"
                       >
                         {link.title}
