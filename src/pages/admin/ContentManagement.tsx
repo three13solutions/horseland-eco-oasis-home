@@ -112,16 +112,12 @@ const ContentManagement = () => {
         'blog': 'Journal',
         'faq': 'FAQ',
         'contact': 'Contact',
-        'booking': 'Booking Policy',
-        'cancellation': 'Cancellation & Refunds',
-        'payment': 'Payment Policy',
-        'privacy': 'Privacy Policy',
-        'terms': 'Terms & Conditions',
-        'guest': 'Guest Conduct Policy'
+        'policies': 'Policies'
       };
 
       const specificPages: ContentPage[] = [];
       const globalContentSections: string[] = [];
+      const policyContentSections: string[] = [];
 
       // Process translation sections
       (sectionsData || []).forEach(section => {
@@ -138,20 +134,20 @@ const ContentManagement = () => {
         }
       });
 
-      // Process policy sections
+      // Process policy sections - collect them for the Policies page
       (policiesData || []).forEach(policy => {
-        const mappedName = specificPageMappings[policy.section_key];
-        if (mappedName) {
-          specificPages.push({
-            key: policy.section_key,
-            name: mappedName,
-            description: policy.description,
-            type: 'policy' as const
-          });
-        } else {
-          globalContentSections.push(policy.section_key);
-        }
+        policyContentSections.push(policy.section_key);
       });
+
+      // Add Policies page if there are policy sections
+      if (policyContentSections.length > 0) {
+        specificPages.push({
+          key: 'policies',
+          name: 'Policies',
+          description: `All policy content sections (${policyContentSections.length} sections)`,
+          type: 'policy' as const
+        });
+      }
 
       // Create the final pages array
       const pages: ContentPage[] = [...specificPages];
@@ -169,8 +165,7 @@ const ContentManagement = () => {
       // Sort pages by the desired order
       const pageOrder = [
         'Home', 'About', 'Stay', 'Experiences', 'Packages', 'Journal', 'FAQ', 'Contact',
-        'Booking Policy', 'Cancellation & Refunds', 'Payment Policy', 'Privacy Policy', 
-        'Terms & Conditions', 'Guest Conduct Policy', 'Global Content'
+        'Policies', 'Global Content'
       ];
 
       const sortedPages = pages.sort((a, b) => {
@@ -188,8 +183,9 @@ const ContentManagement = () => {
       setContentPages(sortedPages);
       setTranslations(translationsData || []);
 
-      // Store global content sections for later use
+      // Store global content sections and policy sections for later use
       (window as any).globalContentSections = globalContentSections;
+      (window as any).policyContentSections = policyContentSections;
     } catch (error) {
       toast({
         title: "Error",
@@ -253,6 +249,12 @@ const ContentManagement = () => {
         englishTranslation = translations.find(t => 
           t.key === key && t.language_code === 'en' && globalSections.includes(t.section)
         );
+      } else if (selectedPage === 'policies') {
+        // For policies page, find the English translation from any of the policy sections
+        const policySections = (window as any).policyContentSections || [];
+        englishTranslation = translations.find(t => 
+          t.key === key && t.language_code === 'en' && policySections.includes(t.section)
+        );
       } else {
         // For specific pages, find the English translation from that section
         englishTranslation = translations.find(t => 
@@ -300,6 +302,12 @@ const ContentManagement = () => {
       return translations.filter(t => 
         globalSections.includes(t.section) && t.language_code === selectedLanguage
       );
+    } else if (selectedPage === 'policies') {
+      // For policies page, get translations from all policy sections
+      const policySections = (window as any).policyContentSections || [];
+      return translations.filter(t => 
+        policySections.includes(t.section) && t.language_code === selectedLanguage
+      );
     } else {
       // For specific pages, get translations from that section only
       return translations.filter(t => 
@@ -318,6 +326,15 @@ const ContentManagement = () => {
           .map(t => t.key)
       );
       return Array.from(keys).sort();
+    } else if (selectedPage === 'policies') {
+      // For policies page, get keys from all policy sections
+      const policySections = (window as any).policyContentSections || [];
+      const keys = new Set(
+        translations
+          .filter(t => policySections.includes(t.section))
+          .map(t => t.key)
+      );
+      return Array.from(keys).sort();
     } else {
       // For specific pages, get keys from that section only
       const keys = new Set(
@@ -332,7 +349,7 @@ const ContentManagement = () => {
   const saveTranslation = async (key: string, value: string, showToast = true, targetSection?: string) => {
     setSaving(key);
     try {
-      // For global content, determine which section this key belongs to
+      // For global content or policies, determine which section this key belongs to
       let sectionToUse = selectedPage;
       if (selectedPage === 'global_content') {
         if (targetSection) {
@@ -348,6 +365,22 @@ const ContentManagement = () => {
             // Fallback to first global section
             const globalSections = (window as any).globalContentSections || [];
             sectionToUse = globalSections[0] || selectedPage;
+          }
+        }
+      } else if (selectedPage === 'policies') {
+        if (targetSection) {
+          sectionToUse = targetSection;
+        } else {
+          // Find the section from existing translations
+          const existingTranslation = translations.find(t => 
+            t.key === key && t.language_code === 'en'
+          );
+          if (existingTranslation) {
+            sectionToUse = existingTranslation.section;
+          } else {
+            // Fallback to first policy section
+            const policySections = (window as any).policyContentSections || [];
+            sectionToUse = policySections[0] || selectedPage;
           }
         }
       }
@@ -425,6 +458,12 @@ const ContentManagement = () => {
         const globalSections = (window as any).globalContentSections || [];
         sourceTranslations = translations.filter(t => 
           globalSections.includes(t.section) && t.language_code === sourceLang
+        );
+      } else if (selectedPage === 'policies') {
+        // For policies page, get translations from all policy sections
+        const policySections = (window as any).policyContentSections || [];
+        sourceTranslations = translations.filter(t => 
+          policySections.includes(t.section) && t.language_code === sourceLang
         );
       } else {
         // For specific pages, get translations from that section only
@@ -563,6 +602,12 @@ const ContentManagement = () => {
                       const globalSections = (window as any).globalContentSections || [];
                       englishTranslation = translations.find(t => 
                         t.key === key && t.language_code === 'en' && globalSections.includes(t.section)
+                      );
+                    } else if (selectedPage === 'policies') {
+                      // For policies page, find English translation from any policy section
+                      const policySections = (window as any).policyContentSections || [];
+                      englishTranslation = translations.find(t => 
+                        t.key === key && t.language_code === 'en' && policySections.includes(t.section)
                       );
                     } else {
                       // For specific pages, find English translation from that section
