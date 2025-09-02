@@ -160,23 +160,23 @@ const FooterV5 = () => {
             
             {/* Show policies on desktop, or when expanded on mobile */}
             <div className={`${isPoliciesOpen ? 'block' : 'hidden'} md:block`}>
-              <div className="flex flex-wrap items-center justify-center md:justify-start gap-4 text-sm">
-                <a href="/policies#booking-policy" className="text-primary-foreground/60 hover:text-accent transition-colors font-body">
+              <div className="flex flex-wrap items-center justify-center md:justify-start gap-3 md:gap-4 text-sm">
+                <a href="/policies#booking" className="text-primary-foreground/60 hover:text-accent transition-colors font-body whitespace-nowrap">
                   Booking
                 </a>
-                <a href="/policies#cancellation-refunds" className="text-primary-foreground/60 hover:text-accent transition-colors font-body">
+                <a href="/policies#cancellation" className="text-primary-foreground/60 hover:text-accent transition-colors font-body whitespace-nowrap">
                   Cancellation
                 </a>
-                <a href="/policies#payment-policy" className="text-primary-foreground/60 hover:text-accent transition-colors font-body">
+                <a href="/policies#payment" className="text-primary-foreground/60 hover:text-accent transition-colors font-body whitespace-nowrap">
                   Payment
                 </a>
-                <a href="/policies#privacy-policy" className="text-primary-foreground/60 hover:text-accent transition-colors font-body">
+                <a href="/policies#privacy" className="text-primary-foreground/60 hover:text-accent transition-colors font-body whitespace-nowrap">
                   Privacy
                 </a>
-                <a href="/policies#terms-conditions" className="text-primary-foreground/60 hover:text-accent transition-colors font-body">
+                <a href="/policies#terms" className="text-primary-foreground/60 hover:text-accent transition-colors font-body whitespace-nowrap">
                   Terms
                 </a>
-                <a href="/policies#guest-conduct-policy" className="text-primary-foreground/60 hover:text-accent transition-colors font-body">
+                <a href="/policies#guest" className="text-primary-foreground/60 hover:text-accent transition-colors font-body whitespace-nowrap">
                   Guest Conduct
                 </a>
               </div>

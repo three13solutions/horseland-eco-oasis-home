@@ -123,13 +123,13 @@ const FooterV3 = () => {
           <div className="border-t border-border/20 mt-12 pt-8">
             <div className="flex flex-col space-y-4">
               {/* Policies */}
-              <div className="flex flex-wrap items-center justify-center md:justify-start gap-4 text-sm text-muted-foreground">
-                <a href="/policies#booking-policy" className="hover:text-primary transition-colors">Booking</a>
-                <a href="/policies#cancellation-refunds" className="hover:text-primary transition-colors">Cancellation</a>
-                <a href="/policies#payment-policy" className="hover:text-primary transition-colors">Payment</a>
-                <a href="/policies#privacy-policy" className="hover:text-primary transition-colors">Privacy</a>
-                <a href="/policies#terms-conditions" className="hover:text-primary transition-colors">Terms</a>
-                <a href="/policies#guest-conduct-policy" className="hover:text-primary transition-colors">Guest Conduct</a>
+              <div className="flex flex-wrap items-center justify-center md:justify-start gap-3 md:gap-4 text-sm text-muted-foreground">
+                <a href="/policies#booking" className="hover:text-primary transition-colors whitespace-nowrap">Booking</a>
+                <a href="/policies#cancellation" className="hover:text-primary transition-colors whitespace-nowrap">Cancellation</a>
+                <a href="/policies#payment" className="hover:text-primary transition-colors whitespace-nowrap">Payment</a>
+                <a href="/policies#privacy" className="hover:text-primary transition-colors whitespace-nowrap">Privacy</a>
+                <a href="/policies#terms" className="hover:text-primary transition-colors whitespace-nowrap">Terms</a>
+                <a href="/policies#guest" className="hover:text-primary transition-colors whitespace-nowrap">Guest Conduct</a>
               </div>
               
               <div className="flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
