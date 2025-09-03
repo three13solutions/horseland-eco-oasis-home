@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Facebook, Instagram, Twitter, Youtube, Mail, Phone, MapPin, Package, ExternalLink, Linkedin, Video, MessageCircle } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
+import { useSiteSettings } from '@/hooks/useSiteSettings';
 
 interface FooterSection {
   id: string;
