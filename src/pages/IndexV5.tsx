@@ -10,7 +10,7 @@ import GuestReviewsV5 from '../components/v5/GuestReviewsV5';
 import TrustedByV5 from '../components/v5/TrustedByV5';
 import GalleryV5 from '../components/v5/GalleryV5';
 import JournalPreviewV5 from '../components/v5/JournalPreviewV5';
-import DynamicFooter from '../components/DynamicFooter';
+import FooterV5 from '../components/v5/FooterV5';
 import CombinedFloatingV5 from '../components/v5/CombinedFloatingV5';
 
 const IndexV5 = () => {
@@ -26,7 +26,7 @@ const IndexV5 = () => {
       <TrustedByV5 />
       <GalleryV5 />
       <JournalPreviewV5 />
-      <DynamicFooter />
+      <FooterV5 />
       <CombinedFloatingV5 />
     </div>
   );

@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Menu, X, Calendar, ChevronDown } from 'lucide-react';
@@ -7,6 +6,7 @@ import { supabase } from '@/integrations/supabase/client';
 import BookingModal from '@/components/BookingModal';
 import { useTranslationContext } from '@/components/admin/TranslationProvider';
 import LanguageSelector from '@/components/LanguageSelector';
+import { useSiteSettings } from '@/hooks/useSiteSettings';
 
 interface NavigationItem {
   id: string;
@@ -17,20 +17,12 @@ interface NavigationItem {
   parent_id?: string;
 }
 
-interface SiteSettings {
-  site_title: string;
-  site_logo: string;
-}
-
 const NavigationV5 = () => {
   const { getTranslation } = useTranslationContext();
+  const { settings } = useSiteSettings();
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [navigationItems, setNavigationItems] = useState<NavigationItem[]>([]);
-  const [siteSettings, setSiteSettings] = useState<SiteSettings>({
-    site_title: 'HORSELAND',
-    site_logo: '/lovable-uploads/24f5ee9b-ce5a-4b86-a2d8-7ca42e0a78cf.png'
-  });
   const [experiencesOpen, setExperiencesOpen] = useState(false);
   const [showBookingModal, setShowBookingModal] = useState(false);
 
@@ -45,17 +37,6 @@ const NavigationV5 = () => {
   useEffect(() => {
     loadNavigationData();
   }, []);
-
-  const safeParseJSON = (value: any) => {
-    if (typeof value === 'string') {
-      try {
-        return JSON.parse(value);
-      } catch {
-        return value; // Return as string if parsing fails
-      }
-    }
-    return value; // Already an object or other type
-  };
 
   const loadNavigationData = async () => {
     try {
@@ -157,13 +138,13 @@ const NavigationV5 = () => {
           {/* Logo */}
           <Link to="/" className="flex items-center space-x-3">
             <img 
-              src={siteSettings.site_logo} 
-              alt={siteSettings.site_title} 
+              src={settings.site_logo || "/lovable-uploads/24f5ee9b-ce5a-4b86-a2d8-7ca42e0a78cf.png"} 
+              alt={settings.site_title || "Horseland Hotel"} 
               className="h-14 w-14 md:h-18 md:w-18 drop-shadow-lg"
             />
             <div>
               <h1 className="text-xl md:text-2xl font-bold text-primary tracking-wide">
-                {siteSettings.site_title}
+                {settings.site_title || "Horseland Hotel"}
               </h1>
               <p className="text-xs text-muted-foreground uppercase tracking-wider hidden sm:block">
                 Hotel
