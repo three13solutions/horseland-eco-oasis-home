@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Menu, X, HelpCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -10,9 +9,11 @@ import {
   NavigationMenuList,
   NavigationMenuTrigger,
 } from '@/components/ui/navigation-menu';
+import { useSiteSettings } from '@/hooks/useSiteSettings';
 
 const Navigation = () => {
   const [isOpen, setIsOpen] = useState(false);
+  const { settings } = useSiteSettings();
 
   const navItems = [
     { title: 'About', href: '#about' },
@@ -20,13 +21,13 @@ const Navigation = () => {
     { 
       title: 'Experiences', 
       href: '#experiences',
-      dropdown: [
+      subitems: [
         { title: 'Activities', href: '#activities' },
-        { title: 'Spa & Wellness', href: '#spa' },
         { title: 'Dining', href: '#dining' },
+        { title: 'Spa & Wellness', href: '#spa' }
       ]
     },
-    
+    { title: 'Packages', href: '#packages' },
     { title: 'Journal', href: '#journal' },
     { title: 'Contact', href: '#contact' },
   ];
@@ -38,12 +39,12 @@ const Navigation = () => {
         <div className="flex items-center">
           <a href="/" className="flex items-center space-x-3">
             <img 
-              src="/lovable-uploads/24f5ee9b-ce5a-4b86-a2d8-7ca42e0a78cf.png" 
-              alt="Horseland Hotel Logo" 
+              src={settings.site_logo || "/lovable-uploads/24f5ee9b-ce5a-4b86-a2d8-7ca42e0a78cf.png"} 
+              alt={`${settings.site_title || "Horseland"} Hotel Logo`} 
               className="h-12 w-12"
             />
             <span className="text-xl font-bold text-primary hidden sm:block">
-              Horseland
+              {settings.site_title || "Horseland"}
             </span>
           </a>
         </div>
@@ -54,20 +55,20 @@ const Navigation = () => {
             <NavigationMenuList>
               {navItems.map((item) => (
                 <NavigationMenuItem key={item.title}>
-                  {item.dropdown ? (
+                  {item.subitems ? (
                     <>
-                      <NavigationMenuTrigger className="text-foreground hover:text-primary transition-colors [&>svg]:hidden">
+                      <NavigationMenuTrigger className="hover:text-primary transition-colors">
                         {item.title}
                       </NavigationMenuTrigger>
                       <NavigationMenuContent>
                         <div className="w-48 p-4">
-                          {item.dropdown.map((subItem) => (
+                          {item.subitems.map((subitem) => (
                             <a
-                              key={subItem.title}
-                              href={subItem.href}
-                              className="block px-3 py-2 text-sm hover:bg-accent hover:text-accent-foreground rounded-md transition-colors"
+                              key={subitem.title}
+                              href={subitem.href}
+                              className="block px-3 py-2 text-sm hover:text-primary transition-colors"
                             >
-                              {subItem.title}
+                              {subitem.title}
                             </a>
                           ))}
                         </div>
@@ -83,66 +84,52 @@ const Navigation = () => {
                   )}
                 </NavigationMenuItem>
               ))}
-              <NavigationMenuItem>
-                <a href="#faq" className="p-2 hover:text-primary transition-colors">
-                  <HelpCircle className="h-5 w-5" />
-                </a>
-              </NavigationMenuItem>
             </NavigationMenuList>
           </NavigationMenu>
         </div>
 
-        {/* Book Now Button */}
-        <Button className="hidden lg:inline-flex bg-primary hover:bg-primary/90 text-primary-foreground">
-          Book Now
-        </Button>
-
-        {/* Mobile Navigation */}
-        <div className="lg:hidden flex items-center space-x-4">
-          <Button className="bg-primary hover:bg-primary/90 text-primary-foreground">
+        {/* CTA Button & Mobile Menu */}
+        <div className="flex items-center space-x-4">
+          <Button className="hidden md:flex">
             Book Now
           </Button>
+          
           <Sheet open={isOpen} onOpenChange={setIsOpen}>
             <SheetTrigger asChild>
-              <Button variant="ghost" size="icon">
+              <Button variant="ghost" size="icon" className="lg:hidden">
                 <Menu className="h-6 w-6" />
               </Button>
             </SheetTrigger>
             <SheetContent side="right" className="w-80">
-              <div className="flex flex-col space-y-4 mt-8">
+              <div className="flex flex-col space-y-4 mt-6">
                 {navItems.map((item) => (
                   <div key={item.title}>
                     <a
                       href={item.href}
-                      className="block py-2 text-lg font-medium hover:text-primary transition-colors"
+                      className="text-lg font-medium hover:text-primary transition-colors block py-2"
                       onClick={() => setIsOpen(false)}
                     >
                       {item.title}
                     </a>
-                    {item.dropdown && (
+                    {item.subitems && (
                       <div className="ml-4 mt-2 space-y-2">
-                        {item.dropdown.map((subItem) => (
+                        {item.subitems.map((subitem) => (
                           <a
-                            key={subItem.title}
-                            href={subItem.href}
-                            className="block py-1 text-muted-foreground hover:text-primary transition-colors"
+                            key={subitem.title}
+                            href={subitem.href}
+                            className="text-sm text-muted-foreground hover:text-primary transition-colors block py-1"
                             onClick={() => setIsOpen(false)}
                           >
-                            {subItem.title}
+                            {subitem.title}
                           </a>
                         ))}
                       </div>
                     )}
                   </div>
                 ))}
-                <a
-                  href="#faq"
-                  className="flex items-center py-2 text-lg font-medium hover:text-primary transition-colors"
-                  onClick={() => setIsOpen(false)}
-                >
-                  <HelpCircle className="h-5 w-5 mr-2" />
-                  FAQs
-                </a>
+                <Button className="mt-6 w-full">
+                  Book Now
+                </Button>
               </div>
             </SheetContent>
           </Sheet>

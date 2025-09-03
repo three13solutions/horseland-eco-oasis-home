@@ -14,10 +14,12 @@ import {
   ChevronDown,
   ChevronUp 
 } from 'lucide-react';
+import { useSiteSettings } from '@/hooks/useSiteSettings';
 
 const FooterV5 = () => {
   const { t } = useTranslation();
   const [isPoliciesOpen, setIsPoliciesOpen] = useState(false);
+  const { settings } = useSiteSettings();
 
   const socialLinks = [
     { icon: Instagram, href: '#', label: 'Instagram', color: 'hover:text-pink-500' },
@@ -42,8 +44,8 @@ const FooterV5 = () => {
             <div className="md:col-span-2 space-y-6">
               <div className="flex flex-col items-start space-y-4">
                 <img 
-                  src="/lovable-uploads/24f5ee9b-ce5a-4b86-a2d8-7ca42e0a78cf.png" 
-                  alt="Horseland Logo" 
+                  src={settings.site_logo || "/lovable-uploads/24f5ee9b-ce5a-4b86-a2d8-7ca42e0a78cf.png"} 
+                  alt={`${settings.site_title || "Horseland"} Logo`} 
                   className="h-16 w-16 md:h-20 md:w-20 drop-shadow-lg"
                 />
                 

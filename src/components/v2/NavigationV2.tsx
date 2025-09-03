@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 const NavigationV2 = () => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const { settings } = useSiteSettings();
 
   useEffect(() => {
     const handleScroll = () => {

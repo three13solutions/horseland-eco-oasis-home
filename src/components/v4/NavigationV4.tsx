@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { Menu, X, Phone, ChevronDown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { useSiteSettings } from '@/hooks/useSiteSettings';
 
 const NavigationV4 = () => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [experiencesOpen, setExperiencesOpen] = useState(false);
+  const { settings } = useSiteSettings();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -42,13 +44,13 @@ const NavigationV4 = () => {
           {/* Logo */}
           <div className="flex items-center space-x-3">
             <img 
-              src="/lovable-uploads/24f5ee9b-ce5a-4b86-a2d8-7ca42e0a78cf.png" 
-              alt="Horseland Hotel" 
+              src={settings.site_logo || "/lovable-uploads/24f5ee9b-ce5a-4b86-a2d8-7ca42e0a78cf.png"} 
+              alt={`${settings.site_title || "Horseland"} Hotel`} 
               className="h-14 w-14 md:h-18 md:w-18 drop-shadow-lg"
             />
             <div>
-              <h1 className="text-xl md:text-2xl font-bold text-foreground tracking-wide">HORSELAND</h1>
-              <p className="text-xs text-muted-foreground uppercase tracking-wider hidden sm:block">Hotel</p>
+              <h1 className="text-xl md:text-2xl font-bold text-foreground tracking-wide">{settings.site_title || "HORSELAND"}</h1>
+              <p className="text-xs text-muted-foreground uppercase tracking-wider hidden sm:block">{settings.site_tagline || "Hotel"}</p>
             </div>
           </div>
 

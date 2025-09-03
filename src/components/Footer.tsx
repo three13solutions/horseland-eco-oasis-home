@@ -1,11 +1,13 @@
-
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Facebook, Instagram, Twitter, Youtube, Phone, Mail, MapPin } from 'lucide-react';
+import { useSiteSettings } from '@/hooks/useSiteSettings';
 
 const Footer = () => {
+  const { settings } = useSiteSettings();
+  
   const quickLinks = [
     { title: 'About Us', href: '#about' },
     { title: 'Accommodations', href: '#stay' },
@@ -18,7 +20,7 @@ const Footer = () => {
     { title: 'Privacy Policy', href: '/policies#privacy' },
     { title: 'Refund Policy', href: '/policies#payment' },
     { title: 'Terms & Conditions', href: '/policies#terms' },
-    { title: 'Cancellation Policy', href: '/policies#cancellation' }
+    { title: 'Booking Policy', href: '/policies#booking' }
   ];
 
   const socialLinks = [
@@ -36,11 +38,11 @@ const Footer = () => {
           <div className="lg:col-span-1">
             <div className="flex items-center space-x-3 mb-4">
               <img 
-                src="/lovable-uploads/24f5ee9b-ce5a-4b86-a2d8-7ca42e0a78cf.png" 
-                alt="Horseland Hotel Logo" 
+                src={settings.site_logo || "/lovable-uploads/24f5ee9b-ce5a-4b86-a2d8-7ca42e0a78cf.png"} 
+                alt={`${settings.site_title || "Horseland"} Hotel Logo`} 
                 className="h-10 w-10"
               />
-              <h3 className="text-xl font-bold">Horseland</h3>
+              <h3 className="text-xl font-bold">{settings.site_title || "Horseland"}</h3>
             </div>
             <p className="text-background/80 mb-6 leading-relaxed">
               An affordable eco-retreat nestled in Matheran's pristine hills, offering 
@@ -97,60 +99,57 @@ const Footer = () => {
             
             {/* Newsletter */}
             <div className="mb-6">
-              <p className="text-background/80 mb-3 text-sm">
-                Subscribe for updates and special offers
+              <p className="text-background/80 text-sm mb-3">
+                Subscribe to our newsletter for updates and exclusive offers.
               </p>
               <div className="flex space-x-2">
                 <Input 
-                  placeholder="Your email" 
-                  className="bg-background/10 border-background/20 text-background placeholder:text-background/60"
+                  type="email" 
+                  placeholder="Enter your email" 
+                  className="bg-background/10 border-background/20 text-background placeholder:text-background/60 focus:border-background/40"
                 />
-                <Button size="sm" className="bg-primary hover:bg-primary/90 text-primary-foreground">
+                <Button size="sm" variant="secondary">
                   Subscribe
                 </Button>
               </div>
             </div>
 
             {/* Contact Info */}
-            <div className="space-y-2 mb-6">
+            <div className="space-y-2 mb-4">
               <div className="flex items-center space-x-2">
                 <Mail className="h-4 w-4" />
-                <span className="text-background/80 text-sm">info@horselandhotel.com</span>
+                <span className="text-background/80 text-sm">stay@horselandhotel.com</span>
               </div>
-              <div className="flex items-start space-x-2">
-                <MapPin className="h-4 w-4 mt-1 flex-shrink-0" />
-                <span className="text-background/80 text-sm">
-                  Matheran Hill Station,<br />Maharashtra, India
-                </span>
+              <div className="flex items-center space-x-2">
+                <MapPin className="h-4 w-4" />
+                <span className="text-background/80 text-sm">Matheran, Maharashtra</span>
               </div>
             </div>
 
-            {/* Social Links */}
-            <div className="flex space-x-4">
+            {/* Social Media */}
+            <div className="flex space-x-3">
               {socialLinks.map((social, index) => (
                 <a
                   key={index}
                   href={social.href}
+                  className="p-2 rounded-full bg-background/10 text-background/70 hover:bg-background/20 hover:text-background transition-all duration-300"
                   aria-label={social.label}
-                  className="text-background/80 hover:text-background transition-colors"
                 >
-                  <social.icon className="h-5 w-5" />
+                  <social.icon className="h-4 w-4" />
                 </a>
               ))}
             </div>
           </div>
         </div>
 
-        {/* Bottom Section */}
-        <div className="border-t border-background/20 pt-8">
-          <div className="flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
-            <p className="text-background/60 text-sm">
-              © 2024 Horseland Hotel. All rights reserved.
-            </p>
-            <p className="text-background/60 text-sm">
-              Crafted with care for sustainable comfort
-            </p>
-          </div>
+        {/* Bottom Bar */}
+        <div className="border-t border-background/20 pt-8 flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
+          <p className="text-background/60 text-sm">
+            © 2024 {settings.site_title || "Horseland"} Hotel. All rights reserved.
+          </p>
+          <p className="text-background/60 text-sm">
+            Crafted with care for unforgettable experiences.
+          </p>
         </div>
       </div>
     </footer>
