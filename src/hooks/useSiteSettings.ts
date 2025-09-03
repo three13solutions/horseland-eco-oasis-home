@@ -5,6 +5,7 @@ export interface SiteSettings {
   site_title?: string;
   site_logo?: string;  
   site_tagline?: string;
+  copyright_text?: string;
 }
 
 export function useSiteSettings() {
