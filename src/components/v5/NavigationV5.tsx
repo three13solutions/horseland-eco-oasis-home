@@ -19,7 +19,16 @@ interface NavigationItem {
 
 const NavigationV5 = () => {
   const { getTranslation } = useTranslationContext();
-  const { settings } = useSiteSettings();
+  
+  // Add debugging and fallback for useSiteSettings
+  const siteSettingsResult = useSiteSettings();
+  console.log('useSiteSettings result:', siteSettingsResult);
+  const settings = siteSettingsResult?.settings || {
+    site_title: 'HORSELAND',
+    site_logo: '/lovable-uploads/24f5ee9b-ce5a-4b86-a2d8-7ca42e0a78cf.png',
+    site_tagline: 'Hotel'
+  };
+  
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [navigationItems, setNavigationItems] = useState<NavigationItem[]>([]);
