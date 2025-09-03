@@ -74,25 +74,6 @@ const NavigationV5 = () => {
         console.log('Navigation items loaded:', navData);
         setNavigationItems(navData || []);
       }
-
-      // Load site settings
-      const { data: settingsData, error: settingsError } = await supabase
-        .from('site_settings')
-        .select('*');
-
-      if (settingsError) {
-        console.error('Error loading site settings:', settingsError);
-      } else if (settingsData) {
-        console.log('Site settings loaded:', settingsData);
-        const settings: any = {};
-        
-        settingsData.forEach(setting => {
-          settings[setting.setting_key] = safeParseJSON(setting.setting_value);
-        });
-        
-        console.log('Processed settings:', settings);
-        setSiteSettings(prev => ({ ...prev, ...settings }));
-      }
     } catch (error) {
       console.error('Error loading navigation data:', error);
       // Use fallback data if database fails
@@ -100,7 +81,7 @@ const NavigationV5 = () => {
         { id: '1', title: 'About', href: '/about', sort_order: 1, is_active: true },
         { id: '2', title: 'Stay', href: '/stay', sort_order: 2, is_active: true },
         { id: '3', title: 'Experiences', href: '/experiences', sort_order: 3, is_active: true },
-        
+        { id: '4', title: 'Dining', href: '/dining', sort_order: 4, is_active: true },
         { id: '5', title: 'Journal', href: '/journal', sort_order: 5, is_active: true },
       ]);
     }

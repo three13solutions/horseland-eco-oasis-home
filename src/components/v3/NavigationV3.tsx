@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { Menu, X, Phone } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { useSiteSettings } from '@/hooks/useSiteSettings';
 
 const NavigationV3 = () => {
+  const { settings } = useSiteSettings();
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
@@ -27,13 +29,13 @@ const NavigationV3 = () => {
           {/* Logo - Mobile Optimized */}
           <div className="flex items-center space-x-2 md:space-x-4">
             <img 
-              src="/lovable-uploads/24f5ee9b-ce5a-4b86-a2d8-7ca42e0a78cf.png" 
-              alt="Horseland Hotel" 
+              src={settings.site_logo || "/lovable-uploads/24f5ee9b-ce5a-4b86-a2d8-7ca42e0a78cf.png"} 
+              alt={`${settings.site_title || "Horseland"} Hotel`} 
               className="h-12 w-12 md:h-16 md:w-16 drop-shadow-lg"
             />
             <div>
-              <h1 className="text-lg md:text-2xl font-bold text-primary tracking-wide">HORSELAND</h1>
-              <p className="text-xs text-muted-foreground uppercase tracking-wider hidden sm:block">Affordable Mountain Getaway</p>
+              <h1 className="text-lg md:text-2xl font-bold text-primary tracking-wide">{settings.site_title || "HORSELAND"}</h1>
+              <p className="text-xs text-muted-foreground uppercase tracking-wider hidden sm:block">{settings.site_tagline || "Affordable Mountain Getaway"}</p>
             </div>
           </div>
 

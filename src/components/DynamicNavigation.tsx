@@ -39,21 +39,8 @@ const DynamicNavigation = () => {
         .eq('is_active', true)
         .order('sort_order');
 
-      // Load site settings
-      const { data: settingsData } = await supabase
-        .from('site_settings')
-        .select('*');
-
       if (navData) {
         setNavigationItems(navData);
-      }
-
-      if (settingsData) {
-        const settings: any = {};
-        settingsData.forEach(setting => {
-          settings[setting.setting_key] = JSON.parse(setting.setting_value as string);
-        });
-        setSiteSettings(prev => ({ ...prev, ...settings }));
       }
     } catch (error) {
       console.error('Error loading navigation data:', error);
@@ -62,7 +49,7 @@ const DynamicNavigation = () => {
         { id: '1', title: 'About', href: '/about', sort_order: 1, is_active: true },
         { id: '2', title: 'Stay', href: '/stay', sort_order: 2, is_active: true },
         { id: '3', title: 'Experiences', href: '/experiences', sort_order: 3, is_active: true },
-        
+        { id: '4', title: 'Dining', href: '/dining', sort_order: 4, is_active: true },
         { id: '5', title: 'Journal', href: '/journal', sort_order: 5, is_active: true },
       ]);
     }
@@ -75,12 +62,12 @@ const DynamicNavigation = () => {
           {/* Logo */}
           <Link to="/" className="flex items-center space-x-2">
             <img 
-              src={siteSettings.site_logo} 
-              alt={siteSettings.site_title}
+              src={settings.site_logo || "/lovable-uploads/24f5ee9b-ce5a-4b86-a2d8-7ca42e0a78cf.png"} 
+              alt={settings.site_title || "Horseland Hotel"}
               className="h-8 w-auto"
             />
             <span className="font-bold text-xl text-gray-900">
-              {siteSettings.site_title}
+              {settings.site_title || "Horseland Hotel"}
             </span>
           </Link>
 

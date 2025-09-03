@@ -45,21 +45,8 @@ const DynamicFooter = () => {
         .eq('is_active', true)
         .order('sort_order');
 
-      // Load site settings
-      const { data: settingsData } = await supabase
-        .from('site_settings')
-        .select('*');
-
       if (footerData) {
         setFooterSections(footerData);
-      }
-
-      if (settingsData) {
-        const settings: any = {};
-        settingsData.forEach(setting => {
-          settings[setting.setting_key] = JSON.parse(setting.setting_value as string);
-        });
-        setSiteSettings(prev => ({ ...prev, ...settings }));
       }
     } catch (error) {
       console.error('Error loading footer data:', error);
@@ -133,16 +120,16 @@ const DynamicFooter = () => {
           <div className="md:col-span-2 lg:col-span-2 space-y-6">
             <div className="flex items-center space-x-3">
               <img 
-                src={siteSettings.site_logo} 
-                alt={siteSettings.site_title}
+                src={settings.site_logo || "/lovable-uploads/24f5ee9b-ce5a-4b86-a2d8-7ca42e0a78cf.png"} 
+                alt={settings.site_title || "HORSELAND"}
                 className="h-20 w-auto drop-shadow-lg"
               />
               <div className="flex flex-col">
                 <span className="font-bold text-xl text-background">
-                  HORSELAND
+                  {settings.site_title || "HORSELAND"}
                 </span>
                 <span className="text-background/80 text-sm">
-                  Hotel
+                  {settings.site_tagline || "Hotel"}
                 </span>
               </div>
             </div>
@@ -302,10 +289,10 @@ const DynamicFooter = () => {
           {/* Copyright Row */}
           <div className="flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
             <p className="text-sm text-background/60">
-              {siteSettings.copyright_text}
+              {settings.copyright_text || "© 2024 Horseland Hotel. All rights reserved."}
             </p>
             <p className="text-sm text-background/60">
-              {siteSettings.tagline}
+              {settings.tagline || "Crafted with care for sustainable comfort"}
             </p>
           </div>
         </div>

@@ -1,7 +1,9 @@
 import React from 'react';
 import { MapPin, Phone, Mail, Clock, Wifi, Car, Coffee, Star } from 'lucide-react';
+import { useSiteSettings } from '@/hooks/useSiteSettings';
 
 const FooterV3 = () => {
+  const { settings } = useSiteSettings();
   return (
     <footer className="bg-card border-t border-border/20">
       <div className="container mx-auto px-4 py-12 md:py-16">
@@ -13,13 +15,13 @@ const FooterV3 = () => {
             <div className="lg:col-span-2">
               <div className="flex items-center space-x-4 mb-6">
                 <img 
-                  src="/lovable-uploads/24f5ee9b-ce5a-4b86-a2d8-7ca42e0a78cf.png" 
-                  alt="Horseland Hotel" 
+                  src={settings.site_logo || "/lovable-uploads/24f5ee9b-ce5a-4b86-a2d8-7ca42e0a78cf.png"} 
+                  alt={`${settings.site_title || "Horseland"} Hotel`} 
                   className="h-12 w-12 md:h-16 md:w-16"
                 />
                 <div>
-                  <h3 className="text-xl md:text-2xl font-bold text-primary">HORSELAND</h3>
-                  <p className="text-sm text-muted-foreground uppercase tracking-wider">Affordable Mountain Getaway</p>
+                  <h3 className="text-xl md:text-2xl font-bold text-primary">{settings.site_title || "HORSELAND"}</h3>
+                  <p className="text-sm text-muted-foreground uppercase tracking-wider">{settings.site_tagline || "Affordable Mountain Getaway"}</p>
                 </div>
               </div>
               

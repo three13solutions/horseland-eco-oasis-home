@@ -30,13 +30,13 @@ const NavigationV2 = () => {
           {/* Logo - Extra Large and Prominent */}
           <div className="flex items-center space-x-4">
             <img 
-              src="/lovable-uploads/24f5ee9b-ce5a-4b86-a2d8-7ca42e0a78cf.png" 
-              alt="Horseland Hotel" 
+              src={settings.site_logo || "/lovable-uploads/24f5ee9b-ce5a-4b86-a2d8-7ca42e0a78cf.png"} 
+              alt={`${settings.site_title || "Horseland"} Hotel`} 
               className="h-16 w-16 drop-shadow-lg"
             />
             <div className="hidden sm:block">
-              <h1 className="text-2xl font-bold text-primary tracking-wide">HORSELAND</h1>
-              <p className="text-xs text-muted-foreground uppercase tracking-wider">Hotel</p>
+              <h1 className="text-2xl font-bold text-primary tracking-wide">{settings.site_title || "HORSELAND"}</h1>
+              <p className="text-xs text-muted-foreground uppercase tracking-wider">{settings.site_tagline || "Hotel"}</p>
             </div>
           </div>
 

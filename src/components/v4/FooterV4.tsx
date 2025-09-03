@@ -3,8 +3,10 @@ import { Link } from 'react-router-dom';
 import { MapPin, Phone, Mail, Instagram, Facebook, Twitter, Send } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { useSiteSettings } from '@/hooks/useSiteSettings';
 
 const FooterV4 = () => {
+  const { settings } = useSiteSettings();
   const [email, setEmail] = useState('');
 
   const handleNewsletterSubmit = (e: React.FormEvent) => {
@@ -49,13 +51,13 @@ const FooterV4 = () => {
           <div className="lg:col-span-2">
             <div className="flex items-center space-x-3 mb-6">
               <img 
-                src="/lovable-uploads/24f5ee9b-ce5a-4b86-a2d8-7ca42e0a78cf.png" 
-                alt="Horseland Hotel" 
+                src={settings.site_logo || "/lovable-uploads/24f5ee9b-ce5a-4b86-a2d8-7ca42e0a78cf.png"} 
+                alt={`${settings.site_title || "Horseland"} Hotel`} 
                 className="h-12 w-12"
               />
               <div>
-                <h3 className="text-xl font-bold">HORSELAND</h3>
-                <p className="text-sm text-background/70 uppercase tracking-wider">Hotel</p>
+                <h3 className="text-xl font-bold">{settings.site_title || "HORSELAND"}</h3>
+                <p className="text-sm text-background/70 uppercase tracking-wider">{settings.site_tagline || "Hotel"}</p>
               </div>
             </div>
             
