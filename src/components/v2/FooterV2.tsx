@@ -3,8 +3,10 @@ import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Facebook, Instagram, Twitter, Youtube, Phone, Mail, MapPin, Sparkles } from 'lucide-react';
+import { useSiteSettings } from '@/hooks/useSiteSettings';
 
 const FooterV2 = () => {
+  const { settings } = useSiteSettings();
   const quickLinks = [
     'About Us', 'Accommodations', 'Experiences', 'Dining', 'Wellness', 'Packages'
   ];
