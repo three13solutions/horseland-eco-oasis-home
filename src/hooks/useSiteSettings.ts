@@ -5,18 +5,11 @@ export interface SiteSettings {
   site_title?: string;
   site_logo?: string;  
   site_tagline?: string;
-  copyright_text?: string;
 }
 
 export function useSiteSettings() {
-  const [settings, setSettings] = useState<SiteSettings>({
-    site_title: 'HORSELAND',
-    site_logo: '/lovable-uploads/24f5ee9b-ce5a-4b86-a2d8-7ca42e0a78cf.png',
-    site_tagline: 'Hotel'
-  });
+  const [settings, setSettings] = useState<SiteSettings>({});
   const [loading, setLoading] = useState(true);
-
-  console.log('useSiteSettings hook called, initial settings:', settings);
 
   useEffect(() => {
     const fetchSettings = async () => {
