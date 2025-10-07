@@ -146,6 +146,15 @@ interface SiteSettings {
   tagline: string;
 }
 
+interface SEOSettings {
+  default_title_format: string;
+  default_meta_description: string;
+  default_og_image: string;
+  google_analytics_id: string;
+  google_search_console: string;
+  twitter_handle: string;
+}
+
 const SiteSettings = () => {
   const { toast } = useToast();
   const [loading, setLoading] = useState(true);
@@ -157,6 +166,14 @@ const SiteSettings = () => {
     site_logo: '',
     copyright_text: '',
     tagline: ''
+  });
+  const [seoSettings, setSeoSettings] = useState<SEOSettings>({
+    default_title_format: '{title} | {site_name}',
+    default_meta_description: '',
+    default_og_image: '',
+    google_analytics_id: '',
+    google_search_console: '',
+    twitter_handle: ''
   });
 
   useEffect(() => {
@@ -221,13 +238,23 @@ const SiteSettings = () => {
       } else if (settingsData) {
         console.log('Site settings raw data:', settingsData);
         const settings: any = {};
+        const seoData: any = {};
         
         settingsData.forEach(setting => {
-          settings[setting.setting_key] = safeParseJSON(setting.setting_value);
+          const value = safeParseJSON(setting.setting_value);
+          // Separate SEO settings from general site settings
+          if (['default_title_format', 'default_meta_description', 'default_og_image', 
+               'google_analytics_id', 'google_search_console', 'twitter_handle'].includes(setting.setting_key)) {
+            seoData[setting.setting_key] = value;
+          } else {
+            settings[setting.setting_key] = value;
+          }
         });
         
         console.log('Processed site settings:', settings);
+        console.log('Processed SEO settings:', seoData);
         setSiteSettings(prev => ({ ...prev, ...settings }));
+        setSeoSettings(prev => ({ ...prev, ...seoData }));
       }
     } catch (error) {
       console.error('Error loading data:', error);
@@ -393,6 +420,48 @@ const SiteSettings = () => {
     }
   };
 
+  const saveSEOSettings = async () => {
+    setSaving(true);
+    try {
+      console.log('Saving SEO settings:', seoSettings);
+      
+      const updates = Object.entries(seoSettings).map(([key, value]) => {
+        const preparedValue = safePrepareValue(value);
+        return {
+          setting_key: key,
+          setting_value: preparedValue
+        };
+      });
+
+      for (const update of updates) {
+        const { error } = await supabase
+          .from('site_settings')
+          .upsert(update, {
+            onConflict: 'setting_key'
+          });
+
+        if (error) {
+          console.error('Error saving SEO setting:', update.setting_key, error);
+          throw error;
+        }
+      }
+
+      toast({
+        title: "Success",
+        description: "SEO settings saved successfully"
+      });
+    } catch (error) {
+      console.error('Error saving SEO settings:', error);
+      toast({
+        title: "Error",
+        description: "Failed to save SEO settings",
+        variant: "destructive"
+      });
+    } finally {
+      setSaving(false);
+    }
+  };
+
   const addNavigationItem = (parentId?: string) => {
     const newItem: NavigationItem = {
       id: `temp-${Date.now()}`,
@@ -470,10 +539,11 @@ const SiteSettings = () => {
       </div>
 
       <Tabs defaultValue="general" className="space-y-4">
-        <TabsList className="grid w-full grid-cols-3">
+        <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="general">General</TabsTrigger>
           <TabsTrigger value="navigation">Navigation</TabsTrigger>
           <TabsTrigger value="footer">Footer</TabsTrigger>
+          <TabsTrigger value="seo">SEO</TabsTrigger>
         </TabsList>
 
         <TabsContent value="general">
@@ -665,6 +735,93 @@ const SiteSettings = () => {
                   Save Footer Sections
                 </Button>
               </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="seo">
+          <Card>
+            <CardHeader>
+              <CardTitle>SEO Settings</CardTitle>
+              <CardDescription>
+                Configure search engine optimization and analytics
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div>
+                <Label htmlFor="default_title_format">Default Title Format</Label>
+                <Input
+                  id="default_title_format"
+                  value={seoSettings.default_title_format}
+                  onChange={(e) => setSeoSettings(prev => ({ ...prev, default_title_format: e.target.value }))}
+                  placeholder="{title} | {site_name}"
+                />
+                <p className="text-sm text-muted-foreground mt-1">
+                  Use {'{title}'} and {'{site_name}'} as placeholders
+                </p>
+              </div>
+
+              <div>
+                <Label htmlFor="default_meta_description">Default Meta Description</Label>
+                <Textarea
+                  id="default_meta_description"
+                  value={seoSettings.default_meta_description}
+                  onChange={(e) => setSeoSettings(prev => ({ ...prev, default_meta_description: e.target.value }))}
+                  placeholder="Enter default meta description (max 160 characters)"
+                  rows={3}
+                />
+                <p className="text-sm text-muted-foreground mt-1">
+                  {seoSettings.default_meta_description.length}/160 characters
+                </p>
+              </div>
+
+              <div>
+                <ImageUpload
+                  label="Default OG Image"
+                  value={seoSettings.default_og_image}
+                  onChange={(url) => setSeoSettings(prev => ({ ...prev, default_og_image: url }))}
+                  bucketName="uploads"
+                  folder="seo"
+                />
+                <p className="text-sm text-muted-foreground mt-1">
+                  Recommended size: 1200x630px for social media sharing
+                </p>
+              </div>
+
+              <div>
+                <Label htmlFor="google_analytics_id">Google Analytics ID</Label>
+                <Input
+                  id="google_analytics_id"
+                  value={seoSettings.google_analytics_id}
+                  onChange={(e) => setSeoSettings(prev => ({ ...prev, google_analytics_id: e.target.value }))}
+                  placeholder="G-XXXXXXXXXX"
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="google_search_console">Google Search Console Verification</Label>
+                <Input
+                  id="google_search_console"
+                  value={seoSettings.google_search_console}
+                  onChange={(e) => setSeoSettings(prev => ({ ...prev, google_search_console: e.target.value }))}
+                  placeholder="Verification meta tag content"
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="twitter_handle">Twitter Handle</Label>
+                <Input
+                  id="twitter_handle"
+                  value={seoSettings.twitter_handle}
+                  onChange={(e) => setSeoSettings(prev => ({ ...prev, twitter_handle: e.target.value }))}
+                  placeholder="@yourbrand"
+                />
+              </div>
+
+              <Button onClick={saveSEOSettings} disabled={saving}>
+                <Save className="w-4 h-4 mr-2" />
+                Save SEO Settings
+              </Button>
             </CardContent>
           </Card>
         </TabsContent>
