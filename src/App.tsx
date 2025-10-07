@@ -21,6 +21,7 @@ import Activities from "./pages/Activities";
 import Spa from "./pages/Spa";
 import Experiences from "./pages/Experiences";
 import Journal from "./pages/Journal";
+import BlogPost from "./pages/BlogPost";
 import Booking from "./pages/Booking";
 import NotFound from "./pages/NotFound";
 import FAQ from "./pages/FAQ";
@@ -43,9 +44,10 @@ import SpaManagement from "./pages/admin/SpaManagement";
 import AddonsManagement from "./pages/admin/AddonsManagement";
 import MediaManagement from "./pages/admin/MediaManagement";
 import ContentManagement from "./pages/admin/ContentManagement";
-import IntegrationsManagement from "./pages/admin/IntegrationsManagement"; // Added
+import IntegrationsManagement from "./pages/admin/IntegrationsManagement";
 import UserManagement from "./pages/admin/UserManagement";
 import SiteSettings from "./pages/admin/SiteSettings";
+import BlogManagement from "./pages/admin/BlogManagement";
 
 const queryClient = new QueryClient();
 
@@ -74,6 +76,7 @@ function App() {
               <Route path="/spa" element={<Spa />} />
               <Route path="/experiences" element={<Experiences />} />
               <Route path="/journal" element={<Journal />} />
+              <Route path="/journal/:slug" element={<BlogPost />} />
               <Route path="/booking" element={<Booking />} />
               <Route path="/packages" element={<Packages />} />
               <Route path="/faq" element={<FAQ />} />
@@ -96,6 +99,7 @@ function App() {
                 <Route path="media" element={<MediaManagement />} />
                 <Route path="content" element={<ContentManagement />} />
                 <Route path="integrations" element={<IntegrationsManagement />} />
+                <Route path="blog" element={<BlogManagement />} />
                 <Route path="users" element={<UserManagement />} />
                 <Route path="settings" element={<SiteSettings />} />
               </Route>

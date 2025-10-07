@@ -17,7 +17,8 @@ import {
   Plug,
   ChevronDown,
   ChevronRight,
-  Boxes
+  Boxes,
+  BookOpen
 } from 'lucide-react';
 import {
   Sidebar,
@@ -122,6 +123,12 @@ const systemMenuItems = [
     label: 'Content', 
     path: '/admin/content', 
     description: 'Website content' 
+  },
+  { 
+    icon: BookOpen, 
+    label: 'Blog', 
+    path: '/admin/blog', 
+    description: 'Journal posts' 
   },
   { 
     icon: Plug, 
