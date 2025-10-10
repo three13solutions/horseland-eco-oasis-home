@@ -18,11 +18,15 @@ interface Page {
   id: string;
   slug: string;
   title: string;
+  subtitle: string | null;
   content: string | null;
   meta_title: string | null;
   meta_description: string | null;
   meta_keywords: string | null;
   og_image: string | null;
+  hero_image: string | null;
+  hero_gallery: string[];
+  hero_type: string;
   is_published: boolean;
   template_type: string;
   parent_id: string | null;
@@ -49,11 +53,15 @@ export default function PageManagement() {
   const [formData, setFormData] = useState({
     slug: "",
     title: "",
+    subtitle: "",
     content: "",
     meta_title: "",
     meta_description: "",
     meta_keywords: "",
     og_image: "",
+    hero_image: "",
+    hero_gallery: [] as string[],
+    hero_type: "single",
     is_published: false,
     template_type: "full-width",
     sort_order: 0,
@@ -71,7 +79,10 @@ export default function PageManagement() {
         .order("sort_order", { ascending: true });
 
       if (error) throw error;
-      setPages(data || []);
+      setPages((data || []).map(page => ({
+        ...page,
+        hero_gallery: (page.hero_gallery as string[]) || [],
+      })));
     } catch (error: any) {
       toast.error("Failed to fetch pages: " + error.message);
     } finally {
@@ -111,11 +122,15 @@ export default function PageManagement() {
     setFormData({
       slug: page.slug,
       title: page.title,
+      subtitle: page.subtitle || "",
       content: page.content || "",
       meta_title: page.meta_title || "",
       meta_description: page.meta_description || "",
       meta_keywords: page.meta_keywords || "",
       og_image: page.og_image || "",
+      hero_image: page.hero_image || "",
+      hero_gallery: page.hero_gallery || [],
+      hero_type: page.hero_type || "single",
       is_published: page.is_published,
       template_type: page.template_type,
       sort_order: page.sort_order,
@@ -142,11 +157,15 @@ export default function PageManagement() {
     setFormData({
       slug: "",
       title: "",
+      subtitle: "",
       content: "",
       meta_title: "",
       meta_description: "",
       meta_keywords: "",
       og_image: "",
+      hero_image: "",
+      hero_gallery: [],
+      hero_type: "single",
       is_published: false,
       template_type: "full-width",
       sort_order: 0,
@@ -178,8 +197,9 @@ export default function PageManagement() {
             </DialogHeader>
             <form onSubmit={handleSubmit} className="space-y-6">
               <Tabs defaultValue="content" className="w-full">
-                <TabsList className="grid w-full grid-cols-3">
+                <TabsList className="grid w-full grid-cols-4">
                   <TabsTrigger value="content">Content</TabsTrigger>
+                  <TabsTrigger value="hero">Hero Banner</TabsTrigger>
                   <TabsTrigger value="seo">SEO</TabsTrigger>
                   <TabsTrigger value="settings">Settings</TabsTrigger>
                 </TabsList>
@@ -194,6 +214,18 @@ export default function PageManagement() {
                         setFormData({ ...formData, title: e.target.value })
                       }
                       required
+                    />
+                  </div>
+
+                  <div>
+                    <Label htmlFor="subtitle">Subtitle (optional)</Label>
+                    <Input
+                      id="subtitle"
+                      value={formData.subtitle}
+                      onChange={(e) =>
+                        setFormData({ ...formData, subtitle: e.target.value })
+                      }
+                      placeholder="Page subtitle or tagline"
                     />
                   </div>
 
@@ -230,6 +262,92 @@ export default function PageManagement() {
                       placeholder="Enter your page content here..."
                     />
                   </div>
+                </TabsContent>
+
+                <TabsContent value="hero" className="space-y-4">
+                  <div>
+                    <Label htmlFor="hero_type">Hero Type</Label>
+                    <Select
+                      value={formData.hero_type}
+                      onValueChange={(value) =>
+                        setFormData({ ...formData, hero_type: value })
+                      }
+                    >
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="none">No Hero</SelectItem>
+                        <SelectItem value="single">Single Image</SelectItem>
+                        <SelectItem value="carousel">Image Carousel</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  {formData.hero_type === "single" && (
+                    <ImageUpload
+                      label="Hero Image"
+                      value={formData.hero_image}
+                      onChange={(url) =>
+                        setFormData({ ...formData, hero_image: url })
+                      }
+                      bucketName="uploads"
+                      folder="hero-images"
+                    />
+                  )}
+
+                  {formData.hero_type === "carousel" && (
+                    <div>
+                      <Label>Carousel Images</Label>
+                      <p className="text-sm text-muted-foreground mb-2">
+                        Add up to 5 images for the carousel
+                      </p>
+                      {formData.hero_gallery.map((url, index) => (
+                        <div key={index} className="mb-4">
+                          <ImageUpload
+                            label={`Image ${index + 1}`}
+                            value={url}
+                            onChange={(newUrl) => {
+                              const newGallery = [...formData.hero_gallery];
+                              newGallery[index] = newUrl;
+                              setFormData({ ...formData, hero_gallery: newGallery });
+                            }}
+                            bucketName="uploads"
+                            folder="hero-images"
+                          />
+                          <Button
+                            type="button"
+                            variant="destructive"
+                            size="sm"
+                            className="mt-2"
+                            onClick={() => {
+                              const newGallery = formData.hero_gallery.filter(
+                                (_, i) => i !== index
+                              );
+                              setFormData({ ...formData, hero_gallery: newGallery });
+                            }}
+                          >
+                            Remove Image
+                          </Button>
+                        </div>
+                      ))}
+                      {formData.hero_gallery.length < 5 && (
+                        <Button
+                          type="button"
+                          variant="outline"
+                          onClick={() => {
+                            setFormData({
+                              ...formData,
+                              hero_gallery: [...formData.hero_gallery, ""],
+                            });
+                          }}
+                        >
+                          <Plus className="w-4 h-4 mr-2" />
+                          Add Image
+                        </Button>
+                      )}
+                    </div>
+                  )}
                 </TabsContent>
 
                 <TabsContent value="seo" className="space-y-4">

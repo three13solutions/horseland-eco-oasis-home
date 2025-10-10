@@ -1228,6 +1228,9 @@ export type Database = {
         Row: {
           content: string | null
           created_at: string
+          hero_gallery: Json | null
+          hero_image: string | null
+          hero_type: string | null
           id: string
           is_published: boolean
           meta_description: string | null
@@ -1237,6 +1240,7 @@ export type Database = {
           parent_id: string | null
           slug: string
           sort_order: number
+          subtitle: string | null
           template_type: string
           title: string
           updated_at: string
@@ -1244,6 +1248,9 @@ export type Database = {
         Insert: {
           content?: string | null
           created_at?: string
+          hero_gallery?: Json | null
+          hero_image?: string | null
+          hero_type?: string | null
           id?: string
           is_published?: boolean
           meta_description?: string | null
@@ -1253,6 +1260,7 @@ export type Database = {
           parent_id?: string | null
           slug: string
           sort_order?: number
+          subtitle?: string | null
           template_type?: string
           title: string
           updated_at?: string
@@ -1260,6 +1268,9 @@ export type Database = {
         Update: {
           content?: string | null
           created_at?: string
+          hero_gallery?: Json | null
+          hero_image?: string | null
+          hero_type?: string | null
           id?: string
           is_published?: boolean
           meta_description?: string | null
@@ -1269,6 +1280,7 @@ export type Database = {
           parent_id?: string | null
           slug?: string
           sort_order?: number
+          subtitle?: string | null
           template_type?: string
           title?: string
           updated_at?: string

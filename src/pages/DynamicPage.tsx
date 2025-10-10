@@ -11,11 +11,15 @@ interface Page {
   id: string;
   slug: string;
   title: string;
+  subtitle: string | null;
   content: string | null;
   meta_title: string | null;
   meta_description: string | null;
   meta_keywords: string | null;
   og_image: string | null;
+  hero_image: string | null;
+  hero_gallery: string[];
+  hero_type: string;
   template_type: string;
 }
 
@@ -47,7 +51,10 @@ export default function DynamicPage() {
           throw error;
         }
       } else {
-        setPage(data);
+        setPage({
+          ...data,
+          hero_gallery: (data.hero_gallery as string[]) || [],
+        });
       }
     } catch (error: any) {
       toast.error("Failed to load page: " + error.message);
@@ -68,6 +75,69 @@ export default function DynamicPage() {
   if (notFound || !page) {
     return <Navigate to="/404" replace />;
   }
+
+  const renderHero = () => {
+    if (page.hero_type === "none" || !page.hero_type) return null;
+
+    if (page.hero_type === "single" && page.hero_image) {
+      return (
+        <section className="relative h-[60vh] min-h-[400px] flex items-center justify-center">
+          <div 
+            className="absolute inset-0 bg-cover bg-center bg-no-repeat"
+            style={{ backgroundImage: `url('${page.hero_image}')` }}
+          >
+            <div className="absolute inset-0 bg-black/40"></div>
+          </div>
+          <div className="relative z-10 text-center text-white max-w-4xl mx-auto px-4">
+            <h1 className="text-4xl md:text-6xl font-heading font-bold mb-6 leading-tight">
+              {page.title}
+            </h1>
+            {page.subtitle && (
+              <p className="text-lg md:text-xl font-body opacity-90 max-w-2xl mx-auto">
+                {page.subtitle}
+              </p>
+            )}
+          </div>
+        </section>
+      );
+    }
+
+    if (page.hero_type === "carousel" && page.hero_gallery?.length > 0) {
+      return (
+        <section className="relative h-[60vh] min-h-[400px]">
+          <div className="relative h-full">
+            {page.hero_gallery.map((image, index) => (
+              <div 
+                key={index}
+                className="absolute inset-0 bg-cover bg-center bg-no-repeat"
+                style={{ 
+                  backgroundImage: `url('${image}')`,
+                  opacity: index === 0 ? 1 : 0,
+                  transition: 'opacity 0.5s ease-in-out'
+                }}
+              >
+                <div className="absolute inset-0 bg-black/40"></div>
+              </div>
+            ))}
+          </div>
+          <div className="absolute inset-0 flex items-center justify-center">
+            <div className="text-center text-white max-w-4xl mx-auto px-4">
+              <h1 className="text-4xl md:text-6xl font-heading font-bold mb-6 leading-tight">
+                {page.title}
+              </h1>
+              {page.subtitle && (
+                <p className="text-lg md:text-xl font-body opacity-90 max-w-2xl mx-auto">
+                  {page.subtitle}
+                </p>
+              )}
+            </div>
+          </div>
+        </section>
+      );
+    }
+
+    return null;
+  };
 
   const renderContent = () => {
     const content = page.content || "";
@@ -139,9 +209,18 @@ export default function DynamicPage() {
       <div className="min-h-screen bg-background">
         <NavigationV5 />
 
-        <main className="pt-24 pb-16">
+        {renderHero()}
+
+        <main className={page.hero_type === "none" || !page.hero_type ? "pt-24 pb-16" : "py-16"}>
           <div className="container mx-auto px-4">
-            <h1 className="text-4xl md:text-5xl font-bold mb-8">{page.title}</h1>
+            {(page.hero_type === "none" || !page.hero_type) && (
+              <>
+                <h1 className="text-4xl md:text-5xl font-bold mb-4">{page.title}</h1>
+                {page.subtitle && (
+                  <p className="text-xl text-muted-foreground mb-8">{page.subtitle}</p>
+                )}
+              </>
+            )}
             {renderContent()}
           </div>
         </main>
