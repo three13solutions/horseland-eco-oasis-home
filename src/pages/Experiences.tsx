@@ -5,8 +5,25 @@ import FloatingElementsV5 from '../components/v5/FloatingElementsV5';
 import { Button } from '@/components/ui/button';
 import { TreePine, UtensilsCrossed, Sparkles } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { supabase } from '@/integrations/supabase/client';
 
 const Experiences = () => {
+  const [heroImage, setHeroImage] = React.useState('https://images.unsplash.com/photo-1506905925346-21bda4d32df4?ixlib=rb-4.0.3&auto=format&fit=crop&w=2000&q=80');
+  const [heroTitle, setHeroTitle] = React.useState('Curated Mountain Experiences');
+  const [heroSubtitle, setHeroSubtitle] = React.useState('Every moment at Horseland is designed to reconnect you with nature, nourish your body, and refresh your spirit through authentic mountain experiences.');
+
+  React.useEffect(() => {
+    const fetchPageData = async () => {
+      const { data } = await supabase.from('pages').select('title, subtitle, hero_image').eq('slug', 'experiences').single();
+      if (data) {
+        if (data.title) setHeroTitle(data.title);
+        if (data.subtitle) setHeroSubtitle(data.subtitle);
+        if (data.hero_image) setHeroImage(data.hero_image);
+      }
+    };
+    fetchPageData();
+  }, []);
+
   const experiences = [
     {
       title: 'Activities',
@@ -43,7 +60,7 @@ const Experiences = () => {
         <div 
           className="absolute inset-0 bg-cover bg-center bg-no-repeat"
           style={{
-            backgroundImage: "url('https://images.unsplash.com/photo-1506905925346-21bda4d32df4?ixlib=rb-4.0.3&auto=format&fit=crop&w=2000&q=80')"
+            backgroundImage: `url('${heroImage}')`
           }}
         >
           <div className="absolute inset-0 bg-black/40"></div>
@@ -51,11 +68,10 @@ const Experiences = () => {
         
         <div className="relative z-10 text-center text-white max-w-4xl mx-auto px-4">
           <h1 className="text-4xl md:text-6xl font-heading font-bold mb-6 leading-tight">
-            Curated Mountain Experiences
+            {heroTitle}
           </h1>
           <p className="text-lg md:text-xl font-body opacity-90 max-w-3xl mx-auto leading-relaxed">
-            Every moment at Horseland is designed to reconnect you with nature, nourish your body, 
-            and refresh your spirit through authentic mountain experiences.
+            {heroSubtitle}
           </p>
         </div>
       </section>

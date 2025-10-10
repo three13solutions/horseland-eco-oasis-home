@@ -21,9 +21,24 @@ interface SpaService {
 const Spa = () => {
   const [services, setServices] = useState<SpaService[]>([]);
   const [loading, setLoading] = useState(true);
+  const [heroImage, setHeroImage] = useState('https://images.unsplash.com/photo-1544161515-4ab6ce6db874?ixlib=rb-4.0.3&auto=format&fit=crop&w=2000&q=80');
+  const [heroTitle, setHeroTitle] = useState('Mountain Spa & Wellness');
+  const [heroSubtitle, setHeroSubtitle] = useState('Rejuvenate your mind, body, and spirit in nature\'s embrace');
 
   useEffect(() => {
     loadServices();
+  }, []);
+
+  useEffect(() => {
+    const fetchPageData = async () => {
+      const { data } = await supabase.from('pages').select('title, subtitle, hero_image').eq('slug', 'spa').single();
+      if (data) {
+        if (data.title) setHeroTitle(data.title);
+        if (data.subtitle) setHeroSubtitle(data.subtitle);
+        if (data.hero_image) setHeroImage(data.hero_image);
+      }
+    };
+    fetchPageData();
   }, []);
 
   const loadServices = async () => {
@@ -70,7 +85,7 @@ const Spa = () => {
         <div 
           className="absolute inset-0 bg-cover bg-center bg-no-repeat"
           style={{
-            backgroundImage: "url('https://images.unsplash.com/photo-1544161515-4ab6ce6db874?ixlib=rb-4.0.3&auto=format&fit=crop&w=2000&q=80')"
+            backgroundImage: `url('${heroImage}')`
           }}
         >
           <div className="absolute inset-0 bg-black/40"></div>
@@ -78,10 +93,10 @@ const Spa = () => {
         
         <div className="relative z-10 text-center text-white max-w-4xl mx-auto px-4">
           <h1 className="text-4xl md:text-6xl font-heading font-bold mb-6 leading-tight">
-            Mountain Spa & Wellness
+            {heroTitle}
           </h1>
           <p className="text-lg md:text-xl font-body opacity-90">
-            Rejuvenate your mind, body, and spirit in nature's embrace
+            {heroSubtitle}
           </p>
         </div>
       </section>

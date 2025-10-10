@@ -4,8 +4,25 @@ import DynamicFooter from '../components/DynamicFooter';
 import FloatingElementsV5 from '../components/v5/FloatingElementsV5';
 import { Button } from '@/components/ui/button';
 import { Clock, Leaf, Award, UtensilsCrossed } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
 
 const Dining = () => {
+  const [heroImage, setHeroImage] = React.useState('https://images.unsplash.com/photo-1544025162-d76694265947?ixlib=rb-4.0.3&auto=format&fit=crop&w=2000&q=80');
+  const [heroTitle, setHeroTitle] = React.useState('Farm-to-Table Dining');
+  const [heroSubtitle, setHeroSubtitle] = React.useState('Savor authentic flavors crafted from local ingredients');
+
+  React.useEffect(() => {
+    const fetchPageData = async () => {
+      const { data } = await supabase.from('pages').select('title, subtitle, hero_image').eq('slug', 'dining').single();
+      if (data) {
+        if (data.title) setHeroTitle(data.title);
+        if (data.subtitle) setHeroSubtitle(data.subtitle);
+        if (data.hero_image) setHeroImage(data.hero_image);
+      }
+    };
+    fetchPageData();
+  }, []);
+
   const diningHours = [
     { meal: 'Breakfast', time: '7:00 AM - 10:30 AM', description: 'Continental & Indian options' },
     { meal: 'Lunch', time: '12:30 PM - 3:00 PM', description: 'Buffet with local specialties' },
@@ -49,7 +66,7 @@ const Dining = () => {
         <div 
           className="absolute inset-0 bg-cover bg-center bg-no-repeat"
           style={{
-            backgroundImage: "url('https://images.unsplash.com/photo-1544025162-d76694265947?ixlib=rb-4.0.3&auto=format&fit=crop&w=2000&q=80')"
+            backgroundImage: `url('${heroImage}')`
           }}
         >
           <div className="absolute inset-0 bg-black/40"></div>
@@ -57,10 +74,10 @@ const Dining = () => {
         
         <div className="relative z-10 text-center text-white max-w-4xl mx-auto px-4">
           <h1 className="text-4xl md:text-6xl font-heading font-bold mb-6 leading-tight">
-            Farm-to-Table Dining
+            {heroTitle}
           </h1>
           <p className="text-lg md:text-xl font-body opacity-90">
-            Savor authentic flavors crafted from local ingredients
+            {heroSubtitle}
           </p>
         </div>
       </section>

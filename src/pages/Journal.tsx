@@ -31,6 +31,9 @@ const Journal = () => {
   const [loading, setLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPosts, setTotalPosts] = useState(0);
+  const [heroImage, setHeroImage] = useState('https://images.unsplash.com/photo-1506905925346-21bda4d32df4?ixlib=rb-4.0.3&auto=format&fit=crop&w=2000&q=80');
+  const [heroTitle, setHeroTitle] = useState('Mountain Stories & Insights');
+  const [heroSubtitle, setHeroSubtitle] = useState('Tales from the hills, wellness wisdom, and travel inspiration');
 
   const categories = [
     { id: 'all', name: 'All Stories' },
@@ -43,6 +46,18 @@ const Journal = () => {
   useEffect(() => {
     loadPosts();
   }, [activeCategory, currentPage]);
+
+  useEffect(() => {
+    const fetchPageData = async () => {
+      const { data } = await supabase.from('pages').select('title, subtitle, hero_image').eq('slug', 'journal').single();
+      if (data) {
+        if (data.title) setHeroTitle(data.title);
+        if (data.subtitle) setHeroSubtitle(data.subtitle);
+        if (data.hero_image) setHeroImage(data.hero_image);
+      }
+    };
+    fetchPageData();
+  }, []);
 
   const loadPosts = async () => {
     try {
@@ -98,7 +113,7 @@ const Journal = () => {
         <div 
           className="absolute inset-0 bg-cover bg-center bg-no-repeat"
           style={{
-            backgroundImage: "url('https://images.unsplash.com/photo-1506905925346-21bda4d32df4?ixlib=rb-4.0.3&auto=format&fit=crop&w=2000&q=80')"
+            backgroundImage: `url('${heroImage}')`
           }}
         >
           <div className="absolute inset-0 bg-black/40"></div>
@@ -106,10 +121,10 @@ const Journal = () => {
         
         <div className="relative z-10 text-center text-white max-w-4xl mx-auto px-4">
           <h1 className="text-4xl md:text-6xl font-heading font-bold mb-6 leading-tight">
-            Mountain Stories & Insights
+            {heroTitle}
           </h1>
           <p className="text-lg md:text-xl font-body opacity-90">
-            Tales from the hills, wellness wisdom, and travel inspiration
+            {heroSubtitle}
           </p>
         </div>
       </section>
