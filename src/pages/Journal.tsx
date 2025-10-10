@@ -37,10 +37,10 @@ const Journal = () => {
 
   const categories = [
     { id: 'all', name: 'All Stories' },
-    { id: 'travel-tips', name: 'Travel Tips' },
-    { id: 'guest-stories', name: 'Guest Stories' },
-    { id: 'spa-wellness', name: 'Spa & Wellness' },
-    { id: 'discover-matheran', name: 'Discover Matheran' }
+    { id: 'travel_tips', name: 'Travel Tips' },
+    { id: 'guest_stories', name: 'Guest Stories' },
+    { id: 'spa_wellness', name: 'Spa & Wellness' },
+    { id: 'discover_matheran', name: 'Discover Matheran' }
   ];
 
   useEffect(() => {
@@ -171,7 +171,7 @@ const Journal = () => {
                     
                     <div className="flex items-center justify-between">
                       <Badge variant="secondary">
-                        {featuredPost.category.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ')}
+                        {featuredPost.category.split('_').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ')}
                       </Badge>
                       
                       <Button className="font-body">
@@ -255,7 +255,7 @@ const Journal = () => {
                       
                       <div className="flex items-center justify-between">
                         <Badge variant="secondary" className="text-xs">
-                          {post.category.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ')}
+                          {post.category.split('_').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ')}
                         </Badge>
                         
                         <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform text-muted-foreground" />
