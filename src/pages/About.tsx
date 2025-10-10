@@ -1,11 +1,34 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import NavigationV5 from '../components/v5/NavigationV5';
 import DynamicFooter from '../components/DynamicFooter';
 import FloatingElementsV5 from '../components/v5/FloatingElementsV5';
 import { Button } from '@/components/ui/button';
 import { Leaf, Award, Heart, Mountain, Users, Lightbulb } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
 
 const About = () => {
+  const [heroImage, setHeroImage] = useState('https://images.unsplash.com/photo-1506905925346-21bda4d32df4?ixlib=rb-4.0.3&auto=format&fit=crop&w=2000&q=80');
+  const [subtitle, setSubtitle] = useState('Where time slows down and nature whispers its ancient secrets. Welcome to Horseland Hotel.');
+  const [title, setTitle] = useState('Our Story Began in the Hills');
+
+  useEffect(() => {
+    const fetchPageData = async () => {
+      const { data } = await supabase
+        .from('pages')
+        .select('title, subtitle, hero_image')
+        .eq('slug', 'about')
+        .single();
+      
+      if (data) {
+        setTitle(data.title);
+        if (data.subtitle) setSubtitle(data.subtitle);
+        if (data.hero_image) setHeroImage(data.hero_image);
+      }
+    };
+    
+    fetchPageData();
+  }, []);
+
   return (
     <div className="min-h-screen bg-background overflow-x-hidden">
       <NavigationV5 />
@@ -15,7 +38,7 @@ const About = () => {
         <div 
           className="absolute inset-0 bg-cover bg-center bg-no-repeat"
           style={{
-            backgroundImage: "url('https://images.unsplash.com/photo-1506905925346-21bda4d32df4?ixlib=rb-4.0.3&auto=format&fit=crop&w=2000&q=80')"
+            backgroundImage: `url('${heroImage}')`
           }}
         >
           <div className="absolute inset-0 bg-black/40"></div>
@@ -23,11 +46,10 @@ const About = () => {
         
         <div className="relative z-10 text-center text-white max-w-4xl mx-auto px-4">
           <h1 className="text-4xl md:text-6xl font-heading font-bold mb-6 leading-tight">
-            Our Story Began in the Hills
+            {title}
           </h1>
           <p className="text-lg md:text-xl font-body opacity-90 max-w-2xl mx-auto">
-            Where time slows down and nature whispers its ancient secrets. 
-            Welcome to Horseland Hotel.
+            {subtitle}
           </p>
         </div>
       </section>

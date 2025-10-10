@@ -22,9 +22,13 @@ const Activities = () => {
   const [filter, setFilter] = useState('all');
   const [activities, setActivities] = useState<Activity[]>([]);
   const [loading, setLoading] = useState(true);
+  const [heroImage, setHeroImage] = useState('https://images.unsplash.com/photo-1544568100-847a948585b9?ixlib=rb-4.0.3&auto=format&fit=crop&w=2000&q=80');
+  const [subtitle, setSubtitle] = useState('Discover Matheran\'s natural wonders through guided activities');
+  const [title, setTitle] = useState('Adventure Awaits');
 
   useEffect(() => {
     loadActivities();
+    loadPageData();
   }, []);
 
   const loadActivities = async () => {
@@ -41,6 +45,20 @@ const Activities = () => {
       console.error('Error loading activities:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const loadPageData = async () => {
+    const { data } = await supabase
+      .from('pages')
+      .select('title, subtitle, hero_image')
+      .eq('slug', 'activities')
+      .single();
+    
+    if (data) {
+      setTitle(data.title);
+      if (data.subtitle) setSubtitle(data.subtitle);
+      if (data.hero_image) setHeroImage(data.hero_image);
     }
   };
 
@@ -77,7 +95,7 @@ const Activities = () => {
         <div 
           className="absolute inset-0 bg-cover bg-center bg-no-repeat"
           style={{
-            backgroundImage: "url('https://images.unsplash.com/photo-1544568100-847a948585b9?ixlib=rb-4.0.3&auto=format&fit=crop&w=2000&q=80')"
+            backgroundImage: `url('${heroImage}')`
           }}
         >
           <div className="absolute inset-0 bg-black/40"></div>
@@ -85,10 +103,10 @@ const Activities = () => {
         
         <div className="relative z-10 text-center text-white max-w-4xl mx-auto px-4">
           <h1 className="text-4xl md:text-6xl font-heading font-bold mb-6 leading-tight">
-            Adventure Awaits
+            {title}
           </h1>
           <p className="text-lg md:text-xl font-body opacity-90">
-            Discover Matheran's natural wonders through guided activities
+            {subtitle}
           </p>
         </div>
       </section>

@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Calendar, Users, ArrowRight, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useTranslationContext } from '@/components/admin/TranslationProvider';
-import { useMediaAsset } from '@/hooks/useMediaAsset';
+import { supabase } from '@/integrations/supabase/client';
 
 const HeroSectionV5 = () => {
   const navigate = useNavigate();
@@ -14,35 +14,54 @@ const HeroSectionV5 = () => {
   const [checkIn, setCheckIn] = useState('');
   const [checkOut, setCheckOut] = useState('');
   const [guests, setGuests] = useState('2');
-
-  // Use media assets for hero slides
-  const { asset: slide1 } = useMediaAsset('hero.v5.slide1', "/lovable-uploads/9699e81e-78aa-4ce4-b652-cf46c4bd7075.png");
-  const { asset: slide2 } = useMediaAsset('hero.v5.slide2', "/lovable-uploads/d4df921c-30f4-4f92-92f2-c84dbcd5b591.png");
-  const { asset: slide3 } = useMediaAsset('hero.v5.slide3', "/lovable-uploads/b7049d8c-bd59-4733-b040-30b3f79f881c.png");
-  const { asset: slide4 } = useMediaAsset('hero.v5.slide4', "/lovable-uploads/6df7505d-8906-4590-b67e-a18c9f9da7f5.png");
-
-  const slides = [
+  const [heroTitle, setHeroTitle] = useState('Escape to Nature\'s Embrace');
+  const [heroSubtitle, setHeroSubtitle] = useState('A mindful retreat in Matheran\'s no-car eco zone');
+  const [slides, setSlides] = useState([
     {
       type: 'image',
-      content: slide1?.image_url || "/lovable-uploads/9699e81e-78aa-4ce4-b652-cf46c4bd7075.png",
-      alt: slide1?.title || "Horse riding on red mud trails in Matheran"
+      content: "/lovable-uploads/9699e81e-78aa-4ce4-b652-cf46c4bd7075.png",
+      alt: "Horse riding on red mud trails in Matheran"
     },
     {
       type: 'image',
-      content: slide2?.image_url || "/lovable-uploads/d4df921c-30f4-4f92-92f2-c84dbcd5b591.png",
-      alt: slide2?.title || "Beautiful lake with red earth shores in Matheran"
+      content: "/lovable-uploads/d4df921c-30f4-4f92-92f2-c84dbcd5b591.png",
+      alt: "Beautiful lake with red earth shores in Matheran"
     },
     {
       type: 'image',
-      content: slide3?.image_url || "/lovable-uploads/b7049d8c-bd59-4733-b040-30b3f79f881c.png",
-      alt: slide3?.title || "Winding mountain roads leading to Matheran"
+      content: "/lovable-uploads/b7049d8c-bd59-4733-b040-30b3f79f881c.png",
+      alt: "Winding mountain roads leading to Matheran"
     },
     {
       type: 'image',
-      content: slide4?.image_url || "/lovable-uploads/6df7505d-8906-4590-b67e-a18c9f9da7f5.png",
-      alt: slide4?.title || "Matheran toy train through misty mountains"
+      content: "/lovable-uploads/6df7505d-8906-4590-b67e-a18c9f9da7f5.png",
+      alt: "Matheran toy train through misty mountains"
     }
-  ];
+  ]);
+
+  useEffect(() => {
+    const fetchPageData = async () => {
+      const { data } = await supabase
+        .from('pages')
+        .select('title, subtitle, hero_gallery')
+        .eq('slug', 'home')
+        .single();
+      
+      if (data) {
+        if (data.title) setHeroTitle(data.title);
+        if (data.subtitle) setHeroSubtitle(data.subtitle);
+        if (data.hero_gallery && Array.isArray(data.hero_gallery) && data.hero_gallery.length > 0) {
+          setSlides(data.hero_gallery.map((url: string, index: number) => ({
+            type: 'image',
+            content: url,
+            alt: `Matheran hero image ${index + 1}`
+          })));
+        }
+      }
+    };
+    
+    fetchPageData();
+  }, []);
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -83,10 +102,10 @@ const HeroSectionV5 = () => {
         <div className="container mx-auto px-4">
           <div className="max-w-4xl mx-auto text-center text-white">
             <h1 className="text-4xl md:text-6xl lg:text-7xl font-heading font-bold mb-6 leading-tight">
-              {getTranslation('hero.title', 'Escape to Nature\'s Embrace')}
+              {getTranslation('hero.title', heroTitle)}
             </h1>
             <p className="text-lg md:text-xl mb-12 text-white/90 font-body font-light max-w-2xl mx-auto">
-              {getTranslation('hero.subtitle', 'A mindful retreat in Matheran\'s no-car eco zone')}
+              {getTranslation('hero.subtitle', heroSubtitle)}
             </p>
 
             {/* Glassmorphism Booking Widget - Inside Hero */}
