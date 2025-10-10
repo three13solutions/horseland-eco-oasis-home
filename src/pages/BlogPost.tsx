@@ -10,6 +10,8 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Calendar, User, ArrowLeft, Share2, Facebook, Twitter, Linkedin } from 'lucide-react';
 import { format } from 'date-fns';
+import { useContentTranslation } from '@/hooks/useContentTranslation';
+import { useTranslation } from 'react-i18next';
 
 interface BlogPost {
   id: string;
@@ -27,6 +29,8 @@ interface BlogPost {
 
 const BlogPost = () => {
   const { slug } = useParams<{ slug: string }>();
+  const { i18n } = useTranslation();
+  const { getTranslation } = useContentTranslation('blog');
   const [post, setPost] = useState<BlogPost | null>(null);
   const [relatedPosts, setRelatedPosts] = useState<BlogPost[]>([]);
   const [loading, setLoading] = useState(true);
@@ -122,9 +126,15 @@ const BlogPost = () => {
     );
   }
 
+  // Get translated content
+  const translatedTitle = getTranslation(`blog.${post.slug}.title`, post.title);
+  const translatedContent = getTranslation(`blog.${post.slug}.content`, post.content);
+  const translatedMetaTitle = getTranslation(`blog.${post.slug}.meta_title`, post.meta_title || post.title);
+  const translatedMetaDescription = getTranslation(`blog.${post.slug}.meta_description`, post.meta_description || post.content.substring(0, 160));
+
   const articleSchema = generateArticleSchema({
-    title: post.meta_title || post.title,
-    description: post.meta_description || post.content.substring(0, 160),
+    title: translatedMetaTitle,
+    description: translatedMetaDescription,
     author: post.author,
     publishedDate: post.publish_date,
     modifiedDate: post.created_at,
@@ -135,7 +145,7 @@ const BlogPost = () => {
   const breadcrumbSchema = generateBreadcrumbSchema([
     { name: 'Home', url: window.location.origin },
     { name: 'Journal', url: `${window.location.origin}/journal` },
-    { name: post.title, url: window.location.href }
+    { name: translatedTitle, url: window.location.href }
   ]);
 
   const combinedSchema = {
@@ -146,8 +156,8 @@ const BlogPost = () => {
   return (
     <>
       <SEO
-        title={post.meta_title || post.title}
-        description={post.meta_description || post.content.substring(0, 160)}
+        title={translatedMetaTitle}
+        description={translatedMetaDescription}
         ogImage={post.featured_image}
         canonicalUrl={window.location.href}
         schema={combinedSchema}
@@ -166,7 +176,7 @@ const BlogPost = () => {
             <span>/</span>
             <Link to="/journal" className="hover:text-foreground">Journal</Link>
             <span>/</span>
-            <span className="text-foreground">{post.title}</span>
+            <span className="text-foreground">{translatedTitle}</span>
           </div>
         </div>
 
@@ -178,7 +188,7 @@ const BlogPost = () => {
             </Badge>
             
             <h1 className="text-4xl md:text-5xl font-heading font-bold mb-6 leading-tight">
-              {post.title}
+              {translatedTitle}
             </h1>
             
             <div className="flex items-center gap-6 text-muted-foreground mb-8">
@@ -242,7 +252,7 @@ const BlogPost = () => {
           {/* Article Content */}
           <div className="prose prose-lg max-w-none">
             <div className="whitespace-pre-wrap leading-relaxed">
-              {post.content}
+              {translatedContent}
             </div>
           </div>
 

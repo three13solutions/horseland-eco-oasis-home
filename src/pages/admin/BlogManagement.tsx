@@ -10,10 +10,12 @@ import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Trash2, Plus, Save, Edit, FileText, Eye } from 'lucide-react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Trash2, Plus, Save, Edit, FileText, Eye, Languages, Copy, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import ImageUpload from '@/components/ImageUpload';
 import { format } from 'date-fns';
+import { TranslationField } from '@/components/admin/TranslationField';
 
 interface BlogPost {
   id?: string;
@@ -39,12 +41,32 @@ const categories = [
   'news'
 ];
 
+const LANGUAGES = [
+  { code: 'en', name: 'English', flag: '🇬🇧' },
+  { code: 'hi', name: 'Hindi', flag: '🇮🇳' },
+  { code: 'mr', name: 'Marathi', flag: '🇮🇳' },
+  { code: 'gu', name: 'Gujarati', flag: '🇮🇳' },
+  { code: 'ta', name: 'Tamil', flag: '🇮🇳' },
+  { code: 'te', name: 'Telugu', flag: '🇮🇳' },
+  { code: 'bn', name: 'Bengali', flag: '🇮🇳' },
+  { code: 'pa', name: 'Punjabi', flag: '🇮🇳' },
+  { code: 'es', name: 'Spanish', flag: '🇪🇸' },
+  { code: 'fr', name: 'French', flag: '🇫🇷' },
+  { code: 'ru', name: 'Russian', flag: '🇷🇺' },
+  { code: 'ar', name: 'Arabic', flag: '🇸🇦' },
+  { code: 'zh', name: 'Chinese', flag: '🇨🇳' },
+  { code: 'ur', name: 'Urdu', flag: '🇵🇰' },
+];
+
 const BlogManagement = () => {
   const { toast } = useToast();
   const [posts, setPosts] = useState<BlogPost[]>([]);
   const [loading, setLoading] = useState(true);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingPost, setEditingPost] = useState<BlogPost | null>(null);
+  const [selectedLanguage, setSelectedLanguage] = useState('en');
+  const [translations, setTranslations] = useState<{ [key: string]: string }>({});
+  const [isTranslating, setIsTranslating] = useState(false);
   const [formData, setFormData] = useState<BlogPost>({
     title: '',
     slug: '',
@@ -99,6 +121,109 @@ const BlogManagement = () => {
     }));
   };
 
+  const loadTranslations = async (postSlug: string, languageCode: string) => {
+    if (languageCode === 'en') {
+      setTranslations({});
+      return;
+    }
+
+    try {
+      const { data, error } = await supabase
+        .from('translations')
+        .select('key, value')
+        .eq('section', 'blog')
+        .eq('language_code', languageCode)
+        .like('key', `blog.${postSlug}.%`);
+
+      if (error) throw error;
+
+      const translationMap: { [key: string]: string } = {};
+      data?.forEach((item) => {
+        const field = item.key.replace(`blog.${postSlug}.`, '');
+        translationMap[field] = item.value;
+      });
+
+      setTranslations(translationMap);
+    } catch (error) {
+      console.error('Error loading translations:', error);
+      setTranslations({});
+    }
+  };
+
+  const saveTranslations = async (postSlug: string, languageCode: string) => {
+    if (languageCode === 'en') return;
+
+    try {
+      const translationEntries = [
+        { key: 'title', value: translations.title },
+        { key: 'content', value: translations.content },
+        { key: 'meta_title', value: translations.meta_title },
+        { key: 'meta_description', value: translations.meta_description },
+      ].filter(entry => entry.value);
+
+      for (const entry of translationEntries) {
+        await supabase
+          .from('translations')
+          .upsert({
+            language_code: languageCode,
+            section: 'blog',
+            key: `blog.${postSlug}.${entry.key}`,
+            value: entry.value,
+          }, {
+            onConflict: 'language_code,section,key'
+          });
+      }
+    } catch (error) {
+      console.error('Error saving translations:', error);
+      throw error;
+    }
+  };
+
+  const handleAutoTranslateAll = async () => {
+    if (!formData.slug || selectedLanguage === 'en') return;
+
+    setIsTranslating(true);
+    try {
+      const fields = [
+        { key: 'title', value: formData.title },
+        { key: 'content', value: formData.content },
+        { key: 'meta_title', value: formData.meta_title },
+        { key: 'meta_description', value: formData.meta_description },
+      ];
+
+      const translatedData: { [key: string]: string } = {};
+
+      for (const field of fields) {
+        if (!field.value) continue;
+
+        const { data, error } = await supabase.functions.invoke('auto-translate', {
+          body: {
+            text: field.value,
+            targetLanguage: selectedLanguage,
+            sourceLanguage: 'en',
+          },
+        });
+
+        if (error) throw error;
+        translatedData[field.key] = data.translatedText;
+      }
+
+      setTranslations(prev => ({ ...prev, ...translatedData }));
+      toast({
+        title: "Success",
+        description: "All fields auto-translated successfully"
+      });
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: "Failed to auto-translate: " + error.message,
+        variant: "destructive"
+      });
+    } finally {
+      setIsTranslating(false);
+    }
+  };
+
   const handleSave = async () => {
     try {
       if (!formData.title || !formData.slug || !formData.content || !formData.author) {
@@ -126,9 +251,16 @@ const BlogManagement = () => {
 
         if (error) throw error;
 
+        // Save translations for non-English languages
+        if (selectedLanguage !== 'en') {
+          await saveTranslations(formData.slug, selectedLanguage);
+        }
+
         toast({
           title: "Success",
-          description: "Blog post updated successfully"
+          description: selectedLanguage === 'en' 
+            ? "Blog post updated successfully" 
+            : `Blog post updated and ${LANGUAGES.find(l => l.code === selectedLanguage)?.name} translation saved`
         });
       } else {
         const { error } = await supabase
@@ -159,7 +291,12 @@ const BlogManagement = () => {
   const handleEdit = (post: BlogPost) => {
     setEditingPost(post);
     setFormData(post);
+    setSelectedLanguage('en');
+    setTranslations({});
     setIsDialogOpen(true);
+    if (post.slug) {
+      loadTranslations(post.slug, 'en');
+    }
   };
 
   const handleDelete = async (id: string) => {
@@ -203,6 +340,17 @@ const BlogManagement = () => {
       publish_date: ''
     });
     setEditingPost(null);
+    setSelectedLanguage('en');
+    setTranslations({});
+  };
+
+  const handleLanguageChange = async (languageCode: string) => {
+    setSelectedLanguage(languageCode);
+    if (formData.slug && languageCode !== 'en') {
+      await loadTranslations(formData.slug, languageCode);
+    } else {
+      setTranslations({});
+    }
   };
 
   if (loading) {
@@ -238,77 +386,150 @@ const BlogManagement = () => {
             </DialogHeader>
 
             <div className="space-y-6 py-4">
+              {/* Language Tabs */}
+              {editingPost && (
+                <Tabs value={selectedLanguage} onValueChange={handleLanguageChange}>
+                  <div className="flex items-center justify-between mb-4">
+                    <TabsList className="grid grid-cols-7 w-full max-w-3xl">
+                      {LANGUAGES.slice(0, 7).map((lang) => (
+                        <TabsTrigger key={lang.code} value={lang.code} className="text-xs">
+                          <span className="mr-1">{lang.flag}</span>
+                          {lang.code.toUpperCase()}
+                        </TabsTrigger>
+                      ))}
+                    </TabsList>
+                    {selectedLanguage !== 'en' && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={handleAutoTranslateAll}
+                        disabled={isTranslating}
+                      >
+                        {isTranslating ? (
+                          <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                        ) : (
+                          <Languages className="w-4 h-4 mr-2" />
+                        )}
+                        Auto-translate All
+                      </Button>
+                    )}
+                  </div>
+                  
+                  <TabsList className="grid grid-cols-7 w-full max-w-3xl mb-4">
+                    {LANGUAGES.slice(7).map((lang) => (
+                      <TabsTrigger key={lang.code} value={lang.code} className="text-xs">
+                        <span className="mr-1">{lang.flag}</span>
+                        {lang.code.toUpperCase()}
+                      </TabsTrigger>
+                    ))}
+                  </TabsList>
+                </Tabs>
+              )}
+
               {/* Basic Information */}
               <Card>
                 <CardHeader>
                   <CardTitle className="text-lg">Basic Information</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  <div>
-                    <Label htmlFor="title">Title *</Label>
-                    <Input
-                      id="title"
-                      value={formData.title}
-                      onChange={(e) => handleTitleChange(e.target.value)}
-                      placeholder="Enter post title"
-                    />
-                  </div>
+                  {selectedLanguage === 'en' ? (
+                    <>
+                      <div>
+                        <Label htmlFor="title">Title *</Label>
+                        <Input
+                          id="title"
+                          value={formData.title}
+                          onChange={(e) => handleTitleChange(e.target.value)}
+                          placeholder="Enter post title"
+                        />
+                      </div>
 
-                  <div>
-                    <Label htmlFor="slug">Slug *</Label>
-                    <Input
-                      id="slug"
-                      value={formData.slug}
-                      onChange={(e) => setFormData(prev => ({ ...prev, slug: e.target.value }))}
-                      placeholder="post-url-slug"
-                    />
-                    <p className="text-xs text-muted-foreground mt-1">
-                      URL: /journal/{formData.slug || 'post-slug'}
-                    </p>
-                  </div>
+                      <div>
+                        <Label htmlFor="slug">Slug *</Label>
+                        <Input
+                          id="slug"
+                          value={formData.slug}
+                          onChange={(e) => setFormData(prev => ({ ...prev, slug: e.target.value }))}
+                          placeholder="post-url-slug"
+                        />
+                        <p className="text-xs text-muted-foreground mt-1">
+                          URL: /journal/{formData.slug || 'post-slug'}
+                        </p>
+                      </div>
 
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <Label htmlFor="author">Author *</Label>
-                      <Input
-                        id="author"
-                        value={formData.author}
-                        onChange={(e) => setFormData(prev => ({ ...prev, author: e.target.value }))}
-                        placeholder="Author name"
+                      <div className="grid grid-cols-2 gap-4">
+                        <div>
+                          <Label htmlFor="author">Author *</Label>
+                          <Input
+                            id="author"
+                            value={formData.author}
+                            onChange={(e) => setFormData(prev => ({ ...prev, author: e.target.value }))}
+                            placeholder="Author name"
+                          />
+                        </div>
+
+                        <div>
+                          <Label htmlFor="category">Category *</Label>
+                          <Select
+                            value={formData.category}
+                            onValueChange={(value) => setFormData(prev => ({ ...prev, category: value }))}
+                          >
+                            <SelectTrigger>
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {categories.map((cat) => (
+                                <SelectItem key={cat} value={cat}>
+                                  {cat.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ')}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      </div>
+
+                      <div>
+                        <Label htmlFor="content">Content *</Label>
+                        <Textarea
+                          id="content"
+                          value={formData.content}
+                          onChange={(e) => setFormData(prev => ({ ...prev, content: e.target.value }))}
+                          placeholder="Write your post content (supports markdown)"
+                          rows={10}
+                          className="font-mono text-sm"
+                        />
+                      </div>
+                    </>
+                  ) : (
+                    <>
+                      <TranslationField
+                        label="Title"
+                        translationKey={`blog.${formData.slug}.title`}
+                        slug={formData.slug}
+                        languageCode={selectedLanguage}
+                        englishValue={formData.title}
+                        currentValue={translations.title || ''}
+                        onValueChange={(value) => setTranslations(prev => ({ ...prev, title: value }))}
+                        rows={2}
                       />
-                    </div>
 
-                    <div>
-                      <Label htmlFor="category">Category *</Label>
-                      <Select
-                        value={formData.category}
-                        onValueChange={(value) => setFormData(prev => ({ ...prev, category: value }))}
-                      >
-                        <SelectTrigger>
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {categories.map((cat) => (
-                            <SelectItem key={cat} value={cat}>
-                              {cat.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ')}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  </div>
+                      <TranslationField
+                        label="Content"
+                        translationKey={`blog.${formData.slug}.content`}
+                        slug={formData.slug}
+                        languageCode={selectedLanguage}
+                        englishValue={formData.content}
+                        currentValue={translations.content || ''}
+                        onValueChange={(value) => setTranslations(prev => ({ ...prev, content: value }))}
+                        isTextarea={true}
+                        rows={10}
+                      />
 
-                  <div>
-                    <Label htmlFor="content">Content *</Label>
-                    <Textarea
-                      id="content"
-                      value={formData.content}
-                      onChange={(e) => setFormData(prev => ({ ...prev, content: e.target.value }))}
-                      placeholder="Write your post content (supports markdown)"
-                      rows={10}
-                      className="font-mono text-sm"
-                    />
-                  </div>
+                      <div className="text-sm text-muted-foreground p-4 bg-muted/50 rounded-md">
+                        <p><strong>Note:</strong> Author and Category cannot be translated as they are metadata fields.</p>
+                      </div>
+                    </>
+                  )}
                 </CardContent>
               </Card>
 
@@ -335,34 +556,63 @@ const BlogManagement = () => {
                   <CardDescription>Optimize for search engines</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  <div>
-                    <Label htmlFor="meta_title">Meta Title</Label>
-                    <Input
-                      id="meta_title"
-                      value={formData.meta_title}
-                      onChange={(e) => setFormData(prev => ({ ...prev, meta_title: e.target.value }))}
-                      placeholder="SEO title (defaults to post title)"
-                      maxLength={60}
-                    />
-                    <p className="text-xs text-muted-foreground mt-1">
-                      {formData.meta_title?.length || 0}/60 characters
-                    </p>
-                  </div>
+                  {selectedLanguage === 'en' ? (
+                    <>
+                      <div>
+                        <Label htmlFor="meta_title">Meta Title</Label>
+                        <Input
+                          id="meta_title"
+                          value={formData.meta_title}
+                          onChange={(e) => setFormData(prev => ({ ...prev, meta_title: e.target.value }))}
+                          placeholder="SEO title (defaults to post title)"
+                          maxLength={60}
+                        />
+                        <p className="text-xs text-muted-foreground mt-1">
+                          {formData.meta_title?.length || 0}/60 characters
+                        </p>
+                      </div>
 
-                  <div>
-                    <Label htmlFor="meta_description">Meta Description</Label>
-                    <Textarea
-                      id="meta_description"
-                      value={formData.meta_description}
-                      onChange={(e) => setFormData(prev => ({ ...prev, meta_description: e.target.value }))}
-                      placeholder="Brief description for search results"
-                      rows={3}
-                      maxLength={160}
-                    />
-                    <p className="text-xs text-muted-foreground mt-1">
-                      {formData.meta_description?.length || 0}/160 characters
-                    </p>
-                  </div>
+                      <div>
+                        <Label htmlFor="meta_description">Meta Description</Label>
+                        <Textarea
+                          id="meta_description"
+                          value={formData.meta_description}
+                          onChange={(e) => setFormData(prev => ({ ...prev, meta_description: e.target.value }))}
+                          placeholder="Brief description for search results"
+                          rows={3}
+                          maxLength={160}
+                        />
+                        <p className="text-xs text-muted-foreground mt-1">
+                          {formData.meta_description?.length || 0}/160 characters
+                        </p>
+                      </div>
+                    </>
+                  ) : (
+                    <>
+                      <TranslationField
+                        label="Meta Title"
+                        translationKey={`blog.${formData.slug}.meta_title`}
+                        slug={formData.slug}
+                        languageCode={selectedLanguage}
+                        englishValue={formData.meta_title || ''}
+                        currentValue={translations.meta_title || ''}
+                        onValueChange={(value) => setTranslations(prev => ({ ...prev, meta_title: value }))}
+                        rows={2}
+                      />
+
+                      <TranslationField
+                        label="Meta Description"
+                        translationKey={`blog.${formData.slug}.meta_description`}
+                        slug={formData.slug}
+                        languageCode={selectedLanguage}
+                        englishValue={formData.meta_description || ''}
+                        currentValue={translations.meta_description || ''}
+                        onValueChange={(value) => setTranslations(prev => ({ ...prev, meta_description: value }))}
+                        isTextarea={true}
+                        rows={3}
+                      />
+                    </>
+                  )}
                 </CardContent>
               </Card>
 
