@@ -48,6 +48,8 @@ import IntegrationsManagement from "./pages/admin/IntegrationsManagement";
 import UserManagement from "./pages/admin/UserManagement";
 import SiteSettings from "./pages/admin/SiteSettings";
 import BlogManagement from "./pages/admin/BlogManagement";
+import PageManagement from "./pages/admin/PageManagement";
+import DynamicPage from "./pages/DynamicPage";
 
 const queryClient = new QueryClient();
 
@@ -81,6 +83,9 @@ function App() {
               <Route path="/packages" element={<Packages />} />
               <Route path="/faq" element={<FAQ />} />
               <Route path="/policies" element={<Policies />} />
+              
+              {/* Dynamic Pages Route */}
+              <Route path="/:slug" element={<DynamicPage />} />
 
               {/* Admin Routes */}
               <Route path="/admin/login" element={<AdminLogin />} />
@@ -100,6 +105,7 @@ function App() {
                 <Route path="content" element={<ContentManagement />} />
                 <Route path="integrations" element={<IntegrationsManagement />} />
                 <Route path="blog" element={<BlogManagement />} />
+                <Route path="pages" element={<PageManagement />} />
                 <Route path="users" element={<UserManagement />} />
                 <Route path="settings" element={<SiteSettings />} />
               </Route>
