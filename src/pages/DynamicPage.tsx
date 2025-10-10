@@ -6,6 +6,8 @@ import FooterV5 from "@/components/v5/FooterV5";
 import CombinedFloatingV5 from "@/components/v5/CombinedFloatingV5";
 import SEO from "@/components/SEO";
 import { toast } from "sonner";
+import { useContentTranslation } from "@/hooks/useContentTranslation";
+import { useTranslation } from "react-i18next";
 
 interface Page {
   id: string;
@@ -25,6 +27,8 @@ interface Page {
 
 export default function DynamicPage() {
   const { slug } = useParams<{ slug: string }>();
+  const { i18n } = useTranslation();
+  const { getTranslation } = useContentTranslation("pages");
   const [page, setPage] = useState<Page | null>(null);
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
@@ -33,7 +37,7 @@ export default function DynamicPage() {
     if (slug) {
       fetchPage(slug);
     }
-  }, [slug]);
+  }, [slug, i18n.language]);
 
   const fetchPage = async (pageSlug: string) => {
     try {
@@ -76,6 +80,18 @@ export default function DynamicPage() {
     return <Navigate to="/404" replace />;
   }
 
+  const title = i18n.language === "en" 
+    ? page.title 
+    : getTranslation(`page.${page.slug}.title`, page.title);
+  
+  const subtitle = i18n.language === "en"
+    ? (page.subtitle || "")
+    : getTranslation(`page.${page.slug}.subtitle`, page.subtitle || "");
+
+  const content = i18n.language === "en"
+    ? (page.content || "")
+    : getTranslation(`page.${page.slug}.content`, page.content || "");
+
   const renderHero = () => {
     if (page.hero_type === "none" || !page.hero_type) return null;
 
@@ -90,11 +106,11 @@ export default function DynamicPage() {
           </div>
           <div className="relative z-10 text-center text-white max-w-4xl mx-auto px-4">
             <h1 className="text-4xl md:text-6xl font-heading font-bold mb-6 leading-tight">
-              {page.title}
+              {title}
             </h1>
-            {page.subtitle && (
+            {subtitle && (
               <p className="text-lg md:text-xl font-body opacity-90 max-w-2xl mx-auto">
-                {page.subtitle}
+                {subtitle}
               </p>
             )}
           </div>
@@ -123,11 +139,11 @@ export default function DynamicPage() {
           <div className="absolute inset-0 flex items-center justify-center">
             <div className="text-center text-white max-w-4xl mx-auto px-4">
               <h1 className="text-4xl md:text-6xl font-heading font-bold mb-6 leading-tight">
-                {page.title}
+                {title}
               </h1>
-              {page.subtitle && (
+              {subtitle && (
                 <p className="text-lg md:text-xl font-body opacity-90 max-w-2xl mx-auto">
-                  {page.subtitle}
+                  {subtitle}
                 </p>
               )}
             </div>
@@ -140,7 +156,6 @@ export default function DynamicPage() {
   };
 
   const renderContent = () => {
-    const content = page.content || "";
 
     switch (page.template_type) {
       case "full-width":
@@ -199,7 +214,7 @@ export default function DynamicPage() {
   return (
     <>
       <SEO
-        title={page.meta_title || page.title}
+        title={page.meta_title || title}
         description={page.meta_description || undefined}
         keywords={page.meta_keywords || undefined}
         ogImage={page.og_image || undefined}
@@ -215,9 +230,9 @@ export default function DynamicPage() {
           <div className="container mx-auto px-4">
             {(page.hero_type === "none" || !page.hero_type) && (
               <>
-                <h1 className="text-4xl md:text-5xl font-bold mb-4">{page.title}</h1>
-                {page.subtitle && (
-                  <p className="text-xl text-muted-foreground mb-8">{page.subtitle}</p>
+                <h1 className="text-4xl md:text-5xl font-bold mb-4">{title}</h1>
+                {subtitle && (
+                  <p className="text-xl text-muted-foreground mb-8">{subtitle}</p>
                 )}
               </>
             )}

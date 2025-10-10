@@ -5,21 +5,27 @@ import FloatingElementsV5 from '../components/v5/FloatingElementsV5';
 import { Button } from '@/components/ui/button';
 import { Leaf, Award, Heart, Mountain, Users, Lightbulb } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
+import { useContentTranslation } from '@/hooks/useContentTranslation';
+import { useTranslation } from 'react-i18next';
 
 const About = () => {
+  const { i18n } = useTranslation();
+  const { getTranslation } = useContentTranslation('pages');
   const [heroImage, setHeroImage] = useState('https://images.unsplash.com/photo-1506905925346-21bda4d32df4?ixlib=rb-4.0.3&auto=format&fit=crop&w=2000&q=80');
   const [subtitle, setSubtitle] = useState('Where time slows down and nature whispers its ancient secrets. Welcome to Horseland Hotel.');
   const [title, setTitle] = useState('Our Story Began in the Hills');
+  const [pageData, setPageData] = useState<any>(null);
 
   useEffect(() => {
     const fetchPageData = async () => {
       const { data } = await supabase
         .from('pages')
-        .select('title, subtitle, hero_image')
+        .select('title, subtitle, hero_image, slug')
         .eq('slug', 'about')
         .single();
       
       if (data) {
+        setPageData(data);
         setTitle(data.title);
         if (data.subtitle) setSubtitle(data.subtitle);
         if (data.hero_image) setHeroImage(data.hero_image);
@@ -28,6 +34,14 @@ const About = () => {
     
     fetchPageData();
   }, []);
+
+  const displayTitle = pageData && i18n.language !== 'en'
+    ? getTranslation(`page.${pageData.slug}.title`, title)
+    : title;
+
+  const displaySubtitle = pageData && i18n.language !== 'en'
+    ? getTranslation(`page.${pageData.slug}.subtitle`, subtitle)
+    : subtitle;
 
   return (
     <div className="min-h-screen bg-background overflow-x-hidden">
@@ -46,10 +60,10 @@ const About = () => {
         
         <div className="relative z-10 text-center text-white max-w-4xl mx-auto px-4">
           <h1 className="text-4xl md:text-6xl font-heading font-bold mb-6 leading-tight">
-            {title}
+            {displayTitle}
           </h1>
           <p className="text-lg md:text-xl font-body opacity-90 max-w-2xl mx-auto">
-            {subtitle}
+            {displaySubtitle}
           </p>
         </div>
       </section>

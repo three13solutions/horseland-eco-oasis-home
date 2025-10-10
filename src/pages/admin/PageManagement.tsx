@@ -11,8 +11,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
-import { Plus, Pencil, Trash2, Eye, EyeOff, Search } from "lucide-react";
+import { Plus, Pencil, Trash2, Eye, EyeOff, Search, Languages, Loader2 } from "lucide-react";
 import ImageUpload from "@/components/ImageUpload";
+import { TranslationField } from "@/components/admin/TranslationField";
 
 interface Page {
   id: string;
@@ -42,12 +43,32 @@ const TEMPLATE_TYPES = [
   { value: "custom", label: "Custom Template" },
 ];
 
+const LANGUAGES = [
+  { code: "en", name: "English" },
+  { code: "hi", name: "Hindi" },
+  { code: "mr", name: "Marathi" },
+  { code: "gu", name: "Gujarati" },
+  { code: "ta", name: "Tamil" },
+  { code: "te", name: "Telugu" },
+  { code: "bn", name: "Bengali" },
+  { code: "pa", name: "Punjabi" },
+  { code: "ur", name: "Urdu" },
+  { code: "ar", name: "Arabic" },
+  { code: "zh", name: "Chinese" },
+  { code: "es", name: "Spanish" },
+  { code: "fr", name: "French" },
+  { code: "ru", name: "Russian" },
+];
+
 export default function PageManagement() {
   const [pages, setPages] = useState<Page[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingPage, setEditingPage] = useState<Page | null>(null);
+  const [selectedLanguage, setSelectedLanguage] = useState("en");
+  const [translations, setTranslations] = useState<{ [key: string]: string }>({});
+  const [isTranslatingAll, setIsTranslatingAll] = useState(false);
 
   // Form state
   const [formData, setFormData] = useState({
@@ -70,6 +91,37 @@ export default function PageManagement() {
   useEffect(() => {
     fetchPages();
   }, []);
+
+  useEffect(() => {
+    if (editingPage && selectedLanguage !== "en") {
+      loadTranslations();
+    }
+  }, [editingPage, selectedLanguage]);
+
+  const loadTranslations = async () => {
+    if (!editingPage) return;
+
+    try {
+      const { data, error } = await supabase
+        .from("translations")
+        .select("*")
+        .eq("language_code", selectedLanguage)
+        .eq("section", "pages")
+        .like("key", `page.${editingPage.slug}.%`);
+
+      if (error) throw error;
+
+      const translationMap: { [key: string]: string } = {};
+      data?.forEach((t) => {
+        const field = t.key.replace(`page.${editingPage.slug}.`, "");
+        translationMap[field] = t.value;
+      });
+
+      setTranslations(translationMap);
+    } catch (error: any) {
+      console.error("Failed to load translations:", error);
+    }
+  };
 
   const fetchPages = async () => {
     try {
@@ -94,26 +146,100 @@ export default function PageManagement() {
     e.preventDefault();
 
     try {
-      if (editingPage) {
-        const { error } = await supabase
-          .from("pages")
-          .update(formData)
-          .eq("id", editingPage.id);
+      if (selectedLanguage === "en") {
+        // Save to pages table (English content)
+        if (editingPage) {
+          const { error } = await supabase
+            .from("pages")
+            .update(formData)
+            .eq("id", editingPage.id);
 
-        if (error) throw error;
-        toast.success("Page updated successfully");
+          if (error) throw error;
+          toast.success("Page updated successfully");
+        } else {
+          const { error } = await supabase.from("pages").insert([formData]);
+
+          if (error) throw error;
+          toast.success("Page created successfully");
+        }
       } else {
-        const { error } = await supabase.from("pages").insert([formData]);
+        // Save translations
+        if (!editingPage) {
+          toast.error("Please create the page in English first");
+          return;
+        }
 
-        if (error) throw error;
-        toast.success("Page created successfully");
+        await saveTranslations();
+        toast.success("Translations saved successfully");
       }
 
       setIsDialogOpen(false);
       resetForm();
       fetchPages();
     } catch (error: any) {
-      toast.error("Failed to save page: " + error.message);
+      toast.error("Failed to save: " + error.message);
+    }
+  };
+
+  const saveTranslations = async () => {
+    if (!editingPage) return;
+
+    const translationEntries = [
+      { field: "title", value: translations.title },
+      { field: "subtitle", value: translations.subtitle },
+      { field: "content", value: translations.content },
+    ].filter((t) => t.value);
+
+    for (const entry of translationEntries) {
+      await supabase.from("translations").upsert(
+        {
+          language_code: selectedLanguage,
+          section: "pages",
+          key: `page.${editingPage.slug}.${entry.field}`,
+          value: entry.value,
+        },
+        {
+          onConflict: "language_code,section,key",
+        }
+      );
+    }
+  };
+
+  const handleAutoTranslateAll = async () => {
+    if (!editingPage || selectedLanguage === "en") return;
+
+    setIsTranslatingAll(true);
+    try {
+      const fields = [
+        { key: "title", value: formData.title },
+        { key: "subtitle", value: formData.subtitle },
+        { key: "content", value: formData.content },
+      ];
+
+      const newTranslations: { [key: string]: string } = {};
+
+      for (const field of fields) {
+        if (!field.value) continue;
+
+        const { data, error } = await supabase.functions.invoke("auto-translate", {
+          body: {
+            text: field.value,
+            targetLanguage: selectedLanguage,
+            sourceLanguage: "en",
+          },
+        });
+
+        if (!error && data?.translatedText) {
+          newTranslations[field.key] = data.translatedText;
+        }
+      }
+
+      setTranslations((prev) => ({ ...prev, ...newTranslations }));
+      toast.success("All fields auto-translated");
+    } catch (error: any) {
+      toast.error("Failed to auto-translate: " + error.message);
+    } finally {
+      setIsTranslatingAll(false);
     }
   };
 
@@ -154,6 +280,8 @@ export default function PageManagement() {
 
   const resetForm = () => {
     setEditingPage(null);
+    setSelectedLanguage("en");
+    setTranslations({});
     setFormData({
       slug: "",
       title: "",
@@ -196,6 +324,48 @@ export default function PageManagement() {
               </DialogTitle>
             </DialogHeader>
             <form onSubmit={handleSubmit} className="space-y-6">
+              {editingPage && (
+                <div className="flex items-center justify-between p-4 bg-muted/50 rounded-lg">
+                  <div className="flex items-center gap-2">
+                    <Languages className="w-5 h-5" />
+                    <Label>Language:</Label>
+                    <Select value={selectedLanguage} onValueChange={setSelectedLanguage}>
+                      <SelectTrigger className="w-[180px]">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {LANGUAGES.map((lang) => (
+                          <SelectItem key={lang.code} value={lang.code}>
+                            {lang.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  {selectedLanguage !== "en" && (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={handleAutoTranslateAll}
+                      disabled={isTranslatingAll}
+                    >
+                      {isTranslatingAll ? (
+                        <>
+                          <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                          Translating...
+                        </>
+                      ) : (
+                        <>
+                          <Languages className="w-4 h-4 mr-2" />
+                          Auto-Translate All
+                        </>
+                      )}
+                    </Button>
+                  )}
+                </div>
+              )}
+
               <Tabs defaultValue="content" className="w-full">
                 <TabsList className="grid w-full grid-cols-4">
                   <TabsTrigger value="content">Content</TabsTrigger>
@@ -205,63 +375,109 @@ export default function PageManagement() {
                 </TabsList>
 
                 <TabsContent value="content" className="space-y-4">
-                  <div>
-                    <Label htmlFor="title">Page Title</Label>
-                    <Input
-                      id="title"
-                      value={formData.title}
-                      onChange={(e) =>
-                        setFormData({ ...formData, title: e.target.value })
-                      }
-                      required
-                    />
-                  </div>
+                  {selectedLanguage === "en" ? (
+                    <>
+                      <div>
+                        <Label htmlFor="title">Page Title</Label>
+                        <Input
+                          id="title"
+                          value={formData.title}
+                          onChange={(e) =>
+                            setFormData({ ...formData, title: e.target.value })
+                          }
+                          required
+                        />
+                      </div>
 
-                  <div>
-                    <Label htmlFor="subtitle">Subtitle (optional)</Label>
-                    <Input
-                      id="subtitle"
-                      value={formData.subtitle}
-                      onChange={(e) =>
-                        setFormData({ ...formData, subtitle: e.target.value })
-                      }
-                      placeholder="Page subtitle or tagline"
-                    />
-                  </div>
+                      <div>
+                        <Label htmlFor="subtitle">Subtitle (optional)</Label>
+                        <Input
+                          id="subtitle"
+                          value={formData.subtitle}
+                          onChange={(e) =>
+                            setFormData({ ...formData, subtitle: e.target.value })
+                          }
+                          placeholder="Page subtitle or tagline"
+                        />
+                      </div>
 
-                  <div>
-                    <Label htmlFor="slug">Slug (URL)</Label>
-                    <Input
-                      id="slug"
-                      value={formData.slug}
-                      onChange={(e) =>
-                        setFormData({
-                          ...formData,
-                          slug: e.target.value
-                            .toLowerCase()
-                            .replace(/[^a-z0-9-]/g, "-"),
-                        })
-                      }
-                      placeholder="about-us"
-                      required
-                    />
-                    <p className="text-sm text-muted-foreground mt-1">
-                      URL: /{formData.slug}
-                    </p>
-                  </div>
+                      <div>
+                        <Label htmlFor="slug">Slug (URL)</Label>
+                        <Input
+                          id="slug"
+                          value={formData.slug}
+                          onChange={(e) =>
+                            setFormData({
+                              ...formData,
+                              slug: e.target.value
+                                .toLowerCase()
+                                .replace(/[^a-z0-9-]/g, "-"),
+                            })
+                          }
+                          placeholder="about-us"
+                          required
+                        />
+                        <p className="text-sm text-muted-foreground mt-1">
+                          URL: /{formData.slug}
+                        </p>
+                      </div>
 
-                  <div>
-                    <Label htmlFor="content">Content (Markdown/HTML)</Label>
-                    <Textarea
-                      id="content"
-                      value={formData.content}
-                      onChange={(e) =>
-                        setFormData({ ...formData, content: e.target.value })
-                      }
-                      rows={12}
-                      placeholder="Enter your page content here..."
-                    />
-                  </div>
+                      <div>
+                        <Label htmlFor="content">Content (Markdown/HTML)</Label>
+                        <Textarea
+                          id="content"
+                          value={formData.content}
+                          onChange={(e) =>
+                            setFormData({ ...formData, content: e.target.value })
+                          }
+                          rows={12}
+                          placeholder="Enter your page content here..."
+                        />
+                      </div>
+                    </>
+                  ) : (
+                    <>
+                      <TranslationField
+                        label="Page Title"
+                        translationKey="title"
+                        slug={editingPage?.slug || ""}
+                        languageCode={selectedLanguage}
+                        englishValue={formData.title}
+                        currentValue={translations.title || ""}
+                        onValueChange={(value) =>
+                          setTranslations((prev) => ({ ...prev, title: value }))
+                        }
+                        rows={1}
+                      />
+
+                      <TranslationField
+                        label="Subtitle"
+                        translationKey="subtitle"
+                        slug={editingPage?.slug || ""}
+                        languageCode={selectedLanguage}
+                        englishValue={formData.subtitle}
+                        currentValue={translations.subtitle || ""}
+                        onValueChange={(value) =>
+                          setTranslations((prev) => ({ ...prev, subtitle: value }))
+                        }
+                        rows={2}
+                      />
+
+                      <TranslationField
+                        label="Content"
+                        translationKey="content"
+                        slug={editingPage?.slug || ""}
+                        languageCode={selectedLanguage}
+                        englishValue={formData.content}
+                        currentValue={translations.content || ""}
+                        onValueChange={(value) =>
+                          setTranslations((prev) => ({ ...prev, content: value }))
+                        }
+                        isTextarea
+                        rows={12}
+                      />
+                    </>
+                  )}
                 </TabsContent>
 
                 <TabsContent value="hero" className="space-y-4">
