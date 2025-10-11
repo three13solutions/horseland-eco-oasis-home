@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import NavigationV5 from '@/components/v5/NavigationV5';
 import DynamicFooter from '@/components/DynamicFooter';
 import { Button } from '@/components/ui/button';
@@ -10,6 +10,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 
 const Contact = () => {
+  const [heroImage, setHeroImage] = useState<string>('');
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -19,6 +20,27 @@ const Contact = () => {
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
+
+  useEffect(() => {
+    const fetchPageData = async () => {
+      const { data } = await supabase
+        .from('pages')
+        .select('hero_image, hero_gallery, hero_type')
+        .eq('slug', 'contact')
+        .eq('is_published', true)
+        .single();
+
+      if (data) {
+        if (data.hero_type === 'carousel' && data.hero_gallery && Array.isArray(data.hero_gallery) && data.hero_gallery.length > 0) {
+          setHeroImage(String(data.hero_gallery[0]));
+        } else if (data.hero_image) {
+          setHeroImage(data.hero_image);
+        }
+      }
+    };
+
+    fetchPageData();
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -67,13 +89,24 @@ const Contact = () => {
       <NavigationV5 />
       
       {/* Hero Section */}
-      <section className="pt-24 pb-16 bg-gradient-to-b from-muted/50 to-background">
-        <div className="container mx-auto px-6">
+      <section className="relative min-h-[50vh] flex items-center justify-center">
+        {heroImage && (
+          <>
+            <div 
+              className="absolute inset-0 bg-cover bg-center bg-no-repeat"
+              style={{ backgroundImage: `url('${heroImage}')` }}
+            >
+              <div className="absolute inset-0 bg-black/40"></div>
+            </div>
+          </>
+        )}
+        
+        <div className={`${heroImage ? 'relative z-10 text-white' : 'bg-gradient-to-b from-muted/50 to-background py-16'} container mx-auto px-6`}>
           <div className="text-center max-w-3xl mx-auto">
-            <h1 className="text-4xl md:text-5xl font-serif font-bold text-foreground mb-6">
-              Get in <span className="text-primary">Touch</span>
+            <h1 className="text-4xl md:text-5xl font-serif font-bold mb-6">
+              Get in <span className={heroImage ? 'text-white' : 'text-primary'}>Touch</span>
             </h1>
-            <p className="text-lg text-muted-foreground">
+            <p className={`text-lg ${heroImage ? 'text-white/90' : 'text-muted-foreground'}`}>
               We're here to help you plan your perfect mountain getaway. Reach out to us for reservations, 
               questions, or special requests.
             </p>

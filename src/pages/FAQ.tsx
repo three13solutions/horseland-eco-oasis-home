@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import NavigationV5 from '../components/v5/NavigationV5';
 import DynamicFooter from '../components/DynamicFooter';
 import FloatingElementsV5 from '../components/v5/FloatingElementsV5';
@@ -10,8 +10,31 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import { BookOpen, Hotel, TreePine, Shield } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
 
 const FAQ = () => {
+  const [heroImage, setHeroImage] = useState<string>('https://images.unsplash.com/photo-1506905925346-21bda4d32df4?ixlib=rb-4.0.3&auto=format&fit=crop&w=2000&q=80');
+
+  useEffect(() => {
+    const fetchPageData = async () => {
+      const { data } = await supabase
+        .from('pages')
+        .select('hero_image, hero_gallery, hero_type')
+        .eq('slug', 'faq')
+        .eq('is_published', true)
+        .single();
+
+      if (data) {
+        if (data.hero_type === 'carousel' && data.hero_gallery && Array.isArray(data.hero_gallery) && data.hero_gallery.length > 0) {
+          setHeroImage(String(data.hero_gallery[0]));
+        } else if (data.hero_image) {
+          setHeroImage(data.hero_image);
+        }
+      }
+    };
+
+    fetchPageData();
+  }, []);
   const faqSections = [
     {
       id: 'booking',
@@ -115,9 +138,7 @@ const FAQ = () => {
       <section className="relative min-h-[50vh] flex items-center justify-center">
         <div 
           className="absolute inset-0 bg-cover bg-center bg-no-repeat"
-          style={{
-            backgroundImage: "url('https://images.unsplash.com/photo-1506905925346-21bda4d32df4?ixlib=rb-4.0.3&auto=format&fit=crop&w=2000&q=80')"
-          }}
+          style={{ backgroundImage: `url('${heroImage}')` }}
         >
           <div className="absolute inset-0 bg-black/40"></div>
         </div>
