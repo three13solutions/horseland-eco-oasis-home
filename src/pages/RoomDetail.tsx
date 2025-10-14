@@ -195,6 +195,36 @@ const RoomDetail = () => {
                 </div>
               </div>
 
+              {/* Image Gallery */}
+              {images.length > 0 && (
+                <div>
+                  <h2 className="text-2xl font-heading font-bold mb-6 text-foreground">Room Gallery</h2>
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                    {images.map((image, index) => (
+                      <div 
+                        key={index} 
+                        className="relative aspect-[4/3] rounded-lg overflow-hidden cursor-pointer group"
+                        onClick={() => setCurrentImageIndex(index)}
+                      >
+                        <img
+                          src={image}
+                          alt={`${roomData.name} - Gallery ${index + 1}`}
+                          className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
+                        />
+                        <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors duration-300 flex items-center justify-center">
+                          <span className="text-white opacity-0 group-hover:opacity-100 transition-opacity duration-300 font-body text-sm">
+                            View Full Size
+                          </span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                  <p className="text-sm text-muted-foreground mt-4 font-body">
+                    Click any image to view it in the hero gallery above
+                  </p>
+                </div>
+              )}
+
               {/* Room Features */}
               {features.length > 0 && (
                 <div>
