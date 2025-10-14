@@ -17,6 +17,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Link, useNavigate } from 'react-router-dom';
 import { BulkUnitsDialog } from '@/components/admin/BulkUnitsDialog';
 import { BedConfiguration } from '@/components/admin/BedConfiguration';
+import ImageUpload from '@/components/ImageUpload';
 
 const ROOM_FEATURES = [
   'Wi-Fi', 'Air Conditioning', 'TV', 'Mini Bar', 'Balcony', 
@@ -607,27 +608,27 @@ export default function RoomManagement() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="max_guests">Max Guests *</Label>
-                  <Input
-                    id="max_guests"
-                    type="number"
-                    min="1"
-                    value={formData.max_guests}
-                    onChange={(e) => setFormData({...formData, max_guests: Number(e.target.value)})}
-                    required
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="hero_image">Hero Image URL</Label>
-                  <Input
-                    id="hero_image"
-                    value={formData.hero_image}
-                    onChange={(e) => setFormData({...formData, hero_image: e.target.value})}
-                    placeholder="https://example.com/image.jpg"
-                  />
-                </div>
+              <div>
+                <Label htmlFor="max_guests">Max Guests *</Label>
+                <Input
+                  id="max_guests"
+                  type="number"
+                  min="1"
+                  value={formData.max_guests}
+                  onChange={(e) => setFormData({...formData, max_guests: Number(e.target.value)})}
+                  required
+                  className="max-w-xs"
+                />
+              </div>
+
+              <div>
+                <ImageUpload
+                  label="Hero Image"
+                  value={formData.hero_image}
+                  onChange={(url) => setFormData({...formData, hero_image: url})}
+                  bucketName="uploads"
+                  folder="room-images"
+                />
               </div>
 
               <div>
@@ -664,44 +665,51 @@ export default function RoomManagement() {
               </div>
 
               <div>
-                <Label>Gallery Images</Label>
-                {formData.gallery.map((url, index) => (
-                  <div key={index} className="flex items-center gap-2 mt-2">
-                    <Input
-                      value={url}
-                      onChange={(e) => {
-                        const newGallery = [...formData.gallery];
-                        newGallery[index] = e.target.value;
-                        setFormData({...formData, gallery: newGallery});
-                      }}
-                      placeholder="https://example.com/gallery-image.jpg"
-                    />
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      onClick={() => {
-                        if (formData.gallery.length > 1) {
-                          setFormData({
-                            ...formData,
-                            gallery: formData.gallery.filter((_, i) => i !== index)
-                          });
-                        }
-                      }}
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </div>
-                ))}
+                <Label className="mb-3 block">Gallery Images</Label>
+                <div className="space-y-4">
+                  {formData.gallery.map((url, index) => (
+                    <div key={index} className="relative border rounded-lg p-4">
+                      <div className="flex items-start justify-between mb-2">
+                        <span className="text-sm font-medium">Image {index + 1}</span>
+                        {formData.gallery.length > 1 && (
+                          <Button
+                            type="button"
+                            variant="destructive"
+                            size="sm"
+                            onClick={() => {
+                              setFormData({
+                                ...formData,
+                                gallery: formData.gallery.filter((_, i) => i !== index)
+                              });
+                            }}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        )}
+                      </div>
+                      <ImageUpload
+                        label=""
+                        value={url}
+                        onChange={(newUrl) => {
+                          const newGallery = [...formData.gallery];
+                          newGallery[index] = newUrl;
+                          setFormData({...formData, gallery: newGallery});
+                        }}
+                        bucketName="uploads"
+                        folder="room-images"
+                      />
+                    </div>
+                  ))}
+                </div>
                 <Button
                   type="button"
                   variant="outline"
                   size="sm"
                   onClick={() => setFormData({...formData, gallery: [...formData.gallery, '']})}
-                  className="mt-2"
+                  className="mt-3"
                 >
                   <Plus className="h-4 w-4 mr-2" />
-                  Add Image
+                  Add Gallery Image
                 </Button>
               </div>
 
