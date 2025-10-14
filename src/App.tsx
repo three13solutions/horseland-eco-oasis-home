@@ -16,6 +16,7 @@ import IndexV5 from "./pages/IndexV5";
 import About from "./pages/About";
 import Contact from "./pages/Contact";
 import Stay from "./pages/Stay";
+import RoomDetail from "./pages/RoomDetail";
 import Dining from "./pages/Dining";
 import Activities from "./pages/Activities";
 import Spa from "./pages/Spa";
@@ -73,6 +74,7 @@ function App() {
               <Route path="/about" element={<About />} />
               <Route path="/contact" element={<Contact />} />
               <Route path="/stay" element={<Stay />} />
+              <Route path="/stay/:roomId" element={<RoomDetail />} />
               <Route path="/dining" element={<Dining />} />
               <Route path="/activities" element={<Activities />} />
               <Route path="/spa" element={<Spa />} />
