@@ -448,6 +448,25 @@ const Booking = () => {
   };
 
   const addAddon = (addon: Addon) => {
+    // Validate that dates and room are selected
+    if (!checkIn || !checkOut) {
+      toast({
+        title: "Missing Information",
+        description: "Please select check-in and check-out dates first",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!selectedRoomType) {
+      toast({
+        title: "Missing Information",
+        description: "Please select a room first",
+        variant: "destructive",
+      });
+      return;
+    }
+
     const existingAddon = selectedAddons.find(a => a.id === addon.id);
     if (existingAddon) {
       setSelectedAddons(prev => 
