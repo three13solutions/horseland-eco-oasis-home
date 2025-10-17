@@ -1211,46 +1211,46 @@ const Booking = () => {
 
               {/* Booking Summary */}
               <div className="space-y-6">
-                <Card data-booking-summary>
+                <Card data-booking-summary className="lg:sticky lg:top-4">
                   <CardHeader>
-                    <CardTitle>Booking Summary</CardTitle>
+                    <CardTitle className="text-lg md:text-xl">Booking Summary</CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-4">
-                    <div className="space-y-2">
-                      <div className="flex justify-between">
-                        <span>Check-in:</span>
-                        <span>{formatDate(checkIn)}</span>
+                    <div className="space-y-2 text-sm">
+                      <div className="flex justify-between gap-2">
+                        <span className="text-muted-foreground">Check-in:</span>
+                        <span className="font-medium text-right">{formatDate(checkIn)}</span>
                       </div>
-                      <div className="flex justify-between">
-                        <span>Check-out:</span>
-                        <span>{formatDate(checkOut)}</span>
+                      <div className="flex justify-between gap-2">
+                        <span className="text-muted-foreground">Check-out:</span>
+                        <span className="font-medium text-right">{formatDate(checkOut)}</span>
                       </div>
-                      <div className="flex justify-between">
-                        <span>Guests:</span>
-                        <span>{guests}</span>
+                      <div className="flex justify-between gap-2">
+                        <span className="text-muted-foreground">Guests:</span>
+                        <span className="font-medium">{guests}</span>
                       </div>
-                      <div className="flex justify-between">
-                        <span>Nights:</span>
-                        <span>{nights}</span>
+                      <div className="flex justify-between gap-2">
+                        <span className="text-muted-foreground">Nights:</span>
+                        <span className="font-medium">{nights}</span>
                       </div>
                     </div>
 
                     <Separator />
 
-                    <div className="space-y-2">
-                      <div className="flex justify-between">
-                        <span>Room ({nights} nights):</span>
-                        <span>₹{(selectedRoomType.base_price * nights).toLocaleString()}</span>
+                    <div className="space-y-3">
+                      <div className="flex justify-between gap-2 text-sm">
+                        <span className="text-muted-foreground">Room ({nights} nights):</span>
+                        <span className="font-semibold whitespace-nowrap">₹{(selectedRoomType.base_price * nights).toLocaleString()}</span>
                       </div>
                       
                           {selectedAddons.length > 0 && (
                             <div className="space-y-2">
                               <Separator />
-                              <div className="font-medium">Add-ons:</div>
+                              <div className="font-medium text-sm">Add-ons:</div>
                               {selectedAddons.map((addon) => (
-                                <div key={addon.id} className="flex justify-between text-sm">
-                                  <span>{addon.title} x{addon.quantity}</span>
-                                  <span>₹{(addon.price * addon.quantity).toLocaleString()}</span>
+                                <div key={addon.id} className="flex justify-between gap-2 text-sm">
+                                  <span className="text-muted-foreground break-words">{addon.title} x{addon.quantity}</span>
+                                  <span className="font-medium whitespace-nowrap">₹{(addon.price * addon.quantity).toLocaleString()}</span>
                                 </div>
                               ))}
                             </div>
@@ -1259,9 +1259,9 @@ const Booking = () => {
                           {selectedPickup && (
                             <div className="space-y-2">
                               <Separator />
-                              <div className="font-medium">Transport Service:</div>
-                              <div className="flex justify-between text-sm">
-                                <span>
+                              <div className="font-medium text-sm">Transport Service:</div>
+                              <div className="flex justify-between gap-2 text-sm">
+                                <span className="text-muted-foreground break-words flex-1">
                                   {selectedPickup.direction === 'two-way' 
                                     ? `${selectedPickup.from} ↔ Property (${selectedPickup.carType})`
                                     : selectedPickup.direction === 'pickup'
@@ -1269,7 +1269,7 @@ const Booking = () => {
                                     : `Drop to ${selectedPickup.to} (${selectedPickup.carType})`
                                   }
                                 </span>
-                                <span>₹{selectedPickup.price.toLocaleString()}</span>
+                                <span className="font-medium whitespace-nowrap">₹{selectedPickup.price.toLocaleString()}</span>
                               </div>
                             </div>
                           )}
@@ -1277,11 +1277,11 @@ const Booking = () => {
                           {selectedBedding.length > 0 && (
                             <div className="space-y-2">
                               <Separator />
-                              <div className="font-medium">Extra Bedding:</div>
+                              <div className="font-medium text-sm">Extra Bedding:</div>
                               {selectedBedding.map((bed) => (
-                                <div key={bed.id} className="flex justify-between text-sm">
-                                  <span>{bed.title}</span>
-                                  <span>₹{bed.price.toLocaleString()}</span>
+                                <div key={bed.id} className="flex justify-between gap-2 text-sm">
+                                  <span className="text-muted-foreground">{bed.title}</span>
+                                  <span className="font-medium whitespace-nowrap">₹{bed.price.toLocaleString()}</span>
                                 </div>
                               ))}
                             </div>
@@ -1290,17 +1290,17 @@ const Booking = () => {
 
                      <Separator />
 
-                     <div className="flex justify-between font-semibold text-lg">
+                     <div className="flex justify-between font-semibold text-base md:text-lg">
                        <span>Total:</span>
                        <span>₹{calculateTotal().toLocaleString()}</span>
                      </div>
 
-                      <div className="space-y-3">
-                        <div className="grid grid-cols-2 gap-3">
+                      <div className="space-y-2 pt-2">
+                        <div className="grid grid-cols-2 gap-2">
                           <Button 
                             variant="outline"
-                            className="w-full" 
-                            size="lg"
+                            className="w-full text-xs md:text-sm" 
+                            size="default"
                             onClick={() => {
                               const summaryElement = document.querySelector('[data-booking-summary]');
                               summaryElement?.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -1310,16 +1310,16 @@ const Booking = () => {
                           </Button>
                           {!showGuestDetails ? (
                             <Button 
-                              className="w-full" 
-                              size="lg"
+                              className="w-full text-xs md:text-sm" 
+                              size="default"
                               onClick={handleProceedToGuestDetails}
                             >
                               Add to Stay
                             </Button>
                           ) : (
                             <Button 
-                              className="w-full" 
-                              size="lg"
+                              className="w-full text-xs md:text-sm" 
+                              size="default"
                               onClick={handleProceedToPayment}
                             >
                               Proceed to Payment
@@ -1328,8 +1328,8 @@ const Booking = () => {
                         </div>
                         <Button 
                           variant="destructive"
-                          className="w-full" 
-                          size="lg"
+                          className="w-full text-xs md:text-sm" 
+                          size="default"
                           onClick={handleClearBooking}
                         >
                           Clear Booking
