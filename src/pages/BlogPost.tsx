@@ -4,6 +4,7 @@ import { supabase } from '@/integrations/supabase/client';
 import NavigationV5 from '../components/v5/NavigationV5';
 import DynamicFooter from '../components/DynamicFooter';
 import CombinedFloatingV5 from '../components/v5/CombinedFloatingV5';
+import MediaAsset from '@/components/MediaAsset';
 import SEO from '../components/SEO';
 import { generateArticleSchema, generateBreadcrumbSchema } from '../lib/seo';
 import { Button } from '@/components/ui/button';
@@ -21,6 +22,7 @@ interface BlogPost {
   author: string;
   category: string;
   featured_image?: string;
+  featured_image_key?: string;
   meta_title?: string;
   meta_description?: string;
   publish_date: string;
@@ -172,12 +174,13 @@ const BlogPost = () => {
         {/* Hero Banner */}
         {post.featured_image && (
           <section className="relative h-[60vh] min-h-[500px] w-full overflow-hidden">
-            <div 
-              className="absolute inset-0 bg-cover bg-center"
-              style={{ backgroundImage: `url(${post.featured_image})` }}
-            >
-              <div className="absolute inset-0 bg-black/50" />
-            </div>
+            <MediaAsset
+              hardcodedKey={post.featured_image_key || ''}
+              fallbackUrl={post.featured_image}
+              alt={translatedTitle}
+              className="absolute inset-0 w-full h-full object-cover"
+            />
+            <div className="absolute inset-0 bg-black/50" />
             
             <div className="relative z-10 h-full flex items-end pb-16">
               <div className="max-w-4xl mx-auto px-4 w-full">
@@ -306,8 +309,9 @@ const BlogPost = () => {
                   >
                     {relatedPost.featured_image && (
                       <div className="relative h-48 overflow-hidden">
-                        <img
-                          src={relatedPost.featured_image}
+                        <MediaAsset
+                          hardcodedKey={relatedPost.featured_image_key || ''}
+                          fallbackUrl={relatedPost.featured_image}
                           alt={relatedPost.title}
                           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                         />

@@ -2,6 +2,7 @@ import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import MediaAsset from '@/components/MediaAsset';
 import { Users, MapPin } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 
@@ -10,6 +11,7 @@ export type Category = {
   name: string;
   tagline: string;
   image?: string;
+  imageKey?: string;
   maxGuests: number;
   bedConfigurations: string[];
   audiences: string[];
@@ -47,9 +49,10 @@ const CategoryCard: React.FC<Props> = ({ category, onViewDetails, onBookNow }) =
   return (
     <div className="bg-card border rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-all duration-300">
       <div className="relative">
-        <img 
-          src={category.image || 'https://images.unsplash.com/photo-1590490360238-c33d57733427?auto=format&fit=crop&w=800&q=80'}
-          alt={`${category.name} accommodation - ${category.tagline}`}
+        <MediaAsset
+          hardcodedKey={category.imageKey || ''}
+          fallbackUrl={category.image || 'https://images.unsplash.com/photo-1571896349842-33c89424de2d?auto=format&fit=crop&w=800&q=80'}
+          alt={category.name}
           className="w-full h-48 object-cover"
         />
         <Badge className="absolute top-3 right-3 bg-white/90 text-foreground">

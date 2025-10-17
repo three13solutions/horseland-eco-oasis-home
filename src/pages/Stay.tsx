@@ -52,6 +52,7 @@ const mapRoomToCategory = (room: any): Category => {
     name: room.name,
     tagline,
     image: room.hero_image || 'https://images.unsplash.com/photo-1571896349842-33c89424de2d?auto=format&fit=crop&w=800&q=80',
+    imageKey: room.hero_image_key,
     maxGuests: room.max_guests,
     bedConfigurations: bedConfigurations.length > 0 ? bedConfigurations : ['Standard bed'],
     audiences: audiences.length > 0 ? audiences : ['Anyone'],

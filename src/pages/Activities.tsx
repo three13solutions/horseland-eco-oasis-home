@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import NavigationV5 from '../components/v5/NavigationV5';
 import DynamicFooter from '../components/DynamicFooter';
 import CombinedFloatingV5 from '../components/v5/CombinedFloatingV5';
+import MediaAsset from '@/components/MediaAsset';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Clock, MapPin, Users, Star } from 'lucide-react';
@@ -13,6 +14,7 @@ interface Activity {
   description?: string;
   distance?: string;
   image?: string;
+  image_key?: string;
   is_active: boolean;
   booking_required: boolean;
   tags?: any;
@@ -154,8 +156,9 @@ const Activities = () => {
             {filteredActivities.map((activity) => (
               <div key={activity.id} className="bg-card border rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-all duration-300">
                 <div className="relative">
-                  <img 
-                    src={activity.image || 'https://images.unsplash.com/photo-1544568100-847a948585b9?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80'}
+                  <MediaAsset
+                    hardcodedKey={activity.image_key || ''}
+                    fallbackUrl={activity.image || 'https://images.unsplash.com/photo-1544568100-847a948585b9?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80'}
                     alt={activity.title}
                     className="w-full h-48 object-cover"
                   />

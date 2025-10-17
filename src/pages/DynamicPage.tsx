@@ -5,6 +5,7 @@ import NavigationV5 from "@/components/v5/NavigationV5";
 import FooterV5 from "@/components/v5/FooterV5";
 import CombinedFloatingV5 from "@/components/v5/CombinedFloatingV5";
 import SEO from "@/components/SEO";
+import MediaAsset from "@/components/MediaAsset";
 import { toast } from "sonner";
 import { useContentTranslation } from "@/hooks/useContentTranslation";
 import { useTranslation } from "react-i18next";
@@ -20,7 +21,9 @@ interface Page {
   meta_keywords: string | null;
   og_image: string | null;
   hero_image: string | null;
+  hero_image_key?: string | null;
   hero_gallery: string[];
+  hero_gallery_keys?: string[];
   hero_type: string;
   template_type: string;
 }
@@ -58,6 +61,7 @@ export default function DynamicPage() {
         setPage({
           ...data,
           hero_gallery: (data.hero_gallery as string[]) || [],
+          hero_gallery_keys: (data.hero_gallery_keys as string[]) || [],
         });
       }
     } catch (error: any) {
@@ -98,12 +102,13 @@ export default function DynamicPage() {
     if (page.hero_type === "single" && page.hero_image) {
       return (
         <section className="relative h-[60vh] min-h-[500px] flex items-center justify-center">
-          <div 
-            className="absolute inset-0 bg-cover bg-center bg-no-repeat"
-            style={{ backgroundImage: `url('${page.hero_image}')` }}
-          >
-            <div className="absolute inset-0 bg-black/40"></div>
-          </div>
+          <MediaAsset
+            hardcodedKey={page.hero_image_key || ''}
+            fallbackUrl={page.hero_image}
+            alt={title}
+            className="absolute inset-0 w-full h-full object-cover"
+          />
+          <div className="absolute inset-0 bg-black/40"></div>
           <div className="relative z-10 text-center text-white max-w-4xl mx-auto px-4">
             <h1 className="text-4xl md:text-6xl font-heading font-bold mb-6 leading-tight">
               {title}

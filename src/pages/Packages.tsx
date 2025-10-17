@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import NavigationV5 from '../components/v5/NavigationV5';
 import DynamicFooter from '../components/DynamicFooter';
 import CombinedFloatingV5 from '../components/v5/CombinedFloatingV5';
+import MediaAsset from '@/components/MediaAsset';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Heart, Users, Building, Sparkles, TreePine, Crown } from 'lucide-react';
@@ -195,8 +196,9 @@ const Packages = () => {
               return (
                 <div key={pkg.id} className="bg-card border rounded-lg overflow-hidden shadow-sm hover:shadow-lg transition-all duration-300">
                   <div className="relative">
-                    <img 
-                      src={pkg.featured_image || pkg.banner_image || pkg.image || 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80'}
+                    <MediaAsset
+                      hardcodedKey={pkg.featured_image_key || pkg.banner_image_key || ''}
+                      fallbackUrl={pkg.featured_image || pkg.banner_image || pkg.image || 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80'}
                       alt={pkg.title || pkg.name}
                       className="w-full h-48 object-cover"
                     />
