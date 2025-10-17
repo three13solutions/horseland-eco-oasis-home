@@ -105,9 +105,9 @@ const SpaServiceDetail = () => {
     
     if (!bookingData) {
       toast({
-        title: "Let's Plan Your Stay First",
-        description: "Please select your accommodation and dates on our booking page first.",
-        variant: "default",
+        title: "Select Your Stay First",
+        description: "Please select your accommodation and dates on the booking page first.",
+        variant: "destructive",
         action: (
           <button onClick={() => navigate('/booking')} className="underline">
             Go to Booking
@@ -122,9 +122,9 @@ const SpaServiceDetail = () => {
       
       if (!booking.checkIn || !booking.checkOut) {
         toast({
-          title: "Almost There!",
-          description: "Please select your arrival and departure dates first.",
-          variant: "default",
+          title: "Select Dates First",
+          description: "Please select your check-in and check-out dates on the booking page.",
+          variant: "destructive",
           action: (
             <button onClick={() => navigate('/booking')} className="underline">
               Go to Booking
@@ -136,9 +136,9 @@ const SpaServiceDetail = () => {
 
       if (!booking.selectedRoom && !booking.roomType && !booking.roomUnit) {
         toast({
-          title: "Choose Your Haven First",
+          title: "Select a Room First",
           description: "Please select your accommodation before adding spa services.",
-          variant: "default",
+          variant: "destructive",
           action: (
             <button onClick={() => navigate('/booking')} className="underline">
               Go to Booking
