@@ -89,6 +89,35 @@ const Contact = () => {
     });
   };
 
+  /* MAPBOX Code - by saif*/
+
+  useEffect(() => {
+    // Option 1: use environment variable
+    mapboxgl.accessToken = import.meta.env.VITE_MAPBOX_TOKEN;
+
+    // Option 2 (if you prefer to paste the token directly): uncomment and replace the token, then remove Option 1
+    // mapboxgl.accessToken = "pk.your_mapbox_public_token_here";
+
+    const coords = [18.986604230433652, 73.26882177066267]; // [longitude, latitude] — Horseland Hotel
+    const map = new mapboxgl.Map({
+      container: "map",
+      style: "mapbox://styles/mapbox/streets-v12",
+      center: coords,
+      zoom: 14,
+    });
+
+    // Add a marker + popup
+    new mapboxgl.Marker({ color: "#ff5500" })
+      .setLngLat(coords)
+      .setPopup(new mapboxgl.Popup({ offset: 25 }).setHTML("<b>Horseland Hotel, Matheran</b>"))
+      .addTo(map);
+
+    // Cleanup on unmount — safe, doesn’t affect other code
+    return () => map.remove();
+  }, []);
+
+  /* End of Mapbox code*/
+
   return (
     <div className="min-h-screen bg-background">
       <NavigationV5 />
