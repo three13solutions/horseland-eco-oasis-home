@@ -6,6 +6,8 @@ import CategoryFilters, { Filters } from '@/components/stay/CategoryFilters';
 import CategoryCard, { Category } from '@/components/stay/CategoryCard';
 import CategoryBookingModal from '@/components/stay/CategoryBookingModal';
 import { supabase } from '@/integrations/supabase/client';
+import { Button } from '@/components/ui/button';
+import { LayoutGrid, List } from 'lucide-react';
 
 // Helper function to map room features to category attributes
 const mapRoomToCategory = (room: any): Category => {
@@ -69,6 +71,7 @@ const Stay = () => {
   const [heroImage, setHeroImage] = useState('https://images.unsplash.com/photo-1571896349842-33c89424de2d?ixlib=rb-4.0.3&auto=format&fit=crop&w=2000&q=80');
   const [heroTitle, setHeroTitle] = useState('Your Mountain Retreat Awaits');
   const [heroSubtitle, setHeroSubtitle] = useState('Choose from our thoughtfully designed rooms and suites');
+  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
 
   const [filters, setFilters] = useState<Filters>({
     guests: null,
@@ -192,11 +195,37 @@ const Stay = () => {
       {/* Categories Grid */}
       <section className="py-16">
         <div className="max-w-6xl mx-auto px-4">
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+          {/* View Toggle */}
+          <div className="flex justify-end mb-6">
+            <div className="inline-flex rounded-lg border border-border bg-background p-1">
+              <Button
+                variant={viewMode === 'grid' ? 'default' : 'ghost'}
+                size="sm"
+                onClick={() => setViewMode('grid')}
+                className="gap-2"
+              >
+                <LayoutGrid className="w-4 h-4" />
+                Grid
+              </Button>
+              <Button
+                variant={viewMode === 'list' ? 'default' : 'ghost'}
+                size="sm"
+                onClick={() => setViewMode('list')}
+                className="gap-2"
+              >
+                <List className="w-4 h-4" />
+                List
+              </Button>
+            </div>
+          </div>
+
+          {/* Dynamic Layout */}
+          <div className={viewMode === 'grid' ? 'grid md:grid-cols-2 lg:grid-cols-3 gap-8' : 'flex flex-col gap-6'}>
             {filteredCategories.map((cat) => (
               <CategoryCard
                 key={cat.id}
                 category={cat}
+                viewMode={viewMode}
                 onViewDetails={(c) => {
                   // View Details is now handled by Link in CategoryCard
                 }}

@@ -25,9 +25,10 @@ type Props = {
   category: Category;
   onViewDetails: (category: Category) => void;
   onBookNow: (category: Category) => void;
+  viewMode?: 'grid' | 'list';
 };
 
-const CategoryCard: React.FC<Props> = ({ category, onViewDetails, onBookNow }) => {
+const CategoryCard: React.FC<Props> = ({ category, onViewDetails, onBookNow, viewMode = 'grid' }) => {
   const navigate = useNavigate();
 
   const handleBookNow = () => {
@@ -46,6 +47,79 @@ const CategoryCard: React.FC<Props> = ({ category, onViewDetails, onBookNow }) =
     navigate(`/booking?${searchParams.toString()}`);
   };
 
+  // List view
+  if (viewMode === 'list') {
+    return (
+      <div className="bg-card border rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-all duration-300">
+        <div className="flex flex-col md:flex-row">
+          <div className="relative md:w-80 flex-shrink-0">
+            <MediaAsset
+              hardcodedKey={category.imageKey || ''}
+              fallbackUrl={category.image || 'https://images.unsplash.com/photo-1571896349842-33c89424de2d?auto=format&fit=crop&w=800&q=80'}
+              alt={category.name}
+              className="w-full h-64 md:h-full object-cover"
+            />
+            <Badge className="absolute top-3 right-3 bg-white/90 text-foreground">
+              {category.budget}
+            </Badge>
+          </div>
+          
+          <div className="p-6 flex-1 flex flex-col">
+            <div className="flex-1">
+              <h3 className="text-2xl font-heading font-semibold mb-2">{category.name}</h3>
+              <p className="text-muted-foreground mb-4">{category.tagline}</p>
+              
+              <div className="flex items-center gap-4 mb-4 text-sm text-muted-foreground">
+                <div className="flex items-center gap-1">
+                  <Users className="w-4 h-4" />
+                  Up to {category.maxGuests} Guests
+                </div>
+                <div className="flex items-center gap-1">
+                  <MapPin className="w-4 h-4" />
+                  {category.viewLocations[0]}
+                </div>
+              </div>
+
+              <div className="mb-4">
+                <div className="flex flex-wrap gap-1">
+                  {category.features.slice(0, 4).map((feature, index) => (
+                    <Badge key={index} variant="secondary" className="text-xs">
+                      {feature}
+                    </Badge>
+                  ))}
+                  {category.features.length > 4 && (
+                    <Badge variant="secondary" className="text-xs">
+                      +{category.features.length - 4} more
+                    </Badge>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            <div className="flex items-end justify-between gap-4 mt-4">
+              <div>
+                <div className="text-xs text-muted-foreground mb-1">Starting from</div>
+                <span className="text-2xl font-heading font-bold text-primary">₹8,500</span>
+                <span className="text-sm text-muted-foreground ml-1">/night</span>
+              </div>
+              <div className="flex gap-2">
+                <Link to={`/stay/${category.id}`}>
+                  <Button variant="outline" className="font-body">
+                    View Details
+                  </Button>
+                </Link>
+                <Button className="font-body" onClick={handleBookNow}>
+                  Book Now
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Grid view (default)
   return (
     <div className="bg-card border rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-all duration-300">
       <div className="relative">
