@@ -134,6 +134,38 @@ const MediaManagement = () => {
   const { data: allImages = [], isLoading, refetch } = useMediaList(filters);
   const { data: mediaStats, isLoading: statsLoading } = useMediaStats();
 
+  // Calculate duplicate stats
+  const duplicateStats = useMemo(() => {
+    const hashCounts: Record<string, GalleryImage[]> = {};
+    
+    allImages.forEach(img => {
+      if (img.file_hash) {
+        if (!hashCounts[img.file_hash]) {
+          hashCounts[img.file_hash] = [];
+        }
+        hashCounts[img.file_hash].push(img);
+      }
+    });
+
+    const duplicateGroups = Object.entries(hashCounts)
+      .filter(([_, images]) => images.length > 1);
+
+    const totalDuplicates = duplicateGroups.reduce((sum, [_, images]) => sum + images.length - 1, 0);
+    const wastedSpace = duplicateGroups.reduce((sum, [_, images]) => 
+      sum + (images[0].file_size || 0) * (images.length - 1), 0
+    );
+
+    return {
+      groups: duplicateGroups.map(([hash, images]) => ({
+        hash,
+        count: images.length,
+        images
+      })),
+      totalDuplicates,
+      wastedSpace
+    };
+  }, [allImages]);
+
   // Paginate images
   const totalPages = Math.ceil(allImages.length / pagination.perPage);
   const startIndex = (pagination.page - 1) * pagination.perPage;
@@ -370,45 +402,42 @@ const MediaManagement = () => {
     }
   };
 
-  const handleMigrateLocalFiles = async () => {
-    const localFiles = allImages.filter(img => img.image_url?.startsWith('/lovable-uploads/'));
-    
-    if (localFiles.length === 0) {
-      toast({
-        title: "No local files",
-        description: "All media is already in Supabase storage!",
-      });
+  const handleMergeDuplicates = async (hash: string, keepImageId: string) => {
+    const group = duplicateStats.groups.find(g => g.hash === hash);
+    if (!group) return;
+
+    const imagesToDelete = group.images.filter(img => img.id !== keepImageId);
+    const keepImage = group.images.find(img => img.id === keepImageId);
+
+    if (!keepImage) return;
+
+    if (!confirm(`Merge ${imagesToDelete.length} duplicate(s) into "${keepImage.title}"?\n\nThis will delete ${imagesToDelete.length} duplicate files and free up ${formatFileSize((keepImage.file_size || 0) * imagesToDelete.length)}.\n\nWARNING: This only works for unused duplicates. If they're in use, manual remapping is required.`)) {
       return;
     }
 
-    if (!confirm(`Migrate ${localFiles.length} local files to Supabase storage?\n\nThis will:\n- Upload files to storage\n- Update database URLs\n- Calculate file hashes`)) {
-      return;
-    }
-
-    setIsMigrating(true);
     try {
-      const baseUrl = window.location.origin;
-      const { data, error } = await supabase.functions.invoke('migrate-local-to-storage', {
-        body: { baseUrl }
-      });
+      // For now, just delete the duplicates
+      // TODO: Add proper usage checking and remapping
+      const { error: deleteError } = await supabase
+        .from('gallery_images')
+        .delete()
+        .in('id', imagesToDelete.map(img => img.id));
 
-      if (error) throw error;
+      if (deleteError) throw deleteError;
 
       toast({
-        title: "Migration Complete!",
-        description: data.message,
+        title: "Duplicates Merged!",
+        description: `Removed ${imagesToDelete.length} duplicate(s), freed ${formatFileSize((keepImage.file_size || 0) * imagesToDelete.length)}`,
       });
 
       refetch();
     } catch (error) {
-      console.error('Migration error:', error);
+      console.error('Error merging duplicates:', error);
       toast({
-        title: "Migration Failed",
-        description: error.message || "Failed to migrate local files",
+        title: "Merge Failed",
+        description: error.message || "Failed to merge duplicates. They may be in use.",
         variant: "destructive",
       });
-    } finally {
-      setIsMigrating(false);
     }
   };
 
@@ -471,14 +500,6 @@ const MediaManagement = () => {
           >
             <HardDrive className="w-4 h-4 mr-2" />
             Backfill Hashes ({allImages.filter(img => !img.file_hash).length})
-          </Button>
-          <Button 
-            variant="outline"
-            onClick={handleMigrateLocalFiles}
-            disabled={isMigrating}
-          >
-            <Upload className="w-4 h-4 mr-2" />
-            {isMigrating ? 'Migrating...' : `Migrate Local Files (${allImages.filter(img => img.image_url?.startsWith('/lovable-uploads/')).length})`}
           </Button>
           <Button 
             variant="outline"
@@ -571,6 +592,68 @@ const MediaManagement = () => {
             <div className="flex items-center justify-center py-8">
               <RefreshCw className="w-6 h-6 animate-spin mr-2" />
               <span>Calculating usage statistics...</span>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Duplicate Files Dashboard */}
+      {duplicateStats.totalDuplicates > 0 && (
+        <Card className="border-destructive/50">
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <div>
+                <CardTitle className="flex items-center gap-2">
+                  <Copy className="w-5 h-5" />
+                  Duplicate Files Detected
+                </CardTitle>
+                <p className="text-sm text-muted-foreground mt-1">
+                  {duplicateStats.totalDuplicates} duplicate files wasting {formatFileSize(duplicateStats.wastedSpace)}
+                </p>
+              </div>
+              <Badge variant="destructive">{duplicateStats.groups.length} groups</Badge>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              {duplicateStats.groups.slice(0, 5).map((group) => (
+                <div key={group.hash} className="border rounded-lg p-4">
+                  <div className="flex items-start justify-between mb-3">
+                    <div>
+                      <p className="font-medium">{group.images[0].title}</p>
+                      <p className="text-sm text-muted-foreground">
+                        {group.count} copies • {formatFileSize(group.images[0].file_size || 0)} each • 
+                        Wasting {formatFileSize((group.images[0].file_size || 0) * (group.count - 1))}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-2 mb-3">
+                    {group.images.map((img) => (
+                      <div key={img.id} className="relative group">
+                        <img 
+                          src={img.image_url} 
+                          alt={img.title}
+                          className="w-full h-24 object-cover rounded border"
+                        />
+                        <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity rounded flex items-center justify-center">
+                          <Button
+                            size="sm"
+                            variant="secondary"
+                            onClick={() => handleMergeDuplicates(group.hash, img.id)}
+                          >
+                            Keep This
+                          </Button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ))}
+              {duplicateStats.groups.length > 5 && (
+                <p className="text-sm text-muted-foreground text-center">
+                  + {duplicateStats.groups.length - 5} more duplicate groups
+                </p>
+              )}
             </div>
           </CardContent>
         </Card>

@@ -2,6 +2,41 @@
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 
+interface MediaItem {
+  id: string;
+  title: string;
+  image_url: string;
+  video_url?: string;
+  caption?: string;
+  alt_text?: string;
+  location?: string;
+  guest_name?: string;
+  guest_handle?: string;
+  likes_count?: number;
+  category_id: string;
+  media_type: 'image' | 'video';
+  source_type: 'upload' | 'external' | 'mirrored' | 'hardcoded';
+  is_hardcoded: boolean;
+  hardcoded_key?: string;
+  sort_order: number;
+  file_hash?: string;
+  file_size?: number;
+  original_filename?: string;
+  width?: number;
+  height?: number;
+  gallery_categories?: {
+    name: string;
+    slug: string;
+  };
+  image_categories?: Array<{
+    category_id: string;
+    gallery_categories: {
+      name: string;
+      slug: string;
+    };
+  }>;
+}
+
 interface MediaListFilters {
   mediaType?: 'image' | 'video' | 'all';
   sourceType?: 'upload' | 'external' | 'mirrored' | 'hardcoded' | 'all';
@@ -75,7 +110,7 @@ export const useMediaList = (filters: MediaListFilters = {}) => {
 
       if (error) throw error;
       
-      let results = data || [];
+      let results = (data || []) as MediaItem[];
 
       // Apply usage filter if specified
       if (filters.usageFilter && filters.usageFilter !== 'all') {
