@@ -54,6 +54,9 @@ import SiteSettings from "./pages/admin/SiteSettings";
 import BlogManagement from "./pages/admin/BlogManagement";
 import PageManagement from "./pages/admin/PageManagement";
 import DynamicPage from "./pages/DynamicPage";
+import CategoryPricing from "./pages/admin/CategoryPricing";
+import UnitPricing from "./pages/admin/UnitPricing";
+import SeasonPricing from "./pages/admin/SeasonPricing";
 
 const queryClient = new QueryClient();
 
@@ -103,6 +106,9 @@ function App() {
                 <Route path="guests" element={<GuestManagement />} />
                 <Route path="payments" element={<PaymentManagement />} />
                 <Route path="invoices" element={<InvoiceManagement />} />
+                <Route path="pricing/categories" element={<CategoryPricing />} />
+                <Route path="pricing/units" element={<UnitPricing />} />
+                <Route path="pricing/seasons" element={<SeasonPricing />} />
                 <Route path="rooms" element={<RoomManagement />} />
                 <Route path="packages" element={<PackageManagement />} />
                 <Route path="dining" element={<DiningManagement />} />

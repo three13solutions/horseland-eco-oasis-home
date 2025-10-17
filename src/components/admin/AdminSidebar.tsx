@@ -21,7 +21,11 @@ import {
   BookOpen,
   FileCode,
   Grid3x3,
-  Image as ImageIcon
+  Image as ImageIcon,
+  DollarSign,
+  Tag,
+  Home as HomeIcon,
+  CalendarRange
 } from 'lucide-react';
 import {
   Sidebar,
@@ -72,6 +76,27 @@ const mainMenuItems = [
     label: 'Invoices', 
     path: '/admin/invoices', 
     description: 'Invoice management' 
+  }
+];
+
+const pricingMenuItems = [
+  { 
+    icon: Tag, 
+    label: 'Category Pricing', 
+    path: '/admin/pricing/categories', 
+    description: 'Room category rates' 
+  },
+  { 
+    icon: HomeIcon, 
+    label: 'Unit Pricing', 
+    path: '/admin/pricing/units', 
+    description: 'Individual unit rates' 
+  },
+  { 
+    icon: CalendarRange, 
+    label: 'Season Pricing', 
+    path: '/admin/pricing/seasons', 
+    description: 'Seasonal rate management' 
   }
 ];
 
@@ -177,6 +202,7 @@ const systemMenuItems = [
 export function AdminSidebar() {
   const location = useLocation();
   const { state } = useSidebar();
+  const [pricingOpen, setPricingOpen] = useState(true);
   const [servicesOpen, setServicesOpen] = useState(true);
   const [mediaOpen, setMediaOpen] = useState(true);
 
@@ -184,6 +210,7 @@ export function AdminSidebar() {
     return item.exact ? location.pathname === item.path : location.pathname.startsWith(item.path);
   };
 
+  const hasActivePricing = pricingMenuItems.some(item => isActive(item));
   const hasActiveService = serviceMenuItems.some(item => isActive(item));
   const hasActiveMedia = mediaMenuItems.some(item => isActive(item));
 
@@ -229,6 +256,71 @@ export function AdminSidebar() {
                   </SidebarMenuButton>
                 </SidebarMenuItem>
               ))}
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+
+        {/* Pricing & Rates Menu */}
+        <SidebarGroup>
+          <SidebarGroupLabel className="text-sidebar-foreground/60 font-medium">
+            {isCollapsed ? '' : 'Pricing & Rates'}
+          </SidebarGroupLabel>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              {!isCollapsed ? (
+                <Collapsible open={pricingOpen} onOpenChange={setPricingOpen}>
+                  <CollapsibleTrigger className="flex w-full items-center justify-between rounded-md px-3 py-2 text-sm font-medium text-sidebar-foreground hover:bg-sidebar-accent/50 hover:text-sidebar-foreground">
+                    <div className="flex items-center space-x-3">
+                      <DollarSign className="h-4 w-4" />
+                      <span>Pricing</span>
+                    </div>
+                    {pricingOpen ? (
+                      <ChevronDown className="h-4 w-4" />
+                    ) : (
+                      <ChevronRight className="h-4 w-4" />
+                    )}
+                  </CollapsibleTrigger>
+                  <CollapsibleContent>
+                    <div className="ml-6 space-y-1">
+                      {pricingMenuItems.map((item) => (
+                        <SidebarMenuItem key={item.label}>
+                          <SidebarMenuButton asChild isActive={isActive(item)} size="sm">
+                            <Link
+                              to={item.path}
+                              className={`flex items-center space-x-3 transition-colors ${
+                                isActive(item)
+                                  ? 'bg-sidebar-accent text-sidebar-primary font-medium'
+                                  : 'text-sidebar-foreground hover:bg-sidebar-accent/50 hover:text-sidebar-foreground'
+                              }`}
+                            >
+                              <item.icon className="h-4 w-4 flex-shrink-0" />
+                              <span>{item.label}</span>
+                            </Link>
+                          </SidebarMenuButton>
+                        </SidebarMenuItem>
+                      ))}
+                    </div>
+                  </CollapsibleContent>
+                </Collapsible>
+              ) : (
+                // Collapsed state - show pricing items as individual items
+                pricingMenuItems.map((item) => (
+                  <SidebarMenuItem key={item.label}>
+                    <SidebarMenuButton asChild isActive={isActive(item)}>
+                      <Link
+                        to={item.path}
+                        className={`flex items-center space-x-3 transition-colors ${
+                          isActive(item)
+                            ? 'bg-sidebar-accent text-sidebar-primary font-medium'
+                            : 'text-sidebar-foreground hover:bg-sidebar-accent/50 hover:text-sidebar-foreground'
+                        }`}
+                      >
+                        <item.icon className="h-4 w-4 flex-shrink-0" />
+                      </Link>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                ))
+              )}
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
