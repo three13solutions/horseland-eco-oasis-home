@@ -14,13 +14,23 @@ interface SpaService {
   description: string | null;
   duration: number | null;
   price: number;
+  category: string;
   tags: any;
   is_active: boolean;
 }
 
+const SPA_CATEGORIES = [
+  { id: 'all', label: 'All Services', icon: Sparkles },
+  { id: 'massage', label: 'Massage', icon: Heart },
+  { id: 'therapy', label: 'Therapy', icon: Leaf },
+  { id: 'facials', label: 'Facials', icon: Sparkles },
+  { id: 'workouts', label: 'Workouts', icon: Heart }
+];
+
 const Spa = () => {
   const [services, setServices] = useState<SpaService[]>([]);
   const [loading, setLoading] = useState(true);
+  const [selectedCategory, setSelectedCategory] = useState('all');
   const [heroImage, setHeroImage] = useState('https://images.unsplash.com/photo-1544161515-4ab6ce6db874?ixlib=rb-4.0.3&auto=format&fit=crop&w=2000&q=80');
   const [heroTitle, setHeroTitle] = useState('Mountain Spa & Wellness');
   const [heroSubtitle, setHeroSubtitle] = useState('Rejuvenate your mind, body, and spirit in nature\'s embrace');
@@ -60,6 +70,10 @@ const Spa = () => {
       setLoading(false);
     }
   };
+
+  const filteredServices = selectedCategory === 'all' 
+    ? services 
+    : services.filter(service => service.category === selectedCategory);
 
   const packages = [
     {
@@ -150,21 +164,40 @@ const Spa = () => {
       {/* Services Grid */}
       <section className="py-16 bg-muted/30">
         <div className="max-w-6xl mx-auto px-4">
-          <h2 className="text-3xl md:text-4xl font-heading font-bold text-center mb-12 text-foreground">
+          <h2 className="text-3xl md:text-4xl font-heading font-bold text-center mb-8 text-foreground">
             Spa Services
           </h2>
+          
+          {/* Category Filter */}
+          <div className="flex flex-wrap justify-center gap-3 mb-12">
+            {SPA_CATEGORIES.map((category) => (
+              <Button
+                key={category.id}
+                variant={selectedCategory === category.id ? 'default' : 'outline'}
+                onClick={() => setSelectedCategory(category.id)}
+                className="gap-2"
+              >
+                <category.icon className="h-4 w-4" />
+                {category.label}
+              </Button>
+            ))}
+          </div>
           
           {loading ? (
             <div className="flex justify-center py-12">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
             </div>
-          ) : services.length === 0 ? (
+          ) : filteredServices.length === 0 ? (
             <div className="text-center py-12">
-              <p className="text-muted-foreground">No spa services available at the moment.</p>
+              <p className="text-muted-foreground">
+                {selectedCategory === 'all' 
+                  ? 'No spa services available at the moment.' 
+                  : `No ${SPA_CATEGORIES.find(c => c.id === selectedCategory)?.label.toLowerCase()} services available at the moment.`}
+              </p>
             </div>
           ) : (
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-              {services.map((service) => (
+              {filteredServices.map((service) => (
                 <div key={service.id} className="bg-card border rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-all duration-300">
                   <div className="relative">
                     {service.image && (

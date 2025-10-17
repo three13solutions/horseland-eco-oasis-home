@@ -1627,6 +1627,7 @@ export type Database = {
       spa_services: {
         Row: {
           booking_required: boolean
+          category: string | null
           created_at: string
           description: string | null
           duration: number | null
@@ -1643,6 +1644,7 @@ export type Database = {
         }
         Insert: {
           booking_required?: boolean
+          category?: string | null
           created_at?: string
           description?: string | null
           duration?: number | null
@@ -1659,6 +1661,7 @@ export type Database = {
         }
         Update: {
           booking_required?: boolean
+          category?: string | null
           created_at?: string
           description?: string | null
           duration?: number | null

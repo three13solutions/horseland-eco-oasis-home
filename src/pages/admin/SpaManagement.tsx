@@ -27,6 +27,7 @@ interface SpaService {
   description: string | null;
   duration: number | null;
   price: number;
+  category: string;
   tags: any;
   booking_required: boolean;
   is_active: boolean;
@@ -51,7 +52,7 @@ const SpaManagement = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'inactive'>('all');
   const [viewMode, setViewMode] = useState<'card' | 'list'>('card');
-  const [categoryFilter, setCategoryFilter] = useState<'all' | 'beauty' | 'wellness'>('all');
+  const [categoryFilter, setCategoryFilter] = useState<'all' | 'massage' | 'therapy' | 'facials' | 'workouts'>('all');
   
   const [formData, setFormData] = useState({
     title: '',
@@ -60,6 +61,7 @@ const SpaManagement = () => {
     description: '',
     duration: '',
     price: '',
+    category: 'massage',
     tags: [] as string[],
     media_keys: [] as string[]
   });
@@ -107,6 +109,7 @@ const SpaManagement = () => {
       description: '',
       duration: '',
       price: '',
+      category: 'massage',
       tags: [],
       media_keys: []
     });
@@ -124,6 +127,7 @@ const SpaManagement = () => {
         description: formData.description || null,
         duration: formData.duration ? parseInt(formData.duration) : null,
         price: parseFloat(formData.price),
+        category: formData.category,
         tags: formData.tags,
         booking_required: true,
         is_active: true,
@@ -168,6 +172,7 @@ const SpaManagement = () => {
       description: service.description || '',
       duration: service.duration?.toString() || '',
       price: service.price.toString(),
+      category: service.category || 'massage',
       tags: service.tags || [],
       media_keys: Array.isArray(service.media_keys) ? service.media_keys : []
     });
@@ -228,9 +233,7 @@ const SpaManagement = () => {
                          (statusFilter === 'active' && service.is_active) ||
                          (statusFilter === 'inactive' && !service.is_active);
                          
-    const matchesCategory = categoryFilter === 'all' ||
-                           (categoryFilter === 'beauty' && service.tags?.includes('beauty')) ||
-                           (categoryFilter === 'wellness' && service.tags?.includes('wellness'));
+    const matchesCategory = categoryFilter === 'all' || service.category === categoryFilter;
     
     return matchesSearch && matchesStatus && matchesCategory;
   });
@@ -267,6 +270,24 @@ const SpaManagement = () => {
                     onChange={(e) => setFormData({ ...formData, title: e.target.value })}
                     required
                   />
+                </div>
+
+                <div>
+                  <Label htmlFor="category">Category*</Label>
+                  <Select
+                    value={formData.category}
+                    onValueChange={(value) => setFormData({ ...formData, category: value })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select category" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="massage">Massage</SelectItem>
+                      <SelectItem value="therapy">Therapy</SelectItem>
+                      <SelectItem value="facials">Facials</SelectItem>
+                      <SelectItem value="workouts">Workouts</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
 
                 <div>
@@ -488,20 +509,36 @@ const SpaManagement = () => {
             All
           </Button>
           <Button
-            variant={categoryFilter === 'beauty' ? 'default' : 'ghost'}
+            variant={categoryFilter === 'massage' ? 'default' : 'ghost'}
             size="sm"
-            onClick={() => setCategoryFilter('beauty')}
+            onClick={() => setCategoryFilter('massage')}
             className="h-8 px-3"
           >
-            Beauty
+            Massage
           </Button>
           <Button
-            variant={categoryFilter === 'wellness' ? 'default' : 'ghost'}
+            variant={categoryFilter === 'therapy' ? 'default' : 'ghost'}
             size="sm"
-            onClick={() => setCategoryFilter('wellness')}
+            onClick={() => setCategoryFilter('therapy')}
             className="h-8 px-3"
           >
-            Wellness
+            Therapy
+          </Button>
+          <Button
+            variant={categoryFilter === 'facials' ? 'default' : 'ghost'}
+            size="sm"
+            onClick={() => setCategoryFilter('facials')}
+            className="h-8 px-3"
+          >
+            Facials
+          </Button>
+          <Button
+            variant={categoryFilter === 'workouts' ? 'default' : 'ghost'}
+            size="sm"
+            onClick={() => setCategoryFilter('workouts')}
+            className="h-8 px-3"
+          >
+            Workouts
           </Button>
         </div>
         
