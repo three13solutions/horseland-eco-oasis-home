@@ -30,9 +30,11 @@ export type Database = {
           duration_minutes: number | null
           id: string
           image: string | null
+          image_key: string | null
           is_active: boolean
           is_on_property: boolean | null
           location_name: string | null
+          media_keys: Json | null
           media_urls: Json | null
           price_amount: number | null
           price_range_max: number | null
@@ -59,9 +61,11 @@ export type Database = {
           duration_minutes?: number | null
           id?: string
           image?: string | null
+          image_key?: string | null
           is_active?: boolean
           is_on_property?: boolean | null
           location_name?: string | null
+          media_keys?: Json | null
           media_urls?: Json | null
           price_amount?: number | null
           price_range_max?: number | null
@@ -88,9 +92,11 @@ export type Database = {
           duration_minutes?: number | null
           id?: string
           image?: string | null
+          image_key?: string | null
           is_active?: boolean
           is_on_property?: boolean | null
           location_name?: string | null
+          media_keys?: Json | null
           media_urls?: Json | null
           price_amount?: number | null
           price_range_max?: number | null
@@ -329,6 +335,7 @@ export type Database = {
           content: string
           created_at: string
           featured_image: string | null
+          featured_image_key: string | null
           id: string
           is_published: boolean
           meta_description: string | null
@@ -344,6 +351,7 @@ export type Database = {
           content: string
           created_at?: string
           featured_image?: string | null
+          featured_image_key?: string | null
           id?: string
           is_published?: boolean
           meta_description?: string | null
@@ -359,6 +367,7 @@ export type Database = {
           content?: string
           created_at?: string
           featured_image?: string | null
+          featured_image_key?: string | null
           id?: string
           is_published?: boolean
           meta_description?: string | null
@@ -1070,9 +1079,11 @@ export type Database = {
           created_at: string
           description: string | null
           featured_media: string | null
+          featured_media_key: string | null
           id: string
           is_active: boolean
           meal_type: string
+          media_keys: Json | null
           media_urls: Json | null
           price: number
           title: string
@@ -1085,9 +1096,11 @@ export type Database = {
           created_at?: string
           description?: string | null
           featured_media?: string | null
+          featured_media_key?: string | null
           id?: string
           is_active?: boolean
           meal_type: string
+          media_keys?: Json | null
           media_urls?: Json | null
           price?: number
           title: string
@@ -1100,9 +1113,11 @@ export type Database = {
           created_at?: string
           description?: string | null
           featured_media?: string | null
+          featured_media_key?: string | null
           id?: string
           is_active?: boolean
           meal_type?: string
+          media_keys?: Json | null
           media_urls?: Json | null
           price?: number
           title?: string
@@ -1155,6 +1170,7 @@ export type Database = {
       packages: {
         Row: {
           banner_image: string | null
+          banner_image_key: string | null
           components: Json | null
           created_at: string
           cta_text: string | null
@@ -1162,7 +1178,9 @@ export type Database = {
           duration_days: number | null
           faqs: Json | null
           featured_image: string | null
+          featured_image_key: string | null
           gallery: Json | null
+          gallery_keys: Json | null
           id: string
           inclusions: Json | null
           is_active: boolean
@@ -1178,6 +1196,7 @@ export type Database = {
         }
         Insert: {
           banner_image?: string | null
+          banner_image_key?: string | null
           components?: Json | null
           created_at?: string
           cta_text?: string | null
@@ -1185,7 +1204,9 @@ export type Database = {
           duration_days?: number | null
           faqs?: Json | null
           featured_image?: string | null
+          featured_image_key?: string | null
           gallery?: Json | null
+          gallery_keys?: Json | null
           id?: string
           inclusions?: Json | null
           is_active?: boolean
@@ -1201,6 +1222,7 @@ export type Database = {
         }
         Update: {
           banner_image?: string | null
+          banner_image_key?: string | null
           components?: Json | null
           created_at?: string
           cta_text?: string | null
@@ -1208,7 +1230,9 @@ export type Database = {
           duration_days?: number | null
           faqs?: Json | null
           featured_image?: string | null
+          featured_image_key?: string | null
           gallery?: Json | null
+          gallery_keys?: Json | null
           id?: string
           inclusions?: Json | null
           is_active?: boolean
@@ -1229,7 +1253,9 @@ export type Database = {
           content: string | null
           created_at: string
           hero_gallery: Json | null
+          hero_gallery_keys: Json | null
           hero_image: string | null
+          hero_image_key: string | null
           hero_type: string | null
           id: string
           is_published: boolean
@@ -1237,6 +1263,7 @@ export type Database = {
           meta_keywords: string | null
           meta_title: string | null
           og_image: string | null
+          og_image_key: string | null
           parent_id: string | null
           slug: string
           sort_order: number
@@ -1249,7 +1276,9 @@ export type Database = {
           content?: string | null
           created_at?: string
           hero_gallery?: Json | null
+          hero_gallery_keys?: Json | null
           hero_image?: string | null
+          hero_image_key?: string | null
           hero_type?: string | null
           id?: string
           is_published?: boolean
@@ -1257,6 +1286,7 @@ export type Database = {
           meta_keywords?: string | null
           meta_title?: string | null
           og_image?: string | null
+          og_image_key?: string | null
           parent_id?: string | null
           slug: string
           sort_order?: number
@@ -1269,7 +1299,9 @@ export type Database = {
           content?: string | null
           created_at?: string
           hero_gallery?: Json | null
+          hero_gallery_keys?: Json | null
           hero_image?: string | null
+          hero_image_key?: string | null
           hero_type?: string | null
           id?: string
           is_published?: boolean
@@ -1277,6 +1309,7 @@ export type Database = {
           meta_keywords?: string | null
           meta_title?: string | null
           og_image?: string | null
+          og_image_key?: string | null
           parent_id?: string | null
           slug?: string
           sort_order?: number
@@ -1408,7 +1441,9 @@ export type Database = {
           description: string | null
           features: Json | null
           gallery: Json | null
+          gallery_keys: Json | null
           hero_image: string | null
+          hero_image_key: string | null
           id: string
           is_published: boolean
           max_guests: number
@@ -1423,7 +1458,9 @@ export type Database = {
           description?: string | null
           features?: Json | null
           gallery?: Json | null
+          gallery_keys?: Json | null
           hero_image?: string | null
+          hero_image_key?: string | null
           id?: string
           is_published?: boolean
           max_guests?: number
@@ -1438,7 +1475,9 @@ export type Database = {
           description?: string | null
           features?: Json | null
           gallery?: Json | null
+          gallery_keys?: Json | null
           hero_image?: string | null
+          hero_image_key?: string | null
           id?: string
           is_published?: boolean
           max_guests?: number
@@ -1536,7 +1575,9 @@ export type Database = {
           duration: number | null
           id: string
           image: string | null
+          image_key: string | null
           is_active: boolean
+          media_keys: Json | null
           media_urls: Json | null
           price: number
           tags: Json | null
@@ -1550,7 +1591,9 @@ export type Database = {
           duration?: number | null
           id?: string
           image?: string | null
+          image_key?: string | null
           is_active?: boolean
+          media_keys?: Json | null
           media_urls?: Json | null
           price?: number
           tags?: Json | null
@@ -1564,7 +1607,9 @@ export type Database = {
           duration?: number | null
           id?: string
           image?: string | null
+          image_key?: string | null
           is_active?: boolean
+          media_keys?: Json | null
           media_urls?: Json | null
           price?: number
           tags?: Json | null
