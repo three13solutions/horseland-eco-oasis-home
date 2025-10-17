@@ -19,7 +19,9 @@ import {
   ChevronRight,
   Boxes,
   BookOpen,
-  FileCode
+  FileCode,
+  Grid3x3,
+  Image as ImageIcon
 } from 'lucide-react';
 import {
   Sidebar,
@@ -120,10 +122,16 @@ const mediaMenuItems = [
     description: 'All media files' 
   },
   { 
-    icon: Camera, 
+    icon: Grid3x3, 
+    label: 'Categories', 
+    path: '/admin/categories', 
+    description: 'Category management' 
+  },
+  { 
+    icon: ImageIcon, 
     label: 'Galleries', 
     path: '/admin/galleries', 
-    description: 'Gallery categories' 
+    description: 'Public galleries' 
   }
 ];
 
