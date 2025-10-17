@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowLeft, Plus, Search, Edit, Trash2, ToggleLeft, ToggleRight, Grid, List, Upload, X } from 'lucide-react';
+import { ArrowLeft, Plus, Search, Edit, Trash2, ToggleLeft, ToggleRight, Grid, List, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -17,6 +17,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { useForm } from 'react-hook-form';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { MediaPicker } from '@/components/admin/MediaPicker';
 
 interface Activity {
   id: string;
@@ -24,6 +25,7 @@ interface Activity {
   description?: string;
   distance?: string;
   image?: string;
+  image_key?: string;
   is_active: boolean;
   tags?: any;
   audience_tags?: any;
@@ -42,13 +44,8 @@ interface Activity {
   rules_regulations?: string;
   activity_tags?: any;
   media_urls?: any;
+  media_keys?: any;
   booking_type?: string;
-}
-
-interface MediaFile {
-  url: string;
-  name: string;
-  isFeatured: boolean;
 }
 
 interface FormData {
@@ -72,7 +69,9 @@ interface FormData {
   booking_type: 'reception' | 'online' | 'both' | 'third_party' | 'no_booking';
   audience_tags: string[];
   activity_tags: string[];
-  media_files: MediaFile[];
+  image?: string;
+  image_key?: string;
+  media_keys: string[];
 }
 
 const DAYS_OF_WEEK = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
@@ -91,7 +90,6 @@ const ActivitiesManagement = () => {
   const [showForm, setShowForm] = useState(false);
   const [editingActivity, setEditingActivity] = useState<Activity | null>(null);
   const [loading, setLoading] = useState(true);
-  const [uploading, setUploading] = useState(false);
   const { toast } = useToast();
 
   const form = useForm<FormData>({
@@ -110,7 +108,9 @@ const ActivitiesManagement = () => {
       booking_type: 'reception',
       audience_tags: [],
       activity_tags: [],
-      media_files: [],
+      image: '',
+      image_key: '',
+      media_keys: [],
     }
   });
 
@@ -142,13 +142,12 @@ const ActivitiesManagement = () => {
 
   const handleSubmit = async (data: FormData) => {
     try {
-      const featuredMedia = data.media_files.find(m => m.isFeatured);
-      
       const activityData = {
         title: data.title,
         description: data.description,
         distance: data.is_on_property ? '' : data.distance,
-        image: featuredMedia?.url || data.media_files[0]?.url || '',
+        image: data.image || null,
+        image_key: data.image_key || null,
         location_name: data.location_name,
         is_on_property: data.is_on_property,
         price_type: data.price_type,
@@ -165,7 +164,7 @@ const ActivitiesManagement = () => {
         booking_type: data.booking_type,
         audience_tags: data.audience_tags,
         activity_tags: data.activity_tags,
-        media_urls: data.media_files.map(m => m.url),
+        media_keys: data.media_keys,
         is_active: true
       };
 
@@ -204,96 +203,35 @@ const ActivitiesManagement = () => {
     }
   };
 
-  const handleFileUpload = async (files: FileList | null) => {
-    if (!files) return;
+  const editActivity = (activity: Activity) => {
+    form.reset({
+      title: activity.title,
+      description: activity.description || '',
+      distance: activity.distance || '',
+      location_name: activity.location_name || '',
+      is_on_property: activity.is_on_property ?? true,
+      price_type: activity.price_type as any || 'free',
+      price_amount: activity.price_amount || undefined,
+      price_range_min: activity.price_range_min || undefined,
+      price_range_max: activity.price_range_max || undefined,
+      duration_hours: activity.duration_hours || undefined,
+      duration_minutes: activity.duration_minutes || undefined,
+      timings_type: activity.timings?.type === 'specific' ? 'specific' : '24_7',
+      specific_timings: activity.timings?.times ? activity.timings.times.join(', ') : '',
+      available_days: Array.isArray(activity.available_days) ? activity.available_days : [],
+      available_seasons: Array.isArray(activity.available_seasons) ? activity.available_seasons : [],
+      disclaimer: activity.disclaimer || '',
+      rules_regulations: activity.rules_regulations || '',
+      booking_type: activity.booking_type as any || 'reception',
+      audience_tags: Array.isArray(activity.audience_tags) ? activity.audience_tags : [],
+      activity_tags: Array.isArray(activity.activity_tags) ? activity.activity_tags : [],
+      image: activity.image || '',
+      image_key: activity.image_key || '',
+      media_keys: Array.isArray(activity.media_keys) ? activity.media_keys : [],
+    });
     
-    setUploading(true);
-    const newMediaFiles: MediaFile[] = [];
-    
-    try {
-      // Import the upload hook functionality inline
-      for (const file of Array.from(files)) {
-        // Validate file
-        if (!file.type.startsWith('image/') && !file.type.startsWith('video/')) {
-          toast({
-            title: "Error",
-            description: "Invalid file type. Please select images or videos only.",
-            variant: "destructive",
-          });
-          continue;
-        }
-
-        const fileExt = file.name.split('.').pop();
-        const fileName = `${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExt}`;
-        const filePath = `activity-media/${fileName}`;
-
-        // Upload to storage
-        const { error: uploadError } = await supabase.storage
-          .from('activity-media')
-          .upload(filePath, file);
-
-        if (uploadError) throw uploadError;
-
-        const { data: { publicUrl } } = supabase.storage
-          .from('activity-media')
-          .getPublicUrl(filePath);
-
-        // Get activities category ID
-        const { data: activityCategory } = await supabase
-          .from('gallery_categories')
-          .select('id')
-          .eq('slug', 'activities')
-          .single();
-
-        // Create entry in gallery_images
-        const mediaType = file.type.startsWith('image/') ? 'image' : 'video';
-        const urlField = mediaType === 'image' ? 'image_url' : 'video_url';
-        
-        const insertData: any = {
-          title: file.name,
-          category: 'activities',
-          category_id: activityCategory?.id,
-          caption: `Activity media - ${file.name}`,
-          media_type: mediaType,
-          source_type: 'upload',
-          is_hardcoded: false,
-        };
-
-        if (mediaType === 'image') {
-          insertData.image_url = publicUrl;
-        } else {
-          insertData.video_url = publicUrl;
-          insertData.image_url = '';
-        }
-
-        await supabase
-          .from('gallery_images')
-          .insert(insertData);
-
-        newMediaFiles.push({
-          url: publicUrl,
-          name: file.name,
-          isFeatured: false
-        });
-      }
-
-      const currentFiles = form.getValues('media_files');
-      form.setValue('media_files', [...currentFiles, ...newMediaFiles]);
-      
-      toast({
-        title: "Success",
-        description: `${newMediaFiles.length} file(s) uploaded successfully`,
-      });
-    } catch (error) {
-      console.error('Error uploading files:', error);
-      toast({
-        title: "Error",
-        description: "Failed to upload files",
-        variant: "destructive",
-      });
-    } finally {
-      setUploading(false);
-    }
+    setEditingActivity(activity);
+    setShowForm(true);
   };
 
   const handleDelete = async (id: string) => {
@@ -348,47 +286,6 @@ const ActivitiesManagement = () => {
     form.reset();
     setEditingActivity(null);
     setShowForm(false);
-  };
-
-  const editActivity = (activity: Activity) => {
-    const mediaFiles: MediaFile[] = [];
-    if (activity.image) {
-      mediaFiles.push({ url: activity.image, name: 'Featured Image', isFeatured: true });
-    }
-    if (Array.isArray(activity.media_urls)) {
-      activity.media_urls.forEach((url: string, index: number) => {
-        if (url !== activity.image) {
-          mediaFiles.push({ url, name: `Media ${index + 1}`, isFeatured: false });
-        }
-      });
-    }
-
-    form.reset({
-      title: activity.title,
-      description: activity.description || '',
-      distance: activity.distance || '',
-      location_name: activity.location_name || '',
-      is_on_property: activity.is_on_property ?? true,
-      price_type: activity.price_type as 'free' | 'fixed' | 'range' || 'free',
-      price_amount: activity.price_amount || undefined,
-      price_range_min: activity.price_range_min || undefined,
-      price_range_max: activity.price_range_max || undefined,
-      duration_hours: activity.duration_hours || undefined,
-      duration_minutes: activity.duration_minutes || undefined,
-      timings_type: activity.timings?.type === 'specific' ? 'specific' : '24_7',
-      specific_timings: activity.timings?.times ? activity.timings.times.join(', ') : '',
-      available_days: Array.isArray(activity.available_days) ? activity.available_days : [],
-      available_seasons: Array.isArray(activity.available_seasons) ? activity.available_seasons : [],
-      disclaimer: activity.disclaimer || '',
-      rules_regulations: activity.rules_regulations || '',
-      booking_type: activity.booking_type as any || 'reception',
-      audience_tags: Array.isArray(activity.audience_tags) ? activity.audience_tags : [],
-      activity_tags: Array.isArray(activity.activity_tags) ? activity.activity_tags : [],
-      media_files: mediaFiles,
-    });
-    
-    setEditingActivity(activity);
-    setShowForm(true);
   };
 
   const filteredActivities = activities.filter(activity => {
@@ -754,80 +651,33 @@ const ActivitiesManagement = () => {
                   </div>
                 </div>
 
-                {/* Media Upload */}
+                {/* Media */}
                 <div className="space-y-4">
                   <h3 className="text-lg font-semibold">Media</h3>
                   <FormField
                     control={form.control}
-                    name="media_files"
+                    name="image"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Upload Images/Videos</FormLabel>
-                        <div className="border-2 border-dashed border-gray-300 rounded-lg p-6">
-                          <div className="text-center">
-                            <Upload className="mx-auto h-12 w-12 text-gray-400" />
-                            <div className="mt-4">
-                              <label htmlFor="media-upload" className="cursor-pointer">
-                                <span className="mt-2 block text-sm font-medium text-gray-900">
-                                  {uploading ? 'Uploading...' : 'Drop files here or click to upload'}
-                                </span>
-                                <input
-                                  id="media-upload"
-                                  type="file"
-                                  multiple
-                                  accept="image/*,video/*"
-                                  className="hidden"
-                                  onChange={(e) => handleFileUpload(e.target.files)}
-                                  disabled={uploading}
-                                />
-                              </label>
-                            </div>
-                          </div>
-                        </div>
-                        
-                        {field.value.length > 0 && (
-                          <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mt-4">
-                            {field.value.map((file, index) => (
-                              <div key={index} className="relative border rounded-lg p-2">
-                                <img 
-                                  src={file.url} 
-                                  alt={file.name}
-                                  className="w-full h-24 object-cover rounded"
-                                />
-                                <div className="absolute top-1 right-1 flex gap-1">
-                                  <Button
-                                    type="button"
-                                    size="sm"
-                                    variant={file.isFeatured ? "default" : "outline"}
-                                    onClick={() => {
-                                      const newFiles = field.value.map((f, i) => ({
-                                        ...f,
-                                        isFeatured: i === index
-                                      }));
-                                      field.onChange(newFiles);
-                                    }}
-                                    className="h-6 w-6 p-0 text-xs"
-                                  >
-                                    ★
-                                  </Button>
-                                  <Button
-                                    type="button"
-                                    size="sm"
-                                    variant="destructive"
-                                    onClick={() => {
-                                      field.onChange(field.value.filter((_, i) => i !== index));
-                                    }}
-                                    className="h-6 w-6 p-0"
-                                  >
-                                    <X className="h-3 w-3" />
-                                  </Button>
-                                </div>
-                                <p className="text-xs mt-1 truncate">{file.name}</p>
-                                {file.isFeatured && <p className="text-xs text-blue-600">Featured</p>}
-                              </div>
-                            ))}
-                          </div>
-                        )}
+                        <FormLabel>Featured Image</FormLabel>
+                        <MediaPicker
+                          label=""
+                          value={field.value || ''}
+                          onChange={async (url) => {
+                            field.onChange(url);
+                            // Get and save the hardcoded_key
+                            const { data } = await supabase
+                              .from('gallery_images')
+                              .select('hardcoded_key')
+                              .eq('image_url', url)
+                              .single();
+                            if (data?.hardcoded_key) {
+                              form.setValue('image_key', data.hardcoded_key);
+                            }
+                          }}
+                          categorySlug="activities"
+                          folder="activity-media"
+                        />
                         <FormMessage />
                       </FormItem>
                     )}
@@ -1070,7 +920,7 @@ const ActivitiesManagement = () => {
                 </div>
 
                 <div className="flex gap-2 pt-4">
-                  <Button type="submit" disabled={uploading}>{editingActivity ? 'Update' : 'Create'} Activity</Button>
+                  <Button type="submit">{editingActivity ? 'Update' : 'Create'} Activity</Button>
                   <Button 
                     type="button" 
                     variant="outline" 
