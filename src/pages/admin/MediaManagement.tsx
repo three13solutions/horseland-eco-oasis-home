@@ -429,7 +429,7 @@ const MediaManagement = () => {
       </div>
 
       {/* Usage Statistics Dashboard */}
-      {mediaStats && !statsLoading && <UnusedMediaDashboard stats={mediaStats} />}
+      {mediaStats && !statsLoading && <UnusedMediaDashboard stats={mediaStats} onRefresh={refetch} />}
       {statsLoading && (
         <Card>
           <CardContent className="pt-6">

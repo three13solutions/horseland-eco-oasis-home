@@ -1,6 +1,9 @@
 import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
-import { AlertTriangle, CheckCircle, Database, Image, Video } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { AlertTriangle, CheckCircle, Database, Image, Video, Trash2, RefreshCw } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
+import { useToast } from '@/hooks/use-toast';
 
 interface MediaStats {
   total: number;
@@ -23,13 +26,145 @@ interface MediaStats {
 
 interface UnusedMediaDashboardProps {
   stats: MediaStats;
+  onRefresh?: () => void;
 }
 
-export const UnusedMediaDashboard: React.FC<UnusedMediaDashboardProps> = ({ stats }) => {
+export const UnusedMediaDashboard: React.FC<UnusedMediaDashboardProps> = ({ stats, onRefresh }) => {
   const usagePercentage = stats.total > 0 ? Math.round((stats.used / stats.total) * 100) : 0;
+  const { toast } = useToast();
+  const [isCleaningUp, setIsCleaningUp] = React.useState(false);
+
+  const handleCleanup = async () => {
+    if (stats.unused === 0) {
+      toast({
+        title: "No unused media",
+        description: "All media is currently in use!",
+      });
+      return;
+    }
+
+    if (!confirm(`Delete all ${stats.unused} unused media items? This action cannot be undone.`)) {
+      return;
+    }
+
+    setIsCleaningUp(true);
+    
+    try {
+      // Get all images
+      const { data: allImages, error: fetchError } = await supabase
+        .from('gallery_images')
+        .select('id, image_url, is_hardcoded');
+
+      if (fetchError) throw fetchError;
+
+      // Check usage for each image
+      const unusedImages = [];
+      for (const img of allImages || []) {
+        // Skip hardcoded images
+        if (img.is_hardcoded) continue;
+
+        const imageUrl = img.image_url;
+        
+        // Check all tables for usage
+        const [pages, blogs, rooms, packages, activities, spa, meals] = await Promise.all([
+          supabase.from('pages').select('id, hero_image, og_image, hero_gallery'),
+          supabase.from('blog_posts').select('id, featured_image'),
+          supabase.from('room_types').select('id, hero_image, gallery'),
+          supabase.from('packages').select('id, featured_image, banner_image, gallery'),
+          supabase.from('activities').select('id, image, media_urls'),
+          supabase.from('spa_services').select('id, image, media_urls'),
+          supabase.from('meals').select('id, featured_media'),
+        ]);
+
+        let isUsed = false;
+
+        // Check pages
+        pages.data?.forEach(page => {
+          if (page.hero_image === imageUrl || page.og_image === imageUrl) {
+            isUsed = true;
+          } else if (Array.isArray(page.hero_gallery) && page.hero_gallery.some((item: any) => 
+            (typeof item === 'string' ? item : item?.url) === imageUrl
+          )) {
+            isUsed = true;
+          }
+        });
+
+        // Check other tables
+        if (blogs.data?.some(blog => blog.featured_image === imageUrl)) isUsed = true;
+        
+        rooms.data?.forEach(room => {
+          if (room.hero_image === imageUrl || (Array.isArray(room.gallery) && room.gallery.includes(imageUrl))) {
+            isUsed = true;
+          }
+        });
+
+        packages.data?.forEach(pkg => {
+          if (pkg.featured_image === imageUrl || pkg.banner_image === imageUrl || 
+              (Array.isArray(pkg.gallery) && pkg.gallery.includes(imageUrl))) {
+            isUsed = true;
+          }
+        });
+
+        activities.data?.forEach(activity => {
+          if (activity.image === imageUrl || 
+              (Array.isArray(activity.media_urls) && activity.media_urls.some((m: any) => 
+                typeof m === 'string' ? m === imageUrl : m?.url === imageUrl
+              ))) {
+            isUsed = true;
+          }
+        });
+
+        spa.data?.forEach(service => {
+          if (service.image === imageUrl || 
+              (Array.isArray(service.media_urls) && service.media_urls.includes(imageUrl))) {
+            isUsed = true;
+          }
+        });
+
+        if (meals.data?.some(meal => meal.featured_media === imageUrl)) isUsed = true;
+
+        if (!isUsed) {
+          unusedImages.push(img.id);
+        }
+      }
+
+      if (unusedImages.length === 0) {
+        toast({
+          title: "No unused media found",
+          description: "All media appears to be in use now.",
+        });
+        onRefresh?.();
+        return;
+      }
+
+      // Delete unused images
+      const { error: deleteError } = await supabase
+        .from('gallery_images')
+        .delete()
+        .in('id', unusedImages);
+
+      if (deleteError) throw deleteError;
+
+      toast({
+        title: "Cleanup Complete",
+        description: `Successfully deleted ${unusedImages.length} unused media items.`,
+      });
+      
+      onRefresh?.();
+    } catch (error) {
+      console.error('Cleanup error:', error);
+      toast({
+        title: "Cleanup Failed",
+        description: error.message || "Failed to clean up unused media",
+        variant: "destructive",
+      });
+    } finally {
+      setIsCleaningUp(false);
+    }
+  };
   
   return (
-    <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
       <Card>
         <CardContent className="pt-6">
           <div className="flex items-center justify-between">
@@ -54,38 +189,20 @@ export const UnusedMediaDashboard: React.FC<UnusedMediaDashboardProps> = ({ stat
 
       <Card>
         <CardContent className="pt-6">
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between mb-3">
             <div>
               <p className="text-sm font-medium text-muted-foreground">Used Media</p>
               <p className="text-2xl font-bold text-green-600 dark:text-green-400">{stats.used}</p>
             </div>
             <CheckCircle className="h-8 w-8 text-green-600 dark:text-green-400" />
           </div>
-          <p className="mt-2 text-xs text-muted-foreground">
+          <p className="text-xs text-muted-foreground mb-3">
             {usagePercentage}% utilization
           </p>
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardContent className="pt-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-muted-foreground">Unused Media</p>
-              <p className="text-2xl font-bold text-orange-600 dark:text-orange-400">{stats.unused}</p>
-            </div>
-            <AlertTriangle className="h-8 w-8 text-orange-600 dark:text-orange-400" />
-          </div>
-          <p className="mt-2 text-xs text-muted-foreground">
-            {stats.unused > 0 ? 'Consider cleanup' : 'All media in use!'}
-          </p>
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardContent className="pt-6">
-          <div>
-            <p className="text-sm font-medium text-muted-foreground mb-3">Usage Breakdown</p>
+          
+          {/* Nested Usage Breakdown */}
+          <div className="border-t pt-3 mt-3">
+            <p className="text-xs font-medium text-muted-foreground mb-2">Usage Breakdown</p>
             <div className="space-y-1 text-xs">
               {stats.byType.pages > 0 && (
                 <div className="flex justify-between">
@@ -131,6 +248,43 @@ export const UnusedMediaDashboard: React.FC<UnusedMediaDashboardProps> = ({ stat
               )}
             </div>
           </div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardContent className="pt-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-muted-foreground">Unused Media</p>
+              <p className="text-2xl font-bold text-orange-600 dark:text-orange-400">{stats.unused}</p>
+            </div>
+            <AlertTriangle className="h-8 w-8 text-orange-600 dark:text-orange-400" />
+          </div>
+          <p className="mt-2 text-xs text-muted-foreground mb-3">
+            {stats.unused > 0 ? 'Consider cleanup' : 'All media in use!'}
+          </p>
+          
+          {stats.unused > 0 && (
+            <Button 
+              variant="destructive" 
+              size="sm" 
+              className="w-full mt-2"
+              onClick={handleCleanup}
+              disabled={isCleaningUp}
+            >
+              {isCleaningUp ? (
+                <>
+                  <RefreshCw className="h-3 w-3 mr-2 animate-spin" />
+                  Cleaning...
+                </>
+              ) : (
+                <>
+                  <Trash2 className="h-3 w-3 mr-2" />
+                  Clean Up Unused
+                </>
+              )}
+            </Button>
+          )}
         </CardContent>
       </Card>
     </div>
