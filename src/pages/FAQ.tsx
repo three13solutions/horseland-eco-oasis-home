@@ -135,7 +135,7 @@ const FAQ = () => {
       <NavigationV5 />
       
       {/* Hero Section */}
-      <section className="relative min-h-[50vh] flex items-center justify-center">
+      <section className="relative h-[60vh] min-h-[500px] flex items-center justify-center">
         <div 
           className="absolute inset-0 bg-cover bg-center bg-no-repeat"
           style={{ backgroundImage: `url('${heroImage}')` }}

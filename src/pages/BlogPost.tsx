@@ -171,7 +171,7 @@ const BlogPost = () => {
         
         {/* Hero Banner */}
         {post.featured_image && (
-          <section className="relative h-[60vh] min-h-[400px] w-full overflow-hidden">
+          <section className="relative h-[60vh] min-h-[500px] w-full overflow-hidden">
             <div 
               className="absolute inset-0 bg-cover bg-center"
               style={{ backgroundImage: `url(${post.featured_image})` }}

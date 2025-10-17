@@ -97,7 +97,7 @@ export default function DynamicPage() {
 
     if (page.hero_type === "single" && page.hero_image) {
       return (
-        <section className="relative h-[60vh] min-h-[400px] flex items-center justify-center">
+        <section className="relative h-[60vh] min-h-[500px] flex items-center justify-center">
           <div 
             className="absolute inset-0 bg-cover bg-center bg-no-repeat"
             style={{ backgroundImage: `url('${page.hero_image}')` }}
@@ -120,7 +120,7 @@ export default function DynamicPage() {
 
     if (page.hero_type === "carousel" && page.hero_gallery?.length > 0) {
       return (
-        <section className="relative h-[60vh] min-h-[400px]">
+        <section className="relative h-[60vh] min-h-[500px]">
           <div className="relative h-full">
             {page.hero_gallery.map((image, index) => (
               <div 

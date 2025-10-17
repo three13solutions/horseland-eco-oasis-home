@@ -111,7 +111,7 @@ const Contact = () => {
       <NavigationV5 />
 
       {/* Hero Section */}
-      <section className="relative min-h-[50vh] flex items-center justify-center">
+      <section className="relative h-[60vh] min-h-[500px] flex items-center justify-center">
         {heroImage && (
           <>
             <div

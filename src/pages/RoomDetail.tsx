@@ -113,7 +113,7 @@ const RoomDetail = () => {
       <NavigationV5 />
       
       {/* Hero Section with Image Carousel */}
-      <section className="relative h-[60vh]">
+      <section className="relative h-[60vh] min-h-[500px]">
         <div className="relative w-full h-full overflow-hidden">
           <img 
             src={images[currentImageIndex]}
