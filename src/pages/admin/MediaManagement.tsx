@@ -177,90 +177,50 @@ const MediaManagement = () => {
     }
   };
 
-  const handleSaveImage = async (imageData: Partial<GalleryImage> & { category_ids?: string[] }) => {
+  const handleSaveImage = async (imageData: Partial<GalleryImage>) => {
     try {
-      const { category_ids, ...imageFields } = imageData;
-      
       if (editingImage) {
         // Update existing image
         const { error: updateError } = await supabase
           .from('gallery_images')
-          .update(imageFields)
+          .update(imageData)
           .eq('id', editingImage.id);
 
         if (updateError) throw updateError;
         
-        // Update categories in junction table
-        if (category_ids && category_ids.length > 0) {
-          // Delete existing category associations
-          await supabase
-            .from('image_categories')
-            .delete()
-            .eq('image_id', editingImage.id);
-          
-          // Insert new category associations
-          const categoryInserts = category_ids.map(catId => ({
-            image_id: editingImage.id,
-            category_id: catId
-          }));
-          
-          const { error: categoryError } = await supabase
-            .from('image_categories')
-            .insert(categoryInserts);
-          
-          if (categoryError) throw categoryError;
-        }
-        
         toast({
           title: "Success",
-          description: "Media updated successfully",
+          description: "Media updated successfully. Categories will auto-update based on usage.",
         });
       } else {
         // Insert new image
         const insertData = {
-          title: imageFields.title || '',
-          image_url: imageFields.image_url || '',
-          video_url: imageFields.video_url,
+          title: imageData.title || '',
+          image_url: imageData.image_url || '',
+          video_url: imageData.video_url,
           category: 'gallery',
-          category_id: category_ids?.[0], // Keep for backward compatibility
-          caption: imageFields.caption,
-          location: imageFields.location,
-          guest_name: imageFields.guest_name,
-          guest_handle: imageFields.guest_handle,
-          likes_count: imageFields.likes_count || 0,
-          sort_order: imageFields.sort_order || 0,
-          media_type: imageFields.media_type || 'image',
-          source_type: imageFields.source_type || 'upload',
-          hardcoded_key: imageFields.hardcoded_key,
-          is_hardcoded: imageFields.is_hardcoded || false,
-          alt_text: (imageFields as any).alt_text
+          caption: imageData.caption,
+          location: imageData.location,
+          guest_name: imageData.guest_name,
+          guest_handle: imageData.guest_handle,
+          likes_count: imageData.likes_count || 0,
+          sort_order: imageData.sort_order || 0,
+          media_type: imageData.media_type || 'image',
+          source_type: imageData.source_type || 'upload',
+          hardcoded_key: imageData.hardcoded_key,
+          is_hardcoded: imageData.is_hardcoded || false,
+          alt_text: (imageData as any).alt_text
         };
         
-        const { data: newImage, error: insertError } = await supabase
+        const { error: insertError } = await supabase
           .from('gallery_images')
-          .insert([insertData])
-          .select()
-          .single();
+          .insert([insertData]);
 
         if (insertError) throw insertError;
         
-        // Insert category associations
-        if (category_ids && category_ids.length > 0 && newImage) {
-          const categoryInserts = category_ids.map(catId => ({
-            image_id: newImage.id,
-            category_id: catId
-          }));
-          
-          const { error: categoryError } = await supabase
-            .from('image_categories')
-            .insert(categoryInserts);
-          
-          if (categoryError) throw categoryError;
-        }
-        
         toast({
           title: "Success",
-          description: "Media added successfully",
+          description: "Media added. Categories will be assigned when you use it in content.",
         });
       }
 
@@ -718,7 +678,7 @@ const MediaManagement = () => {
 interface MediaFormProps {
   image?: GalleryImage | null;
   categories: GalleryCategory[];
-  onSave: (data: Partial<GalleryImage> & { category_ids?: string[] }) => void;
+  onSave: (data: Partial<GalleryImage>) => void;
   onCancel: () => void;
 }
 
@@ -733,7 +693,6 @@ const MediaForm: React.FC<MediaFormProps> = ({ image, categories, onSave, onCanc
     guest_name: image?.guest_name || '',
     guest_handle: image?.guest_handle || '',
     likes_count: image?.likes_count || 0,
-    category_ids: [] as string[], // Changed to array for multi-select
     sort_order: image?.sort_order || 0,
     media_type: image?.media_type || 'image' as 'image' | 'video',
     source_type: image?.source_type || 'upload' as 'upload' | 'external' | 'mirrored' | 'hardcoded',
@@ -741,38 +700,10 @@ const MediaForm: React.FC<MediaFormProps> = ({ image, categories, onSave, onCanc
     is_hardcoded: image?.is_hardcoded || false,
   });
 
-  // Fetch existing categories for this image
-  useEffect(() => {
-    if (image) {
-      const fetchImageCategories = async () => {
-        const { data } = await supabase
-          .from('image_categories')
-          .select('category_id')
-          .eq('image_id', image.id);
-        
-        if (data) {
-          setFormData(prev => ({
-            ...prev,
-            category_ids: data.map(ic => ic.category_id)
-          }));
-        }
-      };
-      fetchImageCategories();
-    }
-  }, [image]);
-
-  const selectedCategory = categories.find(cat => formData.category_ids.includes(cat.id));
-  const isGuestCategory = selectedCategory?.slug === 'guests';
+  const isGuestCategory = false; // Categories are now auto-assigned based on usage
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    
-    // Validate at least one category selected
-    if (formData.category_ids.length === 0) {
-      alert('Please select at least one category');
-      return;
-    }
-    
     onSave(formData);
   };
 
@@ -795,40 +726,7 @@ const MediaForm: React.FC<MediaFormProps> = ({ image, categories, onSave, onCanc
         />
       </div>
 
-      <div>
-        <Label>Categories * (Select one or more)</Label>
-        <div className="grid grid-cols-2 gap-2 mt-2">
-          {categories.map((category) => (
-            <div key={category.id} className="flex items-center space-x-2">
-              <Checkbox
-                id={`cat-${category.id}`}
-                checked={formData.category_ids.includes(category.id)}
-                onCheckedChange={(checked) => {
-                  if (checked) {
-                    setFormData({
-                      ...formData,
-                      category_ids: [...formData.category_ids, category.id]
-                    });
-                  } else {
-                    setFormData({
-                      ...formData,
-                      category_ids: formData.category_ids.filter(id => id !== category.id)
-                    });
-                  }
-                }}
-              />
-              <Label htmlFor={`cat-${category.id}`} className="cursor-pointer font-normal">
-                {category.name}
-              </Label>
-            </div>
-          ))}
-        </div>
-        <p className="text-xs text-muted-foreground mt-2">
-          Select all categories where this image should appear
-        </p>
-      </div>
-
-      {/* Auto-detect media type - no toggle needed */}
+      {/* Auto-detect media type - no manual input needed */}
       <div>
         <Label>Media Upload *</Label>
         {!formData.video_url && (
@@ -880,7 +778,16 @@ const MediaForm: React.FC<MediaFormProps> = ({ image, categories, onSave, onCanc
         </div>
         
         <p className="text-xs text-muted-foreground mt-1">
-          Upload an image or paste a video URL - media type is detected automatically
+          Upload an image or paste a video URL - type is detected automatically
+        </p>
+      </div>
+
+      <div className="p-3 bg-muted rounded-lg text-sm">
+        <p className="font-medium mb-1">📂 Categories Auto-Assigned</p>
+        <p className="text-muted-foreground text-xs">
+          Categories are automatically determined based on where you use this media. 
+          For example, if you add this to a blog post, it will be tagged "Blog". 
+          Use it in a room, it gets tagged "Rooms".
         </p>
       </div>
 
