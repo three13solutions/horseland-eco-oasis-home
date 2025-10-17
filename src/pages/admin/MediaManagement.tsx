@@ -332,12 +332,23 @@ const MediaManagement = () => {
   };
 
   const handleBulkDelete = async () => {
-    if (selectedItems.length === 0) return;
+    if (selectedItems.length === 0) {
+      toast({
+        title: "No Items Selected",
+        description: "Please select items to delete",
+        variant: "destructive",
+      });
+      return;
+    }
     
-    // Check if any hardcoded media is selected
-    const hardcodedSelected = allImages.filter(
+    console.log('Bulk delete - selectedItems:', selectedItems);
+    
+    // Check if any hardcoded media is selected using filteredImages instead of allImages
+    const hardcodedSelected = filteredImages.filter(
       img => selectedItems.includes(img.id) && img.is_hardcoded
     );
+    
+    console.log('Hardcoded selected:', hardcodedSelected);
     
     if (hardcodedSelected.length > 0) {
       toast({
@@ -356,7 +367,10 @@ const MediaManagement = () => {
         .delete()
         .in('id', selectedItems);
 
-      if (error) throw error;
+      if (error) {
+        console.error('Delete error:', error);
+        throw error;
+      }
       
       toast({
         title: "Success",
@@ -364,12 +378,13 @@ const MediaManagement = () => {
       });
       
       setSelectedItems([]);
-      refetch();
-    } catch (error) {
+      await refetch();
+      await refetchUnfiltered();
+    } catch (error: any) {
       console.error('Error bulk deleting:', error);
       toast({
         title: "Error",
-        description: "Failed to delete selected items",
+        description: error.message || "Failed to delete selected items",
         variant: "destructive",
       });
     }
