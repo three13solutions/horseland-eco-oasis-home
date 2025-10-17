@@ -354,28 +354,18 @@ const Contact = () => {
             </p>
           </div>
 
-          <div className="bg-white rounded-lg overflow-hidden shadow-lg relative">
+          <div className="bg-white rounded-lg overflow-hidden shadow-lg">
             {googleMapsApiKey ? (
-              <>
-                <iframe
-                  width="100%"
-                  height="450"
-                  style={{ border: 0 }}
-                  loading="lazy"
-                  allowFullScreen
-                  referrerPolicy="no-referrer-when-downgrade"
-                  src={`https://www.google.com/maps/embed/v1/place?key=${googleMapsApiKey}&q=Horseland+Hotel,Vithalrao+Kotwal+Road,Near+Dasturi+Point,Matheran,Maharashtra+410102&zoom=15`}
-                  className="w-full min-h-[450px]"
-                />
-                <Button
-                  onClick={() => window.open('https://www.google.com/maps/dir/?api=1&destination=18.9847,73.2673', '_blank')}
-                  className="absolute bottom-6 right-6 z-10 bg-primary hover:bg-primary/90 shadow-lg"
-                  size="lg"
-                >
-                  <MapPin className="w-4 h-4 mr-2" />
-                  Get Directions
-                </Button>
-              </>
+              <iframe
+                width="100%"
+                height="450"
+                style={{ border: 0 }}
+                loading="lazy"
+                allowFullScreen
+                referrerPolicy="no-referrer-when-downgrade"
+                src={`https://www.google.com/maps/embed/v1/place?key=${googleMapsApiKey}&q=Horseland+Hotel,Vithalrao+Kotwal+Road,Near+Dasturi+Point,Matheran,Maharashtra+410102&zoom=15`}
+                className="w-full min-h-[450px]"
+              />
             ) : (
               <div className="aspect-video bg-muted/50 flex items-center justify-center">
                 <div className="text-center">
