@@ -56,73 +56,101 @@ export const useMediaStats = () => {
       const usagePromises = images.map(async (img) => {
         const imageUrl = img.image_url;
         
-        // Check all tables for usage - must match useMediaUsage logic exactly
+        // Fetch ALL records to check arrays - must match useMediaUsage logic exactly
         const [pages, blogs, rooms, packages, activities, spa, meals] = await Promise.all([
-          // Check pages: hero_image, og_image, and hero_gallery array
-          supabase.from('pages').select('id, hero_gallery').or(`hero_image.eq.${imageUrl},og_image.eq.${imageUrl},hero_gallery.cs.["${imageUrl}"]`),
-          supabase.from('blog_posts').select('id').eq('featured_image', imageUrl),
-          // Check rooms: hero_image and gallery array
-          supabase.from('room_types').select('id, gallery'),
-          // Check packages: featured_image, banner_image, and gallery array
-          supabase.from('packages').select('id, gallery').or(`featured_image.eq.${imageUrl},banner_image.eq.${imageUrl}`),
-          // Check activities: image and media_urls array
-          supabase.from('activities').select('id, media_urls').eq('image', imageUrl),
-          // Check spa: image and media_urls array
-          supabase.from('spa_services').select('id, media_urls').eq('image', imageUrl),
-          supabase.from('meals').select('id').eq('featured_media', imageUrl),
+          supabase.from('pages').select('id, hero_image, og_image, hero_gallery'),
+          supabase.from('blog_posts').select('id, featured_image'),
+          supabase.from('room_types').select('id, hero_image, gallery'),
+          supabase.from('packages').select('id, featured_image, banner_image, gallery'),
+          supabase.from('activities').select('id, image, media_urls'),
+          supabase.from('spa_services').select('id, image, media_urls'),
+          supabase.from('meals').select('id, featured_media'),
         ]);
 
-        // Check gallery arrays for matches
+        // Check each field/array for matches
+        let pagesCount = 0;
+        pages.data?.forEach(page => {
+          if (page.hero_image === imageUrl || page.og_image === imageUrl) {
+            pagesCount++;
+          } else if (Array.isArray(page.hero_gallery) && page.hero_gallery.some((img: any) => 
+            (typeof img === 'string' ? img : img?.url) === imageUrl
+          )) {
+            pagesCount++;
+          }
+        });
+
+        let blogsCount = 0;
+        blogs.data?.forEach(blog => {
+          if (blog.featured_image === imageUrl) {
+            blogsCount++;
+          }
+        });
+
         let roomsCount = 0;
         rooms.data?.forEach(room => {
-          if (Array.isArray(room.gallery) && room.gallery.includes(imageUrl)) {
+          if (room.hero_image === imageUrl) {
+            roomsCount++;
+          } else if (Array.isArray(room.gallery) && room.gallery.includes(imageUrl)) {
             roomsCount++;
           }
         });
 
-        let packagesCount = (packages.data?.length || 0);
+        let packagesCount = 0;
         packages.data?.forEach(pkg => {
-          if (Array.isArray(pkg.gallery) && pkg.gallery.includes(imageUrl)) {
+          if (pkg.featured_image === imageUrl || pkg.banner_image === imageUrl) {
+            packagesCount++;
+          } else if (Array.isArray(pkg.gallery) && pkg.gallery.includes(imageUrl)) {
             packagesCount++;
           }
         });
 
-        let activitiesCount = (activities.data?.length || 0);
+        let activitiesCount = 0;
         activities.data?.forEach(activity => {
-          if (Array.isArray(activity.media_urls) && activity.media_urls.some((m: any) => 
+          if (activity.image === imageUrl) {
+            activitiesCount++;
+          } else if (Array.isArray(activity.media_urls) && activity.media_urls.some((m: any) => 
             typeof m === 'string' ? m === imageUrl : m?.url === imageUrl
           )) {
             activitiesCount++;
           }
         });
 
-        let spaCount = (spa.data?.length || 0);
+        let spaCount = 0;
         spa.data?.forEach(service => {
-          if (Array.isArray(service.media_urls) && service.media_urls.includes(imageUrl)) {
+          if (service.image === imageUrl) {
+            spaCount++;
+          } else if (Array.isArray(service.media_urls) && service.media_urls.includes(imageUrl)) {
             spaCount++;
           }
         });
 
+        let mealsCount = 0;
+        meals.data?.forEach(meal => {
+          if (meal.featured_media === imageUrl) {
+            mealsCount++;
+          }
+        });
+
         const usageCount = [
-          pages.data?.length || 0,
-          blogs.data?.length || 0,
+          pagesCount,
+          blogsCount,
           roomsCount,
           packagesCount,
           activitiesCount,
           spaCount,
-          meals.data?.length || 0,
+          mealsCount,
         ].reduce((a, b) => a + b, 0);
 
         return {
           isUsed: usageCount > 0,
           byType: {
-            pages: pages.data?.length || 0,
-            blogs: blogs.data?.length || 0,
+            pages: pagesCount,
+            blogs: blogsCount,
             rooms: roomsCount,
             packages: packagesCount,
             activities: activitiesCount,
             spa: spaCount,
-            meals: meals.data?.length || 0,
+            meals: mealsCount,
           }
         };
       });
