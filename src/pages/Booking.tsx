@@ -125,6 +125,88 @@ const Booking = () => {
     loadHeroImage();
   }, [checkIn, checkOut, guests, roomTypeId]);
 
+  // Load booking state from localStorage on mount
+  useEffect(() => {
+    const savedBooking = localStorage.getItem('currentBooking');
+    if (savedBooking) {
+      try {
+        const booking = JSON.parse(savedBooking);
+        
+        // Restore dates if not in URL
+        if (!checkIn && booking.checkIn) {
+          setSearchCheckIn(booking.checkIn);
+          searchParams.set('checkIn', booking.checkIn);
+        }
+        if (!checkOut && booking.checkOut) {
+          setSearchCheckOut(booking.checkOut);
+          searchParams.set('checkOut', booking.checkOut);
+        }
+        if (!guests && booking.guests) {
+          setSearchGuests(booking.guests.toString());
+          searchParams.set('guests', booking.guests.toString());
+        }
+        
+        // Restore selected room
+        if (booking.selectedRoom) {
+          setSelectedRoomType(booking.selectedRoom);
+          setShowBookingForm(true);
+        }
+        
+        // Restore addons
+        if (booking.selectedAddons) {
+          setSelectedAddons(booking.selectedAddons);
+        }
+        
+        // Restore spa services
+        if (booking.selectedSpaServices) {
+          const spaAddons = booking.selectedSpaServices.map((spa: any) => ({
+            ...spa,
+            type: 'spa' as const
+          }));
+          setSelectedAddons(prev => {
+            const filtered = prev.filter(a => a.type !== 'spa');
+            return [...filtered, ...spaAddons];
+          });
+        }
+        
+        // Restore pickup/bedding
+        if (booking.selectedPickup) {
+          setSelectedPickup(booking.selectedPickup);
+        }
+        if (booking.selectedBedding) {
+          setSelectedBedding(booking.selectedBedding);
+        }
+        
+        // Update URL if dates were restored
+        if ((!checkIn && booking.checkIn) || (!checkOut && booking.checkOut)) {
+          setSearchParams(searchParams);
+        }
+      } catch (error) {
+        console.error('Error loading saved booking:', error);
+      }
+    }
+  }, []);
+
+  // Save booking state to localStorage whenever it changes
+  useEffect(() => {
+    if (checkIn || checkOut || selectedRoomType || selectedAddons.length > 0) {
+      const bookingData = {
+        checkIn: checkIn || searchCheckIn,
+        checkOut: checkOut || searchCheckOut,
+        guests: guests || parseInt(searchGuests),
+        selectedRoom: selectedRoomType,
+        selectedAddons: selectedAddons,
+        selectedSpaServices: selectedAddons.filter(a => a.type === 'spa'),
+        selectedPickup,
+        selectedBedding,
+        guestDetails: guestDetails.name ? guestDetails : null,
+        lastUpdated: new Date().toISOString()
+      };
+      
+      localStorage.setItem('currentBooking', JSON.stringify(bookingData));
+    }
+  }, [checkIn, checkOut, guests, searchCheckIn, searchCheckOut, searchGuests, selectedRoomType, selectedAddons, selectedPickup, selectedBedding, guestDetails]);
+
   const loadHeroImage = async () => {
     try {
       const { data } = await supabase
@@ -271,6 +353,26 @@ const Booking = () => {
         variant: "destructive",
       });
       return;
+    }
+
+    // Check if dates have changed
+    const datesChanged = searchCheckIn !== checkIn || searchCheckOut !== checkOut;
+    
+    if (datesChanged) {
+      // Clear room and addon selections when dates change
+      setSelectedRoomType(null);
+      setSelectedAddons([]);
+      setSelectedPickup(null);
+      setSelectedBedding([]);
+      setShowBookingForm(false);
+      
+      // Clear localStorage booking data
+      localStorage.removeItem('currentBooking');
+      
+      toast({
+        title: "Dates Updated",
+        description: "Please select your room again for the new dates",
+      });
     }
 
     const newSearchParams = new URLSearchParams();
@@ -469,6 +571,9 @@ const Booking = () => {
         title: "Booking Confirmed!",
         description: `Your booking has been confirmed. Payment ID: ${paymentId}`,
       });
+
+      // Clear booking data from localStorage after successful booking
+      localStorage.removeItem('currentBooking');
 
       // Redirect to confirmation page or home
       navigate('/');
