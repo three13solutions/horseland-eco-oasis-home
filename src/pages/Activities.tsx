@@ -331,12 +331,11 @@ const Activities = () => {
                   </div>
 
                   <div className="flex gap-2">
-                    <Button variant="outline" size="sm" className="font-body flex-1">
+                    <Button variant="outline" className="font-body flex-1 h-10">
                       Learn More
                     </Button>
                     <Button 
-                      size="sm" 
-                      className="font-body flex-1"
+                      className="font-body flex-1 h-10"
                       onClick={() => handleAddToStay(activity)}
                       variant={addedActivityIds.includes(activity.id) ? "secondary" : "default"}
                     >

@@ -317,19 +317,17 @@ const SpaServiceDetail = () => {
               )}
 
               {/* Action Buttons */}
-              <div className="flex flex-col sm:flex-row gap-4 mt-8">
+              <div className="grid grid-cols-2 gap-3 mt-8">
                 <Button 
-                  size="lg"
-                  className="flex-1 font-body gap-2"
+                  className="font-body gap-2 h-12"
                   onClick={handleAddToStay}
                   variant={isAdded ? "secondary" : "default"}
                 >
-                  {isAdded ? "✓ Added to Stay" : <><Plus className="h-5 w-5" />Add to My Stay</>}
+                  {isAdded ? "✓ Added" : <><Plus className="h-4 w-4" />Add to Stay</>}
                 </Button>
                 <Button 
-                  size="lg"
                   variant="outline"
-                  className="flex-1 font-body"
+                  className="font-body h-12"
                   onClick={() => navigate('/booking?tab=spa')}
                 >
                   View Booking

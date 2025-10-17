@@ -374,17 +374,15 @@ const Spa = () => {
                                 
                                 <div className="flex gap-2">
                                   <Button 
-                                    size="sm"
                                     variant="outline"
-                                    className="flex-1 font-body"
+                                    className="flex-1 font-body h-10"
                                     onClick={() => navigate(`/spa/${service.id}`)}
                                   >
                                     <span className="hidden sm:inline text-xs">Learn More</span>
                                     <Sparkles className="h-3 w-3 sm:hidden" />
                                   </Button>
                                   <Button 
-                                    size="sm"
-                                    className="flex-1 font-body gap-1"
+                                    className="flex-1 font-body gap-1 h-10"
                                     onClick={() => handleAddToStay(service)}
                                     variant={addedServiceIds.includes(service.id) ? "secondary" : "default"}
                                   >
