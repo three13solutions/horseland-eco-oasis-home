@@ -1318,8 +1318,7 @@ const Booking = () => {
                         <div className="grid grid-cols-2 gap-2">
                           <Button 
                             variant="outline"
-                            className="w-full text-xs md:text-sm" 
-                            size="default"
+                            className="w-full text-xs md:text-sm h-10 md:h-11" 
                             onClick={() => {
                               const summaryElement = document.querySelector('[data-booking-summary]');
                               summaryElement?.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -1329,16 +1328,14 @@ const Booking = () => {
                           </Button>
                           {!showGuestDetails ? (
                             <Button 
-                              className="w-full text-xs md:text-sm" 
-                              size="default"
+                              className="w-full text-xs md:text-sm h-10 md:h-11" 
                               onClick={handleProceedToGuestDetails}
                             >
                               Add to Stay
                             </Button>
                           ) : (
                             <Button 
-                              className="w-full text-xs md:text-sm" 
-                              size="default"
+                              className="w-full text-xs md:text-sm h-10 md:h-11" 
                               onClick={handleProceedToPayment}
                             >
                               Proceed to Payment
@@ -1347,8 +1344,7 @@ const Booking = () => {
                         </div>
                         <Button 
                           variant="destructive"
-                          className="w-full text-xs md:text-sm" 
-                          size="default"
+                          className="w-full text-xs md:text-sm h-10 md:h-11" 
                           onClick={handleClearBooking}
                         >
                           Clear Booking
