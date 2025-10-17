@@ -1,10 +1,9 @@
 
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Menu, X, Calendar, ChevronDown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
-import BookingModal from '@/components/BookingModal';
 import { useTranslationContext } from '@/components/admin/TranslationProvider';
 import LanguageSelector from '@/components/LanguageSelector';
 
@@ -25,6 +24,7 @@ interface SiteSettings {
 
 const NavigationV5 = () => {
   const { getTranslation } = useTranslationContext();
+  const navigate = useNavigate();
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [navigationItems, setNavigationItems] = useState<NavigationItem[]>([]);
@@ -34,7 +34,6 @@ const NavigationV5 = () => {
     brand_descriptor: 'Hotel'
   });
   const [experiencesOpen, setExperiencesOpen] = useState(false);
-  const [showBookingModal, setShowBookingModal] = useState(false);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -228,7 +227,7 @@ const NavigationV5 = () => {
             <Button 
               size="sm" 
               className="hidden md:flex bg-primary hover:bg-primary/90 text-primary-foreground"
-              onClick={() => setShowBookingModal(true)}
+              onClick={() => navigate('/booking')}
             >
               <Calendar className="w-4 h-4 mr-2" />
               {getTranslation('navigation.bookNow', 'Book Now')}
@@ -282,7 +281,7 @@ const NavigationV5 = () => {
                 </div>
                 <Button 
                   className="mt-2 w-full bg-primary hover:bg-primary/90 text-primary-foreground"
-                  onClick={() => setShowBookingModal(true)}
+                  onClick={() => navigate('/booking')}
                 >
                   <Calendar className="w-4 h-4 mr-2" />
                   {getTranslation('navigation.bookNow', 'Book Now')}
@@ -292,12 +291,6 @@ const NavigationV5 = () => {
           </div>
         )}
       </div>
-      
-      {/* Booking Modal */}
-      <BookingModal 
-        isOpen={showBookingModal} 
-        onClose={() => setShowBookingModal(false)} 
-      />
     </nav>
   );
 };
