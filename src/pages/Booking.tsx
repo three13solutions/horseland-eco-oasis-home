@@ -127,65 +127,95 @@ const Booking = () => {
 
   // Load booking state from localStorage on mount
   useEffect(() => {
-    const savedBooking = localStorage.getItem('currentBooking');
-    if (savedBooking) {
-      try {
-        const booking = JSON.parse(savedBooking);
-        
-        // Restore dates if not in URL
-        if (!checkIn && booking.checkIn) {
-          setSearchCheckIn(booking.checkIn);
-          searchParams.set('checkIn', booking.checkIn);
+    const loadBookingData = () => {
+      const savedBooking = localStorage.getItem('currentBooking');
+      if (savedBooking) {
+        try {
+          const booking = JSON.parse(savedBooking);
+          
+          // Restore dates if not in URL
+          if (!checkIn && booking.checkIn) {
+            setSearchCheckIn(booking.checkIn);
+            searchParams.set('checkIn', booking.checkIn);
+          }
+          if (!checkOut && booking.checkOut) {
+            setSearchCheckOut(booking.checkOut);
+            searchParams.set('checkOut', booking.checkOut);
+          }
+          if (!guests && booking.guests) {
+            setSearchGuests(booking.guests.toString());
+            searchParams.set('guests', booking.guests.toString());
+          }
+          
+          // Restore selected room
+          if (booking.selectedRoom) {
+            setSelectedRoomType(booking.selectedRoom);
+            setShowBookingForm(true);
+          }
+          
+          // Combine all addons from different sources
+          const allAddons = [...(booking.selectedAddons || [])];
+          
+          // Add spa services if they exist
+          if (booking.selectedSpaServices && booking.selectedSpaServices.length > 0) {
+            const spaAddons = booking.selectedSpaServices.map((spa: any) => ({
+              id: spa.id,
+              title: spa.title,
+              price: spa.price,
+              duration: spa.duration,
+              quantity: spa.quantity || 1,
+              type: 'spa' as const
+            }));
+            
+            // Remove existing spa addons and add new ones
+            const filteredAddons = allAddons.filter(a => a.type !== 'spa');
+            allAddons.length = 0;
+            allAddons.push(...filteredAddons, ...spaAddons);
+          }
+          
+          setSelectedAddons(allAddons);
+          
+          // Restore pickup/bedding
+          if (booking.selectedPickup) {
+            setSelectedPickup(booking.selectedPickup);
+          }
+          if (booking.selectedBedding) {
+            setSelectedBedding(booking.selectedBedding);
+          }
+          
+          // Update URL if dates were restored
+          if ((!checkIn && booking.checkIn) || (!checkOut && booking.checkOut)) {
+            setSearchParams(searchParams);
+          }
+        } catch (error) {
+          console.error('Error loading saved booking:', error);
         }
-        if (!checkOut && booking.checkOut) {
-          setSearchCheckOut(booking.checkOut);
-          searchParams.set('checkOut', booking.checkOut);
-        }
-        if (!guests && booking.guests) {
-          setSearchGuests(booking.guests.toString());
-          searchParams.set('guests', booking.guests.toString());
-        }
-        
-        // Restore selected room
-        if (booking.selectedRoom) {
-          setSelectedRoomType(booking.selectedRoom);
-          setShowBookingForm(true);
-        }
-        
-        // Restore addons
-        if (booking.selectedAddons) {
-          setSelectedAddons(booking.selectedAddons);
-        }
-        
-        // Restore spa services
-        if (booking.selectedSpaServices) {
-          const spaAddons = booking.selectedSpaServices.map((spa: any) => ({
-            ...spa,
-            type: 'spa' as const
-          }));
-          setSelectedAddons(prev => {
-            const filtered = prev.filter(a => a.type !== 'spa');
-            return [...filtered, ...spaAddons];
-          });
-        }
-        
-        // Restore pickup/bedding
-        if (booking.selectedPickup) {
-          setSelectedPickup(booking.selectedPickup);
-        }
-        if (booking.selectedBedding) {
-          setSelectedBedding(booking.selectedBedding);
-        }
-        
-        // Update URL if dates were restored
-        if ((!checkIn && booking.checkIn) || (!checkOut && booking.checkOut)) {
-          setSearchParams(searchParams);
-        }
-      } catch (error) {
-        console.error('Error loading saved booking:', error);
       }
-    }
-  }, []);
+    };
+
+    // Load on mount
+    loadBookingData();
+
+    // Listen for visibility changes (when user returns to this tab/page)
+    const handleVisibilityChange = () => {
+      if (!document.hidden) {
+        loadBookingData();
+      }
+    };
+
+    // Listen for window focus (when user returns to this window)
+    const handleFocus = () => {
+      loadBookingData();
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    window.addEventListener('focus', handleFocus);
+
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      window.removeEventListener('focus', handleFocus);
+    };
+  }, [checkIn, checkOut, guests]);
 
   // Save booking state to localStorage whenever it changes
   useEffect(() => {
