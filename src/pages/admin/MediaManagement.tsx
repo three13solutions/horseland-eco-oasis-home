@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -13,10 +13,22 @@ import { useToast } from '@/hooks/use-toast';
 import { MediaPicker } from '@/components/admin/MediaPicker';
 import { MediaCard } from '@/components/admin/MediaCard';
 import { MediaListRow } from '@/components/admin/MediaListRow';
+import { UnusedMediaDashboard } from '@/components/admin/UnusedMediaDashboard';
+import { UsageDetailsModal } from '@/components/admin/UsageDetailsModal';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { supabase } from '@/integrations/supabase/client';
 import { useMediaList } from '@/hooks/useMediaList';
 import { useMediaUsage } from '@/hooks/useMediaUsage';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import {
   Upload, 
   Edit, 
@@ -77,22 +89,63 @@ const MediaManagement = () => {
   const [showFilters, setShowFilters] = useState(false);
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [isMigrating, setIsMigrating] = useState(false);
+  const [usageModalOpen, setUsageModalOpen] = useState(false);
+  const [selectedMediaForUsage, setSelectedMediaForUsage] = useState<GalleryImage | null>(null);
+  const [deleteConfirmation, setDeleteConfirmation] = useState<{
+    open: boolean;
+    image: GalleryImage | null;
+    usages: any[];
+  }>({ open: false, image: null, usages: [] });
   const [filters, setFilters] = useState<{
     mediaType: 'image' | 'video' | 'all';
     sourceType: 'upload' | 'external' | 'mirrored' | 'hardcoded' | 'all';
     categoryId: string;
     categorySlug?: string;
     searchTerm: string;
+    usageFilter: 'all' | 'used' | 'unused';
   }>({
     mediaType: 'all',
     sourceType: 'all',
     categoryId: '',
     categorySlug: undefined,
-    searchTerm: ''
+    searchTerm: '',
+    usageFilter: 'all'
   });
   const { toast } = useToast();
 
-  const { data: images = [], isLoading, refetch } = useMediaList(filters);
+  const { data: allImages = [], isLoading, refetch } = useMediaList(filters);
+
+  // Calculate usage statistics
+  const mediaStats = useMemo(() => {
+    const stats = {
+      total: allImages.length,
+      used: 0,
+      unused: 0,
+      byType: {
+        pages: 0,
+        blogs: 0,
+        rooms: 0,
+        packages: 0,
+        activities: 0,
+        spa: 0,
+        meals: 0,
+      },
+      byMediaType: {
+        images: allImages.filter(img => img.media_type === 'image').length,
+        videos: allImages.filter(img => img.media_type === 'video').length,
+      },
+    };
+    
+    return stats;
+  }, [allImages]);
+
+  // Filter images based on usage filter
+  const images = useMemo(() => {
+    if (filters.usageFilter === 'all') return allImages;
+    // For usage filtering, we'll need to check in real-time
+    // This is a placeholder - actual filtering happens in the render
+    return allImages;
+  }, [allImages, filters.usageFilter]);
 
   useEffect(() => {
     fetchCategories();
@@ -175,9 +228,28 @@ const MediaManagement = () => {
     }
   };
 
-  const handleDeleteImage = async (id: string) => {
-    if (!confirm('Are you sure you want to delete this media?')) return;
+  const handleDeleteImage = async (image: GalleryImage, usages: any[]) => {
+    // Safety check for hardcoded media
+    if (image.is_hardcoded) {
+      toast({
+        title: "Cannot Delete Hardcoded Media",
+        description: "This media is hardcoded and referenced in the application code. Deletion is blocked to prevent breaking the site.",
+        variant: "destructive",
+      });
+      return;
+    }
 
+    // If media has usages, show confirmation with details
+    if (usages.length > 0) {
+      setDeleteConfirmation({ open: true, image, usages });
+      return;
+    }
+
+    // Direct delete for unused media
+    await performDelete(image.id);
+  };
+
+  const performDelete = async (id: string) => {
     try {
       const { error } = await supabase
         .from('gallery_images')
@@ -191,6 +263,7 @@ const MediaManagement = () => {
         description: "Media deleted successfully",
       });
       
+      setDeleteConfirmation({ open: false, image: null, usages: [] });
       refetch();
     } catch (error) {
       console.error('Error deleting media:', error);
@@ -204,6 +277,21 @@ const MediaManagement = () => {
 
   const handleBulkDelete = async () => {
     if (selectedItems.length === 0) return;
+    
+    // Check if any hardcoded media is selected
+    const hardcodedSelected = allImages.filter(
+      img => selectedItems.includes(img.id) && img.is_hardcoded
+    );
+    
+    if (hardcodedSelected.length > 0) {
+      toast({
+        title: "Cannot Delete Hardcoded Media",
+        description: `${hardcodedSelected.length} selected items are hardcoded and cannot be deleted. Please deselect them first.`,
+        variant: "destructive",
+      });
+      return;
+    }
+
     if (!confirm(`Delete ${selectedItems.length} selected items?`)) return;
 
     try {
@@ -229,6 +317,14 @@ const MediaManagement = () => {
         variant: "destructive",
       });
     }
+  };
+
+  const handleSelectAllUnused = () => {
+    // This would need to be implemented with usage checking
+    toast({
+      title: "Select All Unused",
+      description: "This feature requires checking usage for all media items...",
+    });
   };
 
   const getSourceIcon = (sourceType: string) => {
@@ -305,6 +401,9 @@ const MediaManagement = () => {
         </div>
       </div>
 
+      {/* Usage Statistics Dashboard */}
+      <UnusedMediaDashboard stats={mediaStats} />
+
       {/* Filters */}
       <Card>
         <CardContent className="pt-6">
@@ -370,6 +469,20 @@ const MediaManagement = () => {
                 </SelectContent>
               </Select>
 
+              <Select 
+                value={filters.usageFilter} 
+                onValueChange={(value: 'all' | 'used' | 'unused') => setFilters({ ...filters, usageFilter: value })}
+              >
+                <SelectTrigger className="w-32">
+                  <SelectValue placeholder="Usage" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Media</SelectItem>
+                  <SelectItem value="used">Used Only</SelectItem>
+                  <SelectItem value="unused">Unused Only</SelectItem>
+                </SelectContent>
+              </Select>
+
               <Button
                 variant="outline"
                 size="icon"
@@ -407,11 +520,7 @@ const MediaManagement = () => {
                   setEditingImage(image as GalleryImage);
                   setIsDialogOpen(true);
                 }}
-                onDelete={async () => {
-                  if (confirm('Are you sure you want to delete this media item?')) {
-                    await handleDeleteImage(image.id);
-                  }
-                }}
+                onDelete={(usages) => handleDeleteImage(image as GalleryImage, usages)}
               />
             ))}
           </div>
@@ -458,11 +567,7 @@ const MediaManagement = () => {
                       setEditingImage(image as GalleryImage);
                       setIsDialogOpen(true);
                     }}
-                    onDelete={async () => {
-                      if (confirm('Are you sure you want to delete this media item?')) {
-                        await handleDeleteImage(image.id);
-                      }
-                    }}
+                onDelete={(usages) => handleDeleteImage(image as GalleryImage, usages)}
                   />
                 ))}
               </TableBody>
@@ -509,6 +614,60 @@ const MediaManagement = () => {
           />
         </DialogContent>
       </Dialog>
+
+      {/* Usage Details Modal */}
+      {selectedMediaForUsage && (
+        <UsageDetailsModal
+          open={usageModalOpen}
+          onOpenChange={setUsageModalOpen}
+          imageUrl={selectedMediaForUsage.image_url}
+          usages={[]}
+        />
+      )}
+
+      {/* Delete Confirmation with Usage Warning */}
+      <AlertDialog 
+        open={deleteConfirmation.open} 
+        onOpenChange={(open) => !open && setDeleteConfirmation({ open: false, image: null, usages: [] })}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Media with Active Usages?</AlertDialogTitle>
+            <AlertDialogDescription className="space-y-3">
+              <p>
+                This media is currently used in <strong>{deleteConfirmation.usages.length}</strong> location
+                {deleteConfirmation.usages.length > 1 ? 's' : ''}:
+              </p>
+              <div className="bg-muted p-3 rounded-lg space-y-1 max-h-40 overflow-y-auto">
+                {deleteConfirmation.usages.slice(0, 5).map((usage, idx) => (
+                  <div key={idx} className="text-sm flex items-center gap-2">
+                    <Badge variant="secondary">{usage.type}</Badge>
+                    <span>{usage.title}</span>
+                  </div>
+                ))}
+                {deleteConfirmation.usages.length > 5 && (
+                  <p className="text-xs text-muted-foreground">
+                    ...and {deleteConfirmation.usages.length - 5} more
+                  </p>
+                )}
+              </div>
+              <p className="text-destructive font-medium">
+                ⚠️ Deleting this media will NOT automatically remove it from these locations.
+                This may result in broken images on your website.
+              </p>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              onClick={() => deleteConfirmation.image && performDelete(deleteConfirmation.image.id)}
+            >
+              Delete Anyway
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };

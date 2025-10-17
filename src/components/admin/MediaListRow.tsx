@@ -2,7 +2,7 @@ import { TableRow, TableCell } from '@/components/ui/table';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Edit, Trash2, Image as ImageIcon, Video, Eye } from 'lucide-react';
+import { Edit, Trash2, Image as ImageIcon, Video, Eye, AlertTriangle } from 'lucide-react';
 import { useMediaUsage } from '@/hooks/useMediaUsage';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 
@@ -11,7 +11,7 @@ interface MediaListRowProps {
   selected: boolean;
   onSelect: (checked: boolean) => void;
   onEdit: () => void;
-  onDelete: () => void;
+  onDelete: (usages: any[]) => void;
 }
 
 export const MediaListRow: React.FC<MediaListRowProps> = ({ image, selected, onSelect, onEdit, onDelete }) => {
@@ -61,7 +61,7 @@ export const MediaListRow: React.FC<MediaListRowProps> = ({ image, selected, onS
         {usages.length > 0 ? (
           <Popover>
             <PopoverTrigger asChild>
-              <Button variant="ghost" size="sm">
+              <Button variant="ghost" size="sm" className="text-green-600 dark:text-green-400">
                 <Eye className="w-4 h-4 mr-1" />
                 {usages.length} location{usages.length > 1 ? 's' : ''}
               </Button>
@@ -80,7 +80,10 @@ export const MediaListRow: React.FC<MediaListRowProps> = ({ image, selected, onS
             </PopoverContent>
           </Popover>
         ) : (
-          <span className="text-muted-foreground text-sm">Not used</span>
+          <div className="flex items-center gap-2">
+            <AlertTriangle className="w-4 h-4 text-orange-600 dark:text-orange-400" />
+            <span className="text-orange-600 dark:text-orange-400 text-sm font-medium">Unused</span>
+          </div>
         )}
       </TableCell>
       <TableCell className="text-right">
@@ -88,7 +91,7 @@ export const MediaListRow: React.FC<MediaListRowProps> = ({ image, selected, onS
           <Button size="sm" variant="ghost" onClick={onEdit}>
             <Edit className="h-4 w-4" />
           </Button>
-          <Button size="sm" variant="ghost" onClick={onDelete}>
+          <Button size="sm" variant="ghost" onClick={() => onDelete(usages)}>
             <Trash2 className="h-4 w-4" />
           </Button>
         </div>

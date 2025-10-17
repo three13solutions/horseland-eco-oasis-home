@@ -2,7 +2,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Edit, Trash2, Camera, Heart, Image as ImageIcon, Video, Eye } from 'lucide-react';
+import { Edit, Trash2, Camera, Heart, Image as ImageIcon, Video, Eye, AlertTriangle, CheckCircle } from 'lucide-react';
 import { useMediaUsage } from '@/hooks/useMediaUsage';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 
@@ -11,20 +11,35 @@ interface MediaCardProps {
   selected: boolean;
   onSelect: (checked: boolean) => void;
   onEdit: () => void;
-  onDelete: () => void;
+  onDelete: (usages: any[]) => void;
 }
 
 export const MediaCard: React.FC<MediaCardProps> = ({ image, selected, onSelect, onEdit, onDelete }) => {
   const { data: usages = [] } = useMediaUsage(image.image_url);
+  const isUnused = usages.length === 0;
 
   return (
-    <Card className={`overflow-hidden ${selected ? 'ring-2 ring-primary' : ''}`}>
+    <Card className={`overflow-hidden ${selected ? 'ring-2 ring-primary' : ''} ${isUnused ? 'border-orange-200 dark:border-orange-900' : ''}`}>
       <div className="relative">
         <Checkbox
           className="absolute top-2 left-2 z-10 bg-background"
           checked={selected}
           onCheckedChange={onSelect}
         />
+        {/* Usage Badge - Top Right */}
+        <div className="absolute top-2 right-2 z-10">
+          {isUnused ? (
+            <Badge variant="outline" className="bg-orange-500/90 text-white border-orange-600">
+              <AlertTriangle className="w-3 h-3 mr-1" />
+              Unused
+            </Badge>
+          ) : (
+            <Badge variant="outline" className="bg-green-500/90 text-white border-green-600">
+              <CheckCircle className="w-3 h-3 mr-1" />
+              {usages.length}
+            </Badge>
+          )}
+        </div>
         <div className="aspect-video bg-muted flex items-center justify-center overflow-hidden">
           {image.media_type === 'video' ? (
             <Video className="h-12 w-12 text-muted-foreground" />
@@ -36,11 +51,11 @@ export const MediaCard: React.FC<MediaCardProps> = ({ image, selected, onSelect,
             />
           )}
         </div>
-        <div className="absolute top-2 right-2 flex gap-2">
+        <div className="absolute bottom-2 right-2 flex gap-2">
           <Button size="sm" variant="secondary" onClick={onEdit}>
             <Edit className="h-3 w-3" />
           </Button>
-          <Button size="sm" variant="destructive" onClick={onDelete}>
+          <Button size="sm" variant="destructive" onClick={() => onDelete(usages)}>
             <Trash2 className="h-3 w-3" />
           </Button>
         </div>
