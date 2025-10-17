@@ -214,52 +214,46 @@ const SpaServiceDetail = () => {
     <div className="min-h-screen bg-background overflow-x-hidden">
       <NavigationV5 />
       
-      {/* Hero Section with Image */}
-      <section className="relative h-[50vh] min-h-[400px] bg-muted">
-        {service.image && (
-          <>
-            <div className="absolute inset-0 flex items-center justify-center overflow-hidden">
-              <img 
-                src={service.image}
-                alt={service.title}
-                className="w-full h-full object-contain"
-              />
-              <div className="absolute inset-0 bg-gradient-to-b from-black/20 to-black/40"></div>
-            </div>
-            <Button
-              variant="secondary"
-              size="sm"
-              className="absolute top-24 left-4 md:left-8 z-10"
-              onClick={() => navigate('/spa')}
-            >
-              <ArrowLeft className="h-4 w-4 mr-2" />
-              Back to Spa
-            </Button>
-          </>
-        )}
+      {/* Header Section */}
+      <section className="bg-muted/30 py-16">
+        <div className="max-w-6xl mx-auto px-4">
+          <Button
+            variant="ghost"
+            size="sm"
+            className="mb-4"
+            onClick={() => navigate('/spa')}
+          >
+            <ArrowLeft className="h-4 w-4 mr-2" />
+            Back to Spa Services
+          </Button>
+          <h1 className="text-3xl md:text-5xl font-heading font-bold text-foreground">
+            Mountain Spa & Wellness
+          </h1>
+        </div>
       </section>
 
       {/* Service Details */}
-      <section className="py-16 -mt-20 relative z-10">
-        <div className="max-w-4xl mx-auto px-4">
-          <Card className="shadow-xl">
-            <CardContent className="p-8">
-              <div className="flex items-start justify-between mb-6">
+      <section className="py-16">
+        <div className="max-w-6xl mx-auto px-4">
+          <div className="grid md:grid-cols-2 gap-8 mb-12">
+            {/* Left: Service Info */}
+            <div className="order-2 md:order-1">
+              <div className="flex items-start justify-between mb-4">
                 <div className="flex-1">
-                  <h1 className="text-3xl md:text-4xl font-heading font-bold mb-2 text-foreground">
+                  <h2 className="text-3xl font-heading font-bold mb-3 text-foreground">
                     {service.title}
-                  </h1>
-                  {service.duration && (
-                    <div className="flex items-center gap-2 text-muted-foreground">
-                      <Clock className="w-5 h-5" />
-                      <span className="font-body text-lg">{service.duration} minutes</span>
-                    </div>
-                  )}
-                </div>
-                <div className="text-right">
-                  <Badge className="bg-primary text-primary-foreground text-lg px-4 py-2">
-                    ₹{service.price}
-                  </Badge>
+                  </h2>
+                  <div className="flex items-center gap-4 mb-4">
+                    {service.duration && (
+                      <div className="flex items-center gap-2 text-muted-foreground">
+                        <Clock className="w-5 h-5" />
+                        <span className="font-body">{service.duration} minutes</span>
+                      </div>
+                    )}
+                    <Badge className="bg-primary text-primary-foreground px-4 py-1.5">
+                      ₹{service.price}
+                    </Badge>
+                  </div>
                 </div>
               </div>
 
@@ -267,10 +261,10 @@ const SpaServiceDetail = () => {
 
               {/* Description */}
               {service.description && (
-                <div className="mb-8">
-                  <h2 className="text-xl font-heading font-semibold mb-3 text-foreground">
+                <div className="mb-6">
+                  <h3 className="text-xl font-heading font-semibold mb-3 text-foreground">
                     About This Treatment
-                  </h2>
+                  </h3>
                   <p className="text-muted-foreground font-body leading-relaxed whitespace-pre-line">
                     {service.description}
                   </p>
@@ -279,11 +273,11 @@ const SpaServiceDetail = () => {
 
               {/* Benefits Description */}
               {service.benefits && (
-                <div className="mb-8">
-                  <h2 className="text-xl font-heading font-semibold mb-3 text-foreground flex items-center gap-2">
+                <div className="mb-6">
+                  <h3 className="text-xl font-heading font-semibold mb-3 text-foreground flex items-center gap-2">
                     <Sparkles className="h-5 w-5 text-primary" />
                     Benefits
-                  </h2>
+                  </h3>
                   <p className="text-muted-foreground font-body leading-relaxed whitespace-pre-line">
                     {service.benefits}
                   </p>
@@ -292,16 +286,15 @@ const SpaServiceDetail = () => {
 
               {/* Benefits Tags */}
               {service.tags && service.tags.length > 0 && (
-                <div className="mb-8">
-                  <h2 className="text-xl font-heading font-semibold mb-4 text-foreground">
-                    Benefits
-                  </h2>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <div className="mb-6">
+                  <h3 className="text-lg font-heading font-semibold mb-3 text-foreground">
+                    Key Features
+                  </h3>
+                  <div className="flex flex-wrap gap-2">
                     {service.tags.map((tag: string, index: number) => (
-                      <div key={index} className="flex items-center gap-2">
-                        <div className="w-2 h-2 bg-primary rounded-full"></div>
-                        <span className="text-muted-foreground font-body">{tag}</span>
-                      </div>
+                      <Badge key={index} variant="secondary" className="text-sm">
+                        {tag}
+                      </Badge>
                     ))}
                   </div>
                 </div>
@@ -326,8 +319,23 @@ const SpaServiceDetail = () => {
                   View Booking
                 </Button>
               </div>
-            </CardContent>
-          </Card>
+            </div>
+
+            {/* Right: Image (Top on mobile) */}
+            <div className="order-1 md:order-2">
+              {service.image && (
+                <div className="sticky top-24">
+                  <div className="relative rounded-lg overflow-hidden shadow-xl aspect-[4/3] md:aspect-square">
+                    <img 
+                      src={service.image}
+                      alt={service.title}
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
         </div>
       </section>
 
