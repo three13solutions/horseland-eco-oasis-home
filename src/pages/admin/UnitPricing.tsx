@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { HomeIcon, Save, X, IndianRupee } from 'lucide-react';
+import { HomeIcon, Save, X, IndianRupee, LayoutGrid, List } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 
@@ -31,6 +32,7 @@ export default function UnitPricing() {
   const [loading, setLoading] = useState(true);
   const [editingUnit, setEditingUnit] = useState<string | null>(null);
   const [pricing, setPricing] = useState<CustomPricing>({});
+  const [groupBy, setGroupBy] = useState<'all' | 'category'>('all');
   const { toast } = useToast();
 
   useEffect(() => {
@@ -150,6 +152,121 @@ export default function UnitPricing() {
     return unit.room_types?.base_price || 0;
   };
 
+  const groupedUnits = groupBy === 'category' 
+    ? units.reduce((acc, unit) => {
+        const categoryName = unit.room_types?.name || 'Uncategorized';
+        if (!acc[categoryName]) {
+          acc[categoryName] = [];
+        }
+        acc[categoryName].push(unit);
+        return acc;
+      }, {} as Record<string, RoomUnit[]>)
+    : { 'All Units': units };
+
+  const renderUnitCard = (unit: RoomUnit) => (
+    <div key={unit.id} className="border rounded-lg p-4 space-y-4">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <HomeIcon className="h-5 w-5 text-muted-foreground" />
+          <div>
+            <div className="font-semibold">
+              {unit.unit_name || `Unit ${unit.unit_number}`}
+            </div>
+            {groupBy === 'all' && (
+              <div className="text-sm text-muted-foreground">
+                {unit.room_types?.name}
+              </div>
+            )}
+          </div>
+        </div>
+        <div className="flex gap-2">
+          {editingUnit === unit.id ? (
+            <>
+              <Button
+                size="sm"
+                variant="ghost"
+                onClick={handleCancel}
+              >
+                <X className="h-4 w-4 mr-1" />
+                Cancel
+              </Button>
+              <Button
+                size="sm"
+                onClick={() => handleSave(unit.id)}
+              >
+                <Save className="h-4 w-4 mr-1" />
+                Save
+              </Button>
+            </>
+          ) : (
+            <>
+              {unit.custom_pricing && (
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => handleClearPricing(unit.id)}
+                >
+                  Clear Custom Pricing
+                </Button>
+              )}
+              <Button
+                size="sm"
+                onClick={() => handleEdit(unit)}
+              >
+                {unit.custom_pricing ? 'Edit' : 'Set Custom Pricing'}
+              </Button>
+            </>
+          )}
+        </div>
+      </div>
+
+      {editingUnit === unit.id ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 pt-4 border-t">
+          {(['peak', 'shoulder', 'monsoon', 'off_peak'] as const).map((season) => (
+            <div key={season}>
+              <Label htmlFor={`${unit.id}-${season}`} className="capitalize">
+                {season.replace('_', ' ')} Season
+              </Label>
+              <div className="flex items-center gap-2 mt-1">
+                <IndianRupee className="h-4 w-4 text-muted-foreground" />
+                <Input
+                  id={`${unit.id}-${season}`}
+                  type="number"
+                  placeholder={`${getDisplayPrice(unit, season)}`}
+                  value={pricing[season] || ''}
+                  onChange={(e) => setPricing({
+                    ...pricing,
+                    [season]: e.target.value ? Number(e.target.value) : undefined
+                  })}
+                />
+              </div>
+              <p className="text-xs text-muted-foreground mt-1">
+                Default: ₹{getDisplayPrice(unit, season)}
+              </p>
+            </div>
+          ))}
+        </div>
+      ) : (
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 pt-4 border-t">
+          {(['peak', 'shoulder', 'monsoon', 'off_peak'] as const).map((season) => (
+            <div key={season}>
+              <div className="text-xs text-muted-foreground capitalize">
+                {season.replace('_', ' ')}
+              </div>
+              <div className="font-semibold flex items-center gap-1">
+                <IndianRupee className="h-4 w-4" />
+                {getDisplayPrice(unit, season)}
+                {unit.custom_pricing?.[season] && (
+                  <span className="text-xs text-primary ml-1">(Custom)</span>
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -159,121 +276,37 @@ export default function UnitPricing() {
             Set custom prices for individual room units that override category pricing
           </p>
         </div>
+        <Tabs value={groupBy} onValueChange={(v) => setGroupBy(v as 'all' | 'category')}>
+          <TabsList>
+            <TabsTrigger value="all" className="gap-2">
+              <List className="h-4 w-4" />
+              All Units
+            </TabsTrigger>
+            <TabsTrigger value="category" className="gap-2">
+              <LayoutGrid className="h-4 w-4" />
+              By Category
+            </TabsTrigger>
+          </TabsList>
+        </Tabs>
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Unit-Specific Pricing</CardTitle>
-          <CardDescription>
-            Custom prices override the default category pricing. Leave blank to use category pricing.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-4">
-            {units.map((unit) => (
-              <div key={unit.id} className="border rounded-lg p-4 space-y-4">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <HomeIcon className="h-5 w-5 text-muted-foreground" />
-                    <div>
-                      <div className="font-semibold">
-                        {unit.unit_name || `Unit ${unit.unit_number}`}
-                      </div>
-                      <div className="text-sm text-muted-foreground">
-                        {unit.room_types?.name}
-                      </div>
-                    </div>
-                  </div>
-                  <div className="flex gap-2">
-                    {editingUnit === unit.id ? (
-                      <>
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          onClick={handleCancel}
-                        >
-                          <X className="h-4 w-4 mr-1" />
-                          Cancel
-                        </Button>
-                        <Button
-                          size="sm"
-                          onClick={() => handleSave(unit.id)}
-                        >
-                          <Save className="h-4 w-4 mr-1" />
-                          Save
-                        </Button>
-                      </>
-                    ) : (
-                      <>
-                        {unit.custom_pricing && (
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => handleClearPricing(unit.id)}
-                          >
-                            Clear Custom Pricing
-                          </Button>
-                        )}
-                        <Button
-                          size="sm"
-                          onClick={() => handleEdit(unit)}
-                        >
-                          {unit.custom_pricing ? 'Edit' : 'Set Custom Pricing'}
-                        </Button>
-                      </>
-                    )}
-                  </div>
-                </div>
-
-                {editingUnit === unit.id ? (
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 pt-4 border-t">
-                    {(['peak', 'shoulder', 'monsoon', 'off_peak'] as const).map((season) => (
-                      <div key={season}>
-                        <Label htmlFor={`${unit.id}-${season}`} className="capitalize">
-                          {season.replace('_', ' ')} Season
-                        </Label>
-                        <div className="flex items-center gap-2 mt-1">
-                          <IndianRupee className="h-4 w-4 text-muted-foreground" />
-                          <Input
-                            id={`${unit.id}-${season}`}
-                            type="number"
-                            placeholder={`${getDisplayPrice(unit, season)}`}
-                            value={pricing[season] || ''}
-                            onChange={(e) => setPricing({
-                              ...pricing,
-                              [season]: e.target.value ? Number(e.target.value) : undefined
-                            })}
-                          />
-                        </div>
-                        <p className="text-xs text-muted-foreground mt-1">
-                          Default: ₹{getDisplayPrice(unit, season)}
-                        </p>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4 pt-4 border-t">
-                    {(['peak', 'shoulder', 'monsoon', 'off_peak'] as const).map((season) => (
-                      <div key={season}>
-                        <div className="text-xs text-muted-foreground capitalize">
-                          {season.replace('_', ' ')}
-                        </div>
-                        <div className="font-semibold flex items-center gap-1">
-                          <IndianRupee className="h-4 w-4" />
-                          {getDisplayPrice(unit, season)}
-                          {unit.custom_pricing?.[season] && (
-                            <span className="text-xs text-primary ml-1">(Custom)</span>
-                          )}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
+      {Object.entries(groupedUnits).map(([categoryName, categoryUnits]) => (
+        <Card key={categoryName}>
+          <CardHeader>
+            <CardTitle>{groupBy === 'category' ? categoryName : 'Unit-Specific Pricing'}</CardTitle>
+            <CardDescription>
+              {groupBy === 'category' 
+                ? `${categoryUnits.length} unit${categoryUnits.length !== 1 ? 's' : ''} in this category`
+                : 'Custom prices override the default category pricing. Leave blank to use category pricing.'}
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              {categoryUnits.map(renderUnitCard)}
+            </div>
+          </CardContent>
+        </Card>
+      ))}
 
       {units.length === 0 && (
         <Card>
