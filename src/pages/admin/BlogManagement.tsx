@@ -25,6 +25,7 @@ interface BlogPost {
   author: string;
   category: string;
   featured_image?: string;
+  featured_image_key?: string;
   meta_title?: string;
   meta_description?: string;
   is_published: boolean;
@@ -74,6 +75,7 @@ const BlogManagement = () => {
     author: '',
     category: 'travel-tips',
     featured_image: '',
+    featured_image_key: '',
     meta_title: '',
     meta_description: '',
     is_published: false,
@@ -334,6 +336,7 @@ const BlogManagement = () => {
       author: '',
       category: 'travel-tips',
       featured_image: '',
+      featured_image_key: '',
       meta_title: '',
       meta_description: '',
       is_published: false,
@@ -542,7 +545,18 @@ const BlogManagement = () => {
                   <MediaPicker
                     label="Featured Image"
                     value={formData.featured_image || ''}
-                    onChange={(url) => setFormData(prev => ({ ...prev, featured_image: url }))}
+                    onChange={async (url) => {
+                      setFormData(prev => ({ ...prev, featured_image: url }));
+                      // Fetch and save the hardcoded_key
+                      const { data } = await supabase
+                        .from('gallery_images')
+                        .select('hardcoded_key')
+                        .eq('image_url', url)
+                        .single();
+                      if (data?.hardcoded_key) {
+                        setFormData(prev => ({ ...prev, featured_image_key: data.hardcoded_key }));
+                      }
+                    }}
                     categorySlug="blog"
                     folder="blog"
                   />
