@@ -8,11 +8,11 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { MapPin, Phone, Mail, Clock, MessageSquare, Send } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import MapboxMap from "@/components/MapboxMap";
+import GoogleMap from "@/components/GoogleMap";
 
 const Contact = () => {
   const [heroImage, setHeroImage] = useState<string>("");
-  const [mapboxToken, setMapboxToken] = useState<string>("");
+  const [googleMapsApiKey, setGoogleMapsApiKey] = useState<string>("");
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -46,24 +46,24 @@ const Contact = () => {
       }
     };
 
-    const fetchMapboxToken = async () => {
+    const fetchGoogleMapsKey = async () => {
       const { data } = await supabase
         .from("api_integrations")
         .select("public_config, is_enabled")
-        .eq("integration_key", "mapbox")
+        .eq("integration_key", "google_maps")
         .eq("is_enabled", true)
-        .single();
+        .maybeSingle();
 
       if (data?.public_config && typeof data.public_config === 'object') {
-        const config = data.public_config as { MAPBOX_PUBLIC_TOKEN?: string };
-        if (config.MAPBOX_PUBLIC_TOKEN) {
-          setMapboxToken(config.MAPBOX_PUBLIC_TOKEN);
+        const config = data.public_config as { GOOGLE_MAPS_API_KEY?: string };
+        if (config.GOOGLE_MAPS_API_KEY) {
+          setGoogleMapsApiKey(config.GOOGLE_MAPS_API_KEY);
         }
       }
     };
 
     fetchPageData();
-    fetchMapboxToken();
+    fetchGoogleMapsKey();
   }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -355,10 +355,10 @@ const Contact = () => {
           </div>
 
           <div className="bg-white rounded-lg overflow-hidden shadow-lg">
-            {mapboxToken ? (
-              <MapboxMap
-                accessToken={mapboxToken}
-                center={[73.2673, 18.9847]}
+            {googleMapsApiKey ? (
+              <GoogleMap
+                apiKey={googleMapsApiKey}
+                center={{ lat: 18.9847, lng: 73.2673 }}
                 zoom={14}
                 markerTitle="Horseland Hotel"
                 markerDescription="Vithalrao Kotwal Road, Near Dasturi Point, Matheran"
