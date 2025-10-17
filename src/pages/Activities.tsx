@@ -1,18 +1,21 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import NavigationV5 from '../components/v5/NavigationV5';
 import DynamicFooter from '../components/DynamicFooter';
 import CombinedFloatingV5 from '../components/v5/CombinedFloatingV5';
 import MediaAsset from '@/components/MediaAsset';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Clock, MapPin, Users, Star } from 'lucide-react';
+import { Clock, MapPin, Users, Star, Plus } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
+import { useToast } from '@/hooks/use-toast';
 
 interface Activity {
   id: string;
   title: string;
   description?: string;
   distance?: string;
+  price_amount?: number;
   image?: string;
   image_key?: string;
   is_active: boolean;
@@ -27,6 +30,8 @@ const Activities = () => {
   const [heroImage, setHeroImage] = useState('https://images.unsplash.com/photo-1544568100-847a948585b9?ixlib=rb-4.0.3&auto=format&fit=crop&w=2000&q=80');
   const [subtitle, setSubtitle] = useState('Discover Matheran\'s natural wonders through guided activities');
   const [title, setTitle] = useState('Adventure Awaits');
+  const { toast } = useToast();
+  const navigate = useNavigate();
 
   useEffect(() => {
     loadActivities();
@@ -73,6 +78,90 @@ const Activities = () => {
     if (filter === 'family') return tags.includes('family');
     return true;
   });
+
+  const handleAddToStay = (activity: Activity) => {
+    // Get booking data from localStorage
+    const bookingData = localStorage.getItem('currentBooking');
+    
+    if (!bookingData) {
+      toast({
+        title: "Let's Plan Your Stay First",
+        description: "We'd love to add this to your experience! Please select your accommodation and dates on our booking page.",
+        variant: "default",
+      });
+      navigate('/booking');
+      return;
+    }
+
+    try {
+      const booking = JSON.parse(bookingData);
+      
+      // Check if check-in and check-out dates are selected
+      if (!booking.checkIn || !booking.checkOut) {
+        toast({
+          title: "Almost There!",
+          description: "To add activities to your stay, please select your arrival and departure dates first.",
+          variant: "default",
+        });
+        navigate('/booking');
+        return;
+      }
+
+      // Check if room is selected
+      if (!booking.selectedRoom) {
+        toast({
+          title: "Choose Your Haven First",
+          description: "Please select your accommodation before adding activities. We want to ensure everything is perfectly arranged!",
+          variant: "default",
+        });
+        navigate('/booking');
+        return;
+      }
+
+      // Add activity to booking
+      const existingActivities = booking.selectedActivities || [];
+      
+      // Check if activity already added
+      if (existingActivities.some((a: any) => a.id === activity.id)) {
+        toast({
+          title: "Already Added",
+          description: `${activity.title} is already part of your experience. You can adjust quantities on the booking page.`,
+        });
+        navigate('/booking');
+        return;
+      }
+
+      const updatedBooking = {
+        ...booking,
+        selectedActivities: [...existingActivities, {
+          id: activity.id,
+          title: activity.title,
+          price: activity.price_amount || 0,
+          quantity: 1,
+          type: 'activity'
+        }]
+      };
+
+      localStorage.setItem('currentBooking', JSON.stringify(updatedBooking));
+      
+      // Dispatch custom event to notify booking page
+      window.dispatchEvent(new CustomEvent('bookingUpdated'));
+      
+      toast({
+        title: "Added to Your Stay!",
+        description: `${activity.title} has been added to your experience. View your complete itinerary on the booking page.`,
+      });
+      
+      navigate('/booking');
+    } catch (error) {
+      console.error('Error adding activity:', error);
+      toast({
+        title: "Oops!",
+        description: "We encountered a small issue. Please try again or contact our concierge for assistance.",
+        variant: "destructive",
+      });
+    }
+  };
 
   if (loading) {
     return (
@@ -200,7 +289,12 @@ const Activities = () => {
                     <Button variant="outline" size="sm" className="font-body flex-1">
                       Learn More
                     </Button>
-                    <Button size="sm" className="font-body flex-1">
+                    <Button 
+                      size="sm" 
+                      className="font-body flex-1 gap-2"
+                      onClick={() => handleAddToStay(activity)}
+                    >
+                      <Plus className="h-4 w-4" />
                       Add to Stay
                     </Button>
                   </div>

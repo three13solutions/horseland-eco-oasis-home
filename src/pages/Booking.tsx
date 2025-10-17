@@ -154,7 +154,12 @@ const Booking = () => {
           }
           
           // Combine all addons from different sources
-          const allAddons = [...(booking.selectedAddons || [])];
+          let allAddons: SelectedAddon[] = [];
+          
+          // Add regular addons
+          if (booking.selectedAddons && booking.selectedAddons.length > 0) {
+            allAddons = [...booking.selectedAddons];
+          }
           
           // Add spa services if they exist
           if (booking.selectedSpaServices && booking.selectedSpaServices.length > 0) {
@@ -166,11 +171,19 @@ const Booking = () => {
               quantity: spa.quantity || 1,
               type: 'spa' as const
             }));
-            
-            // Remove existing spa addons and add new ones
-            const filteredAddons = allAddons.filter(a => a.type !== 'spa');
-            allAddons.length = 0;
-            allAddons.push(...filteredAddons, ...spaAddons);
+            allAddons = [...allAddons.filter(a => a.type !== 'spa'), ...spaAddons];
+          }
+          
+          // Add activities if they exist
+          if (booking.selectedActivities && booking.selectedActivities.length > 0) {
+            const activityAddons = booking.selectedActivities.map((act: any) => ({
+              id: act.id,
+              title: act.title,
+              price: act.price,
+              quantity: act.quantity || 1,
+              type: 'activity' as const
+            }));
+            allAddons = [...allAddons.filter(a => a.type !== 'activity'), ...activityAddons];
           }
           
           setSelectedAddons(allAddons);
@@ -196,6 +209,14 @@ const Booking = () => {
     // Load on mount
     loadBookingData();
 
+    // Listen for custom booking update event
+    const handleBookingUpdate = () => {
+      console.log('Booking updated event received');
+      loadBookingData();
+    };
+
+    window.addEventListener('bookingUpdated', handleBookingUpdate);
+
     // Listen for visibility changes (when user returns to this tab/page)
     const handleVisibilityChange = () => {
       if (!document.hidden) {
@@ -212,6 +233,7 @@ const Booking = () => {
     window.addEventListener('focus', handleFocus);
 
     return () => {
+      window.removeEventListener('bookingUpdated', handleBookingUpdate);
       document.removeEventListener('visibilitychange', handleVisibilityChange);
       window.removeEventListener('focus', handleFocus);
     };

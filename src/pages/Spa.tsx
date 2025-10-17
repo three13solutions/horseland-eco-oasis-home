@@ -144,6 +144,9 @@ const Spa = () => {
 
       localStorage.setItem('currentBooking', JSON.stringify(updatedBooking));
       
+      // Dispatch custom event to notify booking page
+      window.dispatchEvent(new CustomEvent('bookingUpdated'));
+      
       toast({
         title: "Added to Your Stay!",
         description: `${service.title} has been added to your wellness experience. View your complete itinerary on the booking page.`,
