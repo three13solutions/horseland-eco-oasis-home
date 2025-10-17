@@ -56,6 +56,33 @@ export const useMediaStats = () => {
       const usagePromises = images.map(async (img) => {
         const imageUrl = img.image_url;
         
+        // Check if image is assigned to gallery categories (used in gallery components)
+        const { data: categoryAssignments } = await supabase
+          .from('image_categories')
+          .select('category_id, gallery_categories!inner(slug, is_active)')
+          .eq('image_id', img.id);
+        
+        // If image is in Hotel Moments or Guest Stories categories, it's used
+        const isInGalleryCategory = categoryAssignments?.some((assignment: any) => 
+          assignment.gallery_categories?.is_active && 
+          ['hotel', 'guests'].includes(assignment.gallery_categories?.slug)
+        );
+        
+        if (isInGalleryCategory) {
+          return {
+            isUsed: true,
+            byType: {
+              pages: 1, // Count as page usage since it's displayed in gallery sections
+              blogs: 0,
+              rooms: 0,
+              packages: 0,
+              activities: 0,
+              spa: 0,
+              meals: 0,
+            }
+          };
+        }
+        
         // Fetch ALL records to check arrays - must match useMediaUsage logic exactly
         const [pages, blogs, rooms, packages, activities, spa, meals] = await Promise.all([
           supabase.from('pages').select('id, hero_image, og_image, hero_gallery'),
