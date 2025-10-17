@@ -6,16 +6,16 @@ interface MediaListFilters {
   mediaType?: 'image' | 'video' | 'all';
   sourceType?: 'upload' | 'external' | 'mirrored' | 'hardcoded' | 'all';
   categoryId?: string;
+  categorySlug?: string;
   searchTerm?: string;
-  usageFilter?: 'all' | 'hero-banners';
 }
 
 export const useMediaList = (filters: MediaListFilters = {}) => {
   return useQuery({
     queryKey: ['media-list', filters],
     queryFn: async () => {
-      // If hero-banners filter is active, get images used in hero sections
-      if (filters.usageFilter === 'hero-banners') {
+      // If hero-banners category is selected, get images used in hero sections
+      if (filters.categorySlug === 'hero-banners') {
         // First, get all hero images from pages
         const { data: pagesData, error: pagesError } = await supabase
           .from('pages')
@@ -40,12 +40,13 @@ export const useMediaList = (filters: MediaListFilters = {}) => {
           }
         });
 
-        // Now fetch gallery images that match these URLs
+        // If no hero images found, return empty array
         if (heroImageUrls.size === 0) {
           return [];
         }
 
-        const { data, error } = await supabase
+        // Now fetch gallery images that match these URLs
+        let query = supabase
           .from('gallery_images')
           .select(`
             id,
@@ -68,6 +69,20 @@ export const useMediaList = (filters: MediaListFilters = {}) => {
           .in('image_url', Array.from(heroImageUrls))
           .order('sort_order');
 
+        // Apply other filters
+        if (filters.mediaType && filters.mediaType !== 'all') {
+          query = query.eq('media_type', filters.mediaType);
+        }
+
+        if (filters.sourceType && filters.sourceType !== 'all') {
+          query = query.eq('source_type', filters.sourceType);
+        }
+
+        if (filters.searchTerm) {
+          query = query.or(`title.ilike.%${filters.searchTerm}%,caption.ilike.%${filters.searchTerm}%`);
+        }
+
+        const { data, error } = await query;
         if (error) throw error;
         return data || [];
       }

@@ -68,12 +68,18 @@ const MediaManagement = () => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [selectedItems, setSelectedItems] = useState<string[]>([]);
   const [showFilters, setShowFilters] = useState(false);
-  const [filters, setFilters] = useState({
-    mediaType: 'all' as 'image' | 'video' | 'all',
-    sourceType: 'all' as 'upload' | 'external' | 'mirrored' | 'hardcoded' | 'all',
+  const [filters, setFilters] = useState<{
+    mediaType: 'image' | 'video' | 'all';
+    sourceType: 'upload' | 'external' | 'mirrored' | 'hardcoded' | 'all';
+    categoryId: string;
+    categorySlug?: string;
+    searchTerm: string;
+  }>({
+    mediaType: 'all',
+    sourceType: 'all',
     categoryId: '',
-    searchTerm: '',
-    usageFilter: 'all' as 'all' | 'hero-banners'
+    categorySlug: undefined,
+    searchTerm: ''
   });
   const { toast } = useToast();
 
@@ -269,17 +275,7 @@ const MediaManagement = () => {
               </div>
             </div>
             
-            <div className="grid grid-cols-4 gap-2">
-              <Select value={filters.usageFilter || "all"} onValueChange={(value: any) => setFilters({ ...filters, usageFilter: value })}>
-                <SelectTrigger className="w-36">
-                  <SelectValue placeholder="Usage" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Media</SelectItem>
-                  <SelectItem value="hero-banners">Hero Banners Only</SelectItem>
-                </SelectContent>
-              </Select>
-
+            <div className="grid grid-cols-3 gap-2">
               <Select value={filters.mediaType} onValueChange={(value: any) => setFilters({ ...filters, mediaType: value })}>
                 <SelectTrigger className="w-32">
                   <SelectValue placeholder="Type" />
@@ -304,7 +300,17 @@ const MediaManagement = () => {
                 </SelectContent>
               </Select>
 
-              <Select value={filters.categoryId || "all-categories"} onValueChange={(value) => setFilters({ ...filters, categoryId: value === "all-categories" ? "" : value })}>
+              <Select 
+                value={filters.categoryId || "all-categories"} 
+                onValueChange={(value) => {
+                  const selectedCategory = categories.find(c => c.id === value);
+                  setFilters({ 
+                    ...filters, 
+                    categoryId: value === "all-categories" ? "" : value,
+                    categorySlug: selectedCategory?.slug 
+                  });
+                }}
+              >
                 <SelectTrigger className="w-32">
                   <SelectValue placeholder="Category" />
                 </SelectTrigger>
