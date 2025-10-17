@@ -192,10 +192,9 @@ const SiteSettings = () => {
   };
 
   const safePrepareValue = (value: any) => {
-    if (typeof value === 'string') {
-      return value; // Keep strings as strings
-    }
-    return JSON.stringify(value); // Only stringify non-string values
+    // For JSONB columns, we need to ensure proper JSON encoding
+    // Supabase client will handle the final conversion
+    return value;
   };
 
   const loadData = async () => {
@@ -583,9 +582,6 @@ const SiteSettings = () => {
                   onChange={(e) => setSiteSettings(prev => ({ ...prev, tagline: e.target.value }))}
                   placeholder="Powered by IIIXIII"
                 />
-                <p className="text-xs text-muted-foreground mt-1">
-                  Use HTML for links: &lt;a href="https://313s.com/" target="_blank"&gt;IIIXIII&lt;/a&gt;
-                </p>
               </div>
 
               <div>

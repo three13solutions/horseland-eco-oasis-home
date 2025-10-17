@@ -36,17 +36,6 @@ const DynamicFooter = () => {
     loadFooterData();
   }, []);
 
-  const safeParseJSON = (value: any) => {
-    if (typeof value === 'string') {
-      try {
-        return JSON.parse(value);
-      } catch {
-        return value; // Return as string if parsing fails
-      }
-    }
-    return value; // Already an object or other type
-  };
-
   const loadFooterData = async () => {
     try {
       // Load footer sections
@@ -68,7 +57,9 @@ const DynamicFooter = () => {
       if (settingsData) {
         const settings: any = {};
         settingsData.forEach(setting => {
-          settings[setting.setting_key] = safeParseJSON(setting.setting_value);
+          // Supabase automatically parses JSONB columns
+          // Just use the value directly
+          settings[setting.setting_key] = setting.setting_value;
         });
         setSiteSettings(prev => ({ ...prev, ...settings }));
       }
