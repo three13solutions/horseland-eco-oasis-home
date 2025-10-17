@@ -156,12 +156,12 @@ const Activities = () => {
       const existingActivities = booking.selectedActivities || [];
       const existingIndex = existingActivities.findIndex((a: any) => a.id === activity.id);
       
+      // If already added, remove it
       if (existingIndex !== -1) {
-        // Increment quantity if already added
-        existingActivities[existingIndex].quantity += 1;
+        existingActivities.splice(existingIndex, 1);
         toast({
-          title: "Quantity Updated!",
-          description: `${activity.title} quantity increased. Total: ${existingActivities[existingIndex].quantity}`,
+          title: "Removed from Stay",
+          description: `${activity.title} has been removed from your booking.`,
           action: (
             <button onClick={() => navigate('/booking')} className="underline">
               View Booking
@@ -199,7 +199,7 @@ const Activities = () => {
       // Dispatch custom event
       window.dispatchEvent(new CustomEvent('bookingUpdated'));
     } catch (error) {
-      console.error('Error adding activity:', error);
+      console.error('Error managing activity:', error);
       toast({
         title: "Oops!",
         description: "We encountered a small issue. Please try again.",

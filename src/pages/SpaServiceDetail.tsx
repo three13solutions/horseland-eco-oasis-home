@@ -142,11 +142,13 @@ const SpaServiceDetail = () => {
       const existingSpaServices = booking.selectedSpaServices || [];
       const existingIndex = existingSpaServices.findIndex((s: any) => s.id === service.id);
       
+      // If already added, remove it
       if (existingIndex !== -1) {
-        existingSpaServices[existingIndex].quantity += 1;
+        existingSpaServices.splice(existingIndex, 1);
+        setIsAdded(false);
         toast({
-          title: "Quantity Updated!",
-          description: `${service.title} quantity increased. Total: ${existingSpaServices[existingIndex].quantity}`,
+          title: "Removed from Stay",
+          description: `${service.title} has been removed from your booking.`,
           action: (
             <button onClick={() => navigate('/booking')} className="underline">
               View Booking
@@ -154,6 +156,7 @@ const SpaServiceDetail = () => {
           ),
         });
       } else {
+        // Add new service
         existingSpaServices.push({
           id: service.id,
           title: service.title,
@@ -162,6 +165,7 @@ const SpaServiceDetail = () => {
           quantity: 1,
           type: 'spa'
         });
+        setIsAdded(true);
         toast({
           title: "Added to Your Stay!",
           description: `${service.title} has been added to your wellness experience.`,
@@ -179,10 +183,9 @@ const SpaServiceDetail = () => {
       };
 
       localStorage.setItem('currentBooking', JSON.stringify(updatedBooking));
-      setIsAdded(true);
       window.dispatchEvent(new CustomEvent('bookingUpdated'));
     } catch (error) {
-      console.error('Error adding spa service:', error);
+      console.error('Error managing spa service:', error);
       toast({
         title: "Oops!",
         description: "We encountered a small issue. Please try again.",

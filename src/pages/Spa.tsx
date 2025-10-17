@@ -165,12 +165,12 @@ const Spa = () => {
       const existingSpaServices = booking.selectedSpaServices || [];
       const existingIndex = existingSpaServices.findIndex((s: any) => s.id === service.id);
       
+      // If already added, remove it
       if (existingIndex !== -1) {
-        // Increment quantity if already added
-        existingSpaServices[existingIndex].quantity += 1;
+        existingSpaServices.splice(existingIndex, 1);
         toast({
-          title: "Quantity Updated!",
-          description: `${service.title} quantity increased. Total: ${existingSpaServices[existingIndex].quantity}`,
+          title: "Removed from Stay",
+          description: `${service.title} has been removed from your booking.`,
           action: (
             <button onClick={() => navigate('/booking')} className="underline">
               View Booking
@@ -209,7 +209,7 @@ const Spa = () => {
       // Dispatch custom event
       window.dispatchEvent(new CustomEvent('bookingUpdated'));
     } catch (error) {
-      console.error('Error adding spa service:', error);
+      console.error('Error managing spa service:', error);
       toast({
         title: "Oops!",
         description: "We encountered a small issue. Please try again.",
