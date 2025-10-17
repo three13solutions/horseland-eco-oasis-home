@@ -386,6 +386,7 @@ const Booking = () => {
         price: a.price_amount || 0,
         description: a.description,
         image: a.image,
+        category: (Array.isArray(a.activity_tags) && a.activity_tags.length > 0) ? a.activity_tags[0] : 'other',
         type: 'activity' as const 
       })) || []);
       
@@ -576,6 +577,24 @@ const Booking = () => {
     
     return Object.entries(categories).filter(([_, data]) => data.services.length > 0);
   }, [spaServices]);
+
+  // Group activities by category
+  const activitiesByCategory = React.useMemo(() => {
+    const categoryMap: Record<string, { label: string; activities: Addon[] }> = {};
+    
+    activities.forEach(activity => {
+      const category = (activity as any).category || 'other';
+      if (!categoryMap[category]) {
+        categoryMap[category] = {
+          label: category.charAt(0).toUpperCase() + category.slice(1),
+          activities: []
+        };
+      }
+      categoryMap[category].activities.push(activity);
+    });
+    
+    return Object.entries(categoryMap).filter(([_, data]) => data.activities.length > 0);
+  }, [activities]);
 
   const needsExtraBedding = selectedRoomType && guests > selectedRoomType.max_guests;
 
@@ -980,36 +999,76 @@ const Booking = () => {
                         </div>
                       </TabsContent>
                       
-                      <TabsContent value="activities" className="space-y-4">
-                        {activities.map((activity) => (
-                          <div key={activity.id} className="flex items-center justify-between p-4 border rounded-lg">
-                            <div className="flex-1">
-                              <h4 className="font-medium">{activity.title}</h4>
-                              <p className="text-sm text-muted-foreground">{activity.description}</p>
-                              <p className="text-lg font-semibold">₹{activity.price}</p>
-                            </div>
-                            <div className="flex items-center gap-2">
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() => removeAddon(activity.id)}
-                                disabled={!selectedAddons.find(a => a.id === activity.id)}
-                              >
-                                <Minus className="h-4 w-4" />
-                              </Button>
-                              <span className="w-8 text-center">
-                                {selectedAddons.find(a => a.id === activity.id)?.quantity || 0}
-                              </span>
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() => addAddon(activity)}
-                              >
-                                <Plus className="h-4 w-4" />
-                              </Button>
-                            </div>
+                      <TabsContent value="activities" className="space-y-8">
+                        {activitiesByCategory.length === 0 ? (
+                          <div className="text-center text-muted-foreground py-8">
+                            No activities available
                           </div>
-                        ))}
+                        ) : (
+                          activitiesByCategory.map(([categoryId, categoryData]) => (
+                            <div key={categoryId} className="space-y-3">
+                              <h4 className="text-lg font-semibold">{categoryData.label}</h4>
+                              <Carousel
+                                opts={{
+                                  align: "start",
+                                  loop: false,
+                                }}
+                                className="w-full"
+                              >
+                                <CarouselContent className="-ml-2">
+                                  {categoryData.activities.map((activity) => {
+                                    const quantity = selectedAddons.find(a => a.id === activity.id)?.quantity || 0;
+                                    return (
+                                      <CarouselItem key={activity.id} className="pl-2 basis-1/3 sm:basis-1/4 md:basis-1/5 lg:basis-1/6">
+                                        <div className="flex flex-col items-center">
+                                          <div className="relative w-full aspect-square rounded-lg overflow-hidden mb-2 border-2 border-transparent hover:border-primary transition-colors">
+                                            {activity.image ? (
+                                              <img 
+                                                src={activity.image}
+                                                alt={activity.title}
+                                                className="w-full h-full object-cover"
+                                              />
+                                            ) : (
+                                              <div className="w-full h-full bg-muted flex items-center justify-center">
+                                                <Sparkles className="h-8 w-8 text-muted-foreground" />
+                                              </div>
+                                            )}
+                                          </div>
+                                          <div className="flex items-center gap-1.5 mb-2">
+                                            <Button
+                                              variant="outline"
+                                              size="icon"
+                                              className="h-6 w-6 rounded-full"
+                                              onClick={() => removeAddon(activity.id)}
+                                              disabled={quantity === 0}
+                                            >
+                                              <Minus className="h-3 w-3" />
+                                            </Button>
+                                            <span className="w-6 text-center text-sm font-medium">
+                                              {quantity}
+                                            </span>
+                                            <Button
+                                              variant="outline"
+                                              size="icon"
+                                              className="h-6 w-6 rounded-full"
+                                              onClick={() => addAddon(activity)}
+                                            >
+                                              <Plus className="h-3 w-3" />
+                                            </Button>
+                                          </div>
+                                          <p className="text-xs font-medium text-center mb-1 line-clamp-2 h-8">{activity.title}</p>
+                                          <p className="text-xs font-semibold text-primary">₹{activity.price}</p>
+                                        </div>
+                                      </CarouselItem>
+                                    );
+                                  })}
+                                </CarouselContent>
+                                <CarouselPrevious className="-left-4" />
+                                <CarouselNext className="-right-4" />
+                              </Carousel>
+                            </div>
+                          ))
+                        )}
                       </TabsContent>
                       
                       <TabsContent value="spa" className="space-y-8">
