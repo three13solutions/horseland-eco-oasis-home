@@ -89,16 +89,16 @@ const Contact = () => {
     });
   };
 
-  /* MAPBOX Code - by saif*/
+  /*Mapbox code*/
 
   useEffect(() => {
-    // Option 1: use environment variable
-    mapboxgl.accessToken = import.meta.env.VITE_MAPBOX_TOKEN;
+    if (typeof window === "undefined") return; // skip SSR
 
-    // Option 2 (if you prefer to paste the token directly): uncomment and replace the token, then remove Option 1
-    // mapboxgl.accessToken = "pk.your_mapbox_public_token_here";
+    if (!mapToken) return; // wait for token
 
-    const coords = [18.986604230433652, 73.26882177066267]; // [longitude, latitude] — Horseland Hotel
+    mapboxgl.accessToken = mapToken;
+    const coords = [18.986589866841467, 73.26884202400663];
+
     const map = new mapboxgl.Map({
       container: "map",
       style: "mapbox://styles/mapbox/streets-v12",
@@ -106,17 +106,15 @@ const Contact = () => {
       zoom: 14,
     });
 
-    // Add a marker + popup
     new mapboxgl.Marker({ color: "#ff5500" })
       .setLngLat(coords)
       .setPopup(new mapboxgl.Popup({ offset: 25 }).setHTML("<b>Horseland Hotel, Matheran</b>"))
       .addTo(map);
 
-    // Cleanup on unmount — safe, doesn’t affect other code
     return () => map.remove();
-  }, []);
+  }, [mapToken]);
 
-  /* End of Mapbox code*/
+  /*End of code*/
 
   return (
     <div className="min-h-screen bg-background">
@@ -367,7 +365,7 @@ const Contact = () => {
           </div>
 
           <div className="bg-white rounded-lg overflow-hidden shadow-lg">
-            <div id="map" className="aspect-video" />
+            <div id="map" style={{ width: "100%", height: "400px" }} />
           </div>
         </div>
       </section>
