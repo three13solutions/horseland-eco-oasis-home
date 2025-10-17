@@ -1,22 +1,24 @@
-import React, { useState, useEffect } from 'react';
-import NavigationV5 from '@/components/v5/NavigationV5';
-import DynamicFooter from '@/components/DynamicFooter';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { MapPin, Phone, Mail, Clock, MessageSquare, Send } from 'lucide-react';
-import { supabase } from '@/integrations/supabase/client';
-import { useToast } from '@/hooks/use-toast';
+import React, { useState, useEffect } from "react";
+import NavigationV5 from "@/components/v5/NavigationV5";
+import DynamicFooter from "@/components/DynamicFooter";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { MapPin, Phone, Mail, Clock, MessageSquare, Send } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
+import mapboxgl from "mapbox-gl";
+import "mapbox-gl/dist/mapbox-gl.css";
 
 const Contact = () => {
-  const [heroImage, setHeroImage] = useState<string>('');
+  const [heroImage, setHeroImage] = useState<string>("");
   const [formData, setFormData] = useState({
-    name: '',
-    email: '',
-    phone: '',
-    subject: '',
-    message: ''
+    name: "",
+    email: "",
+    phone: "",
+    subject: "",
+    message: "",
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
@@ -24,14 +26,19 @@ const Contact = () => {
   useEffect(() => {
     const fetchPageData = async () => {
       const { data } = await supabase
-        .from('pages')
-        .select('hero_image, hero_gallery, hero_type')
-        .eq('slug', 'contact')
-        .eq('is_published', true)
+        .from("pages")
+        .select("hero_image, hero_gallery, hero_type")
+        .eq("slug", "contact")
+        .eq("is_published", true)
         .single();
 
       if (data) {
-        if (data.hero_type === 'carousel' && data.hero_gallery && Array.isArray(data.hero_gallery) && data.hero_gallery.length > 0) {
+        if (
+          data.hero_type === "carousel" &&
+          data.hero_gallery &&
+          Array.isArray(data.hero_gallery) &&
+          data.hero_gallery.length > 0
+        ) {
           setHeroImage(String(data.hero_gallery[0]));
         } else if (data.hero_image) {
           setHeroImage(data.hero_image);
@@ -47,9 +54,7 @@ const Contact = () => {
     setIsSubmitting(true);
 
     try {
-      const { error } = await supabase
-        .from('contact_messages')
-        .insert([formData]);
+      const { error } = await supabase.from("contact_messages").insert([formData]);
 
       if (error) throw error;
 
@@ -59,14 +64,14 @@ const Contact = () => {
       });
 
       setFormData({
-        name: '',
-        email: '',
-        phone: '',
-        subject: '',
-        message: ''
+        name: "",
+        email: "",
+        phone: "",
+        subject: "",
+        message: "",
       });
     } catch (error) {
-      console.error('Error sending message:', error);
+      console.error("Error sending message:", error);
       toast({
         title: "Error sending message",
         description: "Please try again or contact us directly.",
@@ -80,19 +85,19 @@ const Contact = () => {
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     setFormData({
       ...formData,
-      [e.target.name]: e.target.value
+      [e.target.name]: e.target.value,
     });
   };
 
   return (
     <div className="min-h-screen bg-background">
       <NavigationV5 />
-      
+
       {/* Hero Section */}
       <section className="relative min-h-[50vh] flex items-center justify-center">
         {heroImage && (
           <>
-            <div 
+            <div
               className="absolute inset-0 bg-cover bg-center bg-no-repeat"
               style={{ backgroundImage: `url('${heroImage}')` }}
             >
@@ -100,15 +105,17 @@ const Contact = () => {
             </div>
           </>
         )}
-        
-        <div className={`${heroImage ? 'relative z-10 text-white' : 'bg-gradient-to-b from-muted/50 to-background py-16'} container mx-auto px-6`}>
+
+        <div
+          className={`${heroImage ? "relative z-10 text-white" : "bg-gradient-to-b from-muted/50 to-background py-16"} container mx-auto px-6`}
+        >
           <div className="text-center max-w-3xl mx-auto">
             <h1 className="text-4xl md:text-5xl font-serif font-bold mb-6">
-              Get in <span className={heroImage ? 'text-white' : 'text-primary'}>Touch</span>
+              Get in <span className={heroImage ? "text-white" : "text-primary"}>Touch</span>
             </h1>
-            <p className={`text-lg ${heroImage ? 'text-white/90' : 'text-muted-foreground'}`}>
-              We're here to help you plan your perfect mountain getaway. Reach out to us for reservations, 
-              questions, or special requests.
+            <p className={`text-lg ${heroImage ? "text-white/90" : "text-muted-foreground"}`}>
+              We're here to help you plan your perfect mountain getaway. Reach out to us for reservations, questions, or
+              special requests.
             </p>
           </div>
         </div>
@@ -118,16 +125,13 @@ const Contact = () => {
       <section className="py-16">
         <div className="container mx-auto px-6">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
-            
             {/* Contact Information */}
             <div className="space-y-8">
               <div>
-                <h2 className="text-3xl font-serif font-bold text-foreground mb-6">
-                  Contact Information
-                </h2>
+                <h2 className="text-3xl font-serif font-bold text-foreground mb-6">Contact Information</h2>
                 <p className="text-muted-foreground mb-8">
-                  Our team is available to assist you with your booking and answer any questions 
-                  about your stay at Horseland Hotel.
+                  Our team is available to assist you with your booking and answer any questions about your stay at
+                  Horseland Hotel.
                 </p>
               </div>
 
@@ -141,10 +145,14 @@ const Contact = () => {
                       <div>
                         <h3 className="font-semibold text-foreground mb-2">Address</h3>
                         <p className="text-muted-foreground">
-                          Horseland Hotel<br />
-                          Vithalrao Kotwal Road,<br/>
-                          Near Dasturi Point, Matheran<br/>
-                          Maharashtra 410102, India<br/>
+                          Horseland Hotel
+                          <br />
+                          Vithalrao Kotwal Road,
+                          <br />
+                          Near Dasturi Point, Matheran
+                          <br />
+                          Maharashtra 410102, India
+                          <br />
                         </p>
                       </div>
                     </div>
@@ -160,8 +168,10 @@ const Contact = () => {
                       <div>
                         <h3 className="font-semibold text-foreground mb-2">Phone</h3>
                         <p className="text-muted-foreground">
-                          Mahesh: +91 9404224600<br />
-                          Sachin: +91 9004424567<br />
+                          Mahesh: +91 9404224600
+                          <br />
+                          Sachin: +91 9004424567
+                          <br />
                         </p>
                       </div>
                     </div>
@@ -177,7 +187,8 @@ const Contact = () => {
                       <div>
                         <h3 className="font-semibold text-foreground mb-2">Email</h3>
                         <p className="text-muted-foreground">
-                          info@horselandhotel.com<br />
+                          info@horselandhotel.com
+                          <br />
                         </p>
                       </div>
                     </div>
@@ -193,8 +204,10 @@ const Contact = () => {
                       <div>
                         <h3 className="font-semibold text-foreground mb-2">Operating Hours</h3>
                         <p className="text-muted-foreground">
-                          Reservation: 10:00 AM to 09:00 PM<br />
-                          Restaurant: 7:00 AM - 11:00 PM<br />
+                          Reservation: 10:00 AM to 09:00 PM
+                          <br />
+                          Restaurant: 7:00 AM - 11:00 PM
+                          <br />
                           Spa: 8:00 AM - 8:00 PM
                         </p>
                       </div>
@@ -212,9 +225,7 @@ const Contact = () => {
                     <MessageSquare className="w-5 h-5" />
                     <span>Send us a Message</span>
                   </CardTitle>
-                  <CardDescription>
-                    Fill out the form below and we'll get back to you within 24 hours.
-                  </CardDescription>
+                  <CardDescription>Fill out the form below and we'll get back to you within 24 hours.</CardDescription>
                 </CardHeader>
                 <CardContent>
                   <form onSubmit={handleSubmit} className="space-y-6">
@@ -293,8 +304,8 @@ const Contact = () => {
                       />
                     </div>
 
-                    <Button 
-                      type="submit" 
+                    <Button
+                      type="submit"
                       className="w-full bg-gradient-to-r from-primary to-accent"
                       disabled={isSubmitting}
                     >
@@ -319,21 +330,20 @@ const Contact = () => {
       <section className="py-16 bg-muted/30">
         <div className="container mx-auto px-6">
           <div className="text-center mb-8">
-            <h2 className="text-3xl font-serif font-bold text-foreground mb-4">
-              Find Us in Matheran
-            </h2>
+            <h2 className="text-3xl font-serif font-bold text-foreground mb-4">Find Us in Matheran</h2>
             <p className="text-muted-foreground max-w-2xl mx-auto">
-              Located in the heart of Matheran's car-free hill station, we're easily accessible 
-              by the heritage toy train or horse ride from the main road.
+              Located in the heart of Matheran's car-free hill station, we're easily accessible by the heritage toy
+              train or horse ride from the main road.
             </p>
           </div>
-          
+
           <div className="bg-white rounded-lg overflow-hidden shadow-lg">
             <div className="aspect-video bg-muted/50 flex items-center justify-center">
               <div className="text-center">
                 <MapPin className="w-12 h-12 text-primary mx-auto mb-4" />
                 <p className="text-muted-foreground">
-                  Interactive map coming soon<br />
+                  Interactive map coming soon
+                  <br />
                   For now, use GPS coordinates: 18.9847° N, 73.2673° E
                 </p>
               </div>
