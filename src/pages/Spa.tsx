@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import NavigationV5 from '../components/v5/NavigationV5';
 import DynamicFooter from '../components/DynamicFooter';
 import CombinedFloatingV5 from '../components/v5/CombinedFloatingV5';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Clock, Sparkles, Heart, Leaf } from 'lucide-react';
+import { Clock, Sparkles, Heart, Leaf, Plus } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
+import { useToast } from '@/hooks/use-toast';
 
 interface SpaService {
   id: string;
@@ -34,6 +36,8 @@ const Spa = () => {
   const [heroImage, setHeroImage] = useState('https://images.unsplash.com/photo-1544161515-4ab6ce6db874?ixlib=rb-4.0.3&auto=format&fit=crop&w=2000&q=80');
   const [heroTitle, setHeroTitle] = useState('Mountain Spa & Wellness');
   const [heroSubtitle, setHeroSubtitle] = useState('Rejuvenate your mind, body, and spirit in nature\'s embrace');
+  const { toast } = useToast();
+  const navigate = useNavigate();
 
   useEffect(() => {
     loadServices();
@@ -74,6 +78,87 @@ const Spa = () => {
   const filteredServices = selectedCategory === 'all' 
     ? services 
     : services.filter(service => service.category === selectedCategory);
+
+  const handleAddToStay = (service: SpaService) => {
+    // Get booking data from localStorage
+    const bookingData = localStorage.getItem('currentBooking');
+    
+    if (!bookingData) {
+      toast({
+        title: "Let's Plan Your Stay First",
+        description: "We'd love to add this to your experience! Please select your accommodation and dates on our booking page, and we'll be happy to include this service.",
+        variant: "default",
+      });
+      navigate('/booking');
+      return;
+    }
+
+    try {
+      const booking = JSON.parse(bookingData);
+      
+      // Check if check-in and check-out dates are selected
+      if (!booking.checkIn || !booking.checkOut) {
+        toast({
+          title: "Almost There!",
+          description: "To add spa services to your stay, please select your arrival and departure dates first. We want to ensure your wellness experience is perfectly timed!",
+          variant: "default",
+        });
+        navigate('/booking');
+        return;
+      }
+
+      // Check if room is selected
+      if (!booking.roomType && !booking.roomUnit) {
+        toast({
+          title: "Choose Your Haven First",
+          description: "Please select your accommodation before adding spa services. We want to ensure everything is perfectly arranged for your comfort!",
+          variant: "default",
+        });
+        navigate('/booking');
+        return;
+      }
+
+      // Add spa service to booking
+      const existingSpaServices = booking.selectedSpaServices || [];
+      
+      // Check if service already added
+      if (existingSpaServices.some((s: any) => s.id === service.id)) {
+        toast({
+          title: "Already Added",
+          description: `${service.title} is already part of your wellness experience. You can adjust quantities on the booking page.`,
+        });
+        navigate('/booking');
+        return;
+      }
+
+      const updatedBooking = {
+        ...booking,
+        selectedSpaServices: [...existingSpaServices, {
+          id: service.id,
+          title: service.title,
+          price: service.price,
+          duration: service.duration,
+          quantity: 1
+        }]
+      };
+
+      localStorage.setItem('currentBooking', JSON.stringify(updatedBooking));
+      
+      toast({
+        title: "Added to Your Stay!",
+        description: `${service.title} has been added to your wellness experience. View your complete itinerary on the booking page.`,
+      });
+      
+      navigate('/booking');
+    } catch (error) {
+      console.error('Error adding spa service:', error);
+      toast({
+        title: "Oops!",
+        description: "We encountered a small issue. Please try again or contact our concierge for assistance.",
+        variant: "destructive",
+      });
+    }
+  };
 
   const packages = [
     {
@@ -246,8 +331,12 @@ const Spa = () => {
                       </div>
                     )}
                     
-                    <Button className="w-full font-body">
-                      Book a Slot
+                    <Button 
+                      className="w-full font-body gap-2"
+                      onClick={() => handleAddToStay(service)}
+                    >
+                      <Plus className="h-4 w-4" />
+                      Add to My Stay
                     </Button>
                   </div>
                 </div>
