@@ -25,8 +25,11 @@ interface Page {
   meta_description: string | null;
   meta_keywords: string | null;
   og_image: string | null;
+  og_image_key?: string | null;
   hero_image: string | null;
+  hero_image_key?: string | null;
   hero_gallery: string[];
+  hero_gallery_keys?: string[];
   hero_type: string;
   is_published: boolean;
   template_type: string;
@@ -80,8 +83,11 @@ export default function PageManagement() {
     meta_description: "",
     meta_keywords: "",
     og_image: "",
+    og_image_key: "",
     hero_image: "",
+    hero_image_key: "",
     hero_gallery: [] as string[],
+    hero_gallery_keys: [] as string[],
     hero_type: "single",
     is_published: false,
     template_type: "full-width",
@@ -134,6 +140,7 @@ export default function PageManagement() {
       setPages((data || []).map(page => ({
         ...page,
         hero_gallery: (page.hero_gallery as string[]) || [],
+        hero_gallery_keys: (page.hero_gallery_keys as string[]) || [],
       })));
     } catch (error: any) {
       toast.error("Failed to fetch pages: " + error.message);
@@ -254,8 +261,11 @@ export default function PageManagement() {
       meta_description: page.meta_description || "",
       meta_keywords: page.meta_keywords || "",
       og_image: page.og_image || "",
+      og_image_key: page.og_image_key || "",
       hero_image: page.hero_image || "",
+      hero_image_key: page.hero_image_key || "",
       hero_gallery: page.hero_gallery || [],
+      hero_gallery_keys: page.hero_gallery_keys || [],
       hero_type: page.hero_type || "single",
       is_published: page.is_published,
       template_type: page.template_type,
@@ -291,8 +301,11 @@ export default function PageManagement() {
       meta_description: "",
       meta_keywords: "",
       og_image: "",
+      og_image_key: "",
       hero_image: "",
+      hero_image_key: "",
       hero_gallery: [],
+      hero_gallery_keys: [],
       hero_type: "single",
       is_published: false,
       template_type: "full-width",
@@ -504,9 +517,18 @@ export default function PageManagement() {
                     <MediaPicker
                       label="Hero Image"
                       value={formData.hero_image}
-                      onChange={(url) =>
-                        setFormData({ ...formData, hero_image: url })
-                      }
+                      onChange={async (url) => {
+                        setFormData({ ...formData, hero_image: url });
+                        // Fetch and save the hardcoded_key
+                        const { data } = await supabase
+                          .from('gallery_images')
+                          .select('hardcoded_key')
+                          .eq('image_url', url)
+                          .single();
+                        if (data?.hardcoded_key) {
+                          setFormData(prev => ({ ...prev, hero_image_key: data.hardcoded_key }));
+                        }
+                      }}
                       categorySlug="hero-banners"
                       folder="hero-images"
                     />
@@ -518,15 +540,27 @@ export default function PageManagement() {
                       <p className="text-sm text-muted-foreground mb-2">
                         Add up to 5 images for the carousel
                       </p>
-                      {formData.hero_gallery.map((url, index) => (
+                        {formData.hero_gallery.map((url, index) => (
                         <div key={index} className="mb-4">
                           <MediaPicker
                             label={`Image ${index + 1}`}
                             value={url}
-                            onChange={(newUrl) => {
+                            onChange={async (newUrl) => {
                               const newGallery = [...formData.hero_gallery];
                               newGallery[index] = newUrl;
                               setFormData({ ...formData, hero_gallery: newGallery });
+                              
+                              // Fetch and save the hardcoded_key
+                              const { data } = await supabase
+                                .from('gallery_images')
+                                .select('hardcoded_key')
+                                .eq('image_url', newUrl)
+                                .single();
+                              if (data?.hardcoded_key) {
+                                const newGalleryKeys = [...formData.hero_gallery_keys];
+                                newGalleryKeys[index] = data.hardcoded_key;
+                                setFormData(prev => ({ ...prev, hero_gallery_keys: newGalleryKeys }));
+                              }
                             }}
                             categorySlug="hero-banners"
                             folder="hero-images"
@@ -616,9 +650,18 @@ export default function PageManagement() {
                   <MediaPicker
                     label="OG Image"
                     value={formData.og_image}
-                    onChange={(url) =>
-                      setFormData({ ...formData, og_image: url })
-                    }
+                    onChange={async (url) => {
+                      setFormData({ ...formData, og_image: url });
+                      // Fetch and save the hardcoded_key
+                      const { data } = await supabase
+                        .from('gallery_images')
+                        .select('hardcoded_key')
+                        .eq('image_url', url)
+                        .single();
+                      if (data?.hardcoded_key) {
+                        setFormData(prev => ({ ...prev, og_image_key: data.hardcoded_key }));
+                      }
+                    }}
                     categorySlug="seo"
                     folder="og-images"
                   />
