@@ -29,6 +29,7 @@ interface SpaService {
   price: number;
   category: string;
   tags: any;
+  benefits: string | null;
   booking_required: boolean;
   is_active: boolean;
   created_at: string;
@@ -59,6 +60,7 @@ const SpaManagement = () => {
     image: '',
     image_key: '',
     description: '',
+    benefits: '',
     duration: '',
     price: '',
     category: 'massage',
@@ -67,6 +69,7 @@ const SpaManagement = () => {
   });
 
   const [benefitsOpen, setBenefitsOpen] = useState(false);
+  const [newTag, setNewTag] = useState('');
 
   const { toast } = useToast();
   const navigate = useNavigate();
@@ -107,6 +110,7 @@ const SpaManagement = () => {
       image: '',
       image_key: '',
       description: '',
+      benefits: '',
       duration: '',
       price: '',
       category: 'massage',
@@ -114,6 +118,7 @@ const SpaManagement = () => {
       media_keys: []
     });
     setEditingId(null);
+    setNewTag('');
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -125,6 +130,7 @@ const SpaManagement = () => {
         image: formData.image || null,
         image_key: formData.image_key || null,
         description: formData.description || null,
+        benefits: formData.benefits || null,
         duration: formData.duration ? parseInt(formData.duration) : null,
         price: parseFloat(formData.price),
         category: formData.category,
@@ -170,6 +176,7 @@ const SpaManagement = () => {
       image: service.image || '',
       image_key: service.image_key || '',
       description: service.description || '',
+      benefits: service.benefits || '',
       duration: service.duration?.toString() || '',
       price: service.price.toString(),
       category: service.category || 'massage',
@@ -320,7 +327,22 @@ const SpaManagement = () => {
                   value={formData.description}
                   onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                   rows={4}
+                  placeholder="Describe the spa service..."
                 />
+              </div>
+
+              <div>
+                <Label htmlFor="benefits">Benefits (Detailed Description)</Label>
+                <Textarea
+                  id="benefits"
+                  value={formData.benefits}
+                  onChange={(e) => setFormData({ ...formData, benefits: e.target.value })}
+                  rows={6}
+                  placeholder="Describe the detailed benefits of this treatment..."
+                />
+                <p className="text-xs text-muted-foreground mt-1">
+                  This will be displayed on the service detail page as a detailed benefits description.
+                </p>
               </div>
 
               <div>
@@ -359,52 +381,88 @@ const SpaManagement = () => {
               </div>
 
               <div>
-                <Label>Benefits/Tags</Label>
-                <Popover open={benefitsOpen} onOpenChange={setBenefitsOpen}>
-                  <PopoverTrigger asChild>
+                <Label>Benefits Tags / Key Features</Label>
+                <div className="space-y-2">
+                  <div className="flex gap-2">
+                    <Input
+                      placeholder="Add custom tag..."
+                      value={newTag}
+                      onChange={(e) => setNewTag(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') {
+                          e.preventDefault();
+                          if (newTag.trim() && !formData.tags.includes(newTag.trim())) {
+                            setFormData({
+                              ...formData,
+                              tags: [...formData.tags, newTag.trim()]
+                            });
+                            setNewTag('');
+                          }
+                        }
+                      }}
+                    />
                     <Button
+                      type="button"
                       variant="outline"
-                      role="combobox"
-                      aria-expanded={benefitsOpen}
-                      className="w-full justify-between"
+                      onClick={() => {
+                        if (newTag.trim() && !formData.tags.includes(newTag.trim())) {
+                          setFormData({
+                            ...formData,
+                            tags: [...formData.tags, newTag.trim()]
+                          });
+                          setNewTag('');
+                        }
+                      }}
                     >
-                      {formData.tags.length > 0
-                        ? `${formData.tags.length} selected`
-                        : "Select benefits..."}
-                      <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                      <Plus className="h-4 w-4 mr-1" />
+                      Add
                     </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-full p-0">
-                    <Command>
-                      <CommandInput placeholder="Search benefits..." />
-                      <CommandList>
-                        <CommandEmpty>No benefit found.</CommandEmpty>
-                        <CommandGroup>
-                          {AVAILABLE_BENEFITS.map((benefit) => (
-                            <CommandItem
-                              key={benefit}
-                              onSelect={() => {
-                                const isSelected = formData.tags.includes(benefit);
-                                setFormData({
-                                  ...formData,
-                                  tags: isSelected
-                                    ? formData.tags.filter(tag => tag !== benefit)
-                                    : [...formData.tags, benefit]
-                                });
-                              }}
-                            >
-                              <Checkbox
-                                checked={formData.tags.includes(benefit)}
-                                className="mr-2"
-                              />
-                              {benefit}
-                            </CommandItem>
-                          ))}
-                        </CommandGroup>
-                      </CommandList>
-                    </Command>
-                  </PopoverContent>
-                </Popover>
+                  </div>
+                  <Popover open={benefitsOpen} onOpenChange={setBenefitsOpen}>
+                    <PopoverTrigger asChild>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        role="combobox"
+                        aria-expanded={benefitsOpen}
+                        className="w-full justify-between"
+                      >
+                        Select from common tags...
+                        <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-full p-0">
+                      <Command>
+                        <CommandInput placeholder="Search tags..." />
+                        <CommandList>
+                          <CommandEmpty>No tag found.</CommandEmpty>
+                          <CommandGroup>
+                            {AVAILABLE_BENEFITS.map((benefit) => (
+                              <CommandItem
+                                key={benefit}
+                                onSelect={() => {
+                                  const isSelected = formData.tags.includes(benefit);
+                                  setFormData({
+                                    ...formData,
+                                    tags: isSelected
+                                      ? formData.tags.filter(tag => tag !== benefit)
+                                      : [...formData.tags, benefit]
+                                  });
+                                }}
+                              >
+                                <Checkbox
+                                  checked={formData.tags.includes(benefit)}
+                                  className="mr-2"
+                                />
+                                {benefit}
+                              </CommandItem>
+                            ))}
+                          </CommandGroup>
+                        </CommandList>
+                      </Command>
+                    </PopoverContent>
+                  </Popover>
+                </div>
                 {formData.tags.length > 0 && (
                   <div className="flex flex-wrap gap-1 mt-2">
                     {formData.tags.map((tag) => (
@@ -421,6 +479,9 @@ const SpaManagement = () => {
                     ))}
                   </div>
                 )}
+                <p className="text-xs text-muted-foreground mt-1">
+                  Add custom tags or select from common ones. These appear as key features on the detail page.
+                </p>
               </div>
 
               <div className="flex gap-4 pt-4">

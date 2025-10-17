@@ -20,6 +20,7 @@ interface SpaService {
   price: number;
   category: string;
   tags: any;
+  benefits: string | null;
   is_active: boolean;
 }
 
@@ -259,12 +260,24 @@ const SpaServiceDetail = () => {
                 </div>
               )}
 
-              {/* Benefits */}
-              {service.tags && service.tags.length > 0 && (
+              {/* Benefits Description */}
+              {service.benefits && (
                 <div className="mb-8">
-                  <h2 className="text-xl font-heading font-semibold mb-4 text-foreground flex items-center gap-2">
+                  <h2 className="text-xl font-heading font-semibold mb-3 text-foreground flex items-center gap-2">
                     <Sparkles className="h-5 w-5 text-primary" />
                     Benefits
+                  </h2>
+                  <p className="text-muted-foreground font-body leading-relaxed whitespace-pre-line">
+                    {service.benefits}
+                  </p>
+                </div>
+              )}
+
+              {/* Benefits Tags */}
+              {service.tags && service.tags.length > 0 && (
+                <div className="mb-8">
+                  <h2 className="text-xl font-heading font-semibold mb-4 text-foreground">
+                    Key Features
                   </h2>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                     {service.tags.map((tag: string, index: number) => (

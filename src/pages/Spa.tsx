@@ -372,22 +372,28 @@ const Spa = () => {
                                   </p>
                                 )}
                                 
-                                <div className="flex flex-col gap-2">
+                                <div className="flex gap-2">
                                   <Button 
                                     size="sm"
                                     variant="outline"
-                                    className="w-full font-body text-xs"
+                                    className="flex-1 font-body"
                                     onClick={() => navigate(`/spa/${service.id}`)}
                                   >
-                                    Learn More
+                                    <span className="hidden sm:inline text-xs">Learn More</span>
+                                    <Sparkles className="h-3 w-3 sm:hidden" />
                                   </Button>
                                   <Button 
                                     size="sm"
-                                    className="w-full font-body gap-2 text-xs"
+                                    className="flex-1 font-body gap-1"
                                     onClick={() => handleAddToStay(service)}
                                     variant={addedServiceIds.includes(service.id) ? "secondary" : "default"}
                                   >
-                                    {addedServiceIds.includes(service.id) ? "✓ Added" : <><Plus className="h-3 w-3" />Add to Stay</>}
+                                    <span className="hidden sm:inline text-xs">
+                                      {addedServiceIds.includes(service.id) ? "✓ Added" : "Add to Stay"}
+                                    </span>
+                                    <span className="sm:hidden text-xs">
+                                      {addedServiceIds.includes(service.id) ? "✓" : "Add+"}
+                                    </span>
                                   </Button>
                                 </div>
                               </div>
