@@ -354,24 +354,18 @@ const Contact = () => {
             </p>
           </div>
 
-          <div className="bg-white rounded-lg overflow-hidden shadow-lg relative">
+          <div className="bg-white rounded-lg overflow-hidden shadow-lg">
             {googleMapsApiKey ? (
-              <>
-                <GoogleMap
-                  apiKey={googleMapsApiKey}
-                  center={{ lat: 18.9847, lng: 73.2673 }}
-                  zoom={14}
-                  markerTitle="Horseland Hotel"
-                  markerDescription="Vithalrao Kotwal Road, Near Dasturi Point, Matheran"
-                />
-                <Button
-                  onClick={() => window.open('https://www.google.com/maps/dir/?api=1&destination=18.9847,73.2673&destination_place_id=ChIJX8X8X8X8X8X8X8X8X8X8X8', '_blank')}
-                  className="absolute bottom-4 right-4 z-10 bg-primary hover:bg-primary/90 shadow-lg"
-                >
-                  <MapPin className="w-4 h-4 mr-2" />
-                  Get Directions
-                </Button>
-              </>
+              <iframe
+                width="100%"
+                height="450"
+                style={{ border: 0 }}
+                loading="lazy"
+                allowFullScreen
+                referrerPolicy="no-referrer-when-downgrade"
+                src={`https://www.google.com/maps/embed/v1/directions?key=${googleMapsApiKey}&origin=&destination=Horseland+Hotel,Vithalrao+Kotwal+Road,Near+Dasturi+Point,Matheran,Maharashtra+410102&mode=driving`}
+                className="w-full min-h-[450px]"
+              />
             ) : (
               <div className="aspect-video bg-muted/50 flex items-center justify-center">
                 <div className="text-center">
