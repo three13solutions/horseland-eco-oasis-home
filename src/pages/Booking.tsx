@@ -59,6 +59,12 @@ interface GuestDetails {
   specialRequests: string;
 }
 
+interface GuestMeal {
+  guestNumber: number;
+  dietaryPreference: 'vegetarian' | 'non-vegetarian' | 'jain';
+  selectedMeals: string[]; // meal IDs
+}
+
 interface PickupService {
   id: string;
   from: 'mumbai' | 'pune' | 'property';
@@ -116,6 +122,19 @@ const Booking = () => {
   const [selectedBedding, setSelectedBedding] = useState<BeddingOption[]>([]);
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [activeTab, setActiveTab] = useState<string>('');
+  const [guestMeals, setGuestMeals] = useState<GuestMeal[]>([]);
+
+  // Initialize guest meals when guests count changes
+  useEffect(() => {
+    if (guests > 0 && guestMeals.length !== guests) {
+      const newGuestMeals: GuestMeal[] = Array.from({ length: guests }, (_, i) => ({
+        guestNumber: i + 1,
+        dietaryPreference: 'vegetarian',
+        selectedMeals: []
+      }));
+      setGuestMeals(newGuestMeals);
+    }
+  }, [guests]);
 
   // Load available rooms and addons
   useEffect(() => {
@@ -531,7 +550,8 @@ const Booking = () => {
     const addonsTotal = selectedAddons.reduce((total, addon) => total + (addon.price * addon.quantity), 0);
     const pickupTotal = selectedPickup ? selectedPickup.price : 0;
     const beddingTotal = selectedBedding.reduce((total, bed) => total + bed.price, 0);
-    return roomTotal + addonsTotal + pickupTotal + beddingTotal;
+    const mealsTotal = calculateGuestMealsTotal();
+    return roomTotal + addonsTotal + pickupTotal + beddingTotal + mealsTotal;
   };
 
   const formatDate = (dateString: string) => {
@@ -573,6 +593,59 @@ const Booking = () => {
           return true;
       }
     });
+  };
+
+  const getFilteredMealsByPreference = (preference: 'vegetarian' | 'non-vegetarian' | 'jain') => {
+    return meals.filter(meal => {
+      const mealTitle = meal.title.toLowerCase();
+      const mealDesc = meal.description?.toLowerCase() || '';
+      
+      switch (preference) {
+        case 'vegetarian':
+          return mealTitle.includes('veg') || mealDesc.includes('vegetarian');
+        case 'non-vegetarian':
+          return mealTitle.includes('non-veg') || mealTitle.includes('chicken') || 
+                 mealTitle.includes('mutton') || mealTitle.includes('fish') || 
+                 mealDesc.includes('non-vegetarian');
+        case 'jain':
+          return mealTitle.includes('jain') || mealDesc.includes('jain');
+        default:
+          return true;
+      }
+    });
+  };
+
+  const handleGuestMealToggle = (guestIndex: number, mealId: string) => {
+    setGuestMeals(prev => {
+      const updated = [...prev];
+      const guest = updated[guestIndex];
+      if (guest.selectedMeals.includes(mealId)) {
+        guest.selectedMeals = guest.selectedMeals.filter(id => id !== mealId);
+      } else {
+        guest.selectedMeals.push(mealId);
+      }
+      return updated;
+    });
+  };
+
+  const handleGuestDietaryChange = (guestIndex: number, preference: 'vegetarian' | 'non-vegetarian' | 'jain') => {
+    setGuestMeals(prev => {
+      const updated = [...prev];
+      updated[guestIndex].dietaryPreference = preference;
+      updated[guestIndex].selectedMeals = []; // Clear selections when preference changes
+      return updated;
+    });
+  };
+
+  const calculateGuestMealsTotal = () => {
+    let total = 0;
+    guestMeals.forEach(guest => {
+      guest.selectedMeals.forEach(mealId => {
+        const meal = meals.find(m => m.id === mealId);
+        if (meal) total += meal.price;
+      });
+    });
+    return total;
   };
 
   const pickupServices: PickupService[] = [
@@ -985,46 +1058,68 @@ const Booking = () => {
                         </div>
                       </TabsContent>
 
-                      <TabsContent value="meals" className="space-y-4">
-                        {guestDetails.dietaryPreference !== 'no-preference' && (
-                          <div className="text-sm text-muted-foreground mb-4">
-                            Showing {guestDetails.dietaryPreference.replace('-', ' ')} options only
-                          </div>
-                        )}
-                        {getFilteredMeals().length === 0 ? (
-                          <div className="text-center text-muted-foreground py-8">
-                            No meals available for your dietary preference
-                          </div>
-                        ) : (
-                          getFilteredMeals().map((meal) => (
-                          <div key={meal.id} className="flex items-center justify-between p-4 border rounded-lg">
-                            <div className="flex-1">
-                              <h4 className="font-medium">{meal.title}</h4>
-                              <p className="text-sm text-muted-foreground">{meal.description}</p>
-                              <p className="text-lg font-semibold">₹{meal.price}</p>
-                            </div>
-                            <div className="flex items-center gap-2">
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() => removeAddon(meal.id)}
-                                disabled={!selectedAddons.find(a => a.id === meal.id)}
-                              >
-                                <Minus className="h-4 w-4" />
-                              </Button>
-                              <span className="w-8 text-center">
-                                {selectedAddons.find(a => a.id === meal.id)?.quantity || 0}
-                              </span>
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() => addAddon(meal)}
-                              >
-                                <Plus className="h-4 w-4" />
-                              </Button>
-                            </div>
-                          </div>
-                        )))}
+                      <TabsContent value="meals" className="space-y-6">
+                        <div className="space-y-6">
+                          {guestMeals.map((guest, index) => {
+                            const filteredMeals = getFilteredMealsByPreference(guest.dietaryPreference);
+                            return (
+                              <Card key={index}>
+                                <CardHeader>
+                                  <CardTitle className="text-lg">Guest {guest.guestNumber}</CardTitle>
+                                </CardHeader>
+                                <CardContent className="space-y-4">
+                                  <div>
+                                    <Label htmlFor={`dietary-${index}`} className="text-sm font-medium mb-2 block">
+                                      Dietary Preference
+                                    </Label>
+                                    <select
+                                      id={`dietary-${index}`}
+                                      className="w-full p-2 border rounded-md text-sm"
+                                      value={guest.dietaryPreference}
+                                      onChange={(e) => handleGuestDietaryChange(index, e.target.value as any)}
+                                    >
+                                      <option value="vegetarian">Vegetarian</option>
+                                      <option value="non-vegetarian">Non-Vegetarian</option>
+                                      <option value="jain">Jain</option>
+                                    </select>
+                                  </div>
+                                  
+                                  <div>
+                                    <Label className="text-sm font-medium mb-3 block">Select Meals</Label>
+                                    {filteredMeals.length === 0 ? (
+                                      <div className="text-sm text-muted-foreground text-center py-4">
+                                        No meals available for this dietary preference
+                                      </div>
+                                    ) : (
+                                      <div className="space-y-3">
+                                        {filteredMeals.map((meal) => (
+                                          <div key={meal.id} className="flex items-start gap-3 p-3 border rounded-lg hover:bg-muted/50 transition-colors">
+                                            <Checkbox
+                                              id={`meal-${index}-${meal.id}`}
+                                              checked={guest.selectedMeals.includes(meal.id)}
+                                              onCheckedChange={() => handleGuestMealToggle(index, meal.id)}
+                                              className="mt-1"
+                                            />
+                                            <label
+                                              htmlFor={`meal-${index}-${meal.id}`}
+                                              className="flex-1 cursor-pointer"
+                                            >
+                                              <div className="font-medium text-sm">{meal.title}</div>
+                                              {meal.description && (
+                                                <div className="text-xs text-muted-foreground mt-1">{meal.description}</div>
+                                              )}
+                                              <div className="font-semibold text-primary text-sm mt-1">₹{meal.price}</div>
+                                            </label>
+                                          </div>
+                                        ))}
+                                      </div>
+                                    )}
+                                  </div>
+                                </CardContent>
+                              </Card>
+                            );
+                          })}
+                        </div>
                       </TabsContent>
                       
                       <TabsContent value="pickup" className="space-y-4">
@@ -1303,6 +1398,31 @@ const Booking = () => {
                                   <span className="font-medium whitespace-nowrap">₹{bed.price.toLocaleString()}</span>
                                 </div>
                               ))}
+                            </div>
+                          )}
+                          
+                          {calculateGuestMealsTotal() > 0 && (
+                            <div className="space-y-2">
+                              <Separator />
+                              <div className="font-medium text-sm">Meals:</div>
+                              {guestMeals.map((guest, idx) => {
+                                if (guest.selectedMeals.length === 0) return null;
+                                return (
+                                  <div key={idx} className="space-y-1 pl-2">
+                                    <div className="text-xs font-medium text-muted-foreground">Guest {guest.guestNumber} ({guest.dietaryPreference})</div>
+                                    {guest.selectedMeals.map(mealId => {
+                                      const meal = meals.find(m => m.id === mealId);
+                                      if (!meal) return null;
+                                      return (
+                                        <div key={mealId} className="flex justify-between gap-2 text-sm">
+                                          <span className="text-muted-foreground break-words">• {meal.title}</span>
+                                          <span className="font-medium whitespace-nowrap">₹{meal.price.toLocaleString()}</span>
+                                        </div>
+                                      );
+                                    })}
+                                  </div>
+                                );
+                              })}
                             </div>
                           )}
                      </div>
