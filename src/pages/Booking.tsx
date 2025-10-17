@@ -1038,9 +1038,9 @@ const Booking = () => {
                                   {categoryData.activities.map((activity) => {
                                     const quantity = selectedAddons.find(a => a.id === activity.id)?.quantity || 0;
                                     return (
-                                      <CarouselItem key={activity.id} className="pl-2 basis-1/3 sm:basis-1/4 md:basis-1/5 lg:basis-1/6">
-                                        <div className="flex flex-col items-center">
-                                          <div className="relative w-full aspect-square rounded-lg overflow-hidden mb-2 border-2 border-transparent hover:border-primary transition-colors">
+                                      <CarouselItem key={activity.id} className="pl-2 basis-1/2 sm:basis-1/3 md:basis-1/4 lg:basis-1/5">
+                                        <div className="flex flex-col items-center p-2 border rounded-lg hover:border-primary transition-colors">
+                                          <div className="relative w-full aspect-square rounded-lg overflow-hidden mb-3">
                                             {activity.image ? (
                                               <img 
                                                 src={activity.image}
@@ -1052,31 +1052,38 @@ const Booking = () => {
                                                 <Sparkles className="h-8 w-8 text-muted-foreground" />
                                               </div>
                                             )}
+                                            <Button
+                                              variant="secondary"
+                                              size="sm"
+                                              className="absolute bottom-2 right-2 text-xs h-7 px-2"
+                                            >
+                                              View
+                                            </Button>
                                           </div>
-                                          <div className="flex items-center gap-1.5 mb-2">
+                                          <div className="flex items-center gap-2 mb-2">
                                             <Button
                                               variant="outline"
                                               size="icon"
-                                              className="h-6 w-6 rounded-full"
+                                              className="h-8 w-8 rounded-full"
                                               onClick={() => removeAddon(activity.id)}
                                               disabled={quantity === 0}
                                             >
-                                              <Minus className="h-3 w-3" />
+                                              <Minus className="h-4 w-4" />
                                             </Button>
-                                            <span className="w-6 text-center text-sm font-medium">
+                                            <span className="w-8 text-center text-sm font-medium">
                                               {quantity}
                                             </span>
                                             <Button
                                               variant="outline"
                                               size="icon"
-                                              className="h-6 w-6 rounded-full"
+                                              className="h-8 w-8 rounded-full"
                                               onClick={() => addAddon(activity)}
                                             >
-                                              <Plus className="h-3 w-3" />
+                                              <Plus className="h-4 w-4" />
                                             </Button>
                                           </div>
-                                          <p className="text-xs font-medium text-center mb-1 line-clamp-2 h-8">{activity.title}</p>
-                                          <p className="text-xs font-semibold text-primary">₹{activity.price}</p>
+                                          <p className="text-sm font-medium text-center mb-1 line-clamp-2">{activity.title}</p>
+                                          <p className="text-sm font-semibold text-primary">₹{activity.price}</p>
                                         </div>
                                       </CarouselItem>
                                     );
@@ -1110,9 +1117,9 @@ const Booking = () => {
                                   {categoryData.services.map((spa) => {
                                     const quantity = selectedAddons.find(a => a.id === spa.id)?.quantity || 0;
                                     return (
-                                      <CarouselItem key={spa.id} className="pl-2 basis-1/3 sm:basis-1/4 md:basis-1/5 lg:basis-1/6">
-                                        <div className="flex flex-col items-center">
-                                          <div className="relative w-full aspect-square rounded-lg overflow-hidden mb-2 border-2 border-transparent hover:border-primary transition-colors">
+                                      <CarouselItem key={spa.id} className="pl-2 basis-1/2 sm:basis-1/3 md:basis-1/4 lg:basis-1/5">
+                                        <div className="flex flex-col items-center p-2 border rounded-lg hover:border-primary transition-colors">
+                                          <div className="relative w-full aspect-square rounded-lg overflow-hidden mb-3">
                                             {spa.image ? (
                                               <img 
                                                 src={spa.image}
@@ -1124,31 +1131,38 @@ const Booking = () => {
                                                 <Sparkles className="h-8 w-8 text-muted-foreground" />
                                               </div>
                                             )}
+                                            <Button
+                                              variant="secondary"
+                                              size="sm"
+                                              className="absolute bottom-2 right-2 text-xs h-7 px-2"
+                                            >
+                                              View
+                                            </Button>
                                           </div>
-                                          <div className="flex items-center gap-1.5 mb-2">
+                                          <div className="flex items-center gap-2 mb-2">
                                             <Button
                                               variant="outline"
                                               size="icon"
-                                              className="h-6 w-6 rounded-full"
+                                              className="h-8 w-8 rounded-full"
                                               onClick={() => removeAddon(spa.id)}
                                               disabled={quantity === 0}
                                             >
-                                              <Minus className="h-3 w-3" />
+                                              <Minus className="h-4 w-4" />
                                             </Button>
-                                            <span className="w-6 text-center text-sm font-medium">
+                                            <span className="w-8 text-center text-sm font-medium">
                                               {quantity}
                                             </span>
                                             <Button
                                               variant="outline"
                                               size="icon"
-                                              className="h-6 w-6 rounded-full"
+                                              className="h-8 w-8 rounded-full"
                                               onClick={() => addAddon(spa)}
                                             >
-                                              <Plus className="h-3 w-3" />
+                                              <Plus className="h-4 w-4" />
                                             </Button>
                                           </div>
-                                          <p className="text-xs font-medium text-center mb-1 line-clamp-2 h-8">{spa.title}</p>
-                                          <p className="text-xs font-semibold text-primary">₹{spa.price}</p>
+                                          <p className="text-sm font-medium text-center mb-1 line-clamp-2">{spa.title}</p>
+                                          <p className="text-sm font-semibold text-primary">₹{spa.price}</p>
                                         </div>
                                       </CarouselItem>
                                     );
@@ -1168,7 +1182,7 @@ const Booking = () => {
 
               {/* Booking Summary */}
               <div className="space-y-6">
-                <Card>
+                <Card data-booking-summary>
                   <CardHeader>
                     <CardTitle>Booking Summary</CardTitle>
                   </CardHeader>
@@ -1252,23 +1266,36 @@ const Booking = () => {
                        <span>₹{calculateTotal().toLocaleString()}</span>
                      </div>
 
-                      {!showGuestDetails ? (
+                      <div className="grid grid-cols-2 gap-3">
                         <Button 
+                          variant="outline"
                           className="w-full" 
                           size="lg"
-                          onClick={handleProceedToGuestDetails}
+                          onClick={() => {
+                            const summaryElement = document.querySelector('[data-booking-summary]');
+                            summaryElement?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                          }}
                         >
-                          Proceed to Guest Details
+                          View Booking
                         </Button>
-                      ) : (
-                        <Button 
-                          className="w-full" 
-                          size="lg"
-                          onClick={handleProceedToPayment}
-                        >
-                          Proceed to Payment
-                        </Button>
-                      )}
+                        {!showGuestDetails ? (
+                          <Button 
+                            className="w-full" 
+                            size="lg"
+                            onClick={handleProceedToGuestDetails}
+                          >
+                            Add to Stay
+                          </Button>
+                        ) : (
+                          <Button 
+                            className="w-full" 
+                            size="lg"
+                            onClick={handleProceedToPayment}
+                          >
+                            Proceed to Payment
+                          </Button>
+                        )}
+                      </div>
                   </CardContent>
                 </Card>
                 
