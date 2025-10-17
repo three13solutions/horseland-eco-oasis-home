@@ -94,11 +94,10 @@ const Contact = () => {
   useEffect(() => {
     if (typeof window === "undefined") return; // skip SSR
 
-    if (!mapToken) return; // wait for token
+    mapboxgl.accessToken =
+      "pk.eyJ1IjoiaG9yc2VsYW5kIiwiYSI6ImNtZ3VqOGthNTBlY2gya3NjMWpvaDc4eDgifQ.QuVNk5IzzBe3ANWi-ANLlQ"; // <-- paste your token here
 
-    mapboxgl.accessToken = mapToken;
-    const coords = [18.986589866841467, 73.26884202400663];
-
+    const coords = [18.98660901829744, 73.26883189733466]; // Longitude, Latitude of Horseland Hotel
     const map = new mapboxgl.Map({
       container: "map",
       style: "mapbox://styles/mapbox/streets-v12",
@@ -112,10 +111,9 @@ const Contact = () => {
       .addTo(map);
 
     return () => map.remove();
-  }, [mapToken]);
+  }, []);
 
-  /*End of code*/
-
+  /*Code ends*/
   return (
     <div className="min-h-screen bg-background">
       <NavigationV5 />
@@ -365,7 +363,7 @@ const Contact = () => {
           </div>
 
           <div className="bg-white rounded-lg overflow-hidden shadow-lg">
-            <div id="map" style={{ width: "100%", height: "400px" }} />
+            <div id="map" className="aspect-video" />
           </div>
         </div>
       </section>
