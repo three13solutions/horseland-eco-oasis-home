@@ -71,9 +71,17 @@ serve(async (req) => {
           continue;
         }
 
-        const url = media.media_type === 'image' ? media.image_url : media.video_url;
+        let url = media.media_type === 'image' ? media.image_url : media.video_url;
         if (!url) {
           console.log(`No URL for media: ${media.id}`);
+          skipped++;
+          continue;
+        }
+
+        // Skip relative URLs (local files in public folder)
+        if (url.startsWith('/')) {
+          console.log(`Skipping local file with relative URL: ${media.id} (${url})`);
+          console.log('  → These should be uploaded to Supabase storage or marked as hardcoded');
           skipped++;
           continue;
         }
