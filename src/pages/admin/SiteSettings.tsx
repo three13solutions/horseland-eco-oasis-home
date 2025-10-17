@@ -586,26 +586,6 @@ const SiteSettings = () => {
                 />
               </div>
 
-              <div>
-                <Label htmlFor="copyright_text">Copyright Text</Label>
-                <Input
-                  id="copyright_text"
-                  value={siteSettings.copyright_text}
-                  onChange={(e) => setSiteSettings(prev => ({ ...prev, copyright_text: e.target.value }))}
-                  placeholder="© 2024 Your Company Name"
-                />
-              </div>
-
-              <div>
-                <Label htmlFor="credits">Credits</Label>
-                <Input
-                  id="credits"
-                  value={siteSettings.tagline}
-                  onChange={(e) => setSiteSettings(prev => ({ ...prev, tagline: e.target.value }))}
-                  placeholder="Powered by IIIXIII"
-                />
-              </div>
-
               <Button onClick={saveSiteSettings} disabled={saving}>
                 <Save className="w-4 h-4 mr-2" />
                 Save General Settings
@@ -688,6 +668,35 @@ const SiteSettings = () => {
             </CardHeader>
             <CardContent>
               <div className="space-y-6">
+                <div className="space-y-4 p-4 border rounded-lg bg-muted/30">
+                  <h3 className="font-semibold text-sm">Footer Settings</h3>
+                  
+                  <div>
+                    <Label htmlFor="copyright_text">Copyright Text</Label>
+                    <Input
+                      id="copyright_text"
+                      value={siteSettings.copyright_text}
+                      onChange={(e) => setSiteSettings(prev => ({ ...prev, copyright_text: e.target.value }))}
+                      placeholder="© 2024 Your Company Name"
+                    />
+                  </div>
+
+                  <div>
+                    <Label htmlFor="credits">Credits</Label>
+                    <Input
+                      id="credits"
+                      value={siteSettings.tagline}
+                      onChange={(e) => setSiteSettings(prev => ({ ...prev, tagline: e.target.value }))}
+                      placeholder="Powered by IIIXIII"
+                    />
+                  </div>
+
+                  <Button onClick={saveSiteSettings} disabled={saving} size="sm">
+                    <Save className="w-4 h-4 mr-2" />
+                    Save Footer Settings
+                  </Button>
+                </div>
+
                 {footerSections.map((section, index) => (
                   <div key={section.id} className="p-4 border rounded-lg">
                     <div className="flex items-center justify-between mb-4">
