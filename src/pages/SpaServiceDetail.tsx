@@ -44,18 +44,30 @@ const SpaServiceDetail = () => {
         .select('*')
         .eq('id', serviceId)
         .eq('is_active', true)
-        .single();
+        .maybeSingle();
 
       if (error) throw error;
+      
+      if (!data) {
+        toast({
+          title: "Service Not Found",
+          description: "This spa service could not be loaded.",
+          variant: "destructive",
+        });
+        navigate('/spa');
+        return;
+      }
+      
       setService({
         ...data,
-        tags: Array.isArray(data.tags) ? data.tags : []
+        tags: Array.isArray(data.tags) ? data.tags : [],
+        benefits: data.benefits || null
       });
     } catch (error) {
       console.error('Error loading spa service:', error);
       toast({
-        title: "Service Not Found",
-        description: "This spa service could not be loaded.",
+        title: "Error",
+        description: "Failed to load spa service details.",
         variant: "destructive",
       });
       navigate('/spa');
@@ -200,14 +212,16 @@ const SpaServiceDetail = () => {
       <NavigationV5 />
       
       {/* Hero Section with Image */}
-      <section className="relative h-[50vh] min-h-[400px]">
+      <section className="relative h-[50vh] min-h-[400px] bg-muted">
         {service.image && (
           <>
-            <div 
-              className="absolute inset-0 bg-cover bg-center bg-no-repeat"
-              style={{ backgroundImage: `url('${service.image}')` }}
-            >
-              <div className="absolute inset-0 bg-black/40"></div>
+            <div className="absolute inset-0 flex items-center justify-center overflow-hidden">
+              <img 
+                src={service.image}
+                alt={service.title}
+                className="w-full h-full object-contain"
+              />
+              <div className="absolute inset-0 bg-gradient-to-b from-black/20 to-black/40"></div>
             </div>
             <Button
               variant="secondary"
@@ -277,7 +291,7 @@ const SpaServiceDetail = () => {
               {service.tags && service.tags.length > 0 && (
                 <div className="mb-8">
                   <h2 className="text-xl font-heading font-semibold mb-4 text-foreground">
-                    Key Features
+                    Benefits
                   </h2>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                     {service.tags.map((tag: string, index: number) => (
