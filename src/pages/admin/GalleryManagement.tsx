@@ -54,10 +54,9 @@ const GalleryManagement = () => {
     },
   });
 
-  // Fetch all available images for picker
+  // Fetch all available images for picker (always load for better UX)
   const { data: allImages = [] } = useQuery({
     queryKey: ['all-images', searchTerm],
-    enabled: showMediaPicker,
     queryFn: async () => {
       let query = supabase
         .from('gallery_images')
@@ -367,8 +366,8 @@ const GalleryManagement = () => {
             </div>
           </div>
 
-          <ScrollArea className="flex-1 h-[500px]">
-            <div className="grid grid-cols-4 gap-4 p-2">
+          <ScrollArea className="h-[500px] w-full">
+            <div className="grid grid-cols-4 gap-4 p-4 pr-4">
               {allImages.map((image: any) => {
                 const isSelected = selectedImageIds.includes(image.id);
                 const isAlreadyInGallery = categoryImages.some((img: any) => img.id === image.id);
