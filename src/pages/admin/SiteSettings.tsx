@@ -142,6 +142,7 @@ interface FooterSection {
 interface SiteSettings {
   site_title: string;
   site_logo: string;
+  brand_descriptor: string;
   copyright_text: string;
   tagline: string;
 }
@@ -164,6 +165,7 @@ const SiteSettings = () => {
   const [siteSettings, setSiteSettings] = useState<SiteSettings>({
     site_title: '',
     site_logo: '',
+    brand_descriptor: '',
     copyright_text: '',
     tagline: 'Powered by <a href="https://313s.com/" target="_blank" rel="noopener noreferrer">IIIXIII</a>'
   });
@@ -555,18 +557,18 @@ const SiteSettings = () => {
             </CardHeader>
             <CardContent className="space-y-6">
               <div>
-                <Label htmlFor="site_title">Site Title</Label>
+                <Label htmlFor="site_title">Brand Name</Label>
                 <Input
                   id="site_title"
                   value={siteSettings.site_title}
                   onChange={(e) => setSiteSettings(prev => ({ ...prev, site_title: e.target.value }))}
-                  placeholder="Your site title"
+                  placeholder="Your brand name"
                 />
               </div>
               
               <div>
                 <ImageUpload
-                  label="Site Logo"
+                  label="Brand Monogram"
                   value={siteSettings.site_logo}
                   onChange={(url) => setSiteSettings(prev => ({ ...prev, site_logo: url }))}
                   bucketName="uploads"
@@ -575,12 +577,12 @@ const SiteSettings = () => {
               </div>
 
               <div>
-                <Label htmlFor="credits">Credits</Label>
+                <Label htmlFor="brand_descriptor">Brand Descriptor</Label>
                 <Input
-                  id="credits"
-                  value={siteSettings.tagline}
-                  onChange={(e) => setSiteSettings(prev => ({ ...prev, tagline: e.target.value }))}
-                  placeholder="Powered by IIIXIII"
+                  id="brand_descriptor"
+                  value={siteSettings.brand_descriptor}
+                  onChange={(e) => setSiteSettings(prev => ({ ...prev, brand_descriptor: e.target.value }))}
+                  placeholder="Hotel, Resort, etc."
                 />
               </div>
 
@@ -591,6 +593,16 @@ const SiteSettings = () => {
                   value={siteSettings.copyright_text}
                   onChange={(e) => setSiteSettings(prev => ({ ...prev, copyright_text: e.target.value }))}
                   placeholder="© 2024 Your Company Name"
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="credits">Credits</Label>
+                <Input
+                  id="credits"
+                  value={siteSettings.tagline}
+                  onChange={(e) => setSiteSettings(prev => ({ ...prev, tagline: e.target.value }))}
+                  placeholder="Powered by IIIXIII"
                 />
               </div>
 
