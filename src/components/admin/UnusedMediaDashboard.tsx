@@ -1,8 +1,8 @@
 import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { AlertTriangle, CheckCircle, Database, Image, Video, Trash2, RefreshCw, ChevronDown, ChevronUp, Filter } from 'lucide-react';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { AlertTriangle, CheckCircle, Database, Image, Video, Trash2, RefreshCw, Filter } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 
@@ -41,7 +41,6 @@ export const UnusedMediaDashboard: React.FC<UnusedMediaDashboardProps> = ({
   const usagePercentage = stats.total > 0 ? Math.round((stats.used / stats.total) * 100) : 0;
   const { toast } = useToast();
   const [isCleaningUp, setIsCleaningUp] = React.useState(false);
-  const [isBreakdownOpen, setIsBreakdownOpen] = React.useState(false);
 
   const handleCleanup = async () => {
     if (stats.unused === 0) {
@@ -201,73 +200,68 @@ export const UnusedMediaDashboard: React.FC<UnusedMediaDashboardProps> = ({
           <div className="flex items-center justify-between mb-3">
             <div>
               <p className="text-sm font-medium text-muted-foreground">Used Media</p>
-              <p className="text-2xl font-bold text-green-600 dark:text-green-400">{stats.used}</p>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <button className="text-2xl font-bold text-green-600 dark:text-green-400 hover:underline cursor-pointer">
+                    {stats.used}
+                  </button>
+                </PopoverTrigger>
+                <PopoverContent className="w-64" side="bottom" align="start">
+                  <div className="space-y-2">
+                    <p className="text-sm font-semibold mb-3">Usage Breakdown</p>
+                    <div className="space-y-1.5 text-sm">
+                      {stats.byType.pages > 0 && (
+                        <div className="flex justify-between">
+                          <span className="text-muted-foreground">Pages</span>
+                          <span className="font-medium">{stats.byType.pages}</span>
+                        </div>
+                      )}
+                      {stats.byType.blogs > 0 && (
+                        <div className="flex justify-between">
+                          <span className="text-muted-foreground">Blog Posts</span>
+                          <span className="font-medium">{stats.byType.blogs}</span>
+                        </div>
+                      )}
+                      {stats.byType.rooms > 0 && (
+                        <div className="flex justify-between">
+                          <span className="text-muted-foreground">Rooms</span>
+                          <span className="font-medium">{stats.byType.rooms}</span>
+                        </div>
+                      )}
+                      {stats.byType.packages > 0 && (
+                        <div className="flex justify-between">
+                          <span className="text-muted-foreground">Packages</span>
+                          <span className="font-medium">{stats.byType.packages}</span>
+                        </div>
+                      )}
+                      {stats.byType.activities > 0 && (
+                        <div className="flex justify-between">
+                          <span className="text-muted-foreground">Activities</span>
+                          <span className="font-medium">{stats.byType.activities}</span>
+                        </div>
+                      )}
+                      {stats.byType.spa > 0 && (
+                        <div className="flex justify-between">
+                          <span className="text-muted-foreground">Spa Services</span>
+                          <span className="font-medium">{stats.byType.spa}</span>
+                        </div>
+                      )}
+                      {stats.byType.meals > 0 && (
+                        <div className="flex justify-between">
+                          <span className="text-muted-foreground">Meals</span>
+                          <span className="font-medium">{stats.byType.meals}</span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </PopoverContent>
+              </Popover>
             </div>
             <CheckCircle className="h-8 w-8 text-green-600 dark:text-green-400" />
           </div>
-          <p className="text-xs text-muted-foreground mb-3">
+          <p className="text-xs text-muted-foreground">
             {usagePercentage}% utilization
           </p>
-          
-          {/* Collapsible Usage Breakdown */}
-          <Collapsible open={isBreakdownOpen} onOpenChange={setIsBreakdownOpen}>
-            <CollapsibleTrigger asChild>
-              <Button variant="ghost" size="sm" className="w-full justify-between px-0 h-8">
-                <span className="text-xs font-medium">Usage Breakdown</span>
-                {isBreakdownOpen ? (
-                  <ChevronUp className="h-3 w-3" />
-                ) : (
-                  <ChevronDown className="h-3 w-3" />
-                )}
-              </Button>
-            </CollapsibleTrigger>
-            <CollapsibleContent className="pt-2">
-              <div className="space-y-1 text-xs border-t pt-3">
-                {stats.byType.pages > 0 && (
-                  <div className="flex justify-between">
-                    <span>Pages</span>
-                    <span className="font-medium">{stats.byType.pages}</span>
-                  </div>
-                )}
-                {stats.byType.blogs > 0 && (
-                  <div className="flex justify-between">
-                    <span>Blog Posts</span>
-                    <span className="font-medium">{stats.byType.blogs}</span>
-                  </div>
-                )}
-                {stats.byType.rooms > 0 && (
-                  <div className="flex justify-between">
-                    <span>Rooms</span>
-                    <span className="font-medium">{stats.byType.rooms}</span>
-                  </div>
-                )}
-                {stats.byType.packages > 0 && (
-                  <div className="flex justify-between">
-                    <span>Packages</span>
-                    <span className="font-medium">{stats.byType.packages}</span>
-                  </div>
-                )}
-                {stats.byType.activities > 0 && (
-                  <div className="flex justify-between">
-                    <span>Activities</span>
-                    <span className="font-medium">{stats.byType.activities}</span>
-                  </div>
-                )}
-                {stats.byType.spa > 0 && (
-                  <div className="flex justify-between">
-                    <span>Spa Services</span>
-                    <span className="font-medium">{stats.byType.spa}</span>
-                  </div>
-                )}
-                {stats.byType.meals > 0 && (
-                  <div className="flex justify-between">
-                    <span>Meals</span>
-                    <span className="font-medium">{stats.byType.meals}</span>
-                  </div>
-                )}
-              </div>
-            </CollapsibleContent>
-          </Collapsible>
         </CardContent>
       </Card>
 
