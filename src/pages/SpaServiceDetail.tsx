@@ -306,9 +306,6 @@ const SpaServiceDetail = () => {
               {/* Benefits Tags */}
               {service.tags && service.tags.length > 0 && (
                 <div className="mb-6">
-                  <h3 className="text-lg font-heading font-semibold mb-3 text-foreground">
-                    Benefits
-                  </h3>
                   <div className="flex flex-wrap gap-2">
                     {service.tags.map((tag: string, index: number) => (
                       <Badge key={index} variant="secondary" className="text-sm">
