@@ -339,71 +339,64 @@ const Spa = () => {
                       }}
                       className="w-full"
                     >
-                      <CarouselContent className="-ml-4">
+                      <CarouselContent className="-ml-2 md:-ml-4">
                         {categoryData.services.map((service) => (
-                          <CarouselItem key={service.id} className="pl-4 md:basis-1/2 lg:basis-1/3">
+                          <CarouselItem key={service.id} className="pl-2 md:pl-4 basis-[85%] sm:basis-1/2 md:basis-1/3 lg:basis-1/4">
                             <div className="bg-card border rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-all duration-300 h-full">
                               <div className="relative">
                                 {service.image && (
                                   <img 
                                     src={service.image}
                                     alt={service.title}
-                                    className="w-full h-48 object-cover"
+                                    className="w-full h-40 object-cover"
                                   />
                                 )}
-                                <Badge className="absolute top-3 right-3 bg-primary text-primary-foreground">
+                                <Badge className="absolute top-2 right-2 bg-primary text-primary-foreground text-xs">
                                   ₹{service.price}
                                 </Badge>
                               </div>
                               
-                              <div className="p-6">
-                                <h4 className="text-xl font-heading font-semibold mb-2">{service.title}</h4>
+                              <div className="p-4">
+                                <h4 className="text-lg font-heading font-semibold mb-2 line-clamp-1">{service.title}</h4>
                                 
                                 {service.duration && (
-                                  <div className="flex items-center gap-2 mb-3 text-muted-foreground">
-                                    <Clock className="w-4 h-4" />
-                                    <span className="font-body text-sm">{service.duration} minutes</span>
+                                  <div className="flex items-center gap-2 mb-2 text-muted-foreground">
+                                    <Clock className="w-3 h-3" />
+                                    <span className="font-body text-xs">{service.duration} min</span>
                                   </div>
                                 )}
                                 
                                 {service.description && (
-                                  <p className="text-muted-foreground font-body text-sm mb-4 leading-relaxed">
+                                  <p className="text-muted-foreground font-body text-xs mb-3 leading-relaxed line-clamp-2">
                                     {service.description}
                                   </p>
                                 )}
                                 
-                                {service.tags && service.tags.length > 0 && (
-                                  <div className="mb-4">
-                                    <h5 className="font-body font-semibold mb-2 text-foreground text-sm">Benefits:</h5>
-                                    <div className="flex flex-wrap gap-1">
-                                      {service.tags.slice(0, 2).map((tag, index) => (
-                                        <Badge key={index} variant="secondary" className="text-xs">
-                                          {tag}
-                                        </Badge>
-                                      ))}
-                                      {service.tags.length > 2 && (
-                                        <Badge variant="secondary" className="text-xs">
-                                          +{service.tags.length - 2} more
-                                        </Badge>
-                                      )}
-                                    </div>
-                                  </div>
-                                )}
-                                
-                                <Button 
-                                  className="w-full font-body gap-2"
-                                  onClick={() => handleAddToStay(service)}
-                                  variant={addedServiceIds.includes(service.id) ? "secondary" : "default"}
-                                >
-                                  {addedServiceIds.includes(service.id) ? "✓ Added" : <><Plus className="h-4 w-4" />Add to My Stay</>}
-                                </Button>
+                                <div className="flex flex-col gap-2">
+                                  <Button 
+                                    size="sm"
+                                    variant="outline"
+                                    className="w-full font-body text-xs"
+                                    onClick={() => navigate(`/spa/${service.id}`)}
+                                  >
+                                    Learn More
+                                  </Button>
+                                  <Button 
+                                    size="sm"
+                                    className="w-full font-body gap-2 text-xs"
+                                    onClick={() => handleAddToStay(service)}
+                                    variant={addedServiceIds.includes(service.id) ? "secondary" : "default"}
+                                  >
+                                    {addedServiceIds.includes(service.id) ? "✓ Added" : <><Plus className="h-3 w-3" />Add to Stay</>}
+                                  </Button>
+                                </div>
                               </div>
                             </div>
                           </CarouselItem>
                         ))}
                       </CarouselContent>
-                      <CarouselPrevious className="-left-4" />
-                      <CarouselNext className="-right-4" />
+                      <CarouselPrevious className="hidden md:flex -left-12" />
+                      <CarouselNext className="hidden md:flex -right-12" />
                     </Carousel>
                   </div>
                 );

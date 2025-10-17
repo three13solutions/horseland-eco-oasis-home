@@ -21,6 +21,7 @@ import RoomDetail from "./pages/RoomDetail";
 import Dining from "./pages/Dining";
 import Activities from "./pages/Activities";
 import Spa from "./pages/Spa";
+import SpaServiceDetail from "./pages/SpaServiceDetail";
 import Experiences from "./pages/Experiences";
 import Journal from "./pages/Journal";
 import BlogPost from "./pages/BlogPost";
@@ -88,6 +89,7 @@ function App() {
               <Route path="/dining" element={<Dining />} />
               <Route path="/activities" element={<Activities />} />
               <Route path="/spa" element={<Spa />} />
+              <Route path="/spa/:serviceId" element={<SpaServiceDetail />} />
               <Route path="/experiences" element={<Experiences />} />
               <Route path="/journal" element={<Journal />} />
               <Route path="/journal/:slug" element={<BlogPost />} />
