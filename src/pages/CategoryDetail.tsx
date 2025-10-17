@@ -1,5 +1,5 @@
 import React from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import NavigationV5 from '../components/v5/NavigationV5';
 import DynamicFooter from '../components/DynamicFooter';
 import CombinedFloatingV5 from '../components/v5/CombinedFloatingV5';
@@ -9,6 +9,7 @@ import { Users, MapPin, Bed, Star } from 'lucide-react';
 
 const CategoryDetail = () => {
   const { categoryId } = useParams();
+  const navigate = useNavigate();
 
   // Mock category data - in a real app, this would come from an API or database
   const categories = {
@@ -91,7 +92,7 @@ const CategoryDetail = () => {
               {category.bedConfigurations[0]}
             </div>
           </div>
-          <Button size="lg" className="bg-primary hover:bg-primary/90 text-white">
+          <Button size="lg" className="bg-primary hover:bg-primary/90 text-white" onClick={() => navigate('/booking')}>
             Book Now - Starting from ₹8,500/night
           </Button>
         </div>
@@ -158,10 +159,10 @@ const CategoryDetail = () => {
             Secure your {category.name} experience today
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Button size="lg" className="bg-primary hover:bg-primary/90">
+            <Button size="lg" className="bg-primary hover:bg-primary/90" onClick={() => navigate('/booking')}>
               Book Now
             </Button>
-            <Button size="lg" variant="outline">
+            <Button size="lg" variant="outline" onClick={() => navigate('/booking')}>
               Check Availability
             </Button>
           </div>
