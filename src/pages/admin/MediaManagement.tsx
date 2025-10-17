@@ -451,8 +451,8 @@ const MediaManagement = () => {
       {/* Filters */}
       <Card>
         <CardContent className="pt-6">
-          <div className="flex flex-wrap gap-4 items-end">
-            <div className="flex-1 min-w-64">
+          <div className="flex items-center gap-4 flex-wrap">
+            <div className="flex-1 min-w-[200px]">
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
                 <Input
@@ -464,64 +464,62 @@ const MediaManagement = () => {
               </div>
             </div>
             
-            <div className="grid grid-cols-2 gap-2">
-              <Select value={filters.mediaType} onValueChange={(value: any) => setFilters({ ...filters, mediaType: value })}>
-                <SelectTrigger className="w-32">
-                  <SelectValue placeholder="Type" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Types</SelectItem>
-                  <SelectItem value="image">Images</SelectItem>
-                  <SelectItem value="video">Videos</SelectItem>
-                </SelectContent>
-              </Select>
+            <Select value={filters.mediaType} onValueChange={(value: any) => setFilters({ ...filters, mediaType: value })}>
+              <SelectTrigger className="w-[140px]">
+                <SelectValue placeholder="Type" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Types</SelectItem>
+                <SelectItem value="image">Images</SelectItem>
+                <SelectItem value="video">Videos</SelectItem>
+              </SelectContent>
+            </Select>
 
-              <Select value={filters.sourceType} onValueChange={(value: any) => setFilters({ ...filters, sourceType: value })}>
-                <SelectTrigger className="w-32">
-                  <SelectValue placeholder="Source" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Sources</SelectItem>
-                  <SelectItem value="upload">Uploaded</SelectItem>
-                  <SelectItem value="external">External</SelectItem>
-                  <SelectItem value="hardcoded">Hardcoded</SelectItem>
-                  <SelectItem value="mirrored">Mirrored</SelectItem>
-                </SelectContent>
-              </Select>
+            <Select value={filters.sourceType} onValueChange={(value: any) => setFilters({ ...filters, sourceType: value })}>
+              <SelectTrigger className="w-[140px]">
+                <SelectValue placeholder="Source" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Sources</SelectItem>
+                <SelectItem value="upload">Uploaded</SelectItem>
+                <SelectItem value="external">External</SelectItem>
+                <SelectItem value="hardcoded">Hardcoded</SelectItem>
+                <SelectItem value="mirrored">Mirrored</SelectItem>
+              </SelectContent>
+            </Select>
 
-              <Select 
-                value={filters.categoryId || "all-categories"} 
-                onValueChange={(value) => {
-                  const selectedCategory = categories.find(c => c.id === value);
-                  setFilters({ 
-                    ...filters, 
-                    categoryId: value === "all-categories" ? "" : value,
-                    categorySlug: selectedCategory?.slug 
-                  });
-                }}
-              >
-                <SelectTrigger className="w-32">
-                  <SelectValue placeholder="Category" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all-categories">All Categories</SelectItem>
-                  {categories.map((category) => (
-                    <SelectItem key={category.id} value={category.id}>
-                      {category.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+            <Select 
+              value={filters.categoryId || "all-categories"} 
+              onValueChange={(value) => {
+                const selectedCategory = categories.find(c => c.id === value);
+                setFilters({ 
+                  ...filters, 
+                  categoryId: value === "all-categories" ? "" : value,
+                  categorySlug: selectedCategory?.slug 
+                });
+              }}
+            >
+              <SelectTrigger className="w-[140px]">
+                <SelectValue placeholder="Category" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all-categories">All Categories</SelectItem>
+                {categories.map((category) => (
+                  <SelectItem key={category.id} value={category.id}>
+                    {category.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
 
-              <Button
-                variant="outline"
-                size="icon"
-                onClick={() => setViewMode(viewMode === 'grid' ? 'list' : 'grid')}
-                title={viewMode === 'grid' ? 'Switch to list view' : 'Switch to grid view'}
-              >
-                {viewMode === 'grid' ? <LayoutList className="h-4 w-4" /> : <LayoutGrid className="h-4 w-4" />}
-              </Button>
-            </div>
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={() => setViewMode(viewMode === 'grid' ? 'list' : 'grid')}
+              title={viewMode === 'grid' ? 'Switch to list view' : 'Switch to grid view'}
+            >
+              {viewMode === 'grid' ? <LayoutList className="h-4 w-4" /> : <LayoutGrid className="h-4 w-4" />}
+            </Button>
           </div>
         </CardContent>
       </Card>

@@ -151,6 +151,21 @@ export const useMediaList = (filters: MediaListFilters = {}) => {
           })
         );
 
+        // Debug logging for unused media verification
+        console.log(`Unused Media Verification:`, {
+          totalChecked: usageChecks.length,
+          usedCount: usageChecks.filter(u => u.isUsed).length,
+          unusedCount: usageChecks.filter(u => !u.isUsed).length,
+          unusedWithCategories: usageChecks
+            .filter(u => !u.isUsed && (u.image.category_id || u.image.image_categories?.length))
+            .map(u => ({
+              title: u.image.title,
+              url: u.image.image_url,
+              categoryId: u.image.category_id,
+              categories: u.image.image_categories
+            }))
+        });
+
         // Filter based on usage
         results = usageChecks
           .filter(({ isUsed }) => filters.usageFilter === 'used' ? isUsed : !isUsed)
