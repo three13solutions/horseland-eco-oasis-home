@@ -468,6 +468,56 @@ const MediaManagement = () => {
               Delete Selected ({selectedItems.length})
             </Button>
           )}
+          <Button 
+            variant="outline"
+            onClick={async () => {
+              const externalCount = allImages.filter(img => img.source_type === 'external').length;
+              
+              if (externalCount === 0) {
+                toast({
+                  title: "No external media",
+                  description: "All media is already in Supabase storage!",
+                });
+                return;
+              }
+
+              if (!confirm(`Migrate ${externalCount} external images to Supabase storage?\n\nThis will download them from external URLs (like Unsplash) and upload them to your storage bucket.`)) {
+                return;
+              }
+
+              setIsMigrating(true);
+              toast({
+                title: "Starting migration...",
+                description: `Migrating ${externalCount} external images`,
+              });
+
+              try {
+                const { data, error } = await supabase.functions.invoke('migrate-external-to-storage');
+
+                if (error) throw error;
+
+                toast({
+                  title: "Migration complete!",
+                  description: data.message,
+                });
+
+                refetch();
+              } catch (error) {
+                console.error('Migration error:', error);
+                toast({
+                  title: "Migration failed",
+                  description: error.message,
+                  variant: "destructive",
+                });
+              } finally {
+                setIsMigrating(false);
+              }
+            }}
+            disabled={isMigrating}
+          >
+            <Download className="w-4 h-4 mr-2" />
+            {isMigrating ? 'Migrating...' : `Migrate External (${allImages.filter(img => img.source_type === 'external').length})`}
+          </Button>
           <Button onClick={() => {
             setEditingImage(null);
             setIsDialogOpen(true);
