@@ -30,7 +30,9 @@ interface RoomType {
   name: string;
   description?: string;
   hero_image?: string;
+  hero_image_key?: string;
   gallery: string[];
+  gallery_keys?: string[];
   max_guests: number;
   features: string[];
   base_price: number;
@@ -80,7 +82,9 @@ export default function RoomManagement() {
     name: '',
     description: '',
     hero_image: '',
+    hero_image_key: '',
     gallery: [''],
+    gallery_keys: [] as string[],
     max_guests: 2,
     features: [] as string[],
     base_price: 0,
@@ -180,7 +184,9 @@ export default function RoomManagement() {
       name: '',
       description: '',
       hero_image: '',
+      hero_image_key: '',
       gallery: [''],
+      gallery_keys: [],
       max_guests: 2,
       features: [],
       base_price: 0,
@@ -211,7 +217,9 @@ export default function RoomManagement() {
       name: '',
       description: '',
       hero_image: '',
+      hero_image_key: '',
       gallery: [''],
+      gallery_keys: [],
       max_guests: 2,
       features: [],
       base_price: 0,
@@ -227,7 +235,9 @@ export default function RoomManagement() {
       name: room.name,
       description: room.description || '',
       hero_image: room.hero_image || '',
+      hero_image_key: room.hero_image_key || '',
       gallery: room.gallery.length > 0 ? room.gallery : [''],
+      gallery_keys: room.gallery_keys || [],
       max_guests: room.max_guests,
       features: room.features,
       base_price: Number(room.base_price),
@@ -625,7 +635,18 @@ export default function RoomManagement() {
                 <MediaPicker
                   label="Hero Image"
                   value={formData.hero_image}
-                  onChange={(url) => setFormData({...formData, hero_image: url})}
+                  onChange={async (url) => {
+                    setFormData({...formData, hero_image: url});
+                    // Fetch and save the hardcoded_key
+                    const { data } = await supabase
+                      .from('gallery_images')
+                      .select('hardcoded_key')
+                      .eq('image_url', url)
+                      .single();
+                    if (data?.hardcoded_key) {
+                      setFormData(prev => ({...prev, hero_image_key: data.hardcoded_key}));
+                    }
+                  }}
                   categorySlug="rooms"
                   folder="room-images"
                 />
@@ -690,10 +711,22 @@ export default function RoomManagement() {
                       <MediaPicker
                         label=""
                         value={url}
-                        onChange={(newUrl) => {
+                        onChange={async (newUrl) => {
                           const newGallery = [...formData.gallery];
                           newGallery[index] = newUrl;
                           setFormData({...formData, gallery: newGallery});
+                          
+                          // Fetch and save the hardcoded_key
+                          const { data } = await supabase
+                            .from('gallery_images')
+                            .select('hardcoded_key')
+                            .eq('image_url', newUrl)
+                            .single();
+                          if (data?.hardcoded_key) {
+                            const newGalleryKeys = [...formData.gallery_keys];
+                            newGalleryKeys[index] = data.hardcoded_key;
+                            setFormData(prev => ({...prev, gallery_keys: newGalleryKeys}));
+                          }
                         }}
                         categorySlug="rooms"
                         folder="room-images"
