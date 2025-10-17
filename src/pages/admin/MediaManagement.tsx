@@ -76,6 +76,7 @@ const MediaManagement = () => {
   const [selectedItems, setSelectedItems] = useState<string[]>([]);
   const [showFilters, setShowFilters] = useState(false);
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+  const [isMigrating, setIsMigrating] = useState(false);
   const [filters, setFilters] = useState<{
     mediaType: 'image' | 'video' | 'all';
     sourceType: 'upload' | 'external' | 'mirrored' | 'hardcoded' | 'all';
@@ -243,6 +244,35 @@ const MediaManagement = () => {
     return mediaType === 'video' ? <Video className="w-4 h-4" /> : <ImageIcon className="w-4 h-4" />;
   };
 
+  const handleMigrateExistingMedia = async () => {
+    if (!confirm('This will import all existing images from Blog Posts, Spa Services, Activities, Room Types, Packages, Meals, and Pages into Media Management. Continue?')) {
+      return;
+    }
+
+    setIsMigrating(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('migrate-existing-media');
+
+      if (error) throw error;
+
+      toast({
+        title: "Migration Complete!",
+        description: data.message,
+      });
+
+      refetch();
+    } catch (error) {
+      console.error('Migration error:', error);
+      toast({
+        title: "Migration Failed",
+        description: error.message || "Failed to migrate existing media",
+        variant: "destructive",
+      });
+    } finally {
+      setIsMigrating(false);
+    }
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
@@ -251,6 +281,14 @@ const MediaManagement = () => {
           <p className="text-muted-foreground">Centralized media library for all website assets</p>
         </div>
         <div className="flex gap-2">
+          <Button 
+            variant="outline" 
+            onClick={handleMigrateExistingMedia}
+            disabled={isMigrating}
+          >
+            <RefreshCw className={`w-4 h-4 mr-2 ${isMigrating ? 'animate-spin' : ''}`} />
+            {isMigrating ? 'Migrating...' : 'Import Existing Media'}
+          </Button>
           {selectedItems.length > 0 && (
             <Button variant="destructive" onClick={handleBulkDelete}>
               <Trash2 className="w-4 h-4 mr-2" />
