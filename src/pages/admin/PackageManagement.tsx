@@ -35,8 +35,11 @@ interface PackageData {
     spa_services: string[];
   };
   banner_image?: string;
+  banner_image_key?: string;
   featured_image?: string;
+  featured_image_key?: string;
   gallery: string[];
+  gallery_keys?: string[];
   is_featured: boolean;
   is_active: boolean;
   cta_text?: string;
@@ -101,8 +104,11 @@ const PackageManagement = () => {
       spa_services: []
     },
     banner_image: '',
+    banner_image_key: '',
     featured_image: '',
+    featured_image_key: '',
     gallery: [],
+    gallery_keys: [],
     is_featured: false,
     is_active: true,
     cta_text: 'Book Now'
@@ -325,6 +331,9 @@ const PackageManagement = () => {
     setSelectedPackage(pkg);
     setFormData({
       ...pkg,
+      banner_image_key: pkg.banner_image_key || '',
+      featured_image_key: pkg.featured_image_key || '',
+      gallery_keys: pkg.gallery_keys || [],
       components: pkg.components || {
         room_units: [],
         activities: [],
@@ -659,7 +668,18 @@ const PackageManagement = () => {
                   <MediaPicker
                     label="Featured Image"
                     value={formData.featured_image || ''}
-                    onChange={(url) => setFormData(prev => ({ ...prev, featured_image: url }))}
+                    onChange={async (url) => {
+                      setFormData(prev => ({ ...prev, featured_image: url }));
+                      // Fetch and save the hardcoded_key
+                      const { data } = await supabase
+                        .from('gallery_images')
+                        .select('hardcoded_key')
+                        .eq('image_url', url)
+                        .single();
+                      if (data?.hardcoded_key) {
+                        setFormData(prev => ({ ...prev, featured_image_key: data.hardcoded_key }));
+                      }
+                    }}
                     categorySlug="packages"
                     folder="packages"
                   />
@@ -674,7 +694,18 @@ const PackageManagement = () => {
                   <MediaPicker
                     label="Banner Image"
                     value={formData.banner_image || ''}
-                    onChange={(url) => setFormData(prev => ({ ...prev, banner_image: url }))}
+                    onChange={async (url) => {
+                      setFormData(prev => ({ ...prev, banner_image: url }));
+                      // Fetch and save the hardcoded_key
+                      const { data } = await supabase
+                        .from('gallery_images')
+                        .select('hardcoded_key')
+                        .eq('image_url', url)
+                        .single();
+                      if (data?.hardcoded_key) {
+                        setFormData(prev => ({ ...prev, banner_image_key: data.hardcoded_key }));
+                      }
+                    }}
                     categorySlug="packages"
                     folder="packages"
                   />
