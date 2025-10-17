@@ -31,11 +31,20 @@ const SpaServiceDetail = () => {
   const [service, setService] = useState<SpaService | null>(null);
   const [loading, setLoading] = useState(true);
   const [isAdded, setIsAdded] = useState(false);
+  const [heroImage, setHeroImage] = useState('https://images.unsplash.com/photo-1544161515-4ab6ce6db874?ixlib=rb-4.0.3&auto=format&fit=crop&w=2000&q=80');
 
   useEffect(() => {
     loadService();
+    loadHeroImage();
     checkIfAdded();
   }, [serviceId]);
+
+  const loadHeroImage = async () => {
+    const { data } = await supabase.from('pages').select('hero_image').eq('slug', 'spa').single();
+    if (data?.hero_image) {
+      setHeroImage(data.hero_image);
+    }
+  };
 
   const loadService = async () => {
     try {
@@ -214,11 +223,20 @@ const SpaServiceDetail = () => {
     <div className="min-h-screen bg-background overflow-x-hidden">
       <NavigationV5 />
       
-      {/* Header Section */}
-      <section className="bg-muted/30 py-16">
-        <div className="max-w-6xl mx-auto px-4">
+      {/* Hero Section */}
+      <section className="relative h-[60vh] min-h-[500px] flex items-center justify-center">
+        <div 
+          className="absolute inset-0 bg-cover bg-center bg-no-repeat"
+          style={{
+            backgroundImage: `url('${heroImage}')`
+          }}
+        >
+          <div className="absolute inset-0 bg-black/40"></div>
+        </div>
+        
+        <div className="relative z-10 text-center text-white max-w-4xl mx-auto px-4">
           <Button
-            variant="ghost"
+            variant="secondary"
             size="sm"
             className="mb-4"
             onClick={() => navigate('/spa')}
@@ -226,9 +244,12 @@ const SpaServiceDetail = () => {
             <ArrowLeft className="h-4 w-4 mr-2" />
             Back to Spa Services
           </Button>
-          <h1 className="text-3xl md:text-5xl font-heading font-bold text-foreground">
+          <h1 className="text-4xl md:text-6xl font-heading font-bold mb-6 leading-tight">
             Mountain Spa & Wellness
           </h1>
+          <p className="text-lg md:text-xl font-body opacity-90">
+            Rejuvenate your mind, body, and spirit in nature's embrace
+          </p>
         </div>
       </section>
 
@@ -238,22 +259,20 @@ const SpaServiceDetail = () => {
           <div className="grid md:grid-cols-2 gap-8 mb-12">
             {/* Left: Service Info */}
             <div className="order-2 md:order-1">
-              <div className="flex items-start justify-between mb-4">
-                <div className="flex-1">
-                  <h2 className="text-3xl font-heading font-bold mb-3 text-foreground">
-                    {service.title}
-                  </h2>
-                  <div className="flex items-center gap-4 mb-4">
-                    {service.duration && (
-                      <div className="flex items-center gap-2 text-muted-foreground">
-                        <Clock className="w-5 h-5" />
-                        <span className="font-body">{service.duration} minutes</span>
-                      </div>
-                    )}
-                    <Badge className="bg-primary text-primary-foreground px-4 py-1.5">
-                      ₹{service.price}
-                    </Badge>
-                  </div>
+              <div className="mb-6">
+                <h2 className="text-3xl font-heading font-bold mb-3 text-foreground">
+                  {service.title}
+                </h2>
+                <div className="flex items-center gap-4 mb-4">
+                  {service.duration && (
+                    <div className="flex items-center gap-2 text-muted-foreground">
+                      <Clock className="w-5 h-5" />
+                      <span className="font-body">{service.duration} minutes</span>
+                    </div>
+                  )}
+                  <Badge className="bg-primary text-primary-foreground px-4 py-1.5">
+                    ₹{service.price}
+                  </Badge>
                 </div>
               </div>
 
@@ -288,7 +307,7 @@ const SpaServiceDetail = () => {
               {service.tags && service.tags.length > 0 && (
                 <div className="mb-6">
                   <h3 className="text-lg font-heading font-semibold mb-3 text-foreground">
-                    Key Features
+                    Benefits
                   </h3>
                   <div className="flex flex-wrap gap-2">
                     {service.tags.map((tag: string, index: number) => (
