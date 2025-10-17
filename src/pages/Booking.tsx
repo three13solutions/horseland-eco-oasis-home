@@ -395,6 +395,7 @@ const Booking = () => {
         price: s.price,
         description: s.description,
         image: s.image,
+        category: s.category,
         type: 'spa' as const 
       })) || []);
     } catch (error) {
@@ -556,6 +557,25 @@ const Booking = () => {
     { id: 'extra-mattress-1', title: 'Extra Mattress', price: 300, type: 'bedding' },
     { id: 'baby-crib-1', title: 'Baby Crib', price: 200, type: 'bedding' }
   ];
+
+  // Group services by category
+  const spaServicesByCategory = React.useMemo(() => {
+    const categories = {
+      massage: { label: 'Massage', services: [] as Addon[] },
+      therapy: { label: 'Therapy', services: [] as Addon[] },
+      facials: { label: 'Facials', services: [] as Addon[] },
+      workouts: { label: 'Workouts', services: [] as Addon[] }
+    };
+    
+    spaServices.forEach(service => {
+      const category = (service as any).category || 'massage';
+      if (categories[category as keyof typeof categories]) {
+        categories[category as keyof typeof categories].services.push(service);
+      }
+    });
+    
+    return Object.entries(categories).filter(([_, data]) => data.services.length > 0);
+  }, [spaServices]);
 
   const needsExtraBedding = selectedRoomType && guests > selectedRoomType.max_guests;
 
@@ -992,65 +1012,76 @@ const Booking = () => {
                         ))}
                       </TabsContent>
                       
-                      <TabsContent value="spa" className="space-y-4">
-                        <Carousel
-                          opts={{
-                            align: "start",
-                            loop: false,
-                          }}
-                          className="w-full"
-                        >
-                          <CarouselContent className="-ml-2">
-                            {spaServices.map((spa) => {
-                              const quantity = selectedAddons.find(a => a.id === spa.id)?.quantity || 0;
-                              return (
-                                <CarouselItem key={spa.id} className="pl-2 basis-1/3 sm:basis-1/4 md:basis-1/5 lg:basis-1/6">
-                                  <div className="flex flex-col items-center">
-                                    <div className="relative w-full aspect-square rounded-lg overflow-hidden mb-2 border-2 border-transparent hover:border-primary transition-colors">
-                                      {spa.image ? (
-                                        <img 
-                                          src={spa.image}
-                                          alt={spa.title}
-                                          className="w-full h-full object-cover"
-                                        />
-                                      ) : (
-                                        <div className="w-full h-full bg-muted flex items-center justify-center">
-                                          <Sparkles className="h-8 w-8 text-muted-foreground" />
+                      <TabsContent value="spa" className="space-y-8">
+                        {spaServicesByCategory.length === 0 ? (
+                          <div className="text-center text-muted-foreground py-8">
+                            No spa services available
+                          </div>
+                        ) : (
+                          spaServicesByCategory.map(([categoryId, categoryData]) => (
+                            <div key={categoryId} className="space-y-3">
+                              <h4 className="text-lg font-semibold">{categoryData.label}</h4>
+                              <Carousel
+                                opts={{
+                                  align: "start",
+                                  loop: false,
+                                }}
+                                className="w-full"
+                              >
+                                <CarouselContent className="-ml-2">
+                                  {categoryData.services.map((spa) => {
+                                    const quantity = selectedAddons.find(a => a.id === spa.id)?.quantity || 0;
+                                    return (
+                                      <CarouselItem key={spa.id} className="pl-2 basis-1/3 sm:basis-1/4 md:basis-1/5 lg:basis-1/6">
+                                        <div className="flex flex-col items-center">
+                                          <div className="relative w-full aspect-square rounded-lg overflow-hidden mb-2 border-2 border-transparent hover:border-primary transition-colors">
+                                            {spa.image ? (
+                                              <img 
+                                                src={spa.image}
+                                                alt={spa.title}
+                                                className="w-full h-full object-cover"
+                                              />
+                                            ) : (
+                                              <div className="w-full h-full bg-muted flex items-center justify-center">
+                                                <Sparkles className="h-8 w-8 text-muted-foreground" />
+                                              </div>
+                                            )}
+                                          </div>
+                                          <div className="flex items-center gap-1.5 mb-2">
+                                            <Button
+                                              variant="outline"
+                                              size="icon"
+                                              className="h-6 w-6 rounded-full"
+                                              onClick={() => removeAddon(spa.id)}
+                                              disabled={quantity === 0}
+                                            >
+                                              <Minus className="h-3 w-3" />
+                                            </Button>
+                                            <span className="w-6 text-center text-sm font-medium">
+                                              {quantity}
+                                            </span>
+                                            <Button
+                                              variant="outline"
+                                              size="icon"
+                                              className="h-6 w-6 rounded-full"
+                                              onClick={() => addAddon(spa)}
+                                            >
+                                              <Plus className="h-3 w-3" />
+                                            </Button>
+                                          </div>
+                                          <p className="text-xs font-medium text-center mb-1 line-clamp-2 h-8">{spa.title}</p>
+                                          <p className="text-xs font-semibold text-primary">₹{spa.price}</p>
                                         </div>
-                                      )}
-                                    </div>
-                                    <p className="text-xs font-medium text-center mb-1 line-clamp-2 h-8">{spa.title}</p>
-                                    <p className="text-xs font-semibold text-primary mb-2">₹{spa.price}</p>
-                                    <div className="flex items-center gap-2">
-                                      <Button
-                                        variant="outline"
-                                        size="icon"
-                                        className="h-7 w-7"
-                                        onClick={() => removeAddon(spa.id)}
-                                        disabled={quantity === 0}
-                                      >
-                                        <Minus className="h-3 w-3" />
-                                      </Button>
-                                      <span className="w-6 text-center text-sm font-medium">
-                                        {quantity}
-                                      </span>
-                                      <Button
-                                        variant="outline"
-                                        size="icon"
-                                        className="h-7 w-7"
-                                        onClick={() => addAddon(spa)}
-                                      >
-                                        <Plus className="h-3 w-3" />
-                                      </Button>
-                                    </div>
-                                  </div>
-                                </CarouselItem>
-                              );
-                            })}
-                          </CarouselContent>
-                          <CarouselPrevious className="-left-4" />
-                          <CarouselNext className="-right-4" />
-                        </Carousel>
+                                      </CarouselItem>
+                                    );
+                                  })}
+                                </CarouselContent>
+                                <CarouselPrevious className="-left-4" />
+                                <CarouselNext className="-right-4" />
+                              </Carousel>
+                            </div>
+                          ))
+                        )}
                       </TabsContent>
                     </Tabs>
                   </CardContent>
