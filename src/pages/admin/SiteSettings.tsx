@@ -143,6 +143,7 @@ interface SiteSettings {
   brand_name: string;
   brand_monogram: string;
   brand_descriptor: string;
+  favicon: string;
   copyright_text: string;
   credits: string;
 }
@@ -166,6 +167,7 @@ const SiteSettings = () => {
     brand_name: '',
     brand_monogram: '',
     brand_descriptor: '',
+    favicon: '',
     copyright_text: '',
     credits: 'Powered by <a href="https://313s.com/" target="_blank" rel="noopener noreferrer">IIIXIII</a>'
   });
@@ -574,6 +576,19 @@ const SiteSettings = () => {
                   bucketName="uploads"
                   folder="logos"
                 />
+              </div>
+
+              <div>
+                <ImageUpload
+                  label="Site Favicon"
+                  value={siteSettings.favicon}
+                  onChange={(url) => setSiteSettings(prev => ({ ...prev, favicon: url }))}
+                  bucketName="uploads"
+                  folder="favicons"
+                />
+                <p className="text-xs text-muted-foreground mt-1">
+                  Recommended: Square image (32x32 or 64x64 pixels), PNG or ICO format
+                </p>
               </div>
 
               <div>
