@@ -20,7 +20,7 @@ interface NavigationItem {
 interface SiteSettings {
   site_title: string;
   site_logo: string;
-  site_tagline?: string;
+  tagline?: string;
 }
 
 const NavigationV5 = () => {
@@ -31,7 +31,7 @@ const NavigationV5 = () => {
   const [siteSettings, setSiteSettings] = useState<SiteSettings>({
     site_title: 'HORSELAND',
     site_logo: '/lovable-uploads/24f5ee9b-ce5a-4b86-a2d8-7ca42e0a78cf.png',
-    site_tagline: 'Hotel'
+    tagline: 'Hotel'
   });
   const [experiencesOpen, setExperiencesOpen] = useState(false);
   const [showBookingModal, setShowBookingModal] = useState(false);
@@ -186,9 +186,9 @@ const NavigationV5 = () => {
               <h1 className="text-xl md:text-2xl font-bold text-primary tracking-wide">
                 {siteSettings.site_title}
               </h1>
-              {siteSettings.site_tagline && (
+              {siteSettings.tagline && (
                 <p className="text-xs text-muted-foreground uppercase tracking-wider hidden sm:block">
-                  {siteSettings.site_tagline}
+                  {siteSettings.tagline}
                 </p>
               )}
             </div>
