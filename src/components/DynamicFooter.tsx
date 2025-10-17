@@ -27,7 +27,7 @@ const DynamicFooter = () => {
     site_title: 'Horseland Hotel',
     site_logo: '/lovable-uploads/24f5ee9b-ce5a-4b86-a2d8-7ca42e0a78cf.png',
     copyright_text: '© 2024 Horseland Hotel. All rights reserved.',
-    tagline: 'Crafted with care for sustainable comfort'
+    tagline: 'Powered by <a href="https://313s.com/" target="_blank" rel="noopener noreferrer" class="hover:text-primary transition-colors">IIIXIII</a>'
   });
   const location = useLocation();
   const isOnPoliciesPage = location.pathname === '/policies';
@@ -315,9 +315,10 @@ const DynamicFooter = () => {
             <p className="text-sm text-background/60">
               {siteSettings.copyright_text}
             </p>
-            <p className="text-sm text-background/60">
-              {siteSettings.tagline}
-            </p>
+            <p 
+              className="text-sm text-background/60"
+              dangerouslySetInnerHTML={{ __html: siteSettings.tagline }}
+            />
           </div>
         </div>
       </div>

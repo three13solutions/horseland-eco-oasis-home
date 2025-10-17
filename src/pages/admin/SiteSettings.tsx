@@ -165,7 +165,7 @@ const SiteSettings = () => {
     site_title: '',
     site_logo: '',
     copyright_text: '',
-    tagline: ''
+    tagline: 'Powered by <a href="https://313s.com/" target="_blank" rel="noopener noreferrer">IIIXIII</a>'
   });
   const [seoSettings, setSeoSettings] = useState<SEOSettings>({
     default_title_format: '{title} | {site_name}',
@@ -576,13 +576,16 @@ const SiteSettings = () => {
               </div>
 
               <div>
-                <Label htmlFor="tagline">Tagline</Label>
+                <Label htmlFor="credits">Credits</Label>
                 <Input
-                  id="tagline"
+                  id="credits"
                   value={siteSettings.tagline}
                   onChange={(e) => setSiteSettings(prev => ({ ...prev, tagline: e.target.value }))}
-                  placeholder="Your site tagline"
+                  placeholder="Powered by IIIXIII"
                 />
+                <p className="text-xs text-muted-foreground mt-1">
+                  Use HTML for links: &lt;a href="https://313s.com/" target="_blank"&gt;IIIXIII&lt;/a&gt;
+                </p>
               </div>
 
               <div>
