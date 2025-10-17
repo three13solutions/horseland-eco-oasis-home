@@ -33,6 +33,11 @@ export const useMediaList = (filters: MediaListFilters = {}) => {
           category_id,
           is_hardcoded,
           sort_order,
+          file_hash,
+          file_size,
+          original_filename,
+          width,
+          height,
           gallery_categories(name, slug),
           image_categories(category_id, gallery_categories(name, slug))
         `)

@@ -724,9 +724,12 @@ export type Database = {
           category: string
           category_id: string | null
           created_at: string
+          file_hash: string | null
+          file_size: number | null
           guest_handle: string | null
           guest_name: string | null
           hardcoded_key: string | null
+          height: number | null
           id: string
           image_url: string
           is_featured: boolean
@@ -734,12 +737,14 @@ export type Database = {
           likes_count: number | null
           location: string | null
           media_type: string
+          original_filename: string | null
           sort_order: number | null
           source_type: string
           tags: Json | null
           title: string
           updated_at: string
           video_url: string | null
+          width: number | null
         }
         Insert: {
           alt_text?: string | null
@@ -747,9 +752,12 @@ export type Database = {
           category: string
           category_id?: string | null
           created_at?: string
+          file_hash?: string | null
+          file_size?: number | null
           guest_handle?: string | null
           guest_name?: string | null
           hardcoded_key?: string | null
+          height?: number | null
           id?: string
           image_url: string
           is_featured?: boolean
@@ -757,12 +765,14 @@ export type Database = {
           likes_count?: number | null
           location?: string | null
           media_type?: string
+          original_filename?: string | null
           sort_order?: number | null
           source_type?: string
           tags?: Json | null
           title: string
           updated_at?: string
           video_url?: string | null
+          width?: number | null
         }
         Update: {
           alt_text?: string | null
@@ -770,9 +780,12 @@ export type Database = {
           category?: string
           category_id?: string | null
           created_at?: string
+          file_hash?: string | null
+          file_size?: number | null
           guest_handle?: string | null
           guest_name?: string | null
           hardcoded_key?: string | null
+          height?: number | null
           id?: string
           image_url?: string
           is_featured?: boolean
@@ -780,12 +793,14 @@ export type Database = {
           likes_count?: number | null
           location?: string | null
           media_type?: string
+          original_filename?: string | null
           sort_order?: number | null
           source_type?: string
           tags?: Json | null
           title?: string
           updated_at?: string
           video_url?: string | null
+          width?: number | null
         }
         Relationships: [
           {

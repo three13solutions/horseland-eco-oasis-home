@@ -20,6 +20,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useMediaList } from '@/hooks/useMediaList';
 import { useMediaUsage } from '@/hooks/useMediaUsage';
 import { useMediaStats } from '@/hooks/useMediaStats';
+import { formatFileSize } from '@/lib/fileHash';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -69,6 +70,11 @@ interface GalleryImage {
   is_hardcoded: boolean;
   hardcoded_key?: string;
   sort_order: number;
+  file_hash?: string;
+  file_size?: number;
+  original_filename?: string;
+  width?: number;
+  height?: number;
   gallery_categories?: {
     name: string;
     slug: string;
@@ -371,7 +377,7 @@ const MediaManagement = () => {
           <h1 className="text-3xl font-bold">Media Management</h1>
           <p className="text-muted-foreground">Centralized media library for all website assets</p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex gap-2 flex-wrap">
           {selectedItems.length > 0 && (
             <Button variant="destructive" onClick={handleBulkDelete}>
               <Trash2 className="w-4 h-4 mr-2" />
@@ -381,37 +387,109 @@ const MediaManagement = () => {
           <Button 
             variant="outline"
             onClick={async () => {
-              toast({
-                title: "Checking for duplicates...",
-                description: "Scanning media library",
-              });
+              const imagesWithoutHash = allImages.filter(img => !img.file_hash);
               
-              // Find duplicates by URL
-              const urlCounts = allImages.reduce((acc, img) => {
-                acc[img.image_url] = (acc[img.image_url] || 0) + 1;
-                return acc;
-              }, {} as Record<string, number>);
-              
-              const duplicates = Object.entries(urlCounts)
-                .filter(([_, count]) => count > 1)
-                .map(([url, count]) => ({
-                  url,
-                  count,
-                  images: allImages.filter(img => img.image_url === url)
-                }));
-              
-              if (duplicates.length > 0) {
+              if (imagesWithoutHash.length === 0) {
                 toast({
-                  title: `⚠️ Found ${duplicates.length} duplicate URL${duplicates.length > 1 ? 's' : ''}`,
-                  description: "Check console for details",
+                  title: "All media has hashes",
+                  description: "No backfill needed!",
+                });
+                return;
+              }
+
+              if (!confirm(`Calculate file hashes for ${imagesWithoutHash.length} media items?\n\nThis may take a few minutes.`)) {
+                return;
+              }
+
+              toast({
+                title: "Starting backfill...",
+                description: `Processing ${imagesWithoutHash.length} media items`,
+              });
+
+              try {
+                const { data, error } = await supabase.functions.invoke('backfill-media-hashes');
+
+                if (error) throw error;
+
+                toast({
+                  title: "Backfill complete!",
+                  description: data.message,
+                });
+
+                refetch();
+              } catch (error) {
+                console.error('Backfill error:', error);
+                toast({
+                  title: "Backfill failed",
+                  description: error.message,
                   variant: "destructive",
                 });
-                console.log('Duplicate images:', duplicates);
+              }
+            }}
+          >
+            <HardDrive className="w-4 h-4 mr-2" />
+            Backfill Hashes ({allImages.filter(img => !img.file_hash).length})
+          </Button>
+          <Button 
+            variant="outline"
+            onClick={async () => {
+              toast({
+                title: "Checking for duplicates...",
+                description: "Scanning by file hash",
+              });
+              
+              // Find duplicates by file hash (more accurate than URL)
+              const hashCounts = allImages
+                .filter(img => img.file_hash) // Only check images with hashes
+                .reduce((acc, img) => {
+                  if (img.file_hash) {
+                    acc[img.file_hash] = (acc[img.file_hash] || []);
+                    acc[img.file_hash].push(img);
+                  }
+                  return acc;
+                }, {} as Record<string, typeof allImages>);
+              
+              const duplicates = Object.entries(hashCounts)
+                .filter(([_, images]) => images.length > 1)
+                .map(([hash, images]) => ({
+                  hash,
+                  count: images.length,
+                  totalSize: images.reduce((sum, img) => sum + (img.file_size || 0), 0),
+                  images: images.map(img => ({
+                    id: img.id,
+                    title: img.title,
+                    url: img.image_url,
+                    size: img.file_size,
+                    filename: img.original_filename
+                  }))
+                }));
+              
+              const imagesWithoutHash = allImages.filter(img => !img.file_hash);
+              
+              if (duplicates.length > 0) {
+                const totalDupes = duplicates.reduce((sum, d) => sum + d.count - 1, 0);
+                const wastedSpace = duplicates.reduce((sum, d) => 
+                  sum + (d.images[0].size || 0) * (d.images.length - 1), 0
+                );
+                
+                toast({
+                  title: `⚠️ Found ${duplicates.length} duplicate groups`,
+                  description: `${totalDupes} duplicate files wasting ${formatFileSize(wastedSpace)}. Check console for details.`,
+                  variant: "destructive",
+                });
+                console.log('=== DUPLICATE FILES BY HASH ===');
+                console.log('Groups:', duplicates);
+                console.log('Total duplicate files:', totalDupes);
+                console.log('Wasted space:', formatFileSize(wastedSpace));
               } else {
                 toast({
-                  title: "✓ No duplicates",
-                  description: "All images have unique URLs",
+                  title: "✓ No duplicates found",
+                  description: "All files have unique content",
                 });
+              }
+              
+              if (imagesWithoutHash.length > 0) {
+                console.warn(`${imagesWithoutHash.length} media files don't have hashes yet. Run backfill to enable full duplicate detection.`);
               }
             }}
           >

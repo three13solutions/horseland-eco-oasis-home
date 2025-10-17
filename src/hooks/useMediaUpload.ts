@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { calculateFileHash, getImageDimensions } from '@/lib/fileHash';
 
 interface UploadOptions {
   bucketName?: string;
@@ -15,8 +16,9 @@ interface MediaEntry {
   id: string;
   image_url: string;
   title: string;
-  category: string;
+  category?: string;
   category_id?: string;
+  file_size?: number;
 }
 
 export const useMediaUpload = () => {
@@ -50,6 +52,47 @@ export const useMediaUpload = () => {
     setUploading(true);
 
     try {
+      // Calculate file hash for duplicate detection
+      const fileHash = await calculateFileHash(file);
+      const fileSize = file.size;
+      const originalFilename = file.name;
+
+      // Check for existing files with same hash
+      const { data: existingMedia, error: checkError } = await supabase
+        .from('gallery_images')
+        .select('id, title, image_url, file_size')
+        .eq('file_hash', fileHash)
+        .maybeSingle();
+
+      if (checkError && checkError.code !== 'PGRST116') {
+        console.error('Error checking for duplicates:', checkError);
+      }
+
+      // If duplicate found, ask user
+      if (existingMedia) {
+        const shouldUpload = window.confirm(
+          `This file already exists as "${existingMedia.title}".\n\n` +
+          `Do you want to upload it anyway?\n\n` +
+          `Click OK to upload as new, or Cancel to use existing.`
+        );
+
+        if (!shouldUpload) {
+          toast.info('Using existing media file');
+          setUploading(false);
+          return existingMedia as MediaEntry;
+        }
+      }
+
+      // Get image dimensions if it's an image
+      let dimensions = { width: 0, height: 0 };
+      if (file.type.startsWith('image/')) {
+        try {
+          dimensions = await getImageDimensions(file);
+        } catch (error) {
+          console.warn('Could not get image dimensions:', error);
+        }
+      }
+
       // Create a unique filename
       const fileExt = file.name.split('.').pop();
       const fileName = `${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExt}`;
@@ -83,6 +126,11 @@ export const useMediaUpload = () => {
         media_type: mediaType,
         source_type: 'upload',
         is_hardcoded: false,
+        file_hash: fileHash,
+        file_size: fileSize,
+        original_filename: originalFilename,
+        width: dimensions.width || null,
+        height: dimensions.height || null,
       };
 
       // Add URL field based on media type
