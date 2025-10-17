@@ -370,6 +370,48 @@ const MediaManagement = () => {
     }
   };
 
+  const handleMigrateLocalFiles = async () => {
+    const localFiles = allImages.filter(img => img.image_url?.startsWith('/lovable-uploads/'));
+    
+    if (localFiles.length === 0) {
+      toast({
+        title: "No local files",
+        description: "All media is already in Supabase storage!",
+      });
+      return;
+    }
+
+    if (!confirm(`Migrate ${localFiles.length} local files to Supabase storage?\n\nThis will:\n- Upload files to storage\n- Update database URLs\n- Calculate file hashes`)) {
+      return;
+    }
+
+    setIsMigrating(true);
+    try {
+      const baseUrl = window.location.origin;
+      const { data, error } = await supabase.functions.invoke('migrate-local-to-storage', {
+        body: { baseUrl }
+      });
+
+      if (error) throw error;
+
+      toast({
+        title: "Migration Complete!",
+        description: data.message,
+      });
+
+      refetch();
+    } catch (error) {
+      console.error('Migration error:', error);
+      toast({
+        title: "Migration Failed",
+        description: error.message || "Failed to migrate local files",
+        variant: "destructive",
+      });
+    } finally {
+      setIsMigrating(false);
+    }
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
@@ -429,6 +471,14 @@ const MediaManagement = () => {
           >
             <HardDrive className="w-4 h-4 mr-2" />
             Backfill Hashes ({allImages.filter(img => !img.file_hash).length})
+          </Button>
+          <Button 
+            variant="outline"
+            onClick={handleMigrateLocalFiles}
+            disabled={isMigrating}
+          >
+            <Upload className="w-4 h-4 mr-2" />
+            {isMigrating ? 'Migrating...' : `Migrate Local Files (${allImages.filter(img => img.image_url?.startsWith('/lovable-uploads/')).length})`}
           </Button>
           <Button 
             variant="outline"
