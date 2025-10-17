@@ -25,7 +25,8 @@ import {
   DollarSign,
   Tag,
   Home as HomeIcon,
-  CalendarRange
+  CalendarRange,
+  Calculator
 } from 'lucide-react';
 import {
   Sidebar,
@@ -94,9 +95,15 @@ const pricingMenuItems = [
   },
   { 
     icon: CalendarRange, 
-    label: 'Season Pricing', 
+    label: 'Season Rules', 
     path: '/admin/pricing/seasons', 
-    description: 'Seasonal rate management' 
+    description: 'Seasonal definitions' 
+  },
+  { 
+    icon: Calculator, 
+    label: 'Rounding Rule', 
+    path: '/admin/pricing/rounding', 
+    description: 'Price rounding settings' 
   }
 ];
 

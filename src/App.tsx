@@ -56,7 +56,8 @@ import PageManagement from "./pages/admin/PageManagement";
 import DynamicPage from "./pages/DynamicPage";
 import CategoryPricing from "./pages/admin/CategoryPricing";
 import UnitPricing from "./pages/admin/UnitPricing";
-import SeasonPricing from "./pages/admin/SeasonPricing";
+import SeasonRules from "./pages/admin/SeasonRules";
+import RoundingRule from "./pages/admin/RoundingRule";
 
 const queryClient = new QueryClient();
 
@@ -108,7 +109,8 @@ function App() {
                 <Route path="invoices" element={<InvoiceManagement />} />
                 <Route path="pricing/categories" element={<CategoryPricing />} />
                 <Route path="pricing/units" element={<UnitPricing />} />
-                <Route path="pricing/seasons" element={<SeasonPricing />} />
+                <Route path="pricing/seasons" element={<SeasonRules />} />
+                <Route path="pricing/rounding" element={<RoundingRule />} />
                 <Route path="rooms" element={<RoomManagement />} />
                 <Route path="packages" element={<PackageManagement />} />
                 <Route path="dining" element={<DiningManagement />} />

@@ -55,7 +55,7 @@ const defaultSeasons: SeasonDefinition[] = [
   }
 ];
 
-export default function SeasonPricing() {
+export default function SeasonRules() {
   const [seasons, setSeasons] = useState<SeasonDefinition[]>(defaultSeasons);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editingSeasons, setEditingSeasons] = useState<SeasonDefinition[]>([]);
@@ -157,9 +157,9 @@ export default function SeasonPricing() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Season Pricing</h1>
+          <h1 className="text-3xl font-bold tracking-tight">Season Rules</h1>
           <p className="text-muted-foreground mt-2">
-            Define and manage seasonal periods for pricing
+            Define seasonal periods that apply to pricing across all room categories
           </p>
         </div>
       </div>
