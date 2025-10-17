@@ -425,7 +425,7 @@ const Spa = () => {
             Our wellness concierge can help design a personalized experience for your stay.
           </p>
           <div className="flex justify-center">
-          <Button size="lg" className="font-body" onClick={() => navigate('/booking')}>
+          <Button size="lg" className="font-body" onClick={() => navigate('/booking?tab=spa')}>
             Book Spa Treatments
           </Button>
           </div>

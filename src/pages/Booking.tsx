@@ -85,6 +85,7 @@ const Booking = () => {
   const checkOut = searchParams.get('checkOut') || '';
   const guests = parseInt(searchParams.get('guests') || '2');
   const roomTypeId = searchParams.get('roomTypeId');
+  const tabParam = searchParams.get('tab');
   
   // State
   const [availableRooms, setAvailableRooms] = useState<AvailableRoom[]>([]);
@@ -113,6 +114,7 @@ const Booking = () => {
   const [selectedPickup, setSelectedPickup] = useState<PickupService | null>(null);
   const [selectedBedding, setSelectedBedding] = useState<BeddingOption[]>([]);
   const [showPaymentModal, setShowPaymentModal] = useState(false);
+  const [activeTab, setActiveTab] = useState<string>('');
 
   // Load available rooms and addons
   useEffect(() => {
@@ -556,6 +558,21 @@ const Booking = () => {
 
   const needsExtraBedding = selectedRoomType && guests > selectedRoomType.max_guests;
 
+  // Set active tab from URL parameter or default
+  useEffect(() => {
+    if (tabParam) {
+      setActiveTab(tabParam);
+    } else if (!activeTab) {
+      setActiveTab(needsExtraBedding ? "bedding" : "pickup");
+    }
+  }, [tabParam, needsExtraBedding]);
+
+  useEffect(() => {
+    if (needsExtraBedding && !activeTab) {
+      setActiveTab("bedding");
+    }
+  }, [needsExtraBedding]);
+
   const handleProceedToPayment = () => {
     if (!guestDetails.name || !guestDetails.email || !guestDetails.phone) {
       toast({
@@ -699,7 +716,7 @@ const Booking = () => {
                     <CardTitle>Add Services & Experiences</CardTitle>
                   </CardHeader>
                   <CardContent>
-                     <Tabs defaultValue={needsExtraBedding ? "bedding" : "pickup"} className="w-full">
+                     <Tabs value={activeTab || (needsExtraBedding ? "bedding" : "pickup")} onValueChange={setActiveTab} className="w-full">
                       <TabsList className={`grid w-full ${needsExtraBedding ? 'grid-cols-5' : 'grid-cols-4'}`}>
                         {needsExtraBedding && <TabsTrigger value="bedding">Extra Bed</TabsTrigger>}
                         <TabsTrigger value="pickup">Pickup/Drop</TabsTrigger>
