@@ -1546,6 +1546,7 @@ export type Database = {
           area_sqft: number | null
           bed_configuration: Json | null
           created_at: string
+          custom_pricing: Json | null
           floor_number: number | null
           id: string
           is_active: boolean
@@ -1562,6 +1563,7 @@ export type Database = {
           area_sqft?: number | null
           bed_configuration?: Json | null
           created_at?: string
+          custom_pricing?: Json | null
           floor_number?: number | null
           id?: string
           is_active?: boolean
@@ -1578,6 +1580,7 @@ export type Database = {
           area_sqft?: number | null
           bed_configuration?: Json | null
           created_at?: string
+          custom_pricing?: Json | null
           floor_number?: number | null
           id?: string
           is_active?: boolean
