@@ -341,6 +341,7 @@ const MediaManagement = () => {
   };
 
   const handleMigrateExistingMedia = async () => {
+    // Migration function kept for potential re-use, but button removed from UI
     if (!confirm('This will import all existing images from Blog Posts, Spa Services, Activities, Room Types, Packages, Meals, and Pages into Media Management. Continue?')) {
       return;
     }
@@ -377,14 +378,6 @@ const MediaManagement = () => {
           <p className="text-muted-foreground">Centralized media library for all website assets</p>
         </div>
         <div className="flex gap-2">
-          <Button 
-            variant="outline" 
-            onClick={handleMigrateExistingMedia}
-            disabled={isMigrating}
-          >
-            <RefreshCw className={`w-4 h-4 mr-2 ${isMigrating ? 'animate-spin' : ''}`} />
-            {isMigrating ? 'Migrating...' : 'Import Existing Media'}
-          </Button>
           {selectedItems.length > 0 && (
             <Button variant="destructive" onClick={handleBulkDelete}>
               <Trash2 className="w-4 h-4 mr-2" />
@@ -711,7 +704,7 @@ const MediaForm: React.FC<MediaFormProps> = ({ image, categories, onSave, onCanc
     <form onSubmit={handleSubmit} className="space-y-4">
       <div className="grid grid-cols-2 gap-4">
         <div>
-          <Label htmlFor="title">Title</Label>
+          <Label htmlFor="title">Title *</Label>
           <Input
             id="title"
             value={formData.title}
@@ -720,25 +713,7 @@ const MediaForm: React.FC<MediaFormProps> = ({ image, categories, onSave, onCanc
           />
         </div>
         <div>
-          <Label htmlFor="media_type">Media Type</Label>
-          <Select
-            value={formData.media_type}
-            onValueChange={(value: 'image' | 'video') => setFormData({ ...formData, media_type: value })}
-          >
-            <SelectTrigger>
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="image">Image</SelectItem>
-              <SelectItem value="video">Video</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-      </div>
-
-      <div className="grid grid-cols-2 gap-4">
-        <div>
-          <Label htmlFor="category">Category</Label>
+          <Label htmlFor="category">Category *</Label>
           <Select
             value={formData.category_id}
             onValueChange={(value) => setFormData({ ...formData, category_id: value })}
@@ -755,136 +730,155 @@ const MediaForm: React.FC<MediaFormProps> = ({ image, categories, onSave, onCanc
             </SelectContent>
           </Select>
         </div>
-        <div>
-          <Label htmlFor="source_type">Source Type</Label>
-          <Select
-            value={formData.source_type}
-            onValueChange={(value: any) => setFormData({ ...formData, source_type: value })}
-          >
-            <SelectTrigger>
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="upload">Upload</SelectItem>
-              <SelectItem value="external">External URL</SelectItem>
-              <SelectItem value="hardcoded">Hardcoded</SelectItem>
-              <SelectItem value="mirrored">Mirrored</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
       </div>
 
-      {formData.source_type === 'hardcoded' && (
-        <div>
-          <Label htmlFor="hardcoded_key">Hardcoded Key</Label>
-          <Input
-            id="hardcoded_key"
-            value={formData.hardcoded_key}
-            onChange={(e) => setFormData({ ...formData, hardcoded_key: e.target.value, is_hardcoded: true })}
-            placeholder="e.g., hero-background, logo-main"
-          />
-        </div>
-      )}
-
+      {/* Auto-detect media type based on upload */}
       {formData.media_type === 'image' ? (
         <div>
+          <Label>Image Upload *</Label>
           <MediaPicker
-            label="Image"
+            label=""
             value={formData.image_url}
-            onChange={(url) => setFormData({ ...formData, image_url: url })}
+            onChange={(url) => {
+              // Auto-detect source type
+              const isExternal = url.startsWith('http://') || url.startsWith('https://');
+              const isUpload = url.includes('supabase.co/storage');
+              setFormData({ 
+                ...formData, 
+                image_url: url,
+                source_type: isUpload ? 'upload' : isExternal ? 'external' : 'upload',
+                media_type: 'image'
+              });
+            }}
             folder="media"
           />
+          <p className="text-xs text-muted-foreground mt-1">
+            Upload an image or paste an external URL
+          </p>
         </div>
       ) : (
         <div>
-          <Label htmlFor="video_url">Video URL</Label>
+          <Label htmlFor="video_url">Video URL *</Label>
           <Input
             id="video_url"
             value={formData.video_url}
-            onChange={(e) => setFormData({ ...formData, video_url: e.target.value })}
-            placeholder="https://..."
+            onChange={(e) => setFormData({ 
+              ...formData, 
+              video_url: e.target.value,
+              source_type: 'external',
+              media_type: 'video'
+            })}
+            placeholder="https://www.youtube.com/embed/... or Vimeo URL"
           />
+          <p className="text-xs text-muted-foreground mt-1">
+            Paste YouTube, Vimeo, or direct video URL
+          </p>
         </div>
       )}
 
-      <div>
-        <Label htmlFor="caption">Caption</Label>
-        <Textarea
-          id="caption"
-          value={formData.caption}
-          onChange={(e) => setFormData({ ...formData, caption: e.target.value })}
-          rows={2}
-        />
+      {/* Toggle between image and video */}
+      <div className="flex items-center gap-4 text-sm">
+        <span className="text-muted-foreground">Media type:</span>
+        <Button
+          type="button"
+          size="sm"
+          variant={formData.media_type === 'image' ? 'default' : 'outline'}
+          onClick={() => setFormData({ ...formData, media_type: 'image', video_url: '' })}
+        >
+          <ImageIcon className="w-3 h-3 mr-1" />
+          Image
+        </Button>
+        <Button
+          type="button"
+          size="sm"
+          variant={formData.media_type === 'video' ? 'default' : 'outline'}
+          onClick={() => setFormData({ ...formData, media_type: 'video', image_url: '' })}
+        >
+          <Video className="w-3 h-3 mr-1" />
+          Video
+        </Button>
       </div>
 
       <div>
-        <Label htmlFor="alt_text">Alt Text (SEO)</Label>
+        <Label htmlFor="alt_text">Alt Text (SEO) *</Label>
         <Input
           id="alt_text"
           value={formData.alt_text}
           onChange={(e) => setFormData({ ...formData, alt_text: e.target.value })}
           placeholder="Descriptive text for accessibility and SEO"
+          required
+        />
+        <p className="text-xs text-muted-foreground mt-1">
+          Describe what's in the image for screen readers and search engines
+        </p>
+      </div>
+
+      {/* Caption - used in gallery displays */}
+      <div>
+        <Label htmlFor="caption">Caption (Optional)</Label>
+        <Textarea
+          id="caption"
+          value={formData.caption}
+          onChange={(e) => setFormData({ ...formData, caption: e.target.value })}
+          rows={2}
+          placeholder="Caption displayed below image in galleries"
         />
       </div>
 
-      {!isGuestCategory ? (
+      {/* Guest-specific fields */}
+      {isGuestCategory && (
+        <div className="space-y-4 p-4 bg-muted rounded-lg">
+          <h4 className="text-sm font-semibold">Guest Photo Details</h4>
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <Label htmlFor="guest_name">Guest Name</Label>
+              <Input
+                id="guest_name"
+                value={formData.guest_name}
+                onChange={(e) => setFormData({ ...formData, guest_name: e.target.value })}
+                placeholder="e.g., John Doe"
+              />
+            </div>
+            <div>
+              <Label htmlFor="guest_handle">Social Handle</Label>
+              <Input
+                id="guest_handle"
+                value={formData.guest_handle}
+                onChange={(e) => setFormData({ ...formData, guest_handle: e.target.value })}
+                placeholder="e.g., @johndoe"
+              />
+            </div>
+          </div>
+          <div>
+            <Label htmlFor="likes_count">Likes Count</Label>
+            <Input
+              id="likes_count"
+              type="number"
+              min="0"
+              value={formData.likes_count}
+              onChange={(e) => setFormData({ ...formData, likes_count: parseInt(e.target.value) || 0 })}
+            />
+          </div>
+        </div>
+      )}
+
+      {/* Location - used in some gallery displays */}
+      {!isGuestCategory && (
         <div>
-          <Label htmlFor="location">Location</Label>
+          <Label htmlFor="location">Location Tag (Optional)</Label>
           <Input
             id="location"
             value={formData.location}
             onChange={(e) => setFormData({ ...formData, location: e.target.value })}
-            placeholder="e.g., Main Pool Area"
+            placeholder="e.g., Main Pool Area, Garden View"
           />
-        </div>
-      ) : (
-        <div className="grid grid-cols-2 gap-4">
-          <div>
-            <Label htmlFor="guest_name">Guest Name</Label>
-            <Input
-              id="guest_name"
-              value={formData.guest_name}
-              onChange={(e) => setFormData({ ...formData, guest_name: e.target.value })}
-              placeholder="e.g., John Doe"
-            />
-          </div>
-          <div>
-            <Label htmlFor="guest_handle">Guest Handle</Label>
-            <Input
-              id="guest_handle"
-              value={formData.guest_handle}
-              onChange={(e) => setFormData({ ...formData, guest_handle: e.target.value })}
-              placeholder="e.g., @johndoe"
-            />
-          </div>
+          <p className="text-xs text-muted-foreground mt-1">
+            Location tag for organizing gallery images
+          </p>
         </div>
       )}
 
-      {isGuestCategory && (
-        <div>
-          <Label htmlFor="likes_count">Likes Count</Label>
-          <Input
-            id="likes_count"
-            type="number"
-            min="0"
-            value={formData.likes_count}
-            onChange={(e) => setFormData({ ...formData, likes_count: parseInt(e.target.value) || 0 })}
-          />
-        </div>
-      )}
-
-      <div>
-        <Label htmlFor="sort_order">Sort Order</Label>
-        <Input
-          id="sort_order"
-          type="number"
-          min="0"
-          value={formData.sort_order}
-          onChange={(e) => setFormData({ ...formData, sort_order: parseInt(e.target.value) || 0 })}
-        />
-      </div>
-
-      <div className="flex justify-end space-x-2 pt-4">
+      <div className="flex justify-end space-x-2 pt-4 border-t">
         <Button type="button" variant="outline" onClick={onCancel}>
           Cancel
         </Button>
