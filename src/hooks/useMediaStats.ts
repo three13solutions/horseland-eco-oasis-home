@@ -56,24 +56,60 @@ export const useMediaStats = () => {
       const usagePromises = images.map(async (img) => {
         const imageUrl = img.image_url;
         
-        // Check all tables for usage
+        // Check all tables for usage - must match useMediaUsage logic exactly
         const [pages, blogs, rooms, packages, activities, spa, meals] = await Promise.all([
-          supabase.from('pages').select('id').or(`hero_image.eq.${imageUrl},og_image.eq.${imageUrl}`),
+          // Check pages: hero_image, og_image, and hero_gallery array
+          supabase.from('pages').select('id, hero_gallery').or(`hero_image.eq.${imageUrl},og_image.eq.${imageUrl},hero_gallery.cs.["${imageUrl}"]`),
           supabase.from('blog_posts').select('id').eq('featured_image', imageUrl),
-          supabase.from('room_types').select('id').eq('hero_image', imageUrl),
-          supabase.from('packages').select('id').or(`featured_image.eq.${imageUrl},banner_image.eq.${imageUrl}`),
-          supabase.from('activities').select('id').eq('image', imageUrl),
-          supabase.from('spa_services').select('id').eq('image', imageUrl),
+          // Check rooms: hero_image and gallery array
+          supabase.from('room_types').select('id, gallery'),
+          // Check packages: featured_image, banner_image, and gallery array
+          supabase.from('packages').select('id, gallery').or(`featured_image.eq.${imageUrl},banner_image.eq.${imageUrl}`),
+          // Check activities: image and media_urls array
+          supabase.from('activities').select('id, media_urls').eq('image', imageUrl),
+          // Check spa: image and media_urls array
+          supabase.from('spa_services').select('id, media_urls').eq('image', imageUrl),
           supabase.from('meals').select('id').eq('featured_media', imageUrl),
         ]);
+
+        // Check gallery arrays for matches
+        let roomsCount = 0;
+        rooms.data?.forEach(room => {
+          if (Array.isArray(room.gallery) && room.gallery.includes(imageUrl)) {
+            roomsCount++;
+          }
+        });
+
+        let packagesCount = (packages.data?.length || 0);
+        packages.data?.forEach(pkg => {
+          if (Array.isArray(pkg.gallery) && pkg.gallery.includes(imageUrl)) {
+            packagesCount++;
+          }
+        });
+
+        let activitiesCount = (activities.data?.length || 0);
+        activities.data?.forEach(activity => {
+          if (Array.isArray(activity.media_urls) && activity.media_urls.some((m: any) => 
+            typeof m === 'string' ? m === imageUrl : m?.url === imageUrl
+          )) {
+            activitiesCount++;
+          }
+        });
+
+        let spaCount = (spa.data?.length || 0);
+        spa.data?.forEach(service => {
+          if (Array.isArray(service.media_urls) && service.media_urls.includes(imageUrl)) {
+            spaCount++;
+          }
+        });
 
         const usageCount = [
           pages.data?.length || 0,
           blogs.data?.length || 0,
-          rooms.data?.length || 0,
-          packages.data?.length || 0,
-          activities.data?.length || 0,
-          spa.data?.length || 0,
+          roomsCount,
+          packagesCount,
+          activitiesCount,
+          spaCount,
           meals.data?.length || 0,
         ].reduce((a, b) => a + b, 0);
 
@@ -82,10 +118,10 @@ export const useMediaStats = () => {
           byType: {
             pages: pages.data?.length || 0,
             blogs: blogs.data?.length || 0,
-            rooms: rooms.data?.length || 0,
-            packages: packages.data?.length || 0,
-            activities: activities.data?.length || 0,
-            spa: spa.data?.length || 0,
+            rooms: roomsCount,
+            packages: packagesCount,
+            activities: activitiesCount,
+            spa: spaCount,
             meals: meals.data?.length || 0,
           }
         };
