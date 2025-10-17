@@ -92,6 +92,20 @@ export const UnusedMediaDashboard: React.FC<UnusedMediaDashboardProps> = ({
 
         const imageUrl = img.image_url;
         
+        // First check if image is assigned to any active gallery category
+        const { data: categoryAssignments } = await supabase
+          .from('image_categories')
+          .select('category_id, gallery_categories!inner(category_type, is_active)')
+          .eq('image_id', img.id);
+        
+        const isInGalleryCategory = categoryAssignments?.some((assignment: any) => 
+          assignment.gallery_categories?.is_active && 
+          assignment.gallery_categories?.category_type === 'gallery'
+        );
+        
+        // If in a gallery category, it's used
+        if (isInGalleryCategory) continue;
+        
         // Check all tables for usage
         const [pages, blogs, rooms, packages, activities, spa, meals] = await Promise.all([
           supabase.from('pages').select('id, hero_image, og_image, hero_gallery'),
