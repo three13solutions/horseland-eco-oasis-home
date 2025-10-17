@@ -557,6 +557,9 @@ const SpaManagement = () => {
     );
   }
 
+  // Count services with blob URLs
+  const servicesWithBlobUrls = services.filter(s => s.image?.startsWith('blob:'));
+
   return (
     <div className="container mx-auto p-6">
       <div className="flex items-center justify-between mb-6">
@@ -571,6 +574,29 @@ const SpaManagement = () => {
           </Button>
         )}
       </div>
+
+      {/* Warning Banner for Blob URLs */}
+      {servicesWithBlobUrls.length > 0 && (
+        <Card className="mb-6 border-destructive bg-destructive/10">
+          <CardContent className="pt-6">
+            <div className="flex items-start gap-3">
+              <Badge variant="destructive" className="mt-0.5">
+                {servicesWithBlobUrls.length}
+              </Badge>
+              <div>
+                <h3 className="font-semibold mb-1">Invalid Images Detected</h3>
+                <p className="text-sm text-muted-foreground mb-2">
+                  {servicesWithBlobUrls.length} spa service{servicesWithBlobUrls.length > 1 ? 's have' : ' has'} temporary blob: URLs that won't display properly. 
+                  These need to be re-uploaded from your computer. Look for the ⚠️ warning badge below.
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  Services affected: {servicesWithBlobUrls.map(s => s.title).join(', ')}
+                </p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Controls */}
       <div className="flex justify-between items-center mb-6">
@@ -657,19 +683,25 @@ const SpaManagement = () => {
               <CardContent className={viewMode === 'card' ? 'p-0' : 'p-0'}>
                 {viewMode === 'card' ? (
                   <div className="space-y-4">
-                    {service.image && (
+                     {service.image && (
                       <div className="relative">
                         <img 
                           src={service.image} 
                           alt={service.title}
                           className="w-full h-48 object-cover rounded-t-lg"
                         />
-                        <Badge 
-                          variant={service.is_active ? "default" : "secondary"}
-                          className="absolute top-2 right-2"
-                        >
-                          {service.is_active ? 'Active' : 'Inactive'}
-                        </Badge>
+                        <div className="absolute top-2 right-2 flex gap-2">
+                          {service.image.startsWith('blob:') && (
+                            <Badge variant="destructive" className="gap-1">
+                              ⚠️ Invalid URL
+                            </Badge>
+                          )}
+                          <Badge 
+                            variant={service.is_active ? "default" : "secondary"}
+                          >
+                            {service.is_active ? 'Active' : 'Inactive'}
+                          </Badge>
+                        </div>
                       </div>
                     )}
                     <div className="p-4">
@@ -738,6 +770,11 @@ const SpaManagement = () => {
                     <div className="flex-1">
                       <div className="flex items-center gap-2 mb-1">
                         <h3 className="font-heading font-semibold">{service.title}</h3>
+                        {service.image?.startsWith('blob:') && (
+                          <Badge variant="destructive" className="gap-1 text-xs">
+                            ⚠️ Invalid URL
+                          </Badge>
+                        )}
                         <Badge variant={service.is_active ? "default" : "secondary"}>
                           {service.is_active ? 'Active' : 'Inactive'}
                         </Badge>
