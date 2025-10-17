@@ -19,6 +19,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { supabase } from '@/integrations/supabase/client';
 import { useMediaList } from '@/hooks/useMediaList';
 import { useMediaUsage } from '@/hooks/useMediaUsage';
+import { useMediaStats } from '@/hooks/useMediaStats';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -103,6 +104,10 @@ const MediaManagement = () => {
     image: GalleryImage | null;
     usages: any[];
   }>({ open: false, image: null, usages: [] });
+  const [pagination, setPagination] = useState({
+    page: 1,
+    perPage: 25,
+  });
   const [filters, setFilters] = useState<{
     mediaType: 'image' | 'video' | 'all';
     sourceType: 'upload' | 'external' | 'mirrored' | 'hardcoded' | 'all';
@@ -121,38 +126,18 @@ const MediaManagement = () => {
   const { toast } = useToast();
 
   const { data: allImages = [], isLoading, refetch } = useMediaList(filters);
+  const { data: mediaStats, isLoading: statsLoading } = useMediaStats();
 
-  // Calculate usage statistics
-  const mediaStats = useMemo(() => {
-    const stats = {
-      total: allImages.length,
-      used: 0,
-      unused: 0,
-      byType: {
-        pages: 0,
-        blogs: 0,
-        rooms: 0,
-        packages: 0,
-        activities: 0,
-        spa: 0,
-        meals: 0,
-      },
-      byMediaType: {
-        images: allImages.filter(img => img.media_type === 'image').length,
-        videos: allImages.filter(img => img.media_type === 'video').length,
-      },
-    };
-    
-    return stats;
-  }, [allImages]);
+  // Paginate images
+  const totalPages = Math.ceil(allImages.length / pagination.perPage);
+  const startIndex = (pagination.page - 1) * pagination.perPage;
+  const endIndex = startIndex + pagination.perPage;
+  const images = allImages.slice(startIndex, endIndex);
 
-  // Filter images based on usage filter
-  const images = useMemo(() => {
-    if (filters.usageFilter === 'all') return allImages;
-    // For usage filtering, we'll need to check in real-time
-    // This is a placeholder - actual filtering happens in the render
-    return allImages;
-  }, [allImages, filters.usageFilter]);
+  // Reset to page 1 when filters change
+  useEffect(() => {
+    setPagination(prev => ({ ...prev, page: 1 }));
+  }, [filters]);
 
   useEffect(() => {
     fetchCategories();
@@ -393,6 +378,46 @@ const MediaManagement = () => {
               Delete Selected ({selectedItems.length})
             </Button>
           )}
+          <Button 
+            variant="outline"
+            onClick={async () => {
+              toast({
+                title: "Checking for duplicates...",
+                description: "Scanning media library",
+              });
+              
+              // Find duplicates by URL
+              const urlCounts = allImages.reduce((acc, img) => {
+                acc[img.image_url] = (acc[img.image_url] || 0) + 1;
+                return acc;
+              }, {} as Record<string, number>);
+              
+              const duplicates = Object.entries(urlCounts)
+                .filter(([_, count]) => count > 1)
+                .map(([url, count]) => ({
+                  url,
+                  count,
+                  images: allImages.filter(img => img.image_url === url)
+                }));
+              
+              if (duplicates.length > 0) {
+                toast({
+                  title: `⚠️ Found ${duplicates.length} duplicate URL${duplicates.length > 1 ? 's' : ''}`,
+                  description: "Check console for details",
+                  variant: "destructive",
+                });
+                console.log('Duplicate images:', duplicates);
+              } else {
+                toast({
+                  title: "✓ No duplicates",
+                  description: "All images have unique URLs",
+                });
+              }
+            }}
+          >
+            <Copy className="w-4 h-4 mr-2" />
+            Check Duplicates
+          </Button>
           <Button onClick={() => {
             setEditingImage(null);
             setIsDialogOpen(true);
@@ -404,7 +429,17 @@ const MediaManagement = () => {
       </div>
 
       {/* Usage Statistics Dashboard */}
-      <UnusedMediaDashboard stats={mediaStats} />
+      {mediaStats && !statsLoading && <UnusedMediaDashboard stats={mediaStats} />}
+      {statsLoading && (
+        <Card>
+          <CardContent className="pt-6">
+            <div className="flex items-center justify-center py-8">
+              <RefreshCw className="w-6 h-6 animate-spin mr-2" />
+              <span>Calculating usage statistics...</span>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Filters */}
       <Card>
@@ -504,78 +539,130 @@ const MediaManagement = () => {
           <RefreshCw className="w-8 h-8 animate-spin" />
         </div>
       ) : images.length > 0 ? (
-        viewMode === 'grid' ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            {images.map((image) => (
-              <MediaCard
-                key={image.id}
-                image={image}
-                selected={selectedItems.includes(image.id)}
-                onSelect={(checked) => {
-                  if (checked) {
-                    setSelectedItems([...selectedItems, image.id]);
-                  } else {
-                    setSelectedItems(selectedItems.filter(id => id !== image.id));
-                  }
-                }}
-                onEdit={() => {
-                  setEditingImage(image as GalleryImage);
-                  setIsDialogOpen(true);
-                }}
-                onDelete={(usages) => handleDeleteImage(image as GalleryImage, usages)}
-              />
-            ))}
-          </div>
-        ) : (
-          <Card>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead className="w-12">
-                    <Checkbox 
-                      checked={selectedItems.length === images.length}
-                      onCheckedChange={(checked) => {
+        <>
+          {viewMode === 'grid' ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+              {images.map((image) => (
+                <MediaCard
+                  key={image.id}
+                  image={image}
+                  selected={selectedItems.includes(image.id)}
+                  onSelect={(checked) => {
+                    if (checked) {
+                      setSelectedItems([...selectedItems, image.id]);
+                    } else {
+                      setSelectedItems(selectedItems.filter(id => id !== image.id));
+                    }
+                  }}
+                  onEdit={() => {
+                    setEditingImage(image as GalleryImage);
+                    setIsDialogOpen(true);
+                  }}
+                  onDelete={(usages) => handleDeleteImage(image as GalleryImage, usages)}
+                />
+              ))}
+            </div>
+          ) : (
+            <Card>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead className="w-12">
+                      <Checkbox 
+                        checked={selectedItems.length === images.length && images.length > 0}
+                        onCheckedChange={(checked) => {
+                          if (checked) {
+                            setSelectedItems(images.map(img => img.id));
+                          } else {
+                            setSelectedItems([]);
+                          }
+                        }}
+                      />
+                    </TableHead>
+                    <TableHead className="w-20">Preview</TableHead>
+                    <TableHead>Title</TableHead>
+                    <TableHead>Category</TableHead>
+                    <TableHead>Type</TableHead>
+                    <TableHead>Source</TableHead>
+                    <TableHead>Used In</TableHead>
+                    <TableHead className="text-right">Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {images.map((image) => (
+                    <MediaListRow
+                      key={image.id}
+                      image={image}
+                      selected={selectedItems.includes(image.id)}
+                      onSelect={(checked) => {
                         if (checked) {
-                          setSelectedItems(images.map(img => img.id));
+                          setSelectedItems([...selectedItems, image.id]);
                         } else {
-                          setSelectedItems([]);
+                          setSelectedItems(selectedItems.filter(id => id !== image.id));
                         }
                       }}
+                      onEdit={() => {
+                        setEditingImage(image as GalleryImage);
+                        setIsDialogOpen(true);
+                      }}
+                      onDelete={(usages) => handleDeleteImage(image as GalleryImage, usages)}
                     />
-                  </TableHead>
-                  <TableHead className="w-20">Preview</TableHead>
-                  <TableHead>Title</TableHead>
-                  <TableHead>Category</TableHead>
-                  <TableHead>Type</TableHead>
-                  <TableHead>Source</TableHead>
-                  <TableHead>Used In</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {images.map((image) => (
-                  <MediaListRow
-                    key={image.id}
-                    image={image}
-                    selected={selectedItems.includes(image.id)}
-                    onSelect={(checked) => {
-                      if (checked) {
-                        setSelectedItems([...selectedItems, image.id]);
-                      } else {
-                        setSelectedItems(selectedItems.filter(id => id !== image.id));
-                      }
-                    }}
-                    onEdit={() => {
-                      setEditingImage(image as GalleryImage);
-                      setIsDialogOpen(true);
-                    }}
-                onDelete={(usages) => handleDeleteImage(image as GalleryImage, usages)}
-                  />
-                ))}
-              </TableBody>
-            </Table>
+                  ))}
+                </TableBody>
+              </Table>
+            </Card>
+          )}
+
+          {/* Pagination Controls */}
+          <Card>
+            <CardContent className="pt-6">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <span className="text-sm text-muted-foreground">Items per page:</span>
+                  <Select
+                    value={pagination.perPage.toString()}
+                    onValueChange={(value) => setPagination({ ...pagination, perPage: parseInt(value), page: 1 })}
+                  >
+                    <SelectTrigger className="w-20">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="10">10</SelectItem>
+                      <SelectItem value="25">25</SelectItem>
+                      <SelectItem value="50">50</SelectItem>
+                      <SelectItem value="100">100</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <span className="text-sm text-muted-foreground">
+                    Showing {startIndex + 1}-{Math.min(endIndex, allImages.length)} of {allImages.length}
+                  </span>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setPagination({ ...pagination, page: pagination.page - 1 })}
+                    disabled={pagination.page === 1}
+                  >
+                    Previous
+                  </Button>
+                  <span className="text-sm">
+                    Page {pagination.page} of {totalPages}
+                  </span>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setPagination({ ...pagination, page: pagination.page + 1 })}
+                    disabled={pagination.page >= totalPages}
+                  >
+                    Next
+                  </Button>
+                </div>
+              </div>
+            </CardContent>
           </Card>
-        )
+        </>
       ) : (
         <Card>
           <CardContent className="text-center py-12">
