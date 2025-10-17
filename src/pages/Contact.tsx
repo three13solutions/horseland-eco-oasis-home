@@ -8,9 +8,11 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { MapPin, Phone, Mail, Clock, MessageSquare, Send } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import MapboxMap from "@/components/MapboxMap";
 
 const Contact = () => {
   const [heroImage, setHeroImage] = useState<string>("");
+  const [mapboxToken, setMapboxToken] = useState<string>("");
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -44,7 +46,24 @@ const Contact = () => {
       }
     };
 
+    const fetchMapboxToken = async () => {
+      const { data } = await supabase
+        .from("api_integrations")
+        .select("public_config, is_enabled")
+        .eq("integration_key", "mapbox")
+        .eq("is_enabled", true)
+        .single();
+
+      if (data?.public_config && typeof data.public_config === 'object') {
+        const config = data.public_config as { MAPBOX_PUBLIC_TOKEN?: string };
+        if (config.MAPBOX_PUBLIC_TOKEN) {
+          setMapboxToken(config.MAPBOX_PUBLIC_TOKEN);
+        }
+      }
+    };
+
     fetchPageData();
+    fetchMapboxToken();
   }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -336,16 +355,26 @@ const Contact = () => {
           </div>
 
           <div className="bg-white rounded-lg overflow-hidden shadow-lg">
-            <div className="aspect-video bg-muted/50 flex items-center justify-center">
-              <div className="text-center">
-                <MapPin className="w-12 h-12 text-primary mx-auto mb-4" />
-                <p className="text-muted-foreground">
-                  Interactive map coming soon
-                  <br />
-                  For now, use GPS coordinates: 18.9847° N, 73.2673° E
-                </p>
+            {mapboxToken ? (
+              <MapboxMap
+                accessToken={mapboxToken}
+                center={[73.2673, 18.9847]}
+                zoom={14}
+                markerTitle="Horseland Hotel"
+                markerDescription="Vithalrao Kotwal Road, Near Dasturi Point, Matheran"
+              />
+            ) : (
+              <div className="aspect-video bg-muted/50 flex items-center justify-center">
+                <div className="text-center">
+                  <MapPin className="w-12 h-12 text-primary mx-auto mb-4" />
+                  <p className="text-muted-foreground">
+                    Map integration not configured
+                    <br />
+                    GPS coordinates: 18.9847° N, 73.2673° E
+                  </p>
+                </div>
               </div>
-            </div>
+            )}
           </div>
         </div>
       </section>
