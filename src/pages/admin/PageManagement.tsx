@@ -619,6 +619,7 @@ export default function PageManagement() {
                     onChange={(url) =>
                       setFormData({ ...formData, og_image: url })
                     }
+                    categorySlug="seo"
                     folder="og-images"
                   />
                 </TabsContent>

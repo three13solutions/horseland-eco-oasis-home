@@ -350,9 +350,17 @@ const SpaManagement = () => {
                             // Create entry in gallery_images
                             const mediaType = file.type.startsWith('image/') ? 'image' : 'video';
                             
+                            // Get spa category ID
+                            const { data: spaCategory } = await supabase
+                              .from('gallery_categories')
+                              .select('id')
+                              .eq('slug', 'spa')
+                              .single();
+
                             const insertData: any = {
                               title: file.name,
-                              category: 'hotel',
+                              category: 'spa',
+                              category_id: spaCategory?.id,
                               caption: `Spa service media - ${file.name}`,
                               media_type: mediaType,
                               source_type: 'upload',
@@ -364,16 +372,6 @@ const SpaManagement = () => {
                             } else {
                               insertData.video_url = publicUrl;
                               insertData.image_url = '';
-                            }
-
-                            const { data: spaCategory } = await supabase
-                              .from('gallery_categories')
-                              .select('id')
-                              .eq('slug', 'spa')
-                              .single();
-
-                            if (spaCategory) {
-                              insertData.category_id = spaCategory.id;
                             }
 
                             await supabase

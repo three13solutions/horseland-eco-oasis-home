@@ -238,13 +238,21 @@ const ActivitiesManagement = () => {
           .from('activity-media')
           .getPublicUrl(filePath);
 
+        // Get activities category ID
+        const { data: activityCategory } = await supabase
+          .from('gallery_categories')
+          .select('id')
+          .eq('slug', 'activities')
+          .single();
+
         // Create entry in gallery_images
         const mediaType = file.type.startsWith('image/') ? 'image' : 'video';
         const urlField = mediaType === 'image' ? 'image_url' : 'video_url';
         
         const insertData: any = {
           title: file.name,
-          category: 'hotel',
+          category: 'activities',
+          category_id: activityCategory?.id,
           caption: `Activity media - ${file.name}`,
           media_type: mediaType,
           source_type: 'upload',
@@ -256,17 +264,6 @@ const ActivitiesManagement = () => {
         } else {
           insertData.video_url = publicUrl;
           insertData.image_url = '';
-        }
-
-        // Get activities category ID
-        const { data: activityCategory } = await supabase
-          .from('gallery_categories')
-          .select('id')
-          .eq('slug', 'activities')
-          .single();
-
-        if (activityCategory) {
-          insertData.category_id = activityCategory.id;
         }
 
         await supabase

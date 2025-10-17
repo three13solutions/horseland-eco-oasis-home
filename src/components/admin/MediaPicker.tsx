@@ -45,7 +45,7 @@ export const MediaPicker: React.FC<MediaPickerProps> = ({
 
     const result = await uploadMedia(file, {
       folder,
-      category: 'hotel',
+      category: categorySlug || 'hotel',
       categoryId,
       title: file.name,
     });
