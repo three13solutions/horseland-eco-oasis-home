@@ -37,9 +37,9 @@ serve(async (req) => {
 
     // Helper function to insert media
     const insertMedia = async (url: string, category: string, title: string, caption?: string) => {
-      if (!url || url.includes('blob:') || url === '') {
+      if (!url || url.includes('blob:') || url === '' || url === 'null') {
         results.skipped++;
-        return;
+        return false;
       }
 
       // Check if already exists
@@ -51,7 +51,7 @@ serve(async (req) => {
 
       if (existing) {
         results.skipped++;
-        return;
+        return false;
       }
 
       // Determine source type
@@ -77,142 +77,160 @@ serve(async (req) => {
         });
 
       if (error) {
-        results.errors.push(`Error inserting ${url}: ${error.message}`);
+        console.error(`Failed to insert ${title}:`, error);
+        results.errors.push(`${title}: ${error.message}`);
+        return false;
       }
+      
+      return true;
     };
 
     // Migrate blog posts
+    console.log('Starting blog migration...');
     const { data: blogs } = await supabase
       .from('blog_posts')
       .select('id, title, featured_image');
 
     for (const blog of blogs || []) {
       if (blog.featured_image) {
-        await insertMedia(
+        const success = await insertMedia(
           blog.featured_image,
           'blog',
           `Blog: ${blog.title}`,
           `Featured image for ${blog.title}`
         );
-        results.blog++;
+        if (success) results.blog++;
       }
     }
+    console.log(`Blog migration complete: ${results.blog} images`);
 
     // Migrate spa services
+    console.log('Starting spa migration...');
     const { data: spaServices } = await supabase
       .from('spa_services')
       .select('id, title, image, media_urls');
 
     for (const spa of spaServices || []) {
       if (spa.image) {
-        await insertMedia(spa.image, 'spa', `Spa: ${spa.title}`);
-        results.spa++;
+        const success = await insertMedia(spa.image, 'spa', `Spa: ${spa.title}`);
+        if (success) results.spa++;
       }
       if (spa.media_urls && Array.isArray(spa.media_urls)) {
         for (const url of spa.media_urls) {
-          await insertMedia(url, 'spa', `Spa Gallery: ${spa.title}`);
-          results.spa++;
+          const success = await insertMedia(url, 'spa', `Spa Gallery: ${spa.title}`);
+          if (success) results.spa++;
         }
       }
     }
+    console.log(`Spa migration complete: ${results.spa} images`);
 
     // Migrate activities
+    console.log('Starting activities migration...');
     const { data: activities } = await supabase
       .from('activities')
       .select('id, title, image, media_urls');
 
     for (const activity of activities || []) {
       if (activity.image) {
-        await insertMedia(activity.image, 'activities', `Activity: ${activity.title}`);
-        results.activities++;
+        const success = await insertMedia(activity.image, 'activities', `Activity: ${activity.title}`);
+        if (success) results.activities++;
       }
       if (activity.media_urls && Array.isArray(activity.media_urls)) {
         for (const url of activity.media_urls) {
-          await insertMedia(url, 'activities', `Activity Gallery: ${activity.title}`);
-          results.activities++;
+          const success = await insertMedia(url, 'activities', `Activity Gallery: ${activity.title}`);
+          if (success) results.activities++;
         }
       }
     }
+    console.log(`Activities migration complete: ${results.activities} images`);
 
     // Migrate room types
+    console.log('Starting rooms migration...');
     const { data: rooms } = await supabase
       .from('room_types')
       .select('id, name, hero_image, gallery');
 
     for (const room of rooms || []) {
       if (room.hero_image) {
-        await insertMedia(room.hero_image, 'rooms', `Room: ${room.name}`);
-        results.rooms++;
+        const success = await insertMedia(room.hero_image, 'rooms', `Room: ${room.name}`);
+        if (success) results.rooms++;
       }
       if (room.gallery && Array.isArray(room.gallery)) {
         for (const url of room.gallery) {
-          await insertMedia(url, 'rooms', `Room Gallery: ${room.name}`);
-          results.rooms++;
+          const success = await insertMedia(url, 'rooms', `Room Gallery: ${room.name}`);
+          if (success) results.rooms++;
         }
       }
     }
+    console.log(`Rooms migration complete: ${results.rooms} images`);
 
     // Migrate packages
+    console.log('Starting packages migration...');
     const { data: packages } = await supabase
       .from('packages')
       .select('id, title, featured_image, banner_image, gallery');
 
     for (const pkg of packages || []) {
       if (pkg.featured_image) {
-        await insertMedia(pkg.featured_image, 'packages', `Package: ${pkg.title}`);
-        results.packages++;
+        const success = await insertMedia(pkg.featured_image, 'packages', `Package: ${pkg.title}`);
+        if (success) results.packages++;
       }
       if (pkg.banner_image) {
-        await insertMedia(pkg.banner_image, 'packages', `Package Banner: ${pkg.title}`);
-        results.packages++;
+        const success = await insertMedia(pkg.banner_image, 'packages', `Package Banner: ${pkg.title}`);
+        if (success) results.packages++;
       }
       if (pkg.gallery && Array.isArray(pkg.gallery)) {
         for (const url of pkg.gallery) {
-          await insertMedia(url, 'packages', `Package Gallery: ${pkg.title}`);
-          results.packages++;
+          const success = await insertMedia(url, 'packages', `Package Gallery: ${pkg.title}`);
+          if (success) results.packages++;
         }
       }
     }
+    console.log(`Packages migration complete: ${results.packages} images`);
 
     // Migrate meals
+    console.log('Starting dining migration...');
     const { data: meals } = await supabase
       .from('meals')
       .select('id, title, featured_media, media_urls');
 
     for (const meal of meals || []) {
       if (meal.featured_media) {
-        await insertMedia(meal.featured_media, 'dining', `Meal: ${meal.title}`);
-        results.dining++;
+        const success = await insertMedia(meal.featured_media, 'dining', `Meal: ${meal.title}`);
+        if (success) results.dining++;
       }
       if (meal.media_urls && Array.isArray(meal.media_urls)) {
         for (const url of meal.media_urls) {
-          await insertMedia(url, 'dining', `Meal Gallery: ${meal.title}`);
-          results.dining++;
+          const success = await insertMedia(url, 'dining', `Meal Gallery: ${meal.title}`);
+          if (success) results.dining++;
         }
       }
     }
+    console.log(`Dining migration complete: ${results.dining} images`);
 
     // Migrate pages (hero images and OG images)
+    console.log('Starting pages migration...');
     const { data: pages } = await supabase
       .from('pages')
       .select('id, title, hero_image, og_image, hero_gallery');
 
     for (const page of pages || []) {
       if (page.hero_image) {
-        await insertMedia(page.hero_image, 'hero-banners', `Page Hero: ${page.title}`);
-        results.pages++;
+        const success = await insertMedia(page.hero_image, 'hero-banners', `Page Hero: ${page.title}`);
+        if (success) results.pages++;
       }
       if (page.og_image) {
-        await insertMedia(page.og_image, 'seo', `Page OG: ${page.title}`);
-        results.pages++;
+        const success = await insertMedia(page.og_image, 'seo', `Page OG: ${page.title}`);
+        if (success) results.pages++;
       }
       if (page.hero_gallery && Array.isArray(page.hero_gallery)) {
         for (const url of page.hero_gallery) {
-          await insertMedia(url, 'hero-banners', `Page Carousel: ${page.title}`);
-          results.pages++;
+          const success = await insertMedia(url, 'hero-banners', `Page Carousel: ${page.title}`);
+          if (success) results.pages++;
         }
       }
     }
+    console.log(`Pages migration complete: ${results.pages} images`);
 
     return new Response(
       JSON.stringify({ 
