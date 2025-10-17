@@ -48,7 +48,9 @@ interface Meal {
   availability_start: string;
   availability_end: string;
   media_urls: string[];
+  media_keys?: string[];
   featured_media: string;
+  featured_media_key?: string;
   is_active: boolean;
   created_at: string;
   updated_at: string;
@@ -75,6 +77,7 @@ const DiningManagement = () => {
     availability_start: string;
     availability_end: string;
     featured_media: string;
+    featured_media_key: string;
     is_active: boolean;
   }>({
     title: '',
@@ -85,6 +88,7 @@ const DiningManagement = () => {
     availability_start: '00:00',
     availability_end: '23:59',
     featured_media: '',
+    featured_media_key: '',
     is_active: true
   });
 
@@ -166,6 +170,7 @@ const DiningManagement = () => {
       availability_start: meal.availability_start.slice(0, 5),
       availability_end: meal.availability_end.slice(0, 5),
       featured_media: meal.featured_media || '',
+      featured_media_key: meal.featured_media_key || '',
       is_active: meal.is_active
     });
     setIsDialogOpen(true);
@@ -206,6 +211,7 @@ const DiningManagement = () => {
       availability_start: '00:00',
       availability_end: '23:59',
       featured_media: '',
+      featured_media_key: '',
       is_active: true
     });
     setEditingMeal(null);
@@ -458,7 +464,18 @@ const DiningManagement = () => {
               <MediaPicker
                 label="Featured Image"
                 value={formData.featured_media}
-                onChange={(url) => setFormData({...formData, featured_media: url})}
+                onChange={async (url) => {
+                  setFormData({...formData, featured_media: url});
+                  // Fetch and save the hardcoded_key
+                  const { data } = await supabase
+                    .from('gallery_images')
+                    .select('hardcoded_key')
+                    .eq('image_url', url)
+                    .single();
+                  if (data?.hardcoded_key) {
+                    setFormData(prev => ({...prev, featured_media_key: data.hardcoded_key}));
+                  }
+                }}
                 categorySlug="dining"
                 folder="meals"
               />
