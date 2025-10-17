@@ -139,7 +139,7 @@ const MediaManagement = () => {
   const { data: mediaStats, isLoading: statsLoading } = useMediaStats();
   
   // Fetch ALL images for stats calculation (unfiltered)
-  const { data: allImagesUnfiltered = [] } = useMediaList({ 
+  const { data: allImagesUnfiltered = [], refetch: refetchUnfiltered } = useMediaList({ 
     mediaType: 'all', 
     sourceType: 'all', 
     categoryId: '', 
@@ -609,7 +609,9 @@ const MediaManagement = () => {
         description: `Successfully merged ${successCount} groups${failCount > 0 ? `, ${failCount} failed` : ''}. Freed ${formatFileSize(duplicateStats.wastedSpace)}.`,
       });
 
-      refetch();
+      // Refresh both filtered and unfiltered data
+      await refetch();
+      await refetchUnfiltered();
     } catch (error) {
       console.error('Error during merge:', error);
       toast({

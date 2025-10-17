@@ -328,20 +328,9 @@ export const UnusedMediaDashboard: React.FC<UnusedMediaDashboardProps> = ({
               <CheckCircle className="h-8 w-8 text-green-600 dark:text-green-400" />
             )}
           </div>
-          <p className="text-xs text-muted-foreground mb-3">
-            {duplicateStats.totalDuplicates > 0 
-              ? `${duplicateStats.groups} groups • ${formatFileSize(duplicateStats.wastedSpace)}`
-              : 'No duplicate files found'
-            }
-          </p>
-          {duplicatesFilter === 'duplicates' && duplicateStats.totalDuplicates > 0 && (
-            <Badge variant="secondary" className="mb-2">Filtering</Badge>
-          )}
           {duplicateStats.totalDuplicates > 0 && onMergeDuplicates && (
-            <Button 
-              size="sm" 
-              variant="outline"
-              className="w-full"
+            <button
+              className="text-xs text-primary hover:underline font-medium"
               onClick={(e) => {
                 e.stopPropagation();
                 onMergeDuplicates();
@@ -349,17 +338,24 @@ export const UnusedMediaDashboard: React.FC<UnusedMediaDashboardProps> = ({
               disabled={isMerging}
             >
               {isMerging ? (
-                <>
-                  <RefreshCw className="h-3 w-3 mr-2 animate-spin" />
-                  Merging...
-                </>
+                'Merging...'
               ) : (
-                <>
-                  <Copy className="h-3 w-3 mr-2" />
-                  Merge All
-                </>
+                `Merge • ${formatFileSize(duplicateStats.wastedSpace)}`
               )}
-            </Button>
+            </button>
+          )}
+          {!onMergeDuplicates && duplicateStats.totalDuplicates > 0 && (
+            <p className="text-xs text-muted-foreground">
+              {formatFileSize(duplicateStats.wastedSpace)} wasted
+            </p>
+          )}
+          {duplicateStats.totalDuplicates === 0 && (
+            <p className="text-xs text-muted-foreground">
+              No duplicate files found
+            </p>
+          )}
+          {duplicatesFilter === 'duplicates' && duplicateStats.totalDuplicates > 0 && (
+            <Badge variant="secondary" className="mt-2">Filtering</Badge>
           )}
         </CardContent>
       </Card>
