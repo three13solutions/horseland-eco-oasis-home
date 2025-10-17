@@ -1,11 +1,13 @@
 import React, { useState } from 'react';
 import { MessageCircle, X, Send } from 'lucide-react';
+import { useSiteSettings } from '@/hooks/useSiteSettings';
 
 const WhatsAppFloatingV4 = () => {
+  const { settings } = useSiteSettings();
   const [isOpen, setIsOpen] = useState(false);
 
-  const whatsappNumber = "+919876543210";
-  const defaultMessage = "Hi! I'm interested in booking a stay at Horseland Hotel. Could you please help me with availability and rates?";
+  const whatsappNumber = settings.whatsapp_number || "+919876543210";
+  const defaultMessage = `Hi! I'm interested in booking a stay at ${settings.brand_name || 'Horseland Hotel'}. Could you please help me with availability and rates?`;
 
   const handleWhatsAppClick = () => {
     if (isOpen) {
@@ -42,7 +44,7 @@ const WhatsAppFloatingV4 = () => {
                 <MessageCircle className="w-5 h-5" />
               </div>
               <div>
-                <h3 className="font-semibold">Horseland Support</h3>
+                <h3 className="font-semibold">{settings.brand_name || 'Horseland'} Support</h3>
                 <p className="text-xs opacity-90">Usually replies instantly</p>
               </div>
             </div>

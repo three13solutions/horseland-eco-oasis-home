@@ -144,6 +144,8 @@ interface SiteSettings {
   brand_monogram: string;
   brand_descriptor: string;
   favicon: string;
+  phone_number: string;
+  whatsapp_number: string;
   copyright_text: string;
   credits: string;
 }
@@ -168,6 +170,8 @@ const SiteSettings = () => {
     brand_monogram: '',
     brand_descriptor: '',
     favicon: '',
+    phone_number: '',
+    whatsapp_number: '',
     copyright_text: '',
     credits: 'Powered by <a href="https://313s.com/" target="_blank" rel="noopener noreferrer">IIIXIII</a>'
   });
@@ -599,6 +603,34 @@ const SiteSettings = () => {
                   onChange={(e) => setSiteSettings(prev => ({ ...prev, brand_descriptor: e.target.value }))}
                   placeholder="Hotel, Resort, etc."
                 />
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="phone_number">Phone Number</Label>
+                  <Input
+                    id="phone_number"
+                    value={siteSettings.phone_number}
+                    onChange={(e) => setSiteSettings(prev => ({ ...prev, phone_number: e.target.value }))}
+                    placeholder="+919876543210"
+                  />
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Used in call buttons across the website
+                  </p>
+                </div>
+
+                <div>
+                  <Label htmlFor="whatsapp_number">WhatsApp Number</Label>
+                  <Input
+                    id="whatsapp_number"
+                    value={siteSettings.whatsapp_number}
+                    onChange={(e) => setSiteSettings(prev => ({ ...prev, whatsapp_number: e.target.value }))}
+                    placeholder="+919876543210"
+                  />
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Used in WhatsApp chat buttons across the website
+                  </p>
+                </div>
               </div>
 
               <Button onClick={saveSiteSettings} disabled={saving}>

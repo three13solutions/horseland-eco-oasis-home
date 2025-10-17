@@ -2,11 +2,14 @@
 import React from 'react';
 import { MessageCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { useSiteSettings } from '@/hooks/useSiteSettings';
 
 const WhatsAppFloat = () => {
+  const { settings } = useSiteSettings();
+  
   const handleWhatsAppClick = () => {
-    const phoneNumber = "+919876543210";
-    const message = "Hi! I'm interested in booking a stay at Horseland Hotel.";
+    const phoneNumber = settings.whatsapp_number || "+919876543210";
+    const message = `Hi! I'm interested in booking a stay at ${settings.brand_name || 'Horseland Hotel'}.`;
     const whatsappUrl = `https://wa.me/${phoneNumber}?text=${encodeURIComponent(message)}`;
     window.open(whatsappUrl, '_blank');
   };

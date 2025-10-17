@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import NavigationV5 from '../components/v5/NavigationV5';
 import DynamicFooter from '../components/DynamicFooter';
 import FloatingElementsV5 from '../components/v5/FloatingElementsV5';
@@ -11,8 +12,11 @@ import {
 } from "@/components/ui/accordion";
 import { BookOpen, Hotel, TreePine, Shield } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
+import { useSiteSettings } from '@/hooks/useSiteSettings';
 
 const FAQ = () => {
+  const navigate = useNavigate();
+  const { settings } = useSiteSettings();
   const [heroImage, setHeroImage] = useState<string>('https://images.unsplash.com/photo-1506905925346-21bda4d32df4?ixlib=rb-4.0.3&auto=format&fit=crop&w=2000&q=80');
 
   useEffect(() => {
@@ -203,11 +207,20 @@ const FAQ = () => {
             Reach out to us for personalized assistance with your booking and stay preferences.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Button size="lg" className="font-body">
+            <Button 
+              size="lg" 
+              className="font-body"
+              onClick={() => navigate('/contact')}
+            >
               Contact Us
             </Button>
-            <Button variant="outline" size="lg" className="font-body">
-              Call +91 98765 43210
+            <Button 
+              variant="outline" 
+              size="lg" 
+              className="font-body"
+              onClick={() => window.location.href = `tel:${settings.phone_number}`}
+            >
+              Call {settings.phone_number}
             </Button>
           </div>
         </div>

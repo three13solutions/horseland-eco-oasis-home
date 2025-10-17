@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { MessageCircle, X, Send, Phone, ArrowUp } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { useSiteSettings } from '@/hooks/useSiteSettings';
 
 const CombinedFloatingV5 = () => {
+  const { settings } = useSiteSettings();
   const [isWhatsAppOpen, setIsWhatsAppOpen] = useState(false);
   const [showScrollTop, setShowScrollTop] = useState(false);
 
@@ -15,8 +17,8 @@ const CombinedFloatingV5 = () => {
   }, []);
 
   // WhatsApp functionality
-  const whatsappNumber = "+919876543210";
-  const defaultMessage = "Hi! I'm interested in booking a stay at Horseland Hotel. Could you please help me with availability and rates?";
+  const whatsappNumber = settings.whatsapp_number || "+919876543210";
+  const defaultMessage = `Hi! I'm interested in booking a stay at ${settings.brand_name || 'Horseland Hotel'}. Could you please help me with availability and rates?`;
 
   const handleWhatsAppClick = () => {
     if (isWhatsAppOpen) {
@@ -43,7 +45,7 @@ const CombinedFloatingV5 = () => {
 
   // Call functionality
   const handleCallClick = () => {
-    window.location.href = 'tel:+919876543210';
+    window.location.href = `tel:${settings.phone_number || '+919876543210'}`;
   };
 
   // Scroll to top functionality

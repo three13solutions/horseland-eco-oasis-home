@@ -5,6 +5,8 @@ export interface SiteSettings {
   brand_name?: string;
   brand_monogram?: string;  
   brand_descriptor?: string;
+  phone_number?: string;
+  whatsapp_number?: string;
 }
 
 export function useSiteSettings() {
@@ -17,7 +19,7 @@ export function useSiteSettings() {
         const { data, error } = await supabase
           .from('site_settings')
           .select('setting_key, setting_value')
-          .in('setting_key', ['brand_name', 'brand_monogram', 'brand_descriptor']);
+          .in('setting_key', ['brand_name', 'brand_monogram', 'brand_descriptor', 'phone_number', 'whatsapp_number']);
 
         if (error) {
           console.error('Error fetching site settings:', error);
@@ -31,20 +33,28 @@ export function useSiteSettings() {
             settingsObj.brand_monogram = item.setting_value as string;
           } else if (item.setting_key === 'brand_descriptor') {
             settingsObj.brand_descriptor = item.setting_value as string;
+          } else if (item.setting_key === 'phone_number') {
+            settingsObj.phone_number = item.setting_value as string;
+          } else if (item.setting_key === 'whatsapp_number') {
+            settingsObj.whatsapp_number = item.setting_value as string;
           }
         });
 
         setSettings({
           brand_name: settingsObj.brand_name || 'HORSELAND',
           brand_monogram: settingsObj.brand_monogram || '/lovable-uploads/24f5ee9b-ce5a-4b86-a2d8-7ca42e0a78cf.png',
-          brand_descriptor: settingsObj.brand_descriptor || 'Hotel'
+          brand_descriptor: settingsObj.brand_descriptor || 'Hotel',
+          phone_number: settingsObj.phone_number || '+919876543210',
+          whatsapp_number: settingsObj.whatsapp_number || '+919876543210'
         });
       } catch (error) {
         console.error('Error loading site settings:', error);
         setSettings({
           brand_name: 'HORSELAND',
           brand_monogram: '/lovable-uploads/24f5ee9b-ce5a-4b86-a2d8-7ca42e0a78cf.png',
-          brand_descriptor: 'Hotel'
+          brand_descriptor: 'Hotel',
+          phone_number: '+919876543210',
+          whatsapp_number: '+919876543210'
         });
       } finally {
         setLoading(false);
