@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import NavigationV5 from '../components/v5/NavigationV5';
 import DynamicFooter from '../components/DynamicFooter';
-import FloatingElementsV5 from '../components/v5/FloatingElementsV5';
+import CombinedFloatingV5 from '../components/v5/CombinedFloatingV5';
 import { Button } from '@/components/ui/button';
 import {
   Accordion,
@@ -227,7 +227,7 @@ const FAQ = () => {
       </section>
 
       <DynamicFooter />
-      <FloatingElementsV5 />
+      <CombinedFloatingV5 />
     </div>
   );
 };

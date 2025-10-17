@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import NavigationV5 from '../components/v5/NavigationV5';
 import DynamicFooter from '../components/DynamicFooter';
-import FloatingElementsV5 from '../components/v5/FloatingElementsV5';
+import CombinedFloatingV5 from '../components/v5/CombinedFloatingV5';
 import SEO from '../components/SEO';
 import { generateBreadcrumbSchema } from '../lib/seo';
 import { Button } from '@/components/ui/button';
@@ -331,7 +331,7 @@ const Journal = () => {
       </section>
 
         <DynamicFooter />
-        <FloatingElementsV5 />
+        <CombinedFloatingV5 />
       </div>
     </>
   );

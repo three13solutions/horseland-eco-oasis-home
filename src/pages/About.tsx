@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import NavigationV5 from '../components/v5/NavigationV5';
 import DynamicFooter from '../components/DynamicFooter';
-import FloatingElementsV5 from '../components/v5/FloatingElementsV5';
+import CombinedFloatingV5 from '../components/v5/CombinedFloatingV5';
 import { Button } from '@/components/ui/button';
 import { Leaf, Award, Heart, Mountain, Users, Lightbulb } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
@@ -331,7 +331,7 @@ const About = () => {
       </section>
 
       <DynamicFooter />
-      <FloatingElementsV5 />
+      <CombinedFloatingV5 />
     </div>
   );
 };

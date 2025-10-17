@@ -1,7 +1,7 @@
 import React, { useMemo, useState, useEffect } from 'react';
 import NavigationV5 from '../components/v5/NavigationV5';
 import DynamicFooter from '../components/DynamicFooter';
-import FloatingElementsV5 from '../components/v5/FloatingElementsV5';
+import CombinedFloatingV5 from '../components/v5/CombinedFloatingV5';
 import CategoryFilters, { Filters } from '@/components/stay/CategoryFilters';
 import CategoryCard, { Category } from '@/components/stay/CategoryCard';
 import CategoryBookingModal from '@/components/stay/CategoryBookingModal';
@@ -216,7 +216,7 @@ const Stay = () => {
       />
 
       <DynamicFooter />
-      <FloatingElementsV5 />
+      <CombinedFloatingV5 />
     </div>
   );
 };
