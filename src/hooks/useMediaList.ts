@@ -14,9 +14,6 @@ export const useMediaList = (filters: MediaListFilters = {}) => {
   return useQuery({
     queryKey: ['media-list', filters],
     queryFn: async () => {
-      // Regular filtering logic - no special handling needed now that migration ensures all hero images are in the library
-
-      // Regular filtering
       let query = supabase
         .from('gallery_images')
         .select(`
@@ -35,7 +32,8 @@ export const useMediaList = (filters: MediaListFilters = {}) => {
           category_id,
           is_hardcoded,
           sort_order,
-          gallery_categories(name, slug)
+          gallery_categories(name, slug),
+          image_categories(category_id, gallery_categories(name, slug))
         `)
         .order('sort_order');
 
@@ -49,7 +47,18 @@ export const useMediaList = (filters: MediaListFilters = {}) => {
       }
 
       if (filters.categoryId) {
-        query = query.eq('category_id', filters.categoryId);
+        // Filter by category using junction table
+        const { data: imageIds } = await supabase
+          .from('image_categories')
+          .select('image_id')
+          .eq('category_id', filters.categoryId);
+        
+        if (imageIds && imageIds.length > 0) {
+          query = query.in('id', imageIds.map(ic => ic.image_id));
+        } else {
+          // No images in this category
+          return [];
+        }
       }
 
       if (filters.searchTerm) {

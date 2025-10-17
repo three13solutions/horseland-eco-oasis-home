@@ -72,6 +72,13 @@ interface GalleryImage {
     name: string;
     slug: string;
   };
+  image_categories?: Array<{
+    category_id: string;
+    gallery_categories: {
+      name: string;
+      slug: string;
+    };
+  }>;
 }
 
 interface GalleryCategory {
@@ -170,44 +177,86 @@ const MediaManagement = () => {
     }
   };
 
-  const handleSaveImage = async (imageData: Partial<GalleryImage>) => {
+  const handleSaveImage = async (imageData: Partial<GalleryImage> & { category_ids?: string[] }) => {
     try {
+      const { category_ids, ...imageFields } = imageData;
+      
       if (editingImage) {
-        const { error } = await supabase
+        // Update existing image
+        const { error: updateError } = await supabase
           .from('gallery_images')
-          .update(imageData)
+          .update(imageFields)
           .eq('id', editingImage.id);
 
-        if (error) throw error;
+        if (updateError) throw updateError;
+        
+        // Update categories in junction table
+        if (category_ids && category_ids.length > 0) {
+          // Delete existing category associations
+          await supabase
+            .from('image_categories')
+            .delete()
+            .eq('image_id', editingImage.id);
+          
+          // Insert new category associations
+          const categoryInserts = category_ids.map(catId => ({
+            image_id: editingImage.id,
+            category_id: catId
+          }));
+          
+          const { error: categoryError } = await supabase
+            .from('image_categories')
+            .insert(categoryInserts);
+          
+          if (categoryError) throw categoryError;
+        }
         
         toast({
           title: "Success",
           description: "Media updated successfully",
         });
       } else {
+        // Insert new image
         const insertData = {
-          title: imageData.title || '',
-          image_url: imageData.image_url || '',
-          video_url: imageData.video_url,
+          title: imageFields.title || '',
+          image_url: imageFields.image_url || '',
+          video_url: imageFields.video_url,
           category: 'gallery',
-          category_id: imageData.category_id,
-          caption: imageData.caption,
-          location: imageData.location,
-          guest_name: imageData.guest_name,
-          guest_handle: imageData.guest_handle,
-          likes_count: imageData.likes_count || 0,
-          sort_order: imageData.sort_order || 0,
-          media_type: imageData.media_type || 'image',
-          source_type: imageData.source_type || 'upload',
-          hardcoded_key: imageData.hardcoded_key,
-          is_hardcoded: imageData.is_hardcoded || false
+          category_id: category_ids?.[0], // Keep for backward compatibility
+          caption: imageFields.caption,
+          location: imageFields.location,
+          guest_name: imageFields.guest_name,
+          guest_handle: imageFields.guest_handle,
+          likes_count: imageFields.likes_count || 0,
+          sort_order: imageFields.sort_order || 0,
+          media_type: imageFields.media_type || 'image',
+          source_type: imageFields.source_type || 'upload',
+          hardcoded_key: imageFields.hardcoded_key,
+          is_hardcoded: imageFields.is_hardcoded || false,
+          alt_text: (imageFields as any).alt_text
         };
         
-        const { error } = await supabase
+        const { data: newImage, error: insertError } = await supabase
           .from('gallery_images')
-          .insert([insertData]);
+          .insert([insertData])
+          .select()
+          .single();
 
-        if (error) throw error;
+        if (insertError) throw insertError;
+        
+        // Insert category associations
+        if (category_ids && category_ids.length > 0 && newImage) {
+          const categoryInserts = category_ids.map(catId => ({
+            image_id: newImage.id,
+            category_id: catId
+          }));
+          
+          const { error: categoryError } = await supabase
+            .from('image_categories')
+            .insert(categoryInserts);
+          
+          if (categoryError) throw categoryError;
+        }
         
         toast({
           title: "Success",
@@ -669,7 +718,7 @@ const MediaManagement = () => {
 interface MediaFormProps {
   image?: GalleryImage | null;
   categories: GalleryCategory[];
-  onSave: (data: Partial<GalleryImage>) => void;
+  onSave: (data: Partial<GalleryImage> & { category_ids?: string[] }) => void;
   onCancel: () => void;
 }
 
@@ -684,7 +733,7 @@ const MediaForm: React.FC<MediaFormProps> = ({ image, categories, onSave, onCanc
     guest_name: image?.guest_name || '',
     guest_handle: image?.guest_handle || '',
     likes_count: image?.likes_count || 0,
-    category_id: image?.category_id || categories[0]?.id || '',
+    category_ids: [] as string[], // Changed to array for multi-select
     sort_order: image?.sort_order || 0,
     media_type: image?.media_type || 'image' as 'image' | 'video',
     source_type: image?.source_type || 'upload' as 'upload' | 'external' | 'mirrored' | 'hardcoded',
@@ -692,111 +741,147 @@ const MediaForm: React.FC<MediaFormProps> = ({ image, categories, onSave, onCanc
     is_hardcoded: image?.is_hardcoded || false,
   });
 
-  const selectedCategory = categories.find(cat => cat.id === formData.category_id);
+  // Fetch existing categories for this image
+  useEffect(() => {
+    if (image) {
+      const fetchImageCategories = async () => {
+        const { data } = await supabase
+          .from('image_categories')
+          .select('category_id')
+          .eq('image_id', image.id);
+        
+        if (data) {
+          setFormData(prev => ({
+            ...prev,
+            category_ids: data.map(ic => ic.category_id)
+          }));
+        }
+      };
+      fetchImageCategories();
+    }
+  }, [image]);
+
+  const selectedCategory = categories.find(cat => formData.category_ids.includes(cat.id));
   const isGuestCategory = selectedCategory?.slug === 'guests';
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Validate at least one category selected
+    if (formData.category_ids.length === 0) {
+      alert('Please select at least one category');
+      return;
+    }
+    
     onSave(formData);
+  };
+
+  // Auto-detect media type from URL
+  const detectMediaType = (url: string): 'image' | 'video' => {
+    const videoIndicators = ['youtube.com', 'youtu.be', 'vimeo.com', '.mp4', '.webm', '.ogg'];
+    const isVideo = videoIndicators.some(indicator => url.toLowerCase().includes(indicator));
+    return isVideo ? 'video' : 'image';
   };
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
-      <div className="grid grid-cols-2 gap-4">
-        <div>
-          <Label htmlFor="title">Title *</Label>
-          <Input
-            id="title"
-            value={formData.title}
-            onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-            required
-          />
-        </div>
-        <div>
-          <Label htmlFor="category">Category *</Label>
-          <Select
-            value={formData.category_id}
-            onValueChange={(value) => setFormData({ ...formData, category_id: value })}
-          >
-            <SelectTrigger>
-              <SelectValue placeholder="Select category" />
-            </SelectTrigger>
-            <SelectContent>
-              {categories.map((category) => (
-                <SelectItem key={category.id} value={category.id}>
-                  {category.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
+      <div>
+        <Label htmlFor="title">Title *</Label>
+        <Input
+          id="title"
+          value={formData.title}
+          onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+          required
+        />
       </div>
 
-      {/* Auto-detect media type based on upload */}
-      {formData.media_type === 'image' ? (
-        <div>
-          <Label>Image Upload *</Label>
+      <div>
+        <Label>Categories * (Select one or more)</Label>
+        <div className="grid grid-cols-2 gap-2 mt-2">
+          {categories.map((category) => (
+            <div key={category.id} className="flex items-center space-x-2">
+              <Checkbox
+                id={`cat-${category.id}`}
+                checked={formData.category_ids.includes(category.id)}
+                onCheckedChange={(checked) => {
+                  if (checked) {
+                    setFormData({
+                      ...formData,
+                      category_ids: [...formData.category_ids, category.id]
+                    });
+                  } else {
+                    setFormData({
+                      ...formData,
+                      category_ids: formData.category_ids.filter(id => id !== category.id)
+                    });
+                  }
+                }}
+              />
+              <Label htmlFor={`cat-${category.id}`} className="cursor-pointer font-normal">
+                {category.name}
+              </Label>
+            </div>
+          ))}
+        </div>
+        <p className="text-xs text-muted-foreground mt-2">
+          Select all categories where this image should appear
+        </p>
+      </div>
+
+      {/* Auto-detect media type - no toggle needed */}
+      <div>
+        <Label>Media Upload *</Label>
+        {!formData.video_url && (
           <MediaPicker
             label=""
             value={formData.image_url}
             onChange={(url) => {
-              // Auto-detect source type
               const isExternal = url.startsWith('http://') || url.startsWith('https://');
               const isUpload = url.includes('supabase.co/storage');
+              const detectedType = detectMediaType(url);
+              
               setFormData({ 
                 ...formData, 
                 image_url: url,
+                video_url: '', // Clear video URL when uploading image
                 source_type: isUpload ? 'upload' : isExternal ? 'external' : 'upload',
-                media_type: 'image'
+                media_type: detectedType
               });
             }}
             folder="media"
           />
-          <p className="text-xs text-muted-foreground mt-1">
-            Upload an image or paste an external URL
-          </p>
+        )}
+        
+        {!formData.image_url && (
+          <div className="mt-2">
+            <Input
+              placeholder="Or paste video URL (YouTube, Vimeo, etc.)"
+              value={formData.video_url}
+              onChange={(e) => {
+                const url = e.target.value;
+                setFormData({ 
+                  ...formData, 
+                  video_url: url,
+                  image_url: '', // Clear image URL when adding video
+                  source_type: 'external',
+                  media_type: 'video'
+                });
+              }}
+            />
+          </div>
+        )}
+        
+        <div className="flex items-center gap-2 mt-2 text-xs text-muted-foreground">
+          <Badge variant="outline">
+            {formData.media_type === 'video' ? <Video className="w-3 h-3 mr-1" /> : <ImageIcon className="w-3 h-3 mr-1" />}
+            {formData.media_type} • {formData.source_type}
+          </Badge>
+          <span>Auto-detected</span>
         </div>
-      ) : (
-        <div>
-          <Label htmlFor="video_url">Video URL *</Label>
-          <Input
-            id="video_url"
-            value={formData.video_url}
-            onChange={(e) => setFormData({ 
-              ...formData, 
-              video_url: e.target.value,
-              source_type: 'external',
-              media_type: 'video'
-            })}
-            placeholder="https://www.youtube.com/embed/... or Vimeo URL"
-          />
-          <p className="text-xs text-muted-foreground mt-1">
-            Paste YouTube, Vimeo, or direct video URL
-          </p>
-        </div>
-      )}
-
-      {/* Toggle between image and video */}
-      <div className="flex items-center gap-4 text-sm">
-        <span className="text-muted-foreground">Media type:</span>
-        <Button
-          type="button"
-          size="sm"
-          variant={formData.media_type === 'image' ? 'default' : 'outline'}
-          onClick={() => setFormData({ ...formData, media_type: 'image', video_url: '' })}
-        >
-          <ImageIcon className="w-3 h-3 mr-1" />
-          Image
-        </Button>
-        <Button
-          type="button"
-          size="sm"
-          variant={formData.media_type === 'video' ? 'default' : 'outline'}
-          onClick={() => setFormData({ ...formData, media_type: 'video', image_url: '' })}
-        >
-          <Video className="w-3 h-3 mr-1" />
-          Video
-        </Button>
+        
+        <p className="text-xs text-muted-foreground mt-1">
+          Upload an image or paste a video URL - media type is detected automatically
+        </p>
       </div>
 
       <div>

@@ -1016,6 +1016,42 @@ export type Database = {
         }
         Relationships: []
       }
+      image_categories: {
+        Row: {
+          category_id: string
+          created_at: string | null
+          id: string
+          image_id: string
+        }
+        Insert: {
+          category_id: string
+          created_at?: string | null
+          id?: string
+          image_id: string
+        }
+        Update: {
+          category_id?: string
+          created_at?: string | null
+          id?: string
+          image_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "image_categories_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "gallery_categories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "image_categories_image_id_fkey"
+            columns: ["image_id"]
+            isOneToOne: false
+            referencedRelation: "gallery_images"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       invoices: {
         Row: {
           booking_id: string
