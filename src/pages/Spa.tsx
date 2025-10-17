@@ -33,14 +33,40 @@ const Spa = () => {
   const [services, setServices] = useState<SpaService[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedCategory, setSelectedCategory] = useState('all');
+  const [addedServiceIds, setAddedServiceIds] = useState<string[]>([]);
   const [heroImage, setHeroImage] = useState('https://images.unsplash.com/photo-1544161515-4ab6ce6db874?ixlib=rb-4.0.3&auto=format&fit=crop&w=2000&q=80');
   const [heroTitle, setHeroTitle] = useState('Mountain Spa & Wellness');
   const [heroSubtitle, setHeroSubtitle] = useState('Rejuvenate your mind, body, and spirit in nature\'s embrace');
   const { toast } = useToast();
   const navigate = useNavigate();
 
+  // Load added service IDs from localStorage
+  const loadAddedServices = () => {
+    const bookingData = localStorage.getItem('currentBooking');
+    if (bookingData) {
+      try {
+        const booking = JSON.parse(bookingData);
+        const spaServices = booking.selectedSpaServices || [];
+        setAddedServiceIds(spaServices.map((s: any) => s.id));
+      } catch (error) {
+        console.error('Error loading added services:', error);
+      }
+    }
+  };
+
   useEffect(() => {
     loadServices();
+    loadAddedServices();
+    
+    // Listen for booking updates
+    const handleBookingUpdate = () => {
+      loadAddedServices();
+    };
+    window.addEventListener('bookingUpdated', handleBookingUpdate);
+    
+    return () => {
+      window.removeEventListener('bookingUpdated', handleBookingUpdate);
+    };
   }, []);
 
   useEffect(() => {
@@ -80,84 +106,104 @@ const Spa = () => {
     : services.filter(service => service.category === selectedCategory);
 
   const handleAddToStay = (service: SpaService) => {
-    // Get booking data from localStorage
     const bookingData = localStorage.getItem('currentBooking');
     
     if (!bookingData) {
       toast({
         title: "Let's Plan Your Stay First",
-        description: "We'd love to add this to your experience! Please select your accommodation and dates on our booking page, and we'll be happy to include this service.",
+        description: "Please select your accommodation and dates on our booking page first.",
         variant: "default",
+        action: (
+          <button onClick={() => navigate('/booking')} className="underline">
+            Go to Booking
+          </button>
+        ),
       });
-      navigate('/booking');
       return;
     }
 
     try {
       const booking = JSON.parse(bookingData);
       
-      // Check if check-in and check-out dates are selected
       if (!booking.checkIn || !booking.checkOut) {
         toast({
           title: "Almost There!",
-          description: "To add spa services to your stay, please select your arrival and departure dates first. We want to ensure your wellness experience is perfectly timed!",
+          description: "Please select your arrival and departure dates first.",
           variant: "default",
+          action: (
+            <button onClick={() => navigate('/booking')} className="underline">
+              Go to Booking
+            </button>
+          ),
         });
-        navigate('/booking');
         return;
       }
 
-      // Check if room is selected
-      if (!booking.roomType && !booking.roomUnit) {
+      if (!booking.selectedRoom && !booking.roomType && !booking.roomUnit) {
         toast({
           title: "Choose Your Haven First",
-          description: "Please select your accommodation before adding spa services. We want to ensure everything is perfectly arranged for your comfort!",
+          description: "Please select your accommodation before adding spa services.",
           variant: "default",
+          action: (
+            <button onClick={() => navigate('/booking')} className="underline">
+              Go to Booking
+            </button>
+          ),
         });
-        navigate('/booking');
         return;
       }
 
-      // Add spa service to booking
       const existingSpaServices = booking.selectedSpaServices || [];
+      const existingIndex = existingSpaServices.findIndex((s: any) => s.id === service.id);
       
-      // Check if service already added
-      if (existingSpaServices.some((s: any) => s.id === service.id)) {
+      if (existingIndex !== -1) {
+        // Increment quantity if already added
+        existingSpaServices[existingIndex].quantity += 1;
         toast({
-          title: "Already Added",
-          description: `${service.title} is already part of your wellness experience. You can adjust quantities on the booking page.`,
+          title: "Quantity Updated!",
+          description: `${service.title} quantity increased. Total: ${existingSpaServices[existingIndex].quantity}`,
+          action: (
+            <button onClick={() => navigate('/booking')} className="underline">
+              View Booking
+            </button>
+          ),
         });
-        navigate('/booking');
-        return;
-      }
-
-      const updatedBooking = {
-        ...booking,
-        selectedSpaServices: [...existingSpaServices, {
+      } else {
+        // Add new service
+        existingSpaServices.push({
           id: service.id,
           title: service.title,
           price: service.price,
           duration: service.duration,
-          quantity: 1
-        }]
+          quantity: 1,
+          type: 'spa'
+        });
+        toast({
+          title: "Added to Your Stay!",
+          description: `${service.title} has been added to your wellness experience.`,
+          action: (
+            <button onClick={() => navigate('/booking')} className="underline">
+              View Booking
+            </button>
+          ),
+        });
+      }
+
+      const updatedBooking = {
+        ...booking,
+        selectedSpaServices: existingSpaServices
       };
 
       localStorage.setItem('currentBooking', JSON.stringify(updatedBooking));
+      setAddedServiceIds(existingSpaServices.map((s: any) => s.id));
       
-      // Dispatch custom event to notify booking page
+      // Dispatch custom event
       window.dispatchEvent(new CustomEvent('bookingUpdated'));
-      
-      toast({
-        title: "Added to Your Stay!",
-        description: `${service.title} has been added to your wellness experience. View your complete itinerary on the booking page.`,
-      });
-      
-      navigate('/booking');
     } catch (error) {
       console.error('Error adding spa service:', error);
       toast({
         title: "Oops!",
-        description: "We encountered a small issue. Please try again or contact our concierge for assistance.",
+        description: "We encountered a small issue. Please try again.",
         variant: "destructive",
       });
     }
@@ -337,9 +383,10 @@ const Spa = () => {
                     <Button 
                       className="w-full font-body gap-2"
                       onClick={() => handleAddToStay(service)}
+                      variant={addedServiceIds.includes(service.id) ? "secondary" : "default"}
                     >
                       <Plus className="h-4 w-4" />
-                      Add to My Stay
+                      {addedServiceIds.includes(service.id) ? "Added - Add More" : "Add to My Stay"}
                     </Button>
                   </div>
                 </div>

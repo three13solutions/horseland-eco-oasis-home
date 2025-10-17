@@ -27,15 +27,41 @@ const Activities = () => {
   const [filter, setFilter] = useState('all');
   const [activities, setActivities] = useState<Activity[]>([]);
   const [loading, setLoading] = useState(true);
+  const [addedActivityIds, setAddedActivityIds] = useState<string[]>([]);
   const [heroImage, setHeroImage] = useState('https://images.unsplash.com/photo-1544568100-847a948585b9?ixlib=rb-4.0.3&auto=format&fit=crop&w=2000&q=80');
   const [subtitle, setSubtitle] = useState('Discover Matheran\'s natural wonders through guided activities');
   const [title, setTitle] = useState('Adventure Awaits');
   const { toast } = useToast();
   const navigate = useNavigate();
 
+  // Load added activity IDs from localStorage
+  const loadAddedActivities = () => {
+    const bookingData = localStorage.getItem('currentBooking');
+    if (bookingData) {
+      try {
+        const booking = JSON.parse(bookingData);
+        const activities = booking.selectedActivities || [];
+        setAddedActivityIds(activities.map((a: any) => a.id));
+      } catch (error) {
+        console.error('Error loading added activities:', error);
+      }
+    }
+  };
+
   useEffect(() => {
     loadActivities();
     loadPageData();
+    loadAddedActivities();
+    
+    // Listen for booking updates
+    const handleBookingUpdate = () => {
+      loadAddedActivities();
+    };
+    window.addEventListener('bookingUpdated', handleBookingUpdate);
+    
+    return () => {
+      window.removeEventListener('bookingUpdated', handleBookingUpdate);
+    };
   }, []);
 
   const loadActivities = async () => {
@@ -80,84 +106,103 @@ const Activities = () => {
   });
 
   const handleAddToStay = (activity: Activity) => {
-    // Get booking data from localStorage
     const bookingData = localStorage.getItem('currentBooking');
     
     if (!bookingData) {
       toast({
         title: "Let's Plan Your Stay First",
-        description: "We'd love to add this to your experience! Please select your accommodation and dates on our booking page.",
+        description: "Please select your accommodation and dates on our booking page first.",
         variant: "default",
+        action: (
+          <button onClick={() => navigate('/booking')} className="underline">
+            Go to Booking
+          </button>
+        ),
       });
-      navigate('/booking');
       return;
     }
 
     try {
       const booking = JSON.parse(bookingData);
       
-      // Check if check-in and check-out dates are selected
       if (!booking.checkIn || !booking.checkOut) {
         toast({
           title: "Almost There!",
-          description: "To add activities to your stay, please select your arrival and departure dates first.",
+          description: "Please select your arrival and departure dates first.",
           variant: "default",
+          action: (
+            <button onClick={() => navigate('/booking')} className="underline">
+              Go to Booking
+            </button>
+          ),
         });
-        navigate('/booking');
         return;
       }
 
-      // Check if room is selected
-      if (!booking.selectedRoom) {
+      if (!booking.selectedRoom && !booking.roomType && !booking.roomUnit) {
         toast({
           title: "Choose Your Haven First",
-          description: "Please select your accommodation before adding activities. We want to ensure everything is perfectly arranged!",
+          description: "Please select your accommodation before adding activities.",
           variant: "default",
+          action: (
+            <button onClick={() => navigate('/booking')} className="underline">
+              Go to Booking
+            </button>
+          ),
         });
-        navigate('/booking');
         return;
       }
 
-      // Add activity to booking
       const existingActivities = booking.selectedActivities || [];
+      const existingIndex = existingActivities.findIndex((a: any) => a.id === activity.id);
       
-      // Check if activity already added
-      if (existingActivities.some((a: any) => a.id === activity.id)) {
+      if (existingIndex !== -1) {
+        // Increment quantity if already added
+        existingActivities[existingIndex].quantity += 1;
         toast({
-          title: "Already Added",
-          description: `${activity.title} is already part of your experience. You can adjust quantities on the booking page.`,
+          title: "Quantity Updated!",
+          description: `${activity.title} quantity increased. Total: ${existingActivities[existingIndex].quantity}`,
+          action: (
+            <button onClick={() => navigate('/booking')} className="underline">
+              View Booking
+            </button>
+          ),
         });
-        navigate('/booking');
-        return;
-      }
-
-      const updatedBooking = {
-        ...booking,
-        selectedActivities: [...existingActivities, {
+      } else {
+        // Add new activity
+        existingActivities.push({
           id: activity.id,
           title: activity.title,
           price: activity.price_amount || 0,
           quantity: 1,
           type: 'activity'
-        }]
+        });
+        toast({
+          title: "Added to Your Stay!",
+          description: `${activity.title} has been added to your experience.`,
+          action: (
+            <button onClick={() => navigate('/booking')} className="underline">
+              View Booking
+            </button>
+          ),
+        });
+      }
+
+      const updatedBooking = {
+        ...booking,
+        selectedActivities: existingActivities
       };
 
       localStorage.setItem('currentBooking', JSON.stringify(updatedBooking));
+      setAddedActivityIds(existingActivities.map((a: any) => a.id));
       
-      // Dispatch custom event to notify booking page
+      // Dispatch custom event
       window.dispatchEvent(new CustomEvent('bookingUpdated'));
-      
-      toast({
-        title: "Added to Your Stay!",
-        description: `${activity.title} has been added to your experience. View your complete itinerary on the booking page.`,
-      });
-      
-      navigate('/booking');
     } catch (error) {
       console.error('Error adding activity:', error);
       toast({
         title: "Oops!",
-        description: "We encountered a small issue. Please try again or contact our concierge for assistance.",
+        description: "We encountered a small issue. Please try again.",
         variant: "destructive",
       });
     }
@@ -293,9 +338,10 @@ const Activities = () => {
                       size="sm" 
                       className="font-body flex-1 gap-2"
                       onClick={() => handleAddToStay(activity)}
+                      variant={addedActivityIds.includes(activity.id) ? "secondary" : "default"}
                     >
                       <Plus className="h-4 w-4" />
-                      Add to Stay
+                      {addedActivityIds.includes(activity.id) ? "Added - Add More" : "Add to Stay"}
                     </Button>
                   </div>
                 </div>
