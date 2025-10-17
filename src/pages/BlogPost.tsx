@@ -169,6 +169,39 @@ const BlogPost = () => {
       <div className="min-h-screen bg-background">
         <NavigationV5 />
         
+        {/* Hero Banner */}
+        {post.featured_image && (
+          <section className="relative h-[60vh] min-h-[400px] w-full overflow-hidden">
+            <div 
+              className="absolute inset-0 bg-cover bg-center"
+              style={{ backgroundImage: `url(${post.featured_image})` }}
+            >
+              <div className="absolute inset-0 bg-black/50" />
+            </div>
+            
+            <div className="relative z-10 h-full flex items-end pb-16">
+              <div className="max-w-4xl mx-auto px-4 w-full">
+                <Badge className="mb-4">
+                  {post.category.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ')}
+                </Badge>
+                <h1 className="text-4xl md:text-6xl font-heading font-bold text-white mb-4 leading-tight">
+                  {translatedTitle}
+                </h1>
+                <div className="flex items-center gap-6 text-white/90">
+                  <div className="flex items-center gap-2">
+                    <User className="w-4 h-4" />
+                    <span>{post.author}</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Calendar className="w-4 h-4" />
+                    <span>{format(new Date(post.publish_date), 'MMMM dd, yyyy')}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </section>
+        )}
+        
         {/* Breadcrumbs */}
         <div className="max-w-4xl mx-auto px-4 pt-8">
           <div className="flex items-center gap-2 text-sm text-muted-foreground">
@@ -182,72 +215,63 @@ const BlogPost = () => {
 
         {/* Article Header */}
         <article className="max-w-4xl mx-auto px-4 py-8">
-          <header className="mb-8">
-            <Badge className="mb-4">
-              {post.category.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ')}
-            </Badge>
-            
-            <h1 className="text-4xl md:text-5xl font-heading font-bold mb-6 leading-tight">
-              {translatedTitle}
-            </h1>
-            
-            <div className="flex items-center gap-6 text-muted-foreground mb-8">
-              <div className="flex items-center gap-2">
-                <User className="w-4 h-4" />
-                <span>{post.author}</span>
+          {!post.featured_image && (
+            <header className="mb-8">
+              <Badge className="mb-4">
+                {post.category.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ')}
+              </Badge>
+              
+              <h1 className="text-4xl md:text-5xl font-heading font-bold mb-6 leading-tight">
+                {translatedTitle}
+              </h1>
+              
+              <div className="flex items-center gap-6 text-muted-foreground mb-8">
+                <div className="flex items-center gap-2">
+                  <User className="w-4 h-4" />
+                  <span>{post.author}</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Calendar className="w-4 h-4" />
+                  <span>{format(new Date(post.publish_date), 'MMMM dd, yyyy')}</span>
+                </div>
               </div>
-              <div className="flex items-center gap-2">
-                <Calendar className="w-4 h-4" />
-                <span>{format(new Date(post.publish_date), 'MMMM dd, yyyy')}</span>
-              </div>
-            </div>
-
-            {/* Social Share Buttons */}
-            <div className="flex items-center gap-4 py-4 border-y">
-              <span className="text-sm text-muted-foreground flex items-center gap-2">
-                <Share2 className="w-4 h-4" />
-                Share:
-              </span>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => handleShare('facebook')}
-                className="gap-2"
-              >
-                <Facebook className="w-4 h-4" />
-                Facebook
-              </Button>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => handleShare('twitter')}
-                className="gap-2"
-              >
-                <Twitter className="w-4 h-4" />
-                Twitter
-              </Button>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => handleShare('linkedin')}
-                className="gap-2"
-              >
-                <Linkedin className="w-4 h-4" />
-                LinkedIn
-              </Button>
-            </div>
-          </header>
-
-          {/* Featured Image */}
-          {post.featured_image && (
-            <div className="mb-8 rounded-lg overflow-hidden">
-              <img
-                src={post.featured_image}
-                alt={post.title}
-                className="w-full h-auto object-cover"
-              />
-            </div>
+            </header>
           )}
+
+          {/* Social Share Buttons */}
+          <div className="flex items-center gap-4 py-4 border-y mb-8">
+            <span className="text-sm text-muted-foreground flex items-center gap-2">
+              <Share2 className="w-4 h-4" />
+              Share:
+            </span>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => handleShare('facebook')}
+              className="gap-2"
+            >
+              <Facebook className="w-4 h-4" />
+              Facebook
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => handleShare('twitter')}
+              className="gap-2"
+            >
+              <Twitter className="w-4 h-4" />
+              Twitter
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => handleShare('linkedin')}
+              className="gap-2"
+            >
+              <Linkedin className="w-4 h-4" />
+              LinkedIn
+            </Button>
+          </div>
 
           {/* Article Content */}
           <div className="prose prose-lg max-w-none">

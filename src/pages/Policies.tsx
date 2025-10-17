@@ -26,6 +26,28 @@ const Policies = () => {
   const [activeTab, setActiveTab] = React.useState('booking');
   const [policies, setPolicies] = useState<PolicyContent[]>([]);
   const [loading, setLoading] = useState(true);
+  const [heroImage, setHeroImage] = useState<string>('');
+
+  useEffect(() => {
+    loadHeroImage();
+  }, []);
+
+  const loadHeroImage = async () => {
+    try {
+      const { data } = await supabase
+        .from('pages')
+        .select('hero_image')
+        .eq('slug', 'policies')
+        .eq('is_published', true)
+        .maybeSingle();
+      
+      if (data?.hero_image) {
+        setHeroImage(data.hero_image);
+      }
+    } catch (error) {
+      console.error('Error loading hero image:', error);
+    }
+  };
 
   const iconMap: { [key: string]: React.ReactNode } = {
     Clock: <Clock className="w-5 h-5 text-primary" />,
@@ -90,13 +112,22 @@ const Policies = () => {
       <NavigationV5 />
       
       {/* Hero Section */}
-      <section className="pt-24 pb-16 bg-gradient-to-b from-muted/50 to-background">
-        <div className="container mx-auto px-6">
-          <div className="text-center max-w-3xl mx-auto">
-            <h1 className="text-4xl md:text-5xl font-serif font-bold text-foreground mb-6">
+      <section className="relative h-[60vh] min-h-[500px] w-full overflow-hidden">
+        <div 
+          className="absolute inset-0 bg-cover bg-center"
+          style={{ 
+            backgroundImage: `url(${heroImage || '/lovable-uploads/d4df921c-30f4-4f92-92f2-c84dbcd5b591.png'})`
+          }}
+        >
+          <div className="absolute inset-0 bg-black/50" />
+        </div>
+        
+        <div className="relative z-10 h-full flex items-center justify-center">
+          <div className="container mx-auto px-6 text-center">
+            <h1 className="text-4xl md:text-6xl font-serif font-bold text-white mb-6">
               Our <span className="text-primary">Policies</span>
             </h1>
-            <p className="text-lg text-muted-foreground">
+            <p className="text-lg md:text-xl text-white/90 max-w-3xl mx-auto">
               Clear, transparent policies to ensure you have the best possible experience at Horseland Hotel.
             </p>
           </div>

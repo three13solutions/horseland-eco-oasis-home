@@ -92,6 +92,7 @@ const Booking = () => {
   const [searchCheckIn, setSearchCheckIn] = useState(checkIn);
   const [searchCheckOut, setSearchCheckOut] = useState(checkOut);
   const [searchGuests, setSearchGuests] = useState(guests.toString());
+  const [heroImage, setHeroImage] = useState<string>('');
   
   // Addon states
   const [meals, setMeals] = useState<Addon[]>([]);
@@ -121,7 +122,25 @@ const Booking = () => {
       setLoading(false);
     }
     loadAddons();
+    loadHeroImage();
   }, [checkIn, checkOut, guests, roomTypeId]);
+
+  const loadHeroImage = async () => {
+    try {
+      const { data } = await supabase
+        .from('pages')
+        .select('hero_image')
+        .eq('slug', 'booking')
+        .eq('is_published', true)
+        .maybeSingle();
+      
+      if (data?.hero_image) {
+        setHeroImage(data.hero_image);
+      }
+    } catch (error) {
+      console.error('Error loading hero image:', error);
+    }
+  };
 
   const loadAvailableRooms = async () => {
     try {
@@ -1028,12 +1047,24 @@ const Booking = () => {
       <NavigationV5 />
       
       {/* Banner */}
-      <section className="relative h-64 bg-gradient-to-r from-primary to-accent">
-        <div className="absolute inset-0 bg-black/20"></div>
-        <div className="relative z-10 h-full flex items-center">
-          <div className="max-w-6xl mx-auto px-4 text-white">
-            <h1 className="text-3xl md:text-4xl font-heading font-bold mb-2">Find Your Perfect Stay</h1>
-            <p className="text-lg opacity-90">Search and book your ideal mountain retreat</p>
+      <section className="relative h-[60vh] min-h-[500px] w-full overflow-hidden">
+        <div 
+          className="absolute inset-0 bg-cover bg-center"
+          style={{ 
+            backgroundImage: `url(${heroImage || '/lovable-uploads/6df7505d-8906-4590-b67e-a18c9f9da7f5.png'})`
+          }}
+        >
+          <div className="absolute inset-0 bg-black/50" />
+        </div>
+        
+        <div className="relative z-10 h-full flex items-center justify-center">
+          <div className="max-w-6xl mx-auto px-4 text-center">
+            <h1 className="text-4xl md:text-6xl font-serif font-bold text-white mb-4">
+              Find Your Perfect <span className="text-primary">Stay</span>
+            </h1>
+            <p className="text-lg md:text-xl text-white/90">
+              Search and book your ideal mountain retreat
+            </p>
           </div>
         </div>
       </section>
