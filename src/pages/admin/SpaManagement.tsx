@@ -324,22 +324,91 @@ const SpaManagement = () => {
                       type="file"
                       multiple
                       accept="image/*,video/*"
-                      onChange={(e) => {
+                      onChange={async (e) => {
                         const files = Array.from(e.target.files || []);
-                        const newMediaFiles = files.map(file => ({
-                          url: URL.createObjectURL(file),
-                          name: file.name,
-                          isFeatured: formData.media_files.length === 0
-                        }));
-                        setFormData({ 
-                          ...formData, 
-                          media_files: [...formData.media_files, ...newMediaFiles] 
-                        });
+                        setUploading(true);
+                        
+                        const newMediaFiles: MediaFile[] = [];
+                        
+                        try {
+                          for (const file of files) {
+                            // Upload to storage
+                            const fileExt = file.name.split('.').pop();
+                            const fileName = `${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExt}`;
+                            const filePath = `spa-media/${fileName}`;
+
+                            const { error: uploadError } = await supabase.storage
+                              .from('uploads')
+                              .upload(filePath, file);
+
+                            if (uploadError) throw uploadError;
+
+                            const { data: { publicUrl } } = supabase.storage
+                              .from('uploads')
+                              .getPublicUrl(filePath);
+
+                            // Create entry in gallery_images
+                            const mediaType = file.type.startsWith('image/') ? 'image' : 'video';
+                            
+                            const insertData: any = {
+                              title: file.name,
+                              category: 'hotel',
+                              caption: `Spa service media - ${file.name}`,
+                              media_type: mediaType,
+                              source_type: 'upload',
+                              is_hardcoded: false,
+                            };
+
+                            if (mediaType === 'image') {
+                              insertData.image_url = publicUrl;
+                            } else {
+                              insertData.video_url = publicUrl;
+                              insertData.image_url = '';
+                            }
+
+                            const { data: spaCategory } = await supabase
+                              .from('gallery_categories')
+                              .select('id')
+                              .eq('slug', 'spa')
+                              .single();
+
+                            if (spaCategory) {
+                              insertData.category_id = spaCategory.id;
+                            }
+
+                            await supabase
+                              .from('gallery_images')
+                              .insert(insertData);
+
+                            newMediaFiles.push({
+                              url: publicUrl,
+                              name: file.name,
+                              isFeatured: formData.media_files.length === 0
+                            });
+                          }
+
+                          setFormData({ 
+                            ...formData, 
+                            media_files: [...formData.media_files, ...newMediaFiles] 
+                          });
+                          
+                          toast({ title: "Success", description: "Media uploaded successfully" });
+                        } catch (error) {
+                          console.error('Upload error:', error);
+                          toast({
+                            title: "Error",
+                            description: "Failed to upload media",
+                            variant: "destructive",
+                          });
+                        } finally {
+                          setUploading(false);
+                        }
                       }}
                       className="w-full"
+                      disabled={uploading}
                     />
                     <p className="text-sm text-muted-foreground mt-2">
-                      Upload images or videos for this service
+                      {uploading ? 'Uploading...' : 'Upload images or videos for this service'}
                     </p>
                   </div>
                   

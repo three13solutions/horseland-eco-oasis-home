@@ -331,116 +331,107 @@ const MediaManagement = () => {
                   ))}
                 </SelectContent>
               </Select>
+
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={() => setViewMode(viewMode === 'grid' ? 'list' : 'grid')}
+                title={viewMode === 'grid' ? 'Switch to list view' : 'Switch to grid view'}
+              >
+                {viewMode === 'grid' ? <LayoutList className="h-4 w-4" /> : <LayoutGrid className="h-4 w-4" />}
+              </Button>
             </div>
           </div>
         </CardContent>
       </Card>
 
-      {/* Media Grid */}
+      {/* Media Grid/List View */}
       {isLoading ? (
         <div className="flex items-center justify-center h-64">
           <RefreshCw className="w-8 h-8 animate-spin" />
         </div>
-      ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-          {images.map((image) => (
-            <Card key={image.id} className="overflow-hidden">
-              <div className="relative aspect-video">
-                <div className="absolute top-2 left-2 z-10">
-                  <Checkbox
-                    checked={selectedItems.includes(image.id)}
-                    onCheckedChange={(checked) => {
+      ) : images.length > 0 ? (
+        viewMode === 'grid' ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            {images.map((image) => (
+              <MediaCard
+                key={image.id}
+                image={image}
+                selected={selectedItems.includes(image.id)}
+                onSelect={(checked) => {
+                  if (checked) {
+                    setSelectedItems([...selectedItems, image.id]);
+                  } else {
+                    setSelectedItems(selectedItems.filter(id => id !== image.id));
+                  }
+                }}
+                onEdit={() => {
+                  setEditingImage(image as GalleryImage);
+                  setIsDialogOpen(true);
+                }}
+                onDelete={async () => {
+                  if (confirm('Are you sure you want to delete this media item?')) {
+                    await handleDeleteImage(image.id);
+                  }
+                }}
+              />
+            ))}
+          </div>
+        ) : (
+          <Card>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="w-12">
+                    <Checkbox 
+                      checked={selectedItems.length === images.length}
+                      onCheckedChange={(checked) => {
+                        if (checked) {
+                          setSelectedItems(images.map(img => img.id));
+                        } else {
+                          setSelectedItems([]);
+                        }
+                      }}
+                    />
+                  </TableHead>
+                  <TableHead className="w-20">Preview</TableHead>
+                  <TableHead>Title</TableHead>
+                  <TableHead>Category</TableHead>
+                  <TableHead>Type</TableHead>
+                  <TableHead>Source</TableHead>
+                  <TableHead>Used In</TableHead>
+                  <TableHead className="text-right">Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {images.map((image) => (
+                  <MediaListRow
+                    key={image.id}
+                    image={image}
+                    selected={selectedItems.includes(image.id)}
+                    onSelect={(checked) => {
                       if (checked) {
                         setSelectedItems([...selectedItems, image.id]);
                       } else {
                         setSelectedItems(selectedItems.filter(id => id !== image.id));
                       }
                     }}
-                    className="bg-white/80"
+                    onEdit={() => {
+                      setEditingImage(image as GalleryImage);
+                      setIsDialogOpen(true);
+                    }}
+                    onDelete={async () => {
+                      if (confirm('Are you sure you want to delete this media item?')) {
+                        await handleDeleteImage(image.id);
+                      }
+                    }}
                   />
-                </div>
-                
-                {image.media_type === 'video' ? (
-                  <div className="w-full h-full bg-muted flex items-center justify-center">
-                    <Video className="w-12 h-12 text-muted-foreground" />
-                  </div>
-                ) : (
-                  <img
-                    src={image.image_url}
-                    alt={image.caption || image.title}
-                    className="w-full h-full object-cover"
-                  />
-                )}
-                
-                <div className="absolute inset-0 bg-black/0 hover:bg-black/20 transition-colors duration-200 flex items-center justify-center opacity-0 hover:opacity-100">
-                  <div className="flex space-x-2">
-                    <Button
-                      size="sm"
-                      variant="secondary"
-                      onClick={() => {
-                        setEditingImage(image as GalleryImage);
-                        setIsDialogOpen(true);
-                      }}
-                    >
-                      <Edit className="w-4 h-4" />
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant="destructive"
-                      onClick={() => handleDeleteImage(image.id)}
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </Button>
-                  </div>
-                </div>
-                
-                <div className="absolute top-2 right-2 flex gap-1">
-                  <Badge variant="outline" className="bg-white/80 text-xs">
-                    {getSourceIcon(image.source_type)}
-                  </Badge>
-                  {image.is_hardcoded && (
-                    <Badge variant="secondary" className="bg-orange-500 text-white text-xs">
-                      Key: {image.hardcoded_key}
-                    </Badge>
-                  )}
-                </div>
-              </div>
-              
-              <CardContent className="p-4">
-                <div className="flex items-start justify-between">
-                  <div className="flex-1">
-                    <h3 className="font-semibold truncate flex items-center gap-2">
-                      {getMediaTypeIcon(image.media_type)}
-                      {image.title}
-                    </h3>
-                    <p className="text-sm text-muted-foreground truncate">{image.caption}</p>
-                  </div>
-                </div>
-                
-                <div className="flex items-center justify-between mt-2 text-xs text-muted-foreground">
-                  <span className="flex items-center">
-                    <Camera className="w-3 h-3 mr-1" />
-                    {image.gallery_categories?.name || 'Uncategorized'}
-                  </span>
-                  <div className="flex items-center gap-2">
-                    <Badge variant="outline" className="text-xs">
-                      {image.source_type}
-                    </Badge>
-                    {image.gallery_categories?.slug === 'guests' && image.likes_count && (
-                      <span className="flex items-center">
-                        <Heart className="w-3 h-3 mr-1 text-red-400" />
-                        {image.likes_count}
-                      </span>
-                    )}
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-      )}
-
-      {images.length === 0 && !isLoading && (
+                ))}
+              </TableBody>
+            </Table>
+          </Card>
+        )
+      ) : (
         <Card>
           <CardContent className="text-center py-12">
             <ImageIcon className="h-12 w-12 text-muted-foreground mx-auto mb-4" />

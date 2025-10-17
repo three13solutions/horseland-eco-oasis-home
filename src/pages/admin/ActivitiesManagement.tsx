@@ -211,11 +211,23 @@ const ActivitiesManagement = () => {
     const newMediaFiles: MediaFile[] = [];
     
     try {
+      // Import the upload hook functionality inline
       for (const file of Array.from(files)) {
+        // Validate file
+        if (!file.type.startsWith('image/') && !file.type.startsWith('video/')) {
+          toast({
+            title: "Error",
+            description: "Invalid file type. Please select images or videos only.",
+            variant: "destructive",
+          });
+          continue;
+        }
+
         const fileExt = file.name.split('.').pop();
-        const fileName = `${Math.random()}.${fileExt}`;
+        const fileName = `${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExt}`;
         const filePath = `activity-media/${fileName}`;
 
+        // Upload to storage
         const { error: uploadError } = await supabase.storage
           .from('activity-media')
           .upload(filePath, file);
@@ -225,6 +237,41 @@ const ActivitiesManagement = () => {
         const { data: { publicUrl } } = supabase.storage
           .from('activity-media')
           .getPublicUrl(filePath);
+
+        // Create entry in gallery_images
+        const mediaType = file.type.startsWith('image/') ? 'image' : 'video';
+        const urlField = mediaType === 'image' ? 'image_url' : 'video_url';
+        
+        const insertData: any = {
+          title: file.name,
+          category: 'hotel',
+          caption: `Activity media - ${file.name}`,
+          media_type: mediaType,
+          source_type: 'upload',
+          is_hardcoded: false,
+        };
+
+        if (mediaType === 'image') {
+          insertData.image_url = publicUrl;
+        } else {
+          insertData.video_url = publicUrl;
+          insertData.image_url = '';
+        }
+
+        // Get activities category ID
+        const { data: activityCategory } = await supabase
+          .from('gallery_categories')
+          .select('id')
+          .eq('slug', 'activities')
+          .single();
+
+        if (activityCategory) {
+          insertData.category_id = activityCategory.id;
+        }
+
+        await supabase
+          .from('gallery_images')
+          .insert(insertData);
 
         newMediaFiles.push({
           url: publicUrl,
