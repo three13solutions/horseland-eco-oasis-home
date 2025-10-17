@@ -121,6 +121,36 @@ export default function IntegrationsManagement() {
     },
   });
 
+  const migrateMapboxMutation = useMutation({
+    mutationFn: async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) throw new Error('Not authenticated');
+
+      const response = await fetch(`https://mmmogqappdtnwqkvzxih.supabase.co/functions/v1/migrate-mapbox-token`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.access_token}`,
+        },
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || 'Migration failed');
+      }
+
+      return response.json();
+    },
+    onSuccess: (result) => {
+      queryClient.invalidateQueries({ queryKey: ['integrations'] });
+      toast.success(result.message);
+    },
+    onError: (error: any) => {
+      console.error('Error migrating Mapbox token:', error);
+      toast.error(error.message || 'Failed to migrate Mapbox token');
+    },
+  });
+
   const categories = integrations ? [...new Set(integrations.map(i => i.category))] : [];
   const filteredIntegrations = integrations?.filter(
     i => selectedCategory === 'all' || i.category === selectedCategory
@@ -221,25 +251,38 @@ export default function IntegrationsManagement() {
                       </div>
                     )}
 
-                    <div className="flex items-center gap-2">
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => handleConfigureIntegration(integration)}
-                        className="flex-1"
-                      >
-                        <Settings className="h-4 w-4 mr-1" />
-                        Configure
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => verifyIntegrationMutation.mutate(integration.id)}
-                        disabled={verifyIntegrationMutation.isPending || integration.status === 'not_configured'}
-                      >
-                        <Shield className="h-4 w-4 mr-1" />
-                        Verify
-                      </Button>
+                    <div className="flex flex-col gap-2">
+                      {integration.integration_key === 'mapbox' && !integration.is_enabled && (
+                        <Button
+                          size="sm"
+                          variant="default"
+                          onClick={() => migrateMapboxMutation.mutate()}
+                          disabled={migrateMapboxMutation.isPending}
+                          className="w-full"
+                        >
+                          {migrateMapboxMutation.isPending ? 'Enabling...' : 'Enable Mapbox'}
+                        </Button>
+                      )}
+                      <div className="flex items-center gap-2">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => handleConfigureIntegration(integration)}
+                          className="flex-1"
+                        >
+                          <Settings className="h-4 w-4 mr-1" />
+                          Configure
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => verifyIntegrationMutation.mutate(integration.id)}
+                          disabled={verifyIntegrationMutation.isPending || integration.status === 'not_configured'}
+                        >
+                          <Shield className="h-4 w-4 mr-1" />
+                          Verify
+                        </Button>
+                      </div>
                     </div>
                   </div>
                 </CardContent>
