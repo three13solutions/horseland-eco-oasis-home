@@ -14,15 +14,15 @@ interface NavigationItem {
 }
 
 interface SiteSettings {
-  site_title: string;
-  site_logo: string;
+  brand_name: string;
+  brand_monogram: string;
 }
 
 const DynamicNavigation = () => {
   const [navigationItems, setNavigationItems] = useState<NavigationItem[]>([]);
   const [siteSettings, setSiteSettings] = useState<SiteSettings>({
-    site_title: 'Horseland Hotel',
-    site_logo: '/lovable-uploads/24f5ee9b-ce5a-4b86-a2d8-7ca42e0a78cf.png'
+    brand_name: 'Horseland Hotel',
+    brand_monogram: '/lovable-uploads/24f5ee9b-ce5a-4b86-a2d8-7ca42e0a78cf.png'
   });
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
@@ -75,12 +75,12 @@ const DynamicNavigation = () => {
           {/* Logo */}
           <Link to="/" className="flex items-center space-x-2">
             <img 
-              src={siteSettings.site_logo} 
-              alt={siteSettings.site_title}
+              src={siteSettings.brand_monogram} 
+              alt={siteSettings.brand_name}
               className="h-8 w-auto"
             />
             <span className="font-bold text-xl text-gray-900">
-              {siteSettings.site_title}
+              {siteSettings.brand_name}
             </span>
           </Link>
 

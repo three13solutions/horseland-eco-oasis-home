@@ -18,8 +18,8 @@ interface NavigationItem {
 }
 
 interface SiteSettings {
-  site_title: string;
-  site_logo: string;
+  brand_name: string;
+  brand_monogram: string;
   brand_descriptor?: string;
 }
 
@@ -29,8 +29,8 @@ const NavigationV5 = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [navigationItems, setNavigationItems] = useState<NavigationItem[]>([]);
   const [siteSettings, setSiteSettings] = useState<SiteSettings>({
-    site_title: 'HORSELAND',
-    site_logo: '/lovable-uploads/24f5ee9b-ce5a-4b86-a2d8-7ca42e0a78cf.png',
+    brand_name: 'HORSELAND',
+    brand_monogram: '/lovable-uploads/24f5ee9b-ce5a-4b86-a2d8-7ca42e0a78cf.png',
     brand_descriptor: 'Hotel'
   });
   const [experiencesOpen, setExperiencesOpen] = useState(false);
@@ -178,13 +178,13 @@ const NavigationV5 = () => {
           {/* Logo */}
           <Link to="/" className="flex items-center space-x-3">
             <img 
-              src={siteSettings.site_logo} 
-              alt={siteSettings.site_title} 
+              src={siteSettings.brand_monogram} 
+              alt={siteSettings.brand_name} 
               className="h-14 w-14 md:h-18 md:w-18 drop-shadow-lg"
             />
             <div>
               <h1 className="text-xl md:text-2xl font-bold text-primary tracking-wide">
-                {siteSettings.site_title}
+                {siteSettings.brand_name}
               </h1>
               {siteSettings.brand_descriptor && (
                 <p className="text-xs text-muted-foreground uppercase tracking-wider hidden sm:block">

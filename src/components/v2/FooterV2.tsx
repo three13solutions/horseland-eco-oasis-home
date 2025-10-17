@@ -43,13 +43,13 @@ const FooterV2 = () => {
             <div className="lg:col-span-2 space-y-6">
               <div className="flex items-center space-x-4">
                 <img 
-                  src={settings.site_logo || "/lovable-uploads/24f5ee9b-ce5a-4b86-a2d8-7ca42e0a78cf.png"} 
-                  alt={`${settings.site_title || "Horseland"} Logo`} 
+                  src={settings.brand_monogram || "/lovable-uploads/24f5ee9b-ce5a-4b86-a2d8-7ca42e0a78cf.png"} 
+                  alt={`${settings.brand_name || "Horseland"} Logo`} 
                   className="h-16 w-16 drop-shadow-lg"
                 />
                 <div>
-                  <h3 className="text-3xl font-bold">{settings.site_title || "HORSELAND"}</h3>
-                  <p className="text-background/80 text-sm uppercase tracking-wider">{settings.site_tagline || "Hotel"}</p>
+                  <h3 className="text-3xl font-bold">{settings.brand_name || "HORSELAND"}</h3>
+                  <p className="text-background/80 text-sm uppercase tracking-wider">{settings.brand_descriptor || "Hotel"}</p>
                 </div>
               </div>
               

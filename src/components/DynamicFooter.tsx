@@ -15,21 +15,21 @@ interface FooterSection {
 
 
 interface SiteSettings {
-  site_title: string;
-  site_logo: string;
+  brand_name: string;
+  brand_monogram: string;
   brand_descriptor: string;
   copyright_text: string;
-  tagline: string;
+  credits: string;
 }
 
 const DynamicFooter = () => {
   const [footerSections, setFooterSections] = useState<FooterSection[]>([]);
   const [siteSettings, setSiteSettings] = useState<SiteSettings>({
-    site_title: 'Horseland Hotel',
-    site_logo: '/lovable-uploads/24f5ee9b-ce5a-4b86-a2d8-7ca42e0a78cf.png',
+    brand_name: 'Horseland Hotel',
+    brand_monogram: '/lovable-uploads/24f5ee9b-ce5a-4b86-a2d8-7ca42e0a78cf.png',
     brand_descriptor: 'Hotel',
     copyright_text: '© 2024 Horseland Hotel. All rights reserved.',
-    tagline: 'Powered by <a href="https://313s.com/" target="_blank" rel="noopener noreferrer" class="hover:text-primary transition-colors">IIIXIII</a>'
+    credits: 'Powered by <a href="https://313s.com/" target="_blank" rel="noopener noreferrer" class="hover:text-primary transition-colors">IIIXIII</a>'
   });
   const location = useLocation();
   const isOnPoliciesPage = location.pathname === '/policies';
@@ -137,13 +137,13 @@ const DynamicFooter = () => {
           <div className="md:col-span-2 lg:col-span-2 space-y-6">
             <div className="flex items-center space-x-3">
               <img 
-                src={siteSettings.site_logo} 
-                alt={siteSettings.site_title}
+                src={siteSettings.brand_monogram} 
+                alt={siteSettings.brand_name}
                 className="h-20 w-auto drop-shadow-lg"
               />
               <div className="flex flex-col">
                 <span className="font-bold text-xl text-background">
-                  {siteSettings.site_title}
+                  {siteSettings.brand_name}
                 </span>
                 {siteSettings.brand_descriptor && (
                   <span className="text-background/80 text-sm">
@@ -312,7 +312,7 @@ const DynamicFooter = () => {
             </p>
             <p 
               className="text-sm text-background/60"
-              dangerouslySetInnerHTML={{ __html: siteSettings.tagline }}
+              dangerouslySetInnerHTML={{ __html: siteSettings.credits }}
             />
           </div>
         </div>

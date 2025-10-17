@@ -140,11 +140,11 @@ interface FooterSection {
 }
 
 interface SiteSettings {
-  site_title: string;
-  site_logo: string;
+  brand_name: string;
+  brand_monogram: string;
   brand_descriptor: string;
   copyright_text: string;
-  tagline: string;
+  credits: string;
 }
 
 interface SEOSettings {
@@ -163,11 +163,11 @@ const SiteSettings = () => {
   const [navigationItems, setNavigationItems] = useState<NavigationItem[]>([]);
   const [footerSections, setFooterSections] = useState<FooterSection[]>([]);
   const [siteSettings, setSiteSettings] = useState<SiteSettings>({
-    site_title: '',
-    site_logo: '',
+    brand_name: '',
+    brand_monogram: '',
     brand_descriptor: '',
     copyright_text: '',
-    tagline: 'Powered by <a href="https://313s.com/" target="_blank" rel="noopener noreferrer">IIIXIII</a>'
+    credits: 'Powered by <a href="https://313s.com/" target="_blank" rel="noopener noreferrer">IIIXIII</a>'
   });
   const [seoSettings, setSeoSettings] = useState<SEOSettings>({
     default_title_format: '{title} | {site_name}',
@@ -557,11 +557,11 @@ const SiteSettings = () => {
             </CardHeader>
             <CardContent className="space-y-6">
               <div>
-                <Label htmlFor="site_title">Brand Name</Label>
+                <Label htmlFor="brand_name">Brand Name</Label>
                 <Input
-                  id="site_title"
-                  value={siteSettings.site_title}
-                  onChange={(e) => setSiteSettings(prev => ({ ...prev, site_title: e.target.value }))}
+                  id="brand_name"
+                  value={siteSettings.brand_name}
+                  onChange={(e) => setSiteSettings(prev => ({ ...prev, brand_name: e.target.value }))}
                   placeholder="Your brand name"
                 />
               </div>
@@ -569,8 +569,8 @@ const SiteSettings = () => {
               <div>
                 <ImageUpload
                   label="Brand Monogram"
-                  value={siteSettings.site_logo}
-                  onChange={(url) => setSiteSettings(prev => ({ ...prev, site_logo: url }))}
+                  value={siteSettings.brand_monogram}
+                  onChange={(url) => setSiteSettings(prev => ({ ...prev, brand_monogram: url }))}
                   bucketName="uploads"
                   folder="logos"
                 />
@@ -685,8 +685,8 @@ const SiteSettings = () => {
                     <Label htmlFor="credits">Credits</Label>
                     <Input
                       id="credits"
-                      value={siteSettings.tagline}
-                      onChange={(e) => setSiteSettings(prev => ({ ...prev, tagline: e.target.value }))}
+                      value={siteSettings.credits}
+                      onChange={(e) => setSiteSettings(prev => ({ ...prev, credits: e.target.value }))}
                       placeholder="Powered by IIIXIII"
                     />
                   </div>

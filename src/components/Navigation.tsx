@@ -39,12 +39,12 @@ const Navigation = () => {
         <div className="flex items-center">
           <a href="/" className="flex items-center space-x-3">
             <img 
-              src={settings.site_logo || "/lovable-uploads/24f5ee9b-ce5a-4b86-a2d8-7ca42e0a78cf.png"} 
-              alt={`${settings.site_title || "Horseland"} Hotel Logo`} 
+              src={settings.brand_monogram || "/lovable-uploads/24f5ee9b-ce5a-4b86-a2d8-7ca42e0a78cf.png"} 
+              alt={`${settings.brand_name || "Horseland"} Hotel Logo`} 
               className="h-12 w-12"
             />
             <span className="text-xl font-bold text-primary hidden sm:block">
-              {settings.site_title || "Horseland"}
+              {settings.brand_name || "Horseland"}
             </span>
           </a>
         </div>

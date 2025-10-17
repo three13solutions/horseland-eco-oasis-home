@@ -44,8 +44,8 @@ const FooterV5 = () => {
             <div className="md:col-span-2 space-y-6">
               <div className="flex flex-col items-start space-y-4">
                 <img 
-                  src={settings.site_logo || "/lovable-uploads/24f5ee9b-ce5a-4b86-a2d8-7ca42e0a78cf.png"} 
-                  alt={`${settings.site_title || "Horseland"} Logo`} 
+                  src={settings.brand_monogram || "/lovable-uploads/24f5ee9b-ce5a-4b86-a2d8-7ca42e0a78cf.png"} 
+                  alt={`${settings.brand_name || "Horseland"} Logo`} 
                   className="h-16 w-16 md:h-20 md:w-20 drop-shadow-lg"
                 />
                 

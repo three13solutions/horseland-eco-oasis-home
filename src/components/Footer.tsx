@@ -38,11 +38,11 @@ const Footer = () => {
           <div className="lg:col-span-1">
             <div className="flex items-center space-x-3 mb-4">
               <img 
-                src={settings.site_logo || "/lovable-uploads/24f5ee9b-ce5a-4b86-a2d8-7ca42e0a78cf.png"} 
-                alt={`${settings.site_title || "Horseland"} Hotel Logo`} 
+                src={settings.brand_monogram || "/lovable-uploads/24f5ee9b-ce5a-4b86-a2d8-7ca42e0a78cf.png"} 
+                alt={`${settings.brand_name || "Horseland"} Hotel Logo`} 
                 className="h-10 w-10"
               />
-              <h3 className="text-xl font-bold">{settings.site_title || "Horseland"}</h3>
+              <h3 className="text-xl font-bold">{settings.brand_name || "Horseland"}</h3>
             </div>
             <p className="text-background/80 mb-6 leading-relaxed">
               An affordable eco-retreat nestled in Matheran's pristine hills, offering 
@@ -145,7 +145,7 @@ const Footer = () => {
         {/* Bottom Bar */}
         <div className="border-t border-background/20 pt-8 flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
           <p className="text-background/60 text-sm">
-            © 2024 {settings.site_title || "Horseland"} Hotel. All rights reserved.
+            © 2024 {settings.brand_name || "Horseland"} Hotel. All rights reserved.
           </p>
           <p className="text-background/60 text-sm">
             Crafted with care for unforgettable experiences.
