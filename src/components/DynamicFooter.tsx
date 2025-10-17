@@ -17,6 +17,7 @@ interface FooterSection {
 interface SiteSettings {
   site_title: string;
   site_logo: string;
+  brand_descriptor: string;
   copyright_text: string;
   tagline: string;
 }
@@ -26,6 +27,7 @@ const DynamicFooter = () => {
   const [siteSettings, setSiteSettings] = useState<SiteSettings>({
     site_title: 'Horseland Hotel',
     site_logo: '/lovable-uploads/24f5ee9b-ce5a-4b86-a2d8-7ca42e0a78cf.png',
+    brand_descriptor: 'Hotel',
     copyright_text: '© 2024 Horseland Hotel. All rights reserved.',
     tagline: 'Powered by <a href="https://313s.com/" target="_blank" rel="noopener noreferrer" class="hover:text-primary transition-colors">IIIXIII</a>'
   });
@@ -141,11 +143,13 @@ const DynamicFooter = () => {
               />
               <div className="flex flex-col">
                 <span className="font-bold text-xl text-background">
-                  HORSELAND
+                  {siteSettings.site_title}
                 </span>
-                <span className="text-background/80 text-sm">
-                  Hotel
-                </span>
+                {siteSettings.brand_descriptor && (
+                  <span className="text-background/80 text-sm">
+                    {siteSettings.brand_descriptor}
+                  </span>
+                )}
               </div>
             </div>
             {brandSection && (
