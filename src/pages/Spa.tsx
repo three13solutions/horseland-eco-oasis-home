@@ -379,7 +379,7 @@ const Spa = () => {
                                     onClick={() => navigate(`/spa/${service.id}`)}
                                   >
                                     <span className="hidden sm:inline text-xs">Learn More</span>
-                                    <Sparkles className="h-3 w-3 sm:hidden" />
+                                    <span className="sm:hidden text-xs">View</span>
                                   </Button>
                                   <Button 
                                     className="flex-1 font-body gap-1 h-10"
