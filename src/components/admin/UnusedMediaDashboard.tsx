@@ -173,12 +173,14 @@ export const UnusedMediaDashboard: React.FC<UnusedMediaDashboardProps> = ({
   
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-      <Card>
+      <Card className="cursor-pointer hover:shadow-md transition-shadow" onClick={() => onUsageFilterChange('all')}>
         <CardContent className="pt-6">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm font-medium text-muted-foreground">Total Media</p>
-              <p className="text-2xl font-bold">{stats.total}</p>
+              <button className="text-2xl font-bold hover:underline text-left">
+                {stats.total}
+              </button>
             </div>
             <Database className="h-8 w-8 text-muted-foreground" />
           </div>
@@ -192,17 +194,25 @@ export const UnusedMediaDashboard: React.FC<UnusedMediaDashboardProps> = ({
               {stats.byMediaType.videos}
             </span>
           </div>
+          {usageFilter === 'all' && (
+            <div className="mt-2 pt-2 border-t">
+              <span className="text-xs text-primary font-medium">● Active Filter</span>
+            </div>
+          )}
         </CardContent>
       </Card>
 
-      <Card>
+      <Card className="cursor-pointer hover:shadow-md transition-shadow" onClick={() => onUsageFilterChange('used')}>
         <CardContent className="pt-6">
           <div className="flex items-center justify-between mb-3">
             <div>
               <p className="text-sm font-medium text-muted-foreground">Used Media</p>
               <Popover>
                 <PopoverTrigger asChild>
-                  <button className="text-2xl font-bold text-green-600 dark:text-green-400 hover:underline cursor-pointer">
+                  <button 
+                    className="text-2xl font-bold text-green-600 dark:text-green-400 hover:underline"
+                    onClick={(e) => e.stopPropagation()}
+                  >
                     {stats.used}
                   </button>
                 </PopoverTrigger>
@@ -262,15 +272,22 @@ export const UnusedMediaDashboard: React.FC<UnusedMediaDashboardProps> = ({
           <p className="text-xs text-muted-foreground">
             {usagePercentage}% utilization
           </p>
+          {usageFilter === 'used' && (
+            <div className="mt-2 pt-2 border-t">
+              <span className="text-xs text-primary font-medium">● Active Filter</span>
+            </div>
+          )}
         </CardContent>
       </Card>
 
-      <Card>
+      <Card className="cursor-pointer hover:shadow-md transition-shadow" onClick={() => onUsageFilterChange('unused')}>
         <CardContent className="pt-6">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm font-medium text-muted-foreground">Unused Media</p>
-              <p className="text-2xl font-bold text-orange-600 dark:text-orange-400">{stats.unused}</p>
+              <button className="text-2xl font-bold text-orange-600 dark:text-orange-400 hover:underline text-left">
+                {stats.unused}
+              </button>
             </div>
             <AlertTriangle className="h-8 w-8 text-orange-600 dark:text-orange-400" />
           </div>
@@ -278,41 +295,36 @@ export const UnusedMediaDashboard: React.FC<UnusedMediaDashboardProps> = ({
             {stats.unused > 0 ? 'Consider cleanup' : 'All media in use!'}
           </p>
           
-          <div className="flex gap-2">
-            {stats.unused > 0 && (
-              <>
-                <Button 
-                  variant={usageFilter === 'unused' ? 'default' : 'outline'}
-                  size="sm" 
-                  className="flex-1"
-                  onClick={() => onUsageFilterChange(usageFilter === 'unused' ? 'all' : 'unused')}
-                >
-                  <Filter className="h-3 w-3 mr-2" />
-                  {usageFilter === 'unused' ? 'Show All' : 'View Unused'}
-                </Button>
-                
-                <Button 
-                  variant="destructive" 
-                  size="sm" 
-                  className="flex-1"
-                  onClick={handleCleanup}
-                  disabled={isCleaningUp}
-                >
-                  {isCleaningUp ? (
-                    <>
-                      <RefreshCw className="h-3 w-3 mr-2 animate-spin" />
-                      Cleaning...
-                    </>
-                  ) : (
-                    <>
-                      <Trash2 className="h-3 w-3 mr-2" />
-                      Clean Up
-                    </>
-                  )}
-                </Button>
-              </>
-            )}
-          </div>
+          {usageFilter === 'unused' && (
+            <div className="mb-3 pt-2 border-t">
+              <span className="text-xs text-primary font-medium">● Active Filter</span>
+            </div>
+          )}
+          
+          {stats.unused > 0 && (
+            <Button 
+              variant="destructive" 
+              size="sm" 
+              className="w-full"
+              onClick={(e) => {
+                e.stopPropagation();
+                handleCleanup();
+              }}
+              disabled={isCleaningUp}
+            >
+              {isCleaningUp ? (
+                <>
+                  <RefreshCw className="h-3 w-3 mr-2 animate-spin" />
+                  Cleaning...
+                </>
+              ) : (
+                <>
+                  <Trash2 className="h-3 w-3 mr-2" />
+                  Clean Up Unused
+                </>
+              )}
+            </Button>
+          )}
         </CardContent>
       </Card>
     </div>
