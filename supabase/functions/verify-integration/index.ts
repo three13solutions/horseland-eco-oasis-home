@@ -80,6 +80,34 @@ async function verifyMapbox(secrets: Record<string, string>): Promise<{ success:
   }
 }
 
+async function verifyGoogleMaps(publicConfig: any): Promise<{ success: boolean, message: string }> {
+  const apiKey = publicConfig?.api_key
+
+  if (!apiKey) {
+    return { success: false, message: 'Missing Google Maps API key' }
+  }
+
+  try {
+    // Test Google Maps by making a simple Geocoding API call
+    const response = await fetch(`https://maps.googleapis.com/maps/api/geocode/json?address=test&key=${apiKey}`)
+    
+    if (response.ok) {
+      const data = await response.json()
+      if (data.status === 'OK' || data.status === 'ZERO_RESULTS') {
+        return { success: true, message: 'Google Maps API key verified successfully' }
+      } else if (data.status === 'REQUEST_DENIED') {
+        return { success: false, message: 'Google Maps API key is invalid or restricted' }
+      } else {
+        return { success: false, message: `Google Maps verification failed: ${data.status}` }
+      }
+    } else {
+      return { success: false, message: `Google Maps verification failed: ${response.status}` }
+    }
+  } catch (error) {
+    return { success: false, message: `Google Maps verification error: ${error.message}` }
+  }
+}
+
 serve(async (req) => {
   console.log('Verify integration function called with method:', req.method)
   
@@ -170,6 +198,7 @@ serve(async (req) => {
       .from('api_integrations')
       .select(`
         integration_key,
+        public_config,
         api_integration_secrets(key, value_encrypted)
       `)
       .eq('id', integrationId)
@@ -217,6 +246,9 @@ serve(async (req) => {
         break
       case 'mapbox':
         result = await verifyMapbox(secrets)
+        break
+      case 'google_maps':
+        result = await verifyGoogleMaps(integration.public_config)
         break
       default:
         result = { success: false, message: 'Verification not implemented for this integration' }
