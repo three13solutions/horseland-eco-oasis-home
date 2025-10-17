@@ -12,7 +12,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
 import { Plus, Pencil, Trash2, Eye, EyeOff, Search, Languages, Loader2 } from "lucide-react";
-import ImageUpload from "@/components/ImageUpload";
+import { MediaPicker } from "@/components/admin/MediaPicker";
 import { TranslationField } from "@/components/admin/TranslationField";
 
 interface Page {
@@ -501,13 +501,13 @@ export default function PageManagement() {
                   </div>
 
                   {formData.hero_type === "single" && (
-                    <ImageUpload
+                    <MediaPicker
                       label="Hero Image"
                       value={formData.hero_image}
                       onChange={(url) =>
                         setFormData({ ...formData, hero_image: url })
                       }
-                      bucketName="uploads"
+                      categorySlug="hero-banners"
                       folder="hero-images"
                     />
                   )}
@@ -520,7 +520,7 @@ export default function PageManagement() {
                       </p>
                       {formData.hero_gallery.map((url, index) => (
                         <div key={index} className="mb-4">
-                          <ImageUpload
+                          <MediaPicker
                             label={`Image ${index + 1}`}
                             value={url}
                             onChange={(newUrl) => {
@@ -528,7 +528,7 @@ export default function PageManagement() {
                               newGallery[index] = newUrl;
                               setFormData({ ...formData, hero_gallery: newGallery });
                             }}
-                            bucketName="uploads"
+                            categorySlug="hero-banners"
                             folder="hero-images"
                           />
                           <Button
@@ -613,13 +613,12 @@ export default function PageManagement() {
                     />
                   </div>
 
-                  <ImageUpload
+                  <MediaPicker
                     label="OG Image"
                     value={formData.og_image}
                     onChange={(url) =>
                       setFormData({ ...formData, og_image: url })
                     }
-                    bucketName="uploads"
                     folder="og-images"
                   />
                 </TabsContent>
