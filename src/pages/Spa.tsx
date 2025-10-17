@@ -8,6 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { Clock, Sparkles, Heart, Leaf, Plus } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from '@/components/ui/carousel';
 
 interface SpaService {
   id: string;
@@ -32,7 +33,6 @@ const SPA_CATEGORIES = [
 const Spa = () => {
   const [services, setServices] = useState<SpaService[]>([]);
   const [loading, setLoading] = useState(true);
-  const [selectedCategory, setSelectedCategory] = useState('all');
   const [addedServiceIds, setAddedServiceIds] = useState<string[]>([]);
   const [heroImage, setHeroImage] = useState('https://images.unsplash.com/photo-1544161515-4ab6ce6db874?ixlib=rb-4.0.3&auto=format&fit=crop&w=2000&q=80');
   const [heroTitle, setHeroTitle] = useState('Mountain Spa & Wellness');
@@ -101,9 +101,18 @@ const Spa = () => {
     }
   };
 
-  const filteredServices = selectedCategory === 'all' 
-    ? services 
-    : services.filter(service => service.category === selectedCategory);
+  // Group services by category
+  const servicesByCategory = SPA_CATEGORIES.filter(cat => cat.id !== 'all').reduce((acc, category) => {
+    const categoryServices = services.filter(service => service.category === category.id);
+    if (categoryServices.length > 0) {
+      acc[category.id] = {
+        label: category.label,
+        icon: category.icon,
+        services: categoryServices
+      };
+    }
+    return acc;
+  }, {} as Record<string, { label: string; icon: any; services: SpaService[] }>);
 
   const handleAddToStay = (service: SpaService) => {
     const bookingData = localStorage.getItem('currentBooking');
@@ -295,101 +304,110 @@ const Spa = () => {
         </div>
       </section>
 
-      {/* Services Grid */}
+      {/* Services by Category - Carousels */}
       <section className="py-16 bg-muted/30">
-        <div className="max-w-6xl mx-auto px-4">
-          <h2 className="text-3xl md:text-4xl font-heading font-bold text-center mb-8 text-foreground">
+        <div className="max-w-7xl mx-auto px-4">
+          <h2 className="text-3xl md:text-4xl font-heading font-bold text-center mb-12 text-foreground">
             Spa Services
           </h2>
-          
-          {/* Category Filter */}
-          <div className="flex flex-wrap justify-center gap-3 mb-12">
-            {SPA_CATEGORIES.map((category) => (
-              <Button
-                key={category.id}
-                variant={selectedCategory === category.id ? 'default' : 'outline'}
-                onClick={() => setSelectedCategory(category.id)}
-                className="gap-2"
-              >
-                <category.icon className="h-4 w-4" />
-                {category.label}
-              </Button>
-            ))}
-          </div>
           
           {loading ? (
             <div className="flex justify-center py-12">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
             </div>
-          ) : filteredServices.length === 0 ? (
+          ) : Object.keys(servicesByCategory).length === 0 ? (
             <div className="text-center py-12">
-              <p className="text-muted-foreground">
-                {selectedCategory === 'all' 
-                  ? 'No spa services available at the moment.' 
-                  : `No ${SPA_CATEGORIES.find(c => c.id === selectedCategory)?.label.toLowerCase()} services available at the moment.`}
-              </p>
+              <p className="text-muted-foreground">No spa services available at the moment.</p>
             </div>
           ) : (
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-              {filteredServices.map((service) => (
-                <div key={service.id} className="bg-card border rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-all duration-300">
-                  <div className="relative">
-                    {service.image && (
-                      <img 
-                        src={service.image}
-                        alt={service.title}
-                        className="w-full h-48 object-cover"
-                      />
-                    )}
-                    <Badge className="absolute top-3 right-3 bg-primary text-primary-foreground">
-                      ₹{service.price}
-                    </Badge>
-                  </div>
-                  
-                  <div className="p-6">
-                    <h3 className="text-xl font-heading font-semibold mb-2">{service.title}</h3>
+            <div className="space-y-16">
+              {Object.entries(servicesByCategory).map(([categoryId, categoryData]) => {
+                const Icon = categoryData.icon;
+                return (
+                  <div key={categoryId}>
+                    <div className="flex items-center gap-3 mb-6">
+                      <Icon className="h-6 w-6 text-primary" />
+                      <h3 className="text-2xl md:text-3xl font-heading font-bold text-foreground">
+                        {categoryData.label}
+                      </h3>
+                    </div>
                     
-                    {service.duration && (
-                      <div className="flex items-center gap-2 mb-3 text-muted-foreground">
-                        <Clock className="w-4 h-4" />
-                        <span className="font-body text-sm">{service.duration} minutes</span>
-                      </div>
-                    )}
-                    
-                    {service.description && (
-                      <p className="text-muted-foreground font-body text-sm mb-4 leading-relaxed">
-                        {service.description}
-                      </p>
-                    )}
-                    
-                    {service.tags && service.tags.length > 0 && (
-                      <div className="mb-4">
-                        <h4 className="font-body font-semibold mb-2 text-foreground text-sm">Benefits:</h4>
-                        <div className="flex flex-wrap gap-1">
-                          {service.tags.slice(0, 2).map((tag, index) => (
-                            <Badge key={index} variant="secondary" className="text-xs">
-                              {tag}
-                            </Badge>
-                          ))}
-                          {service.tags.length > 2 && (
-                            <Badge variant="secondary" className="text-xs">
-                              +{service.tags.length - 2} more
-                            </Badge>
-                          )}
-                        </div>
-                      </div>
-                    )}
-                    
-                    <Button 
-                      className="w-full font-body gap-2"
-                      onClick={() => handleAddToStay(service)}
-                      variant={addedServiceIds.includes(service.id) ? "secondary" : "default"}
+                    <Carousel
+                      opts={{
+                        align: "start",
+                        loop: false,
+                      }}
+                      className="w-full"
                     >
-                      {addedServiceIds.includes(service.id) ? "✓ Added" : <><Plus className="h-4 w-4" />Add to My Stay</>}
-                    </Button>
+                      <CarouselContent className="-ml-4">
+                        {categoryData.services.map((service) => (
+                          <CarouselItem key={service.id} className="pl-4 md:basis-1/2 lg:basis-1/3">
+                            <div className="bg-card border rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-all duration-300 h-full">
+                              <div className="relative">
+                                {service.image && (
+                                  <img 
+                                    src={service.image}
+                                    alt={service.title}
+                                    className="w-full h-48 object-cover"
+                                  />
+                                )}
+                                <Badge className="absolute top-3 right-3 bg-primary text-primary-foreground">
+                                  ₹{service.price}
+                                </Badge>
+                              </div>
+                              
+                              <div className="p-6">
+                                <h4 className="text-xl font-heading font-semibold mb-2">{service.title}</h4>
+                                
+                                {service.duration && (
+                                  <div className="flex items-center gap-2 mb-3 text-muted-foreground">
+                                    <Clock className="w-4 h-4" />
+                                    <span className="font-body text-sm">{service.duration} minutes</span>
+                                  </div>
+                                )}
+                                
+                                {service.description && (
+                                  <p className="text-muted-foreground font-body text-sm mb-4 leading-relaxed">
+                                    {service.description}
+                                  </p>
+                                )}
+                                
+                                {service.tags && service.tags.length > 0 && (
+                                  <div className="mb-4">
+                                    <h5 className="font-body font-semibold mb-2 text-foreground text-sm">Benefits:</h5>
+                                    <div className="flex flex-wrap gap-1">
+                                      {service.tags.slice(0, 2).map((tag, index) => (
+                                        <Badge key={index} variant="secondary" className="text-xs">
+                                          {tag}
+                                        </Badge>
+                                      ))}
+                                      {service.tags.length > 2 && (
+                                        <Badge variant="secondary" className="text-xs">
+                                          +{service.tags.length - 2} more
+                                        </Badge>
+                                      )}
+                                    </div>
+                                  </div>
+                                )}
+                                
+                                <Button 
+                                  className="w-full font-body gap-2"
+                                  onClick={() => handleAddToStay(service)}
+                                  variant={addedServiceIds.includes(service.id) ? "secondary" : "default"}
+                                >
+                                  {addedServiceIds.includes(service.id) ? "✓ Added" : <><Plus className="h-4 w-4" />Add to My Stay</>}
+                                </Button>
+                              </div>
+                            </div>
+                          </CarouselItem>
+                        ))}
+                      </CarouselContent>
+                      <CarouselPrevious className="-left-4" />
+                      <CarouselNext className="-right-4" />
+                    </Carousel>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </div>
