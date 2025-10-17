@@ -135,12 +135,21 @@ const MediaManagement = () => {
 
   const { data: allImages = [], isLoading, refetch } = useMediaList(filters);
   const { data: mediaStats, isLoading: statsLoading } = useMediaStats();
+  
+  // Fetch ALL images for stats calculation (unfiltered)
+  const { data: allImagesUnfiltered = [] } = useMediaList({ 
+    mediaType: 'all', 
+    sourceType: 'all', 
+    categoryId: '', 
+    searchTerm: '', 
+    usageFilter: 'all'
+  });
 
-  // Calculate duplicate stats
+  // Calculate duplicate stats from ALL media (not filtered results)
   const duplicateStats = useMemo(() => {
     const hashCounts: Record<string, GalleryImage[]> = {};
     
-    allImages.forEach(img => {
+    allImagesUnfiltered.forEach(img => {
       if (img.file_hash) {
         if (!hashCounts[img.file_hash]) {
           hashCounts[img.file_hash] = [];
@@ -166,7 +175,7 @@ const MediaManagement = () => {
       totalDuplicates,
       wastedSpace
     };
-  }, [allImages]);
+  }, [allImagesUnfiltered]);
 
   // Apply duplicate filter client-side
   const filteredImages = useMemo(() => {
@@ -468,56 +477,6 @@ const MediaManagement = () => {
               Delete Selected ({selectedItems.length})
             </Button>
           )}
-          <Button 
-            variant="outline"
-            onClick={async () => {
-              const externalCount = allImages.filter(img => img.source_type === 'external').length;
-              
-              if (externalCount === 0) {
-                toast({
-                  title: "No external media",
-                  description: "All media is already in Supabase storage!",
-                });
-                return;
-              }
-
-              if (!confirm(`Migrate ${externalCount} external images to Supabase storage?\n\nThis will download them from external URLs (like Unsplash) and upload them to your storage bucket.`)) {
-                return;
-              }
-
-              setIsMigrating(true);
-              toast({
-                title: "Starting migration...",
-                description: `Migrating ${externalCount} external images`,
-              });
-
-              try {
-                const { data, error } = await supabase.functions.invoke('migrate-external-to-storage');
-
-                if (error) throw error;
-
-                toast({
-                  title: "Migration complete!",
-                  description: data.message,
-                });
-
-                refetch();
-              } catch (error) {
-                console.error('Migration error:', error);
-                toast({
-                  title: "Migration failed",
-                  description: error.message,
-                  variant: "destructive",
-                });
-              } finally {
-                setIsMigrating(false);
-              }
-            }}
-            disabled={isMigrating}
-          >
-            <Download className="w-4 h-4 mr-2" />
-            {isMigrating ? 'Migrating...' : `Migrate External (${allImages.filter(img => img.source_type === 'external').length})`}
-          </Button>
           <Button onClick={() => {
             setEditingImage(null);
             setIsDialogOpen(true);
@@ -535,11 +494,11 @@ const MediaManagement = () => {
           onRefresh={refetch}
           usageFilter={filters.usageFilter}
           onUsageFilterChange={(filter) => setFilters({ ...filters, usageFilter: filter, duplicatesFilter: 'all' })}
-          duplicateStats={duplicateStats.totalDuplicates > 0 ? {
+          duplicateStats={{
             totalDuplicates: duplicateStats.totalDuplicates,
             groups: duplicateStats.groups.length,
             wastedSpace: duplicateStats.wastedSpace
-          } : undefined}
+          }}
           duplicatesFilter={filters.duplicatesFilter}
           onDuplicatesFilterChange={() => setFilters({ ...filters, duplicatesFilter: 'duplicates', usageFilter: 'all' })}
           formatFileSize={formatFileSize}

@@ -37,7 +37,7 @@ interface UnusedMediaDashboardProps {
   onRefresh?: () => void;
   usageFilter: 'all' | 'used' | 'unused';
   onUsageFilterChange: (filter: 'all' | 'used' | 'unused') => void;
-  duplicateStats?: DuplicateStats;
+  duplicateStats: DuplicateStats;
   duplicatesFilter?: 'all' | 'duplicates';
   onDuplicatesFilterChange?: () => void;
   formatFileSize: (bytes: number) => string;
@@ -303,30 +303,38 @@ export const UnusedMediaDashboard: React.FC<UnusedMediaDashboardProps> = ({
       </Card>
 
       {/* Duplicate Files Stat Card */}
-      {duplicateStats && duplicateStats.totalDuplicates > 0 && (
-        <Card 
-          className="cursor-pointer hover:shadow-md transition-shadow border-destructive/50" 
-          onClick={onDuplicatesFilterChange}
-        >
-          <CardContent className="pt-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-muted-foreground">Duplicate Files</p>
-                <button className="text-2xl font-bold text-orange-600 dark:text-orange-400 hover:underline text-left">
-                  {duplicateStats.totalDuplicates}
-                </button>
-              </div>
-              <Copy className="h-8 w-8 text-orange-600 dark:text-orange-400" />
+      <Card 
+        className={`cursor-pointer hover:shadow-md transition-shadow ${duplicateStats.totalDuplicates > 0 ? 'border-destructive/50' : ''}`}
+        onClick={duplicateStats.totalDuplicates > 0 ? onDuplicatesFilterChange : undefined}
+      >
+        <CardContent className="pt-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-muted-foreground">Duplicate Files</p>
+              <button 
+                className={`text-2xl font-bold text-left ${duplicateStats.totalDuplicates > 0 ? 'text-orange-600 dark:text-orange-400 hover:underline' : 'text-green-600 dark:text-green-400'}`}
+                disabled={duplicateStats.totalDuplicates === 0}
+              >
+                {duplicateStats.totalDuplicates}
+              </button>
             </div>
-            <p className="mt-2 text-xs text-muted-foreground">
-              {duplicateStats.groups} groups • {formatFileSize(duplicateStats.wastedSpace)}
-            </p>
-            {duplicatesFilter === 'duplicates' && (
-              <Badge variant="secondary" className="mt-2">Filtering</Badge>
+            {duplicateStats.totalDuplicates > 0 ? (
+              <Copy className="h-8 w-8 text-orange-600 dark:text-orange-400" />
+            ) : (
+              <CheckCircle className="h-8 w-8 text-green-600 dark:text-green-400" />
             )}
-          </CardContent>
-        </Card>
-      )}
+          </div>
+          <p className="mt-2 text-xs text-muted-foreground">
+            {duplicateStats.totalDuplicates > 0 
+              ? `${duplicateStats.groups} groups • ${formatFileSize(duplicateStats.wastedSpace)}`
+              : 'No duplicate files found'
+            }
+          </p>
+          {duplicatesFilter === 'duplicates' && duplicateStats.totalDuplicates > 0 && (
+            <Badge variant="secondary" className="mt-2">Filtering</Badge>
+          )}
+        </CardContent>
+      </Card>
     </div>
   );
 };
