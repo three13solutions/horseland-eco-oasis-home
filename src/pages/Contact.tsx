@@ -338,16 +338,7 @@ const Contact = () => {
           </div>
 
           <div className="bg-white rounded-lg overflow-hidden shadow-lg">
-            <div className="aspect-video bg-muted/50 flex items-center justify-center">
-              <div className="text-center">
-                <MapPin className="w-12 h-12 text-primary mx-auto mb-4" />
-                <p className="text-muted-foreground">
-                  Interactive map coming soon
-                  <br />
-                  For now, use GPS coordinates: 18.9847° N, 73.2673° E
-                </p>
-              </div>
-            </div>
+            <div id="map" className="aspect-video" />
           </div>
         </div>
       </section>
