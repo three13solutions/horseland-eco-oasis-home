@@ -25,7 +25,7 @@ import {
   SelectValue 
 } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
-import ImageUpload from '@/components/ImageUpload';
+import { MediaPicker } from '@/components/admin/MediaPicker';
 import { 
   AlertDialog,
   AlertDialogAction,
@@ -455,11 +455,11 @@ const DiningManagement = () => {
                 />
               </div>
 
-              <ImageUpload
+              <MediaPicker
                 label="Featured Image"
                 value={formData.featured_media}
                 onChange={(url) => setFormData({...formData, featured_media: url})}
-                bucketName="uploads"
+                categorySlug="dining"
                 folder="meals"
               />
 

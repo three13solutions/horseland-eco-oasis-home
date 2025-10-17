@@ -13,7 +13,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Trash2, Plus, Save, Edit, FileText, Eye, Languages, Copy, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import ImageUpload from '@/components/ImageUpload';
+import { MediaPicker } from '@/components/admin/MediaPicker';
 import { format } from 'date-fns';
 import { TranslationField } from '@/components/admin/TranslationField';
 
@@ -539,11 +539,11 @@ const BlogManagement = () => {
                   <CardTitle className="text-lg">Featured Image</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <ImageUpload
+                  <MediaPicker
                     label="Featured Image"
                     value={formData.featured_image || ''}
                     onChange={(url) => setFormData(prev => ({ ...prev, featured_image: url }))}
-                    bucketName="uploads"
+                    categorySlug="blog"
                     folder="blog"
                   />
                 </CardContent>

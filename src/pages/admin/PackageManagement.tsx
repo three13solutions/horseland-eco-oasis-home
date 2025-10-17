@@ -12,7 +12,7 @@ import { Switch } from '@/components/ui/switch';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { MultiSelect } from '@/components/ui/multi-select';
-import ImageUpload from '@/components/ImageUpload';
+import { MediaPicker } from '@/components/admin/MediaPicker';
 import { Plus, Edit, Trash2, Search, Grid, List, Calendar, Users, ArrowLeft, Save, X, Hotel, Activity, Utensils, Sparkles } from 'lucide-react';
 
 interface PackageData {
@@ -656,10 +656,12 @@ const PackageManagement = () => {
                   <CardTitle>Featured Image</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <ImageUpload
+                  <MediaPicker
                     label="Featured Image"
                     value={formData.featured_image || ''}
                     onChange={(url) => setFormData(prev => ({ ...prev, featured_image: url }))}
+                    categorySlug="packages"
+                    folder="packages"
                   />
                 </CardContent>
               </Card>
@@ -669,10 +671,12 @@ const PackageManagement = () => {
                   <CardTitle>Banner Image</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <ImageUpload
+                  <MediaPicker
                     label="Banner Image"
                     value={formData.banner_image || ''}
                     onChange={(url) => setFormData(prev => ({ ...prev, banner_image: url }))}
+                    categorySlug="packages"
+                    folder="packages"
                   />
                 </CardContent>
               </Card>

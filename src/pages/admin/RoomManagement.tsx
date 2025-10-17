@@ -17,7 +17,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Link, useNavigate } from 'react-router-dom';
 import { BulkUnitsDialog } from '@/components/admin/BulkUnitsDialog';
 import { BedConfiguration } from '@/components/admin/BedConfiguration';
-import ImageUpload from '@/components/ImageUpload';
+import { MediaPicker } from '@/components/admin/MediaPicker';
 
 const ROOM_FEATURES = [
   'Wi-Fi', 'Air Conditioning', 'TV', 'Mini Bar', 'Balcony', 
@@ -622,11 +622,11 @@ export default function RoomManagement() {
               </div>
 
               <div>
-                <ImageUpload
+                <MediaPicker
                   label="Hero Image"
                   value={formData.hero_image}
                   onChange={(url) => setFormData({...formData, hero_image: url})}
-                  bucketName="uploads"
+                  categorySlug="rooms"
                   folder="room-images"
                 />
               </div>
@@ -687,7 +687,7 @@ export default function RoomManagement() {
                           </Button>
                         )}
                       </div>
-                      <ImageUpload
+                      <MediaPicker
                         label=""
                         value={url}
                         onChange={(newUrl) => {
@@ -695,7 +695,7 @@ export default function RoomManagement() {
                           newGallery[index] = newUrl;
                           setFormData({...formData, gallery: newGallery});
                         }}
-                        bucketName="uploads"
+                        categorySlug="rooms"
                         folder="room-images"
                       />
                     </div>

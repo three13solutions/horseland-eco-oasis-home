@@ -17,7 +17,7 @@ import { Toggle } from '@/components/ui/toggle';
 import { cn } from '@/lib/utils';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import ImageUpload from '@/components/ImageUpload';
+import { MediaPicker } from '@/components/admin/MediaPicker';
 
 interface SpaService {
   id: string;

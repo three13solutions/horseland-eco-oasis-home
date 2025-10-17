@@ -10,7 +10,7 @@ import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
 import { Trash2, Plus, Save, Settings, GripVertical, ChevronRight, Facebook, Instagram, Twitter, Youtube, Linkedin, Video, MessageCircle, Globe } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import ImageUpload from '@/components/ImageUpload';
+import { MediaPicker } from '@/components/admin/MediaPicker';
 import SocialMediaManager from '@/components/admin/SocialMediaManager';
 import {
   DndContext,
@@ -569,21 +569,21 @@ const SiteSettings = () => {
               </div>
               
               <div>
-                <ImageUpload
+                <MediaPicker
                   label="Brand Monogram"
                   value={siteSettings.brand_monogram}
                   onChange={(url) => setSiteSettings(prev => ({ ...prev, brand_monogram: url }))}
-                  bucketName="uploads"
+                  categorySlug="branding"
                   folder="logos"
                 />
               </div>
 
               <div>
-                <ImageUpload
+                <MediaPicker
                   label="Site Favicon"
                   value={siteSettings.favicon}
                   onChange={(url) => setSiteSettings(prev => ({ ...prev, favicon: url }))}
-                  bucketName="uploads"
+                  categorySlug="branding"
                   folder="favicons"
                 />
                 <p className="text-xs text-muted-foreground mt-1">
@@ -811,11 +811,11 @@ const SiteSettings = () => {
               </div>
 
               <div>
-                <ImageUpload
+                <MediaPicker
                   label="Default OG Image"
                   value={seoSettings.default_og_image}
                   onChange={(url) => setSeoSettings(prev => ({ ...prev, default_og_image: url }))}
-                  bucketName="uploads"
+                  categorySlug="seo"
                   folder="seo"
                 />
                 <p className="text-sm text-muted-foreground mt-1">

@@ -10,10 +10,14 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useToast } from '@/hooks/use-toast';
-import ImageUpload from '@/components/ImageUpload';
+import { MediaPicker } from '@/components/admin/MediaPicker';
+import { MediaCard } from '@/components/admin/MediaCard';
+import { MediaListRow } from '@/components/admin/MediaListRow';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { supabase } from '@/integrations/supabase/client';
 import { useMediaList } from '@/hooks/useMediaList';
-import { 
+import { useMediaUsage } from '@/hooks/useMediaUsage';
+import {
   Upload, 
   Edit, 
   Trash2, 
@@ -30,7 +34,9 @@ import {
   Search,
   MoreVertical,
   Copy,
-  Download
+  Download,
+  LayoutGrid,
+  LayoutList
 } from 'lucide-react';
 
 interface GalleryImage {
@@ -39,6 +45,7 @@ interface GalleryImage {
   image_url: string;
   video_url?: string;
   caption?: string;
+  alt_text?: string;
   location?: string;
   guest_name?: string;
   guest_handle?: string;
@@ -68,6 +75,7 @@ const MediaManagement = () => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [selectedItems, setSelectedItems] = useState<string[]>([]);
   const [showFilters, setShowFilters] = useState(false);
+  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [filters, setFilters] = useState<{
     mediaType: 'image' | 'video' | 'all';
     sourceType: 'upload' | 'external' | 'mirrored' | 'hardcoded' | 'all';
@@ -490,6 +498,7 @@ const MediaForm: React.FC<MediaFormProps> = ({ image, categories, onSave, onCanc
     image_url: image?.image_url || '',
     video_url: image?.video_url || '',
     caption: image?.caption || '',
+    alt_text: (image as any)?.alt_text || '',
     location: image?.location || '',
     guest_name: image?.guest_name || '',
     guest_handle: image?.guest_handle || '',
@@ -591,11 +600,10 @@ const MediaForm: React.FC<MediaFormProps> = ({ image, categories, onSave, onCanc
 
       {formData.media_type === 'image' ? (
         <div>
-          <ImageUpload
+          <MediaPicker
             label="Image"
             value={formData.image_url}
             onChange={(url) => setFormData({ ...formData, image_url: url })}
-            bucketName="uploads"
             folder="media"
           />
         </div>
@@ -618,6 +626,16 @@ const MediaForm: React.FC<MediaFormProps> = ({ image, categories, onSave, onCanc
           value={formData.caption}
           onChange={(e) => setFormData({ ...formData, caption: e.target.value })}
           rows={2}
+        />
+      </div>
+
+      <div>
+        <Label htmlFor="alt_text">Alt Text (SEO)</Label>
+        <Input
+          id="alt_text"
+          value={formData.alt_text}
+          onChange={(e) => setFormData({ ...formData, alt_text: e.target.value })}
+          placeholder="Descriptive text for accessibility and SEO"
         />
       </div>
 
