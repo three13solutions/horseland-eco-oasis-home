@@ -110,7 +110,15 @@ export function IntegrationConfigModal({
   };
 
   const secretKeys = Object.entries(integration.secret_keys || {});
-  const configKeys = Object.entries(integration.config_keys || {});
+  const configKeys = Object.entries(integration.config_keys || {}).map(([key, value]) => {
+    // Handle both simple string labels and complex config objects
+    if (typeof value === 'string') {
+      return [key, value] as [string, string];
+    } else if (typeof value === 'object' && value !== null) {
+      return [key, (value as any).label || key] as [string, string];
+    }
+    return [key, key] as [string, string];
+  });
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
