@@ -194,11 +194,6 @@ export const UnusedMediaDashboard: React.FC<UnusedMediaDashboardProps> = ({
               {stats.byMediaType.videos}
             </span>
           </div>
-          {usageFilter === 'all' && (
-            <div className="mt-2 pt-2 border-t">
-              <span className="text-xs text-primary font-medium">● Active Filter</span>
-            </div>
-          )}
         </CardContent>
       </Card>
 
@@ -272,11 +267,6 @@ export const UnusedMediaDashboard: React.FC<UnusedMediaDashboardProps> = ({
           <p className="text-xs text-muted-foreground">
             {usagePercentage}% utilization
           </p>
-          {usageFilter === 'used' && (
-            <div className="mt-2 pt-2 border-t">
-              <span className="text-xs text-primary font-medium">● Active Filter</span>
-            </div>
-          )}
         </CardContent>
       </Card>
 
@@ -291,40 +281,9 @@ export const UnusedMediaDashboard: React.FC<UnusedMediaDashboardProps> = ({
             </div>
             <AlertTriangle className="h-8 w-8 text-orange-600 dark:text-orange-400" />
           </div>
-          <p className="mt-2 text-xs text-muted-foreground mb-3">
-            {stats.unused > 0 ? 'Consider cleanup' : 'All media in use!'}
+          <p className="mt-2 text-xs text-muted-foreground">
+            {stats.unused > 0 ? 'Click to filter unused media' : 'All media in use!'}
           </p>
-          
-          {usageFilter === 'unused' && (
-            <div className="mb-3 pt-2 border-t">
-              <span className="text-xs text-primary font-medium">● Active Filter</span>
-            </div>
-          )}
-          
-          {stats.unused > 0 && (
-            <Button 
-              variant="destructive" 
-              size="sm" 
-              className="w-full"
-              onClick={(e) => {
-                e.stopPropagation();
-                handleCleanup();
-              }}
-              disabled={isCleaningUp}
-            >
-              {isCleaningUp ? (
-                <>
-                  <RefreshCw className="h-3 w-3 mr-2 animate-spin" />
-                  Cleaning...
-                </>
-              ) : (
-                <>
-                  <Trash2 className="h-3 w-3 mr-2" />
-                  Clean Up Unused
-                </>
-              )}
-            </Button>
-          )}
         </CardContent>
       </Card>
     </div>
