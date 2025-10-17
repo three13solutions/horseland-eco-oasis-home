@@ -45,6 +45,7 @@ import ActivitiesManagement from "./pages/admin/ActivitiesManagement";
 import SpaManagement from "./pages/admin/SpaManagement";
 import AddonsManagement from "./pages/admin/AddonsManagement";
 import MediaManagement from "./pages/admin/MediaManagement";
+import GalleryManagement from "./pages/admin/GalleryManagement";
 import ContentManagement from "./pages/admin/ContentManagement";
 import IntegrationsManagement from "./pages/admin/IntegrationsManagement";
 import UserManagement from "./pages/admin/UserManagement";
@@ -108,6 +109,7 @@ function App() {
                 <Route path="spa" element={<SpaManagement />} />
                 <Route path="addons" element={<AddonsManagement />} />
                 <Route path="media" element={<MediaManagement />} />
+                <Route path="galleries" element={<GalleryManagement />} />
                 <Route path="content" element={<ContentManagement />} />
                 <Route path="integrations" element={<IntegrationsManagement />} />
                 <Route path="blog" element={<BlogManagement />} />

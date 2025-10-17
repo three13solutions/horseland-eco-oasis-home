@@ -686,6 +686,7 @@ export type Database = {
       }
       gallery_categories: {
         Row: {
+          category_type: string | null
           created_at: string | null
           description: string | null
           id: string
@@ -696,6 +697,7 @@ export type Database = {
           updated_at: string | null
         }
         Insert: {
+          category_type?: string | null
           created_at?: string | null
           description?: string | null
           id?: string
@@ -706,6 +708,7 @@ export type Database = {
           updated_at?: string | null
         }
         Update: {
+          category_type?: string | null
           created_at?: string | null
           description?: string | null
           id?: string
