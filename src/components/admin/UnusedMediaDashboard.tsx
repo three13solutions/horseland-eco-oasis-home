@@ -1,7 +1,8 @@
 import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { AlertTriangle, CheckCircle, Database, Image, Video, Trash2, RefreshCw } from 'lucide-react';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import { AlertTriangle, CheckCircle, Database, Image, Video, Trash2, RefreshCw, ChevronDown, ChevronUp, Filter } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 
@@ -27,12 +28,20 @@ interface MediaStats {
 interface UnusedMediaDashboardProps {
   stats: MediaStats;
   onRefresh?: () => void;
+  usageFilter: 'all' | 'used' | 'unused';
+  onUsageFilterChange: (filter: 'all' | 'used' | 'unused') => void;
 }
 
-export const UnusedMediaDashboard: React.FC<UnusedMediaDashboardProps> = ({ stats, onRefresh }) => {
+export const UnusedMediaDashboard: React.FC<UnusedMediaDashboardProps> = ({ 
+  stats, 
+  onRefresh, 
+  usageFilter,
+  onUsageFilterChange 
+}) => {
   const usagePercentage = stats.total > 0 ? Math.round((stats.used / stats.total) * 100) : 0;
   const { toast } = useToast();
   const [isCleaningUp, setIsCleaningUp] = React.useState(false);
+  const [isBreakdownOpen, setIsBreakdownOpen] = React.useState(false);
 
   const handleCleanup = async () => {
     if (stats.unused === 0) {
@@ -200,54 +209,65 @@ export const UnusedMediaDashboard: React.FC<UnusedMediaDashboardProps> = ({ stat
             {usagePercentage}% utilization
           </p>
           
-          {/* Nested Usage Breakdown */}
-          <div className="border-t pt-3 mt-3">
-            <p className="text-xs font-medium text-muted-foreground mb-2">Usage Breakdown</p>
-            <div className="space-y-1 text-xs">
-              {stats.byType.pages > 0 && (
-                <div className="flex justify-between">
-                  <span>Pages</span>
-                  <span className="font-medium">{stats.byType.pages}</span>
-                </div>
-              )}
-              {stats.byType.blogs > 0 && (
-                <div className="flex justify-between">
-                  <span>Blog Posts</span>
-                  <span className="font-medium">{stats.byType.blogs}</span>
-                </div>
-              )}
-              {stats.byType.rooms > 0 && (
-                <div className="flex justify-between">
-                  <span>Rooms</span>
-                  <span className="font-medium">{stats.byType.rooms}</span>
-                </div>
-              )}
-              {stats.byType.packages > 0 && (
-                <div className="flex justify-between">
-                  <span>Packages</span>
-                  <span className="font-medium">{stats.byType.packages}</span>
-                </div>
-              )}
-              {stats.byType.activities > 0 && (
-                <div className="flex justify-between">
-                  <span>Activities</span>
-                  <span className="font-medium">{stats.byType.activities}</span>
-                </div>
-              )}
-              {stats.byType.spa > 0 && (
-                <div className="flex justify-between">
-                  <span>Spa Services</span>
-                  <span className="font-medium">{stats.byType.spa}</span>
-                </div>
-              )}
-              {stats.byType.meals > 0 && (
-                <div className="flex justify-between">
-                  <span>Meals</span>
-                  <span className="font-medium">{stats.byType.meals}</span>
-                </div>
-              )}
-            </div>
-          </div>
+          {/* Collapsible Usage Breakdown */}
+          <Collapsible open={isBreakdownOpen} onOpenChange={setIsBreakdownOpen}>
+            <CollapsibleTrigger asChild>
+              <Button variant="ghost" size="sm" className="w-full justify-between px-0 h-8">
+                <span className="text-xs font-medium">Usage Breakdown</span>
+                {isBreakdownOpen ? (
+                  <ChevronUp className="h-3 w-3" />
+                ) : (
+                  <ChevronDown className="h-3 w-3" />
+                )}
+              </Button>
+            </CollapsibleTrigger>
+            <CollapsibleContent className="pt-2">
+              <div className="space-y-1 text-xs border-t pt-3">
+                {stats.byType.pages > 0 && (
+                  <div className="flex justify-between">
+                    <span>Pages</span>
+                    <span className="font-medium">{stats.byType.pages}</span>
+                  </div>
+                )}
+                {stats.byType.blogs > 0 && (
+                  <div className="flex justify-between">
+                    <span>Blog Posts</span>
+                    <span className="font-medium">{stats.byType.blogs}</span>
+                  </div>
+                )}
+                {stats.byType.rooms > 0 && (
+                  <div className="flex justify-between">
+                    <span>Rooms</span>
+                    <span className="font-medium">{stats.byType.rooms}</span>
+                  </div>
+                )}
+                {stats.byType.packages > 0 && (
+                  <div className="flex justify-between">
+                    <span>Packages</span>
+                    <span className="font-medium">{stats.byType.packages}</span>
+                  </div>
+                )}
+                {stats.byType.activities > 0 && (
+                  <div className="flex justify-between">
+                    <span>Activities</span>
+                    <span className="font-medium">{stats.byType.activities}</span>
+                  </div>
+                )}
+                {stats.byType.spa > 0 && (
+                  <div className="flex justify-between">
+                    <span>Spa Services</span>
+                    <span className="font-medium">{stats.byType.spa}</span>
+                  </div>
+                )}
+                {stats.byType.meals > 0 && (
+                  <div className="flex justify-between">
+                    <span>Meals</span>
+                    <span className="font-medium">{stats.byType.meals}</span>
+                  </div>
+                )}
+              </div>
+            </CollapsibleContent>
+          </Collapsible>
         </CardContent>
       </Card>
 
@@ -264,27 +284,41 @@ export const UnusedMediaDashboard: React.FC<UnusedMediaDashboardProps> = ({ stat
             {stats.unused > 0 ? 'Consider cleanup' : 'All media in use!'}
           </p>
           
-          {stats.unused > 0 && (
-            <Button 
-              variant="destructive" 
-              size="sm" 
-              className="w-full mt-2"
-              onClick={handleCleanup}
-              disabled={isCleaningUp}
-            >
-              {isCleaningUp ? (
-                <>
-                  <RefreshCw className="h-3 w-3 mr-2 animate-spin" />
-                  Cleaning...
-                </>
-              ) : (
-                <>
-                  <Trash2 className="h-3 w-3 mr-2" />
-                  Clean Up Unused
-                </>
-              )}
-            </Button>
-          )}
+          <div className="flex gap-2">
+            {stats.unused > 0 && (
+              <>
+                <Button 
+                  variant={usageFilter === 'unused' ? 'default' : 'outline'}
+                  size="sm" 
+                  className="flex-1"
+                  onClick={() => onUsageFilterChange(usageFilter === 'unused' ? 'all' : 'unused')}
+                >
+                  <Filter className="h-3 w-3 mr-2" />
+                  {usageFilter === 'unused' ? 'Show All' : 'View Unused'}
+                </Button>
+                
+                <Button 
+                  variant="destructive" 
+                  size="sm" 
+                  className="flex-1"
+                  onClick={handleCleanup}
+                  disabled={isCleaningUp}
+                >
+                  {isCleaningUp ? (
+                    <>
+                      <RefreshCw className="h-3 w-3 mr-2 animate-spin" />
+                      Cleaning...
+                    </>
+                  ) : (
+                    <>
+                      <Trash2 className="h-3 w-3 mr-2" />
+                      Clean Up
+                    </>
+                  )}
+                </Button>
+              </>
+            )}
+          </div>
         </CardContent>
       </Card>
     </div>

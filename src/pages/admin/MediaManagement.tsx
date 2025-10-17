@@ -429,7 +429,14 @@ const MediaManagement = () => {
       </div>
 
       {/* Usage Statistics Dashboard */}
-      {mediaStats && !statsLoading && <UnusedMediaDashboard stats={mediaStats} onRefresh={refetch} />}
+      {mediaStats && !statsLoading && (
+        <UnusedMediaDashboard 
+          stats={mediaStats} 
+          onRefresh={refetch}
+          usageFilter={filters.usageFilter}
+          onUsageFilterChange={(filter) => setFilters({ ...filters, usageFilter: filter })}
+        />
+      )}
       {statsLoading && (
         <Card>
           <CardContent className="pt-6">
@@ -457,7 +464,7 @@ const MediaManagement = () => {
               </div>
             </div>
             
-            <div className="grid grid-cols-3 gap-2">
+            <div className="grid grid-cols-2 gap-2">
               <Select value={filters.mediaType} onValueChange={(value: any) => setFilters({ ...filters, mediaType: value })}>
                 <SelectTrigger className="w-32">
                   <SelectValue placeholder="Type" />
@@ -503,20 +510,6 @@ const MediaManagement = () => {
                       {category.name}
                     </SelectItem>
                   ))}
-                </SelectContent>
-              </Select>
-
-              <Select 
-                value={filters.usageFilter} 
-                onValueChange={(value: 'all' | 'used' | 'unused') => setFilters({ ...filters, usageFilter: value })}
-              >
-                <SelectTrigger className="w-32">
-                  <SelectValue placeholder="Usage" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Media</SelectItem>
-                  <SelectItem value="used">Used Only</SelectItem>
-                  <SelectItem value="unused">Unused Only</SelectItem>
                 </SelectContent>
               </Select>
 
