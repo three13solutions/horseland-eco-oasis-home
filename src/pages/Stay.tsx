@@ -4,7 +4,6 @@ import DynamicFooter from '../components/DynamicFooter';
 import CombinedFloatingV5 from '../components/v5/CombinedFloatingV5';
 import CategoryFilters, { Filters } from '@/components/stay/CategoryFilters';
 import CategoryCard, { Category } from '@/components/stay/CategoryCard';
-import CategoryBookingModal from '@/components/stay/CategoryBookingModal';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { LayoutGrid, List } from 'lucide-react';
@@ -226,24 +225,13 @@ const Stay = () => {
                 key={cat.id}
                 category={cat}
                 viewMode={viewMode}
-                onViewDetails={(c) => {
-                  // View Details is now handled by Link in CategoryCard
-                }}
-                onBookNow={(c) => {
-                  setSelectedCategory(c);
-                  setBookingOpen(true);
-                }}
+                onViewDetails={() => {}}
+                onBookNow={() => {}}
               />
             ))}
           </div>
         </div>
       </section>
-
-      <CategoryBookingModal
-        open={bookingOpen}
-        onOpenChange={setBookingOpen}
-        category={selectedCategory}
-      />
 
       <DynamicFooter />
       <CombinedFloatingV5 />

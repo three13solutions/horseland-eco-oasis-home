@@ -336,12 +336,11 @@ const Activities = () => {
                     </Button>
                     <Button 
                       size="sm" 
-                      className="font-body flex-1 gap-2"
+                      className="font-body flex-1"
                       onClick={() => handleAddToStay(activity)}
                       variant={addedActivityIds.includes(activity.id) ? "secondary" : "default"}
                     >
-                      <Plus className="h-4 w-4" />
-                      {addedActivityIds.includes(activity.id) ? "Added - Add More" : "Add to Stay"}
+                      {addedActivityIds.includes(activity.id) ? "✓ Added" : <><Plus className="h-4 w-4 mr-2" />Add to Stay</>}
                     </Button>
                   </div>
                 </div>

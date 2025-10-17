@@ -385,8 +385,7 @@ const Spa = () => {
                       onClick={() => handleAddToStay(service)}
                       variant={addedServiceIds.includes(service.id) ? "secondary" : "default"}
                     >
-                      <Plus className="h-4 w-4" />
-                      {addedServiceIds.includes(service.id) ? "Added - Add More" : "Add to My Stay"}
+                      {addedServiceIds.includes(service.id) ? "✓ Added" : <><Plus className="h-4 w-4" />Add to My Stay</>}
                     </Button>
                   </div>
                 </div>
@@ -408,9 +407,9 @@ const Spa = () => {
             Our wellness concierge can help design a personalized experience for your stay.
           </p>
           <div className="flex justify-center">
-            <Button size="lg" className="font-body">
-              Book Spa Treatments
-            </Button>
+          <Button size="lg" className="font-body" onClick={() => navigate('/booking')}>
+            Book Spa Treatments
+          </Button>
           </div>
         </div>
       </section>
