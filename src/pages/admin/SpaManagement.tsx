@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Plus, Search, Edit, Trash2, ToggleLeft, ToggleRight, Grid, List, Upload, X, Check, ChevronsUpDown, Eye } from 'lucide-react';
+import { ArrowLeft, Plus, Search, Edit, Trash2, ToggleLeft, ToggleRight, Grid, List, X, Check, ChevronsUpDown, Eye } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -23,6 +23,7 @@ interface SpaService {
   id: string;
   title: string;
   image: string | null;
+  image_key: string | null;
   description: string | null;
   duration: number | null;
   price: number;
@@ -32,12 +33,7 @@ interface SpaService {
   created_at: string;
   updated_at: string;
   media_urls?: any;
-}
-
-interface MediaFile {
-  url: string;
-  name: string;
-  isFeatured: boolean;
+  media_keys?: any;
 }
 
 // Available benefits/tags for spa services
@@ -56,17 +52,16 @@ const SpaManagement = () => {
   const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'inactive'>('all');
   const [viewMode, setViewMode] = useState<'card' | 'list'>('card');
   const [categoryFilter, setCategoryFilter] = useState<'all' | 'beauty' | 'wellness'>('all');
-  const [uploading, setUploading] = useState(false);
   
   const [formData, setFormData] = useState({
     title: '',
     image: '',
+    image_key: '',
     description: '',
     duration: '',
     price: '',
     tags: [] as string[],
-    media_files: [] as MediaFile[],
-    featured_image_index: 0
+    media_keys: [] as string[]
   });
 
   const [benefitsOpen, setBenefitsOpen] = useState(false);
@@ -108,12 +103,12 @@ const SpaManagement = () => {
     setFormData({
       title: '',
       image: '',
+      image_key: '',
       description: '',
       duration: '',
       price: '',
       tags: [],
-      media_files: [],
-      featured_image_index: 0
+      media_keys: []
     });
     setEditingId(null);
   };
@@ -122,18 +117,17 @@ const SpaManagement = () => {
     e.preventDefault();
     
     try {
-      const mediaUrls = formData.media_files.map(file => file.url);
-      
       const serviceData = {
         title: formData.title,
-        image: formData.media_files.length > 0 ? formData.media_files.find(f => f.isFeatured)?.url || formData.media_files[0].url : null,
+        image: formData.image || null,
+        image_key: formData.image_key || null,
         description: formData.description || null,
         duration: formData.duration ? parseInt(formData.duration) : null,
         price: parseFloat(formData.price),
         tags: formData.tags,
         booking_required: true,
         is_active: true,
-        media_urls: mediaUrls
+        media_keys: formData.media_keys
       };
 
       if (editingId) {
@@ -167,23 +161,15 @@ const SpaManagement = () => {
   };
 
   const handleEdit = (service: SpaService) => {
-    const mediaFiles = Array.isArray(service.media_urls) 
-      ? service.media_urls.map((url: string, index: number) => ({
-          url,
-          name: `media-${index}`,
-          isFeatured: url === service.image
-        }))
-      : [];
-    
     setFormData({
       title: service.title,
       image: service.image || '',
+      image_key: service.image_key || '',
       description: service.description || '',
       duration: service.duration?.toString() || '',
       price: service.price.toString(),
       tags: service.tags || [],
-      media_files: mediaFiles,
-      featured_image_index: 0
+      media_keys: Array.isArray(service.media_keys) ? service.media_keys : []
     });
     setEditingId(service.id);
     setShowForm(true);
@@ -317,146 +303,38 @@ const SpaManagement = () => {
               </div>
 
               <div>
-                <Label>Service Media</Label>
-                <div className="space-y-4">
-                  <div className="border-2 border-dashed border-border rounded-lg p-4">
-                    <input
-                      type="file"
-                      multiple
-                      accept="image/*,video/*"
-                      onChange={async (e) => {
-                        const files = Array.from(e.target.files || []);
-                        setUploading(true);
-                        
-                        const newMediaFiles: MediaFile[] = [];
-                        
-                        try {
-                          for (const file of files) {
-                            // Upload to storage
-                            const fileExt = file.name.split('.').pop();
-                            const fileName = `${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExt}`;
-                            const filePath = `spa-media/${fileName}`;
+                <MediaPicker
+                  label="Featured Image"
+                  value={formData.image}
+                  onChange={(url) => {
+                    // Extract hardcoded_key from selected media
+                    supabase
+                      .from('gallery_images')
+                      .select('hardcoded_key')
+                      .eq('image_url', url)
+                      .single()
+                      .then(({ data }) => {
+                        setFormData({ 
+                          ...formData, 
+                          image: url,
+                          image_key: data?.hardcoded_key || ''
+                        });
+                      });
+                  }}
+                  categorySlug="spa"
+                  folder="spa-media"
+                />
+              </div>
 
-                            const { error: uploadError } = await supabase.storage
-                              .from('uploads')
-                              .upload(filePath, file);
-
-                            if (uploadError) throw uploadError;
-
-                            const { data: { publicUrl } } = supabase.storage
-                              .from('uploads')
-                              .getPublicUrl(filePath);
-
-                            // Create entry in gallery_images
-                            const mediaType = file.type.startsWith('image/') ? 'image' : 'video';
-                            
-                            // Get spa category ID
-                            const { data: spaCategory } = await supabase
-                              .from('gallery_categories')
-                              .select('id')
-                              .eq('slug', 'spa')
-                              .single();
-
-                            const insertData: any = {
-                              title: file.name,
-                              category: 'spa',
-                              category_id: spaCategory?.id,
-                              caption: `Spa service media - ${file.name}`,
-                              media_type: mediaType,
-                              source_type: 'upload',
-                              is_hardcoded: false,
-                            };
-
-                            if (mediaType === 'image') {
-                              insertData.image_url = publicUrl;
-                            } else {
-                              insertData.video_url = publicUrl;
-                              insertData.image_url = '';
-                            }
-
-                            await supabase
-                              .from('gallery_images')
-                              .insert(insertData);
-
-                            newMediaFiles.push({
-                              url: publicUrl,
-                              name: file.name,
-                              isFeatured: formData.media_files.length === 0
-                            });
-                          }
-
-                          setFormData({ 
-                            ...formData, 
-                            media_files: [...formData.media_files, ...newMediaFiles] 
-                          });
-                          
-                          toast({ title: "Success", description: "Media uploaded successfully" });
-                        } catch (error) {
-                          console.error('Upload error:', error);
-                          toast({
-                            title: "Error",
-                            description: "Failed to upload media",
-                            variant: "destructive",
-                          });
-                        } finally {
-                          setUploading(false);
-                        }
-                      }}
-                      className="w-full"
-                      disabled={uploading}
-                    />
-                    <p className="text-sm text-muted-foreground mt-2">
-                      {uploading ? 'Uploading...' : 'Upload images or videos for this service'}
-                    </p>
-                  </div>
-                  
-                  {formData.media_files.length > 0 && (
-                    <div className="space-y-2">
-                      <Label>Uploaded Media</Label>
-                      <div className="grid grid-cols-3 gap-2">
-                        {formData.media_files.map((media, index) => (
-                          <div key={index} className="relative group">
-                            <img 
-                              src={media.url} 
-                              alt={media.name}
-                              className="w-full h-20 object-cover rounded border"
-                            />
-                            <Button
-                              type="button"
-                              variant="destructive"
-                              size="sm"
-                              className="absolute -top-1 -right-1 h-6 w-6 rounded-full p-0 opacity-0 group-hover:opacity-100"
-                              onClick={() => {
-                                const newFiles = formData.media_files.filter((_, i) => i !== index);
-                                setFormData({ 
-                                  ...formData, 
-                                  media_files: newFiles
-                                });
-                              }}
-                            >
-                              <X className="h-3 w-3" />
-                            </Button>
-                            <Button
-                              type="button"
-                              variant={media.isFeatured ? "default" : "secondary"}
-                              size="sm"
-                              className="absolute -bottom-1 left-1 h-5 text-xs px-2"
-                              onClick={() => {
-                                const updatedFiles = formData.media_files.map((file, i) => ({
-                                  ...file,
-                                  isFeatured: i === index
-                                }));
-                                setFormData({ ...formData, media_files: updatedFiles });
-                              }}
-                            >
-                              {media.isFeatured ? "Featured" : "Set Featured"}
-                            </Button>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                </div>
+              <div>
+                <Label>Additional Media Gallery (Optional)</Label>
+                <p className="text-sm text-muted-foreground mb-2">
+                  Select multiple images to create a gallery for this service
+                </p>
+                {/* TODO: Implement multi-select MediaPicker for gallery */}
+                <p className="text-xs text-muted-foreground italic">
+                  Multi-image gallery coming soon. For now, use featured image above.
+                </p>
               </div>
 
               <div>
@@ -525,8 +403,8 @@ const SpaManagement = () => {
               </div>
 
               <div className="flex gap-4 pt-4">
-                <Button type="submit" disabled={uploading}>
-                  {uploading ? 'Saving...' : (editingId ? 'Update Service' : 'Create Service')}
+                <Button type="submit">
+                  {editingId ? 'Update Service' : 'Create Service'}
                 </Button>
                 <Button 
                   type="button" 
