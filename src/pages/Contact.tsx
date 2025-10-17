@@ -363,7 +363,7 @@ const Contact = () => {
                 loading="lazy"
                 allowFullScreen
                 referrerPolicy="no-referrer-when-downgrade"
-                src={`https://www.google.com/maps/embed/v1/directions?key=${googleMapsApiKey}&origin=&destination=Horseland+Hotel,Vithalrao+Kotwal+Road,Near+Dasturi+Point,Matheran,Maharashtra+410102&mode=driving`}
+                src={`https://www.google.com/maps/embed/v1/place?key=${googleMapsApiKey}&q=Horseland+Hotel,Vithalrao+Kotwal+Road,Near+Dasturi+Point,Matheran,Maharashtra+410102&zoom=15`}
                 className="w-full min-h-[450px]"
               />
             ) : (
