@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
-import { Calendar, Users, Clock, MapPin, Wifi, Coffee, Car, Utensils, Plus, Minus, Bed, CarFront } from 'lucide-react';
+import { Calendar, Users, Clock, MapPin, Wifi, Coffee, Car, Utensils, Plus, Minus, Bed, CarFront, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -9,6 +9,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from '@/components/ui/carousel';
 import NavigationV5 from '@/components/v5/NavigationV5';
 import DynamicFooter from '@/components/DynamicFooter';
 import { PaymentModal } from '@/components/PaymentModal';
@@ -992,35 +993,64 @@ const Booking = () => {
                       </TabsContent>
                       
                       <TabsContent value="spa" className="space-y-4">
-                        {spaServices.map((spa) => (
-                          <div key={spa.id} className="flex items-center justify-between p-4 border rounded-lg">
-                            <div className="flex-1">
-                              <h4 className="font-medium">{spa.title}</h4>
-                              <p className="text-sm text-muted-foreground">{spa.description}</p>
-                              <p className="text-lg font-semibold">₹{spa.price}</p>
-                            </div>
-                            <div className="flex items-center gap-2">
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() => removeAddon(spa.id)}
-                                disabled={!selectedAddons.find(a => a.id === spa.id)}
-                              >
-                                <Minus className="h-4 w-4" />
-                              </Button>
-                              <span className="w-8 text-center">
-                                {selectedAddons.find(a => a.id === spa.id)?.quantity || 0}
-                              </span>
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() => addAddon(spa)}
-                              >
-                                <Plus className="h-4 w-4" />
-                              </Button>
-                            </div>
-                          </div>
-                        ))}
+                        <Carousel
+                          opts={{
+                            align: "start",
+                            loop: false,
+                          }}
+                          className="w-full"
+                        >
+                          <CarouselContent className="-ml-2">
+                            {spaServices.map((spa) => {
+                              const quantity = selectedAddons.find(a => a.id === spa.id)?.quantity || 0;
+                              return (
+                                <CarouselItem key={spa.id} className="pl-2 basis-1/3 sm:basis-1/4 md:basis-1/5 lg:basis-1/6">
+                                  <div className="flex flex-col items-center">
+                                    <div className="relative w-full aspect-square rounded-lg overflow-hidden mb-2 border-2 border-transparent hover:border-primary transition-colors">
+                                      {spa.image ? (
+                                        <img 
+                                          src={spa.image}
+                                          alt={spa.title}
+                                          className="w-full h-full object-cover"
+                                        />
+                                      ) : (
+                                        <div className="w-full h-full bg-muted flex items-center justify-center">
+                                          <Sparkles className="h-8 w-8 text-muted-foreground" />
+                                        </div>
+                                      )}
+                                    </div>
+                                    <p className="text-xs font-medium text-center mb-1 line-clamp-2 h-8">{spa.title}</p>
+                                    <p className="text-xs font-semibold text-primary mb-2">₹{spa.price}</p>
+                                    <div className="flex items-center gap-2">
+                                      <Button
+                                        variant="outline"
+                                        size="icon"
+                                        className="h-7 w-7"
+                                        onClick={() => removeAddon(spa.id)}
+                                        disabled={quantity === 0}
+                                      >
+                                        <Minus className="h-3 w-3" />
+                                      </Button>
+                                      <span className="w-6 text-center text-sm font-medium">
+                                        {quantity}
+                                      </span>
+                                      <Button
+                                        variant="outline"
+                                        size="icon"
+                                        className="h-7 w-7"
+                                        onClick={() => addAddon(spa)}
+                                      >
+                                        <Plus className="h-3 w-3" />
+                                      </Button>
+                                    </div>
+                                  </div>
+                                </CarouselItem>
+                              );
+                            })}
+                          </CarouselContent>
+                          <CarouselPrevious className="-left-4" />
+                          <CarouselNext className="-right-4" />
+                        </Carousel>
                       </TabsContent>
                     </Tabs>
                   </CardContent>
