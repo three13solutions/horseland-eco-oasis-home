@@ -587,6 +587,14 @@ const MediaManagement = () => {
           onRefresh={refetch}
           usageFilter={filters.usageFilter}
           onUsageFilterChange={(filter) => setFilters({ ...filters, usageFilter: filter, duplicatesFilter: 'all' })}
+          duplicateStats={duplicateStats.totalDuplicates > 0 ? {
+            totalDuplicates: duplicateStats.totalDuplicates,
+            groups: duplicateStats.groups.length,
+            wastedSpace: duplicateStats.wastedSpace
+          } : undefined}
+          duplicatesFilter={filters.duplicatesFilter}
+          onDuplicatesFilterChange={() => setFilters({ ...filters, duplicatesFilter: 'duplicates', usageFilter: 'all' })}
+          formatFileSize={formatFileSize}
         />
       )}
       {statsLoading && (
@@ -596,32 +604,6 @@ const MediaManagement = () => {
               <RefreshCw className="w-6 h-6 animate-spin mr-2" />
               <span>Calculating usage statistics...</span>
             </div>
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Duplicate Files Stat Card */}
-      {duplicateStats.totalDuplicates > 0 && (
-        <Card 
-          className="cursor-pointer hover:shadow-md transition-shadow border-destructive/50" 
-          onClick={() => setFilters({ ...filters, duplicatesFilter: 'duplicates', usageFilter: 'all' })}
-        >
-          <CardContent className="pt-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-muted-foreground">Duplicate Files</p>
-                <button className="text-2xl font-bold text-orange-600 dark:text-orange-400 hover:underline text-left">
-                  {duplicateStats.totalDuplicates}
-                </button>
-              </div>
-              <Copy className="h-8 w-8 text-orange-600 dark:text-orange-400" />
-            </div>
-            <p className="mt-2 text-xs text-muted-foreground">
-              {duplicateStats.groups.length} groups • Wasting {formatFileSize(duplicateStats.wastedSpace)}
-            </p>
-            {filters.duplicatesFilter === 'duplicates' && (
-              <Badge variant="secondary" className="mt-2">Filtering duplicates</Badge>
-            )}
           </CardContent>
         </Card>
       )}

@@ -1,8 +1,9 @@
 import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { AlertTriangle, CheckCircle, Database, Image, Video, Trash2, RefreshCw, Filter } from 'lucide-react';
+import { AlertTriangle, CheckCircle, Database, Image, Video, Trash2, RefreshCw, Filter, Copy } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 
@@ -25,18 +26,32 @@ interface MediaStats {
   };
 }
 
+interface DuplicateStats {
+  totalDuplicates: number;
+  groups: number;
+  wastedSpace: number;
+}
+
 interface UnusedMediaDashboardProps {
   stats: MediaStats;
   onRefresh?: () => void;
   usageFilter: 'all' | 'used' | 'unused';
   onUsageFilterChange: (filter: 'all' | 'used' | 'unused') => void;
+  duplicateStats?: DuplicateStats;
+  duplicatesFilter?: 'all' | 'duplicates';
+  onDuplicatesFilterChange?: () => void;
+  formatFileSize: (bytes: number) => string;
 }
 
 export const UnusedMediaDashboard: React.FC<UnusedMediaDashboardProps> = ({ 
   stats, 
   onRefresh, 
   usageFilter,
-  onUsageFilterChange 
+  onUsageFilterChange,
+  duplicateStats,
+  duplicatesFilter,
+  onDuplicatesFilterChange,
+  formatFileSize
 }) => {
   const usagePercentage = stats.total > 0 ? Math.round((stats.used / stats.total) * 100) : 0;
   const { toast } = useToast();
@@ -172,7 +187,7 @@ export const UnusedMediaDashboard: React.FC<UnusedMediaDashboardProps> = ({
   };
   
   return (
-    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
       <Card className="cursor-pointer hover:shadow-md transition-shadow" onClick={() => onUsageFilterChange('all')}>
         <CardContent className="pt-6">
           <div className="flex items-center justify-between">
@@ -286,6 +301,32 @@ export const UnusedMediaDashboard: React.FC<UnusedMediaDashboardProps> = ({
           </p>
         </CardContent>
       </Card>
+
+      {/* Duplicate Files Stat Card */}
+      {duplicateStats && duplicateStats.totalDuplicates > 0 && (
+        <Card 
+          className="cursor-pointer hover:shadow-md transition-shadow border-destructive/50" 
+          onClick={onDuplicatesFilterChange}
+        >
+          <CardContent className="pt-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-muted-foreground">Duplicate Files</p>
+                <button className="text-2xl font-bold text-orange-600 dark:text-orange-400 hover:underline text-left">
+                  {duplicateStats.totalDuplicates}
+                </button>
+              </div>
+              <Copy className="h-8 w-8 text-orange-600 dark:text-orange-400" />
+            </div>
+            <p className="mt-2 text-xs text-muted-foreground">
+              {duplicateStats.groups} groups • {formatFileSize(duplicateStats.wastedSpace)}
+            </p>
+            {duplicatesFilter === 'duplicates' && (
+              <Badge variant="secondary" className="mt-2">Filtering</Badge>
+            )}
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 };
