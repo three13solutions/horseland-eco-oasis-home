@@ -41,6 +41,8 @@ interface UnusedMediaDashboardProps {
   duplicatesFilter?: 'all' | 'duplicates';
   onDuplicatesFilterChange?: () => void;
   formatFileSize: (bytes: number) => string;
+  onMergeDuplicates?: () => void;
+  isMerging?: boolean;
 }
 
 export const UnusedMediaDashboard: React.FC<UnusedMediaDashboardProps> = ({ 
@@ -51,7 +53,9 @@ export const UnusedMediaDashboard: React.FC<UnusedMediaDashboardProps> = ({
   duplicateStats,
   duplicatesFilter,
   onDuplicatesFilterChange,
-  formatFileSize
+  formatFileSize,
+  onMergeDuplicates,
+  isMerging = false
 }) => {
   const usagePercentage = stats.total > 0 ? Math.round((stats.used / stats.total) * 100) : 0;
   const { toast } = useToast();
@@ -304,16 +308,16 @@ export const UnusedMediaDashboard: React.FC<UnusedMediaDashboardProps> = ({
 
       {/* Duplicate Files Stat Card */}
       <Card 
-        className={`cursor-pointer hover:shadow-md transition-shadow ${duplicateStats.totalDuplicates > 0 ? 'border-destructive/50' : ''}`}
-        onClick={duplicateStats.totalDuplicates > 0 ? onDuplicatesFilterChange : undefined}
+        className={`transition-shadow ${duplicateStats.totalDuplicates > 0 ? 'border-destructive/50' : ''}`}
       >
         <CardContent className="pt-6">
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between mb-3">
             <div>
               <p className="text-sm font-medium text-muted-foreground">Duplicate Files</p>
               <button 
                 className={`text-2xl font-bold text-left ${duplicateStats.totalDuplicates > 0 ? 'text-orange-600 dark:text-orange-400 hover:underline' : 'text-green-600 dark:text-green-400'}`}
                 disabled={duplicateStats.totalDuplicates === 0}
+                onClick={duplicateStats.totalDuplicates > 0 ? onDuplicatesFilterChange : undefined}
               >
                 {duplicateStats.totalDuplicates}
               </button>
@@ -324,14 +328,38 @@ export const UnusedMediaDashboard: React.FC<UnusedMediaDashboardProps> = ({
               <CheckCircle className="h-8 w-8 text-green-600 dark:text-green-400" />
             )}
           </div>
-          <p className="mt-2 text-xs text-muted-foreground">
+          <p className="text-xs text-muted-foreground mb-3">
             {duplicateStats.totalDuplicates > 0 
               ? `${duplicateStats.groups} groups • ${formatFileSize(duplicateStats.wastedSpace)}`
               : 'No duplicate files found'
             }
           </p>
           {duplicatesFilter === 'duplicates' && duplicateStats.totalDuplicates > 0 && (
-            <Badge variant="secondary" className="mt-2">Filtering</Badge>
+            <Badge variant="secondary" className="mb-2">Filtering</Badge>
+          )}
+          {duplicateStats.totalDuplicates > 0 && onMergeDuplicates && (
+            <Button 
+              size="sm" 
+              variant="outline"
+              className="w-full"
+              onClick={(e) => {
+                e.stopPropagation();
+                onMergeDuplicates();
+              }}
+              disabled={isMerging}
+            >
+              {isMerging ? (
+                <>
+                  <RefreshCw className="h-3 w-3 mr-2 animate-spin" />
+                  Merging...
+                </>
+              ) : (
+                <>
+                  <Copy className="h-3 w-3 mr-2" />
+                  Merge All
+                </>
+              )}
+            </Button>
           )}
         </CardContent>
       </Card>

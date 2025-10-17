@@ -75,6 +75,8 @@ interface GalleryImage {
   original_filename?: string;
   width?: number;
   height?: number;
+  created_at?: string;
+  updated_at?: string;
   gallery_categories?: {
     name: string;
     slug: string;
@@ -424,42 +426,199 @@ const MediaManagement = () => {
     }
   };
 
-  const handleMergeDuplicates = async (hash: string, keepImageId: string) => {
-    const group = duplicateStats.groups.find(g => g.hash === hash);
-    if (!group) return;
+  const handleMergeAllDuplicates = async () => {
+    if (duplicateStats.totalDuplicates === 0) return;
 
-    const imagesToDelete = group.images.filter(img => img.id !== keepImageId);
-    const keepImage = group.images.find(img => img.id === keepImageId);
-
-    if (!keepImage) return;
-
-    if (!confirm(`Merge ${imagesToDelete.length} duplicate(s) into "${keepImage.title}"?\n\nThis will delete ${imagesToDelete.length} duplicate files and free up ${formatFileSize((keepImage.file_size || 0) * imagesToDelete.length)}.\n\nWARNING: This only works for unused duplicates. If they're in use, manual remapping is required.`)) {
+    if (!confirm(`Merge all duplicate files?\n\nThis will:\n- Process ${duplicateStats.groups.length} duplicate groups\n- Remove ${duplicateStats.totalDuplicates} duplicate files\n- Free up ${formatFileSize(duplicateStats.wastedSpace)}\n- Update all content references to use canonical images\n\nContinue?`)) {
       return;
     }
 
-    try {
-      // For now, just delete the duplicates
-      // TODO: Add proper usage checking and remapping
-      const { error: deleteError } = await supabase
-        .from('gallery_images')
-        .delete()
-        .in('id', imagesToDelete.map(img => img.id));
+    setIsMigrating(true);
+    let successCount = 0;
+    let failCount = 0;
 
-      if (deleteError) throw deleteError;
+    try {
+      for (const group of duplicateStats.groups) {
+        // Keep the oldest image (by created_at)
+        const sortedImages = [...group.images].sort((a, b) => 
+          new Date(a.created_at || 0).getTime() - new Date(b.created_at || 0).getTime()
+        );
+        const keepImage = sortedImages[0];
+        const imagesToDelete = sortedImages.slice(1);
+
+        try {
+          // Update all content references
+          for (const dupImage of imagesToDelete) {
+            const dupUrl = dupImage.image_url;
+            const canonicalUrl = keepImage.image_url;
+
+            // Update pages
+            const { data: pages } = await supabase.from('pages').select('*');
+            for (const page of pages || []) {
+              let updated = false;
+              const updates: any = {};
+
+              if (page.hero_image === dupUrl) {
+                updates.hero_image = canonicalUrl;
+                updated = true;
+              }
+              if (page.og_image === dupUrl) {
+                updates.og_image = canonicalUrl;
+                updated = true;
+              }
+              if (Array.isArray(page.hero_gallery)) {
+                const updatedGallery = page.hero_gallery.map((item: any) => {
+                  const url = typeof item === 'string' ? item : item?.url;
+                  if (url === dupUrl) {
+                    return typeof item === 'string' ? canonicalUrl : { ...item, url: canonicalUrl };
+                  }
+                  return item;
+                });
+                if (JSON.stringify(updatedGallery) !== JSON.stringify(page.hero_gallery)) {
+                  updates.hero_gallery = updatedGallery;
+                  updated = true;
+                }
+              }
+
+              if (updated) {
+                await supabase.from('pages').update(updates).eq('id', page.id);
+              }
+            }
+
+            // Update blog posts
+            await supabase.from('blog_posts')
+              .update({ featured_image: canonicalUrl })
+              .eq('featured_image', dupUrl);
+
+            // Update room types
+            const { data: rooms } = await supabase.from('room_types').select('*');
+            for (const room of rooms || []) {
+              let updated = false;
+              const updates: any = {};
+
+              if (room.hero_image === dupUrl) {
+                updates.hero_image = canonicalUrl;
+                updated = true;
+              }
+              if (Array.isArray(room.gallery) && room.gallery.includes(dupUrl)) {
+                updates.gallery = room.gallery.map((url: string) => url === dupUrl ? canonicalUrl : url);
+                updated = true;
+              }
+
+              if (updated) {
+                await supabase.from('room_types').update(updates).eq('id', room.id);
+              }
+            }
+
+            // Update packages
+            const { data: packages } = await supabase.from('packages').select('*');
+            for (const pkg of packages || []) {
+              let updated = false;
+              const updates: any = {};
+
+              if (pkg.featured_image === dupUrl) {
+                updates.featured_image = canonicalUrl;
+                updated = true;
+              }
+              if (pkg.banner_image === dupUrl) {
+                updates.banner_image = canonicalUrl;
+                updated = true;
+              }
+              if (Array.isArray(pkg.gallery) && pkg.gallery.includes(dupUrl)) {
+                updates.gallery = pkg.gallery.map((url: string) => url === dupUrl ? canonicalUrl : url);
+                updated = true;
+              }
+
+              if (updated) {
+                await supabase.from('packages').update(updates).eq('id', pkg.id);
+              }
+            }
+
+            // Update activities
+            const { data: activities } = await supabase.from('activities').select('*');
+            for (const activity of activities || []) {
+              let updated = false;
+              const updates: any = {};
+
+              if (activity.image === dupUrl) {
+                updates.image = canonicalUrl;
+                updated = true;
+              }
+              if (Array.isArray(activity.media_urls)) {
+                const updatedUrls = activity.media_urls.map((item: any) => {
+                  const url = typeof item === 'string' ? item : item?.url;
+                  if (url === dupUrl) {
+                    return typeof item === 'string' ? canonicalUrl : { ...item, url: canonicalUrl };
+                  }
+                  return item;
+                });
+                if (JSON.stringify(updatedUrls) !== JSON.stringify(activity.media_urls)) {
+                  updates.media_urls = updatedUrls;
+                  updated = true;
+                }
+              }
+
+              if (updated) {
+                await supabase.from('activities').update(updates).eq('id', activity.id);
+              }
+            }
+
+            // Update spa services
+            const { data: spaServices } = await supabase.from('spa_services').select('*');
+            for (const service of spaServices || []) {
+              let updated = false;
+              const updates: any = {};
+
+              if (service.image === dupUrl) {
+                updates.image = canonicalUrl;
+                updated = true;
+              }
+              if (Array.isArray(service.media_urls) && service.media_urls.includes(dupUrl)) {
+                updates.media_urls = service.media_urls.map((url: string) => url === dupUrl ? canonicalUrl : url);
+                updated = true;
+              }
+
+              if (updated) {
+                await supabase.from('spa_services').update(updates).eq('id', service.id);
+              }
+            }
+
+            // Update meals
+            await supabase.from('meals')
+              .update({ featured_media: canonicalUrl })
+              .eq('featured_media', dupUrl);
+          }
+
+          // Delete duplicate images
+          const { error: deleteError } = await supabase
+            .from('gallery_images')
+            .delete()
+            .in('id', imagesToDelete.map(img => img.id));
+
+          if (deleteError) throw deleteError;
+          
+          successCount++;
+        } catch (error) {
+          console.error(`Failed to merge group ${group.hash}:`, error);
+          failCount++;
+        }
+      }
 
       toast({
-        title: "Duplicates Merged!",
-        description: `Removed ${imagesToDelete.length} duplicate(s), freed ${formatFileSize((keepImage.file_size || 0) * imagesToDelete.length)}`,
+        title: "Merge Complete!",
+        description: `Successfully merged ${successCount} groups${failCount > 0 ? `, ${failCount} failed` : ''}. Freed ${formatFileSize(duplicateStats.wastedSpace)}.`,
       });
 
       refetch();
     } catch (error) {
-      console.error('Error merging duplicates:', error);
+      console.error('Error during merge:', error);
       toast({
         title: "Merge Failed",
-        description: error.message || "Failed to merge duplicates. They may be in use.",
+        description: error.message || "Failed to merge duplicates",
         variant: "destructive",
       });
+    } finally {
+      setIsMigrating(false);
     }
   };
 
@@ -502,6 +661,8 @@ const MediaManagement = () => {
           duplicatesFilter={filters.duplicatesFilter}
           onDuplicatesFilterChange={() => setFilters({ ...filters, duplicatesFilter: 'duplicates', usageFilter: 'all' })}
           formatFileSize={formatFileSize}
+          onMergeDuplicates={handleMergeAllDuplicates}
+          isMerging={isMigrating}
         />
       )}
       {statsLoading && (
