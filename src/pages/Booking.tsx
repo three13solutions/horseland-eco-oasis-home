@@ -447,6 +447,35 @@ const Booking = () => {
     setShowBookingForm(true);
   };
 
+  const handleClearBooking = () => {
+    if (confirm('Are you sure you want to clear your booking? All selections will be lost.')) {
+      // Clear all selections
+      setSelectedRoomType(null);
+      setSelectedAddons([]);
+      setSelectedPickup(null);
+      setSelectedBedding([]);
+      setShowBookingForm(false);
+      setShowGuestDetails(false);
+      setGuestDetails({
+        name: '',
+        email: '',
+        phone: '',
+        address: '',
+        dietaryPreference: 'no-preference',
+        specialRequests: ''
+      });
+      
+      // Clear localStorage
+      localStorage.removeItem('currentBooking');
+      
+      // Show success message
+      toast({
+        title: "Booking Cleared",
+        description: "Your booking has been cleared. You can start a new booking.",
+      });
+    }
+  };
+
   const addAddon = (addon: Addon) => {
     // Validate that dates and room are selected
     if (!checkIn || !checkOut) {
@@ -1266,35 +1295,45 @@ const Booking = () => {
                        <span>₹{calculateTotal().toLocaleString()}</span>
                      </div>
 
-                      <div className="grid grid-cols-2 gap-3">
+                      <div className="space-y-3">
+                        <div className="grid grid-cols-2 gap-3">
+                          <Button 
+                            variant="outline"
+                            className="w-full" 
+                            size="lg"
+                            onClick={() => {
+                              const summaryElement = document.querySelector('[data-booking-summary]');
+                              summaryElement?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                            }}
+                          >
+                            View Booking
+                          </Button>
+                          {!showGuestDetails ? (
+                            <Button 
+                              className="w-full" 
+                              size="lg"
+                              onClick={handleProceedToGuestDetails}
+                            >
+                              Add to Stay
+                            </Button>
+                          ) : (
+                            <Button 
+                              className="w-full" 
+                              size="lg"
+                              onClick={handleProceedToPayment}
+                            >
+                              Proceed to Payment
+                            </Button>
+                          )}
+                        </div>
                         <Button 
-                          variant="outline"
+                          variant="destructive"
                           className="w-full" 
                           size="lg"
-                          onClick={() => {
-                            const summaryElement = document.querySelector('[data-booking-summary]');
-                            summaryElement?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                          }}
+                          onClick={handleClearBooking}
                         >
-                          View Booking
+                          Clear Booking
                         </Button>
-                        {!showGuestDetails ? (
-                          <Button 
-                            className="w-full" 
-                            size="lg"
-                            onClick={handleProceedToGuestDetails}
-                          >
-                            Add to Stay
-                          </Button>
-                        ) : (
-                          <Button 
-                            className="w-full" 
-                            size="lg"
-                            onClick={handleProceedToPayment}
-                          >
-                            Proceed to Payment
-                          </Button>
-                        )}
                       </div>
                   </CardContent>
                 </Card>
