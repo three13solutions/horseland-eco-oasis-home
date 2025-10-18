@@ -1144,13 +1144,16 @@ const Booking = () => {
                           {guestMeals.map((guest, index) => {
                             const maxDays = calculateNights();
                             
+                            // Check if selected room is a pool deck room
+                            const isPoolDeckRoom = selectedRoomType?.name?.toLowerCase().includes('pool deck') || false;
+                            
                             const mealOptions = [
                               { 
                                 mealType: 'breakfast', 
                                 label: 'Breakfast',
                                 services: [
                                   { key: 'breakfast', label: 'Buffet', quantityKey: 'mealTypeQuantities' },
-                                  { key: 'sitoutBreakfast', label: 'Sitout at Room', quantityKey: 'specialArrangements', price: 200 }
+                                  ...(isPoolDeckRoom ? [{ key: 'sitoutBreakfast', label: 'Sitout at Room', quantityKey: 'specialArrangements', price: 200 }] : [])
                                 ]
                               },
                               { 
@@ -1158,7 +1161,7 @@ const Booking = () => {
                                 label: 'Lunch',
                                 services: [
                                   { key: 'lunch', label: 'Buffet', quantityKey: 'mealTypeQuantities' },
-                                  { key: 'sitoutLunch', label: 'Sitout at Room', quantityKey: 'specialArrangements', price: 300 }
+                                  ...(isPoolDeckRoom ? [{ key: 'sitoutLunch', label: 'Sitout at Room', quantityKey: 'specialArrangements', price: 300 }] : [])
                                 ]
                               },
                               { 
@@ -1166,7 +1169,7 @@ const Booking = () => {
                                 label: 'High Tea',
                                 services: [
                                   { key: 'high_tea', label: 'Buffet', quantityKey: 'mealTypeQuantities' },
-                                  { key: 'sitoutHighTea', label: 'Sitout at Room', quantityKey: 'specialArrangements', price: 150 }
+                                  ...(isPoolDeckRoom ? [{ key: 'sitoutHighTea', label: 'Sitout at Room', quantityKey: 'specialArrangements', price: 150 }] : [])
                                 ]
                               },
                               { 
@@ -1174,7 +1177,7 @@ const Booking = () => {
                                 label: 'Dinner',
                                 services: [
                                   { key: 'dinner', label: 'Buffet', quantityKey: 'mealTypeQuantities' },
-                                  { key: 'sitoutDinner', label: 'Sitout at Room', quantityKey: 'specialArrangements', price: 400 },
+                                  ...(isPoolDeckRoom ? [{ key: 'sitoutDinner', label: 'Sitout at Room', quantityKey: 'specialArrangements', price: 400 }] : []),
                                   { key: 'candleLightDinner', label: 'Candle Night', quantityKey: 'specialArrangements', price: 1500 }
                                 ]
                               }
