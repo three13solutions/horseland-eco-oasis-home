@@ -110,6 +110,22 @@ export default function YearCalendarView({ seasons, holidays, year = new Date().
     setIsDrawing(false);
   };
 
+  // Prevent text selection during drag
+  React.useEffect(() => {
+    if (isDrawing) {
+      document.body.style.userSelect = 'none';
+      document.body.style.webkitUserSelect = 'none';
+    } else {
+      document.body.style.userSelect = '';
+      document.body.style.webkitUserSelect = '';
+    }
+    
+    return () => {
+      document.body.style.userSelect = '';
+      document.body.style.webkitUserSelect = '';
+    };
+  }, [isDrawing]);
+
   const handleSaveChanges = async () => {
     if (!pendingChanges.size) return;
 
@@ -239,17 +255,27 @@ export default function YearCalendarView({ seasons, holidays, year = new Date().
             <TooltipTrigger asChild>
               <div
                 className={cn(
-                  "aspect-square rounded-sm flex items-center justify-center text-xs font-medium cursor-pointer transition-all hover:scale-110 hover:z-10 hover:shadow-md relative select-none",
+                  "aspect-square rounded-sm flex items-center justify-center text-xs font-medium transition-all relative select-none touch-none",
+                  "hover:scale-110 hover:z-10 hover:shadow-md",
                   season && "shadow-sm",
-                  hasChange && "ring-2 ring-primary ring-offset-1"
+                  hasChange && "ring-2 ring-primary ring-offset-1",
+                  isDrawing ? "cursor-crosshair" : "cursor-pointer",
+                  isDrawing && selectedSeason && "hover:ring-2 hover:ring-offset-1"
                 )}
                 style={{
                   backgroundColor: season ? season.color : isWeekend ? 'hsl(var(--muted))' : 'transparent',
                   color: season ? 'white' : 'hsl(var(--foreground))',
+                  ...(isDrawing && selectedSeason && { 
+                    boxShadow: `0 0 0 2px ${selectedSeason.color}40` 
+                  })
                 }}
-                onMouseDown={() => handleMouseDown(monthIndex, day)}
+                onMouseDown={(e) => {
+                  e.preventDefault();
+                  handleMouseDown(monthIndex, day);
+                }}
                 onMouseEnter={() => handleMouseEnter(monthIndex, day)}
                 onMouseUp={handleMouseUp}
+                onDragStart={(e) => e.preventDefault()}
               >
                 {day}
                 {holiday && (
@@ -325,21 +351,40 @@ export default function YearCalendarView({ seasons, holidays, year = new Date().
   }, [seasons]);
 
   return (
-    <div className="space-y-6" onMouseUp={handleMouseUp} onMouseLeave={handleMouseUp}>
+    <div 
+      className="space-y-6" 
+      onMouseUp={handleMouseUp} 
+      onMouseLeave={handleMouseUp}
+      style={{ userSelect: isDrawing ? 'none' : 'auto' }}
+    >
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-xl font-semibold">Calendar Year View - {year}</h2>
           <p className="text-sm text-muted-foreground mt-1">
-            Click and drag to assign seasons. Holidays are marked with red dots.
+            {isDrawing ? (
+              <span className="text-primary font-medium">
+                Painting with {selectedSeason?.name}... Release to stop
+              </span>
+            ) : (
+              <span>Click and drag across dates to paint seasons. Holidays are marked with red dots.</span>
+            )}
           </p>
         </div>
       </div>
 
-      <div className="flex items-center justify-between gap-4 p-4 border rounded-lg bg-muted/30">
+      <div className={cn(
+        "flex items-center justify-between gap-4 p-4 border rounded-lg transition-colors",
+        isDrawing ? "bg-primary/10 border-primary" : "bg-muted/30"
+      )}>
         <div className="flex items-center gap-3">
-          <Paintbrush className="h-5 w-5 text-muted-foreground" />
+          <Paintbrush className={cn(
+            "h-5 w-5 transition-colors",
+            isDrawing ? "text-primary" : "text-muted-foreground"
+          )} />
           <div className="flex items-center gap-2">
-            <span className="text-sm font-medium">Paint with:</span>
+            <span className="text-sm font-medium">
+              {isDrawing ? "Painting:" : "Select season:"}
+            </span>
             {seasons.map(season => (
               <Button
                 key={season.id}
@@ -347,6 +392,7 @@ export default function YearCalendarView({ seasons, holidays, year = new Date().
                 variant={selectedSeason?.id === season.id ? "default" : "outline"}
                 onClick={() => setSelectedSeason(season)}
                 className="gap-2"
+                disabled={isDrawing}
               >
                 <div 
                   className="w-3 h-3 rounded-sm" 
