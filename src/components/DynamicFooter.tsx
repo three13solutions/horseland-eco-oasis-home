@@ -24,6 +24,7 @@ interface SiteSettings {
 
 const DynamicFooter = () => {
   const [footerSections, setFooterSections] = useState<FooterSection[]>([]);
+  const [packages, setPackages] = useState<any[]>([]);
   const [siteSettings, setSiteSettings] = useState<SiteSettings>({
     brand_name: 'Horseland Hotel',
     brand_monogram: '/lovable-uploads/24f5ee9b-ce5a-4b86-a2d8-7ca42e0a78cf.png',
@@ -36,6 +37,7 @@ const DynamicFooter = () => {
 
   useEffect(() => {
     loadFooterData();
+    loadPackages();
   }, []);
 
   const loadFooterData = async () => {
@@ -67,6 +69,22 @@ const DynamicFooter = () => {
       }
     } catch (error) {
       console.error('Error loading footer data:', error);
+    }
+  };
+
+  const loadPackages = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('packages')
+        .select('id, title')
+        .eq('is_active', true)
+        .order('is_featured', { ascending: false })
+        .limit(4);
+
+      if (error) throw error;
+      setPackages(data || []);
+    } catch (error) {
+      console.error('Error loading packages:', error);
     }
   };
 
@@ -186,35 +204,37 @@ const DynamicFooter = () => {
             <h3 className="text-lg font-semibold text-background">
               Explore Packages
             </h3>
-            <ul className="space-y-2">
-              <li>
-                <Link to="/packages" className="text-background/80 hover:text-primary transition-colors hover:translate-x-1 transform duration-200 inline-block text-sm">
-                  Family Adventure
+            {packages.length > 0 ? (
+              <>
+                <ul className="space-y-2">
+                  {packages.map((pkg) => (
+                    <li key={pkg.id}>
+                      <Link 
+                        to={`/packages/${pkg.id}`} 
+                        className="text-background/80 hover:text-primary transition-colors hover:translate-x-1 transform duration-200 inline-block text-sm"
+                      >
+                        {pkg.title}
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+                <Link 
+                  to="/packages" 
+                  className="inline-flex items-center text-primary hover:text-primary/80 text-sm font-medium transition-colors"
+                >
+                  View All Packages
+                  <ExternalLink className="w-3 h-3 ml-1" />
                 </Link>
-              </li>
-              <li>
-                <Link to="/packages" className="text-background/80 hover:text-primary transition-colors hover:translate-x-1 transform duration-200 inline-block text-sm">
-                  Romantic Getaway
-                </Link>
-              </li>
-              <li>
-                <Link to="/packages" className="text-background/80 hover:text-primary transition-colors hover:translate-x-1 transform duration-200 inline-block text-sm">
-                  Corporate Retreat
-                </Link>
-              </li>
-              <li>
-                <Link to="/packages" className="text-background/80 hover:text-primary transition-colors hover:translate-x-1 transform duration-200 inline-block text-sm">
-                  Adventure Seeker
-                </Link>
-              </li>
-            </ul>
-            <Link 
-              to="/packages" 
-              className="inline-flex items-center text-primary hover:text-primary/80 text-sm font-medium transition-colors"
-            >
-              View All Packages
-              <ExternalLink className="w-3 h-3 ml-1" />
-            </Link>
+              </>
+            ) : (
+              <Link 
+                to="/packages" 
+                className="inline-flex items-center text-primary hover:text-primary/80 text-sm font-medium transition-colors"
+              >
+                View All Packages
+                <ExternalLink className="w-3 h-3 ml-1" />
+              </Link>
+            )}
           </div>
 
           {/* Connect Section - Fourth Column */}
