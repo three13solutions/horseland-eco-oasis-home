@@ -254,7 +254,13 @@ const GalleryV5 = () => {
             Tag us @horselandresort and use #MatheranMoments to be featured in our gallery
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <button className="bg-gradient-to-r from-primary to-accent text-white px-6 py-3 rounded-xl font-semibold hover:shadow-lg transform hover:scale-105 transition-all flex items-center justify-center">
+            <button 
+              onClick={() => {
+                setSelectedImageIndex(0);
+                setLightboxOpen(true);
+              }}
+              className="bg-gradient-to-r from-primary to-accent text-white px-6 py-3 rounded-xl font-semibold hover:shadow-lg transform hover:scale-105 transition-all flex items-center justify-center"
+            >
               <Camera className="w-4 h-4 mr-2" />
               View Full Gallery
             </button>
@@ -262,7 +268,7 @@ const GalleryV5 = () => {
               onClick={openInstagram}
               className="border border-primary text-primary px-6 py-3 rounded-xl font-semibold hover:bg-primary/10 transition-all flex items-center justify-center"
             >
-              Follow @horselandresort
+              Follow @horseland_matheran
               <ArrowRight className="ml-2 h-4 w-4" />
             </button>
           </div>
