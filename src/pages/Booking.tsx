@@ -642,7 +642,7 @@ const Booking = () => {
   // Helper function to calculate total meals for a specific meal type
   const getTotalMealsForType = (guest: GuestMeal, mealType: string): number => {
     let total = guest.mealTypeQuantities[mealType] || 0;
-    // Service in room and candle light dinner are separate services, not counted per meal type
+    // Meal service to the room and candle light dinner are separate services, not counted per meal type
     return total;
   };
 
@@ -782,9 +782,9 @@ const Booking = () => {
         }
       });
       
-      // Calculate service in room and candle light dinner
+      // Calculate meal service to the room and candle light dinner
       if (guest.serviceInRoomQuantity > 0) {
-        total += 300 * guest.serviceInRoomQuantity; // Service in room price
+        total += 300 * guest.serviceInRoomQuantity; // Meal service to the room price
       }
       if (guest.candleLightDinnerQuantity > 0) {
         total += 1500 * guest.candleLightDinnerQuantity; // Candle light dinner price
@@ -1380,10 +1380,10 @@ const Booking = () => {
                                     <div className="mt-6 pt-6 border-t space-y-4">
                                       <div className="font-medium text-sm">Additional Services</div>
                                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                        {/* Service in Room */}
+                                        {/* Meal Service to the Room */}
                                         <div className="border rounded-lg p-4 space-y-3">
                                           <div className="text-center">
-                                            <div className="font-medium text-sm">Service in Room</div>
+                                            <div className="font-medium text-sm">Meal Service to the Room</div>
                                             <div className="text-xs text-muted-foreground">₹300 per meal</div>
                                             <div className="text-xs text-muted-foreground mt-1">
                                               How many meals do you want served in your room?
@@ -1769,10 +1769,10 @@ const Booking = () => {
                                       );
                                     })}
                                     
-                                    {/* Service in Room */}
+                                    {/* Meal Service to the Room */}
                                     {guest.serviceInRoomQuantity > 0 && (
                                       <div className="flex justify-between gap-2 text-sm">
-                                        <span className="text-muted-foreground break-words">• Service in Room × {guest.serviceInRoomQuantity}</span>
+                                        <span className="text-muted-foreground break-words">• Meal Service to the Room × {guest.serviceInRoomQuantity}</span>
                                         <span className="font-medium whitespace-nowrap">₹{(300 * guest.serviceInRoomQuantity).toLocaleString()}</span>
                                       </div>
                                     )}
