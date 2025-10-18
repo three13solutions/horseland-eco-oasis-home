@@ -16,6 +16,8 @@ const Dining = () => {
   const [heroTitle, setHeroTitle] = React.useState('Farm-to-Table Dining');
   const [heroSubtitle, setHeroSubtitle] = React.useState('Savor authentic flavors crafted from local ingredients');
   const [meals, setMeals] = React.useState<any[]>([]);
+  const [inRoomDiningImage, setInRoomDiningImage] = React.useState('https://images.unsplash.com/photo-1590846406792-0adc7f938f1d?w=600&h=400&fit=crop');
+  const [candleLightDinnerImage, setCandleLightDinnerImage] = React.useState('https://images.unsplash.com/photo-1470337458703-46ad1756a187?w=600&h=400&fit=crop');
 
   React.useEffect(() => {
     const fetchPageData = async () => {
@@ -35,9 +37,56 @@ const Dining = () => {
         .order('meal_type');
       if (data) setMeals(data);
     };
+
+    const fetchSpecialDiningImages = async () => {
+      // Fetch dining gallery category
+      const { data: category } = await supabase
+        .from('gallery_categories')
+        .select('id')
+        .eq('slug', 'dining')
+        .eq('is_active', true)
+        .maybeSingle();
+
+      if (category) {
+        // Fetch in-room dining image
+        const { data: inRoomData } = await supabase
+          .from('image_categories')
+          .select('gallery_images(image_url)')
+          .eq('category_id', category.id)
+          .limit(1);
+        
+        if (inRoomData?.[0]?.gallery_images) {
+          const images = inRoomData as any[];
+          const inRoomImage = images.find((img: any) => 
+            img.gallery_images?.tags?.includes('in-room-dining')
+          );
+          if (inRoomImage?.gallery_images?.image_url) {
+            setInRoomDiningImage(inRoomImage.gallery_images.image_url);
+          }
+        }
+
+        // Fetch candle light dinner image
+        const { data: candleData } = await supabase
+          .from('image_categories')
+          .select('gallery_images(image_url)')
+          .eq('category_id', category.id)
+          .limit(1);
+        
+        if (candleData?.[0]?.gallery_images) {
+          const images = candleData as any[];
+          const candleImage = images.find((img: any) => 
+            img.gallery_images?.tags?.includes('candle-light-dinner')
+          );
+          if (candleImage?.gallery_images?.image_url) {
+            setCandleLightDinnerImage(candleImage.gallery_images.image_url);
+          }
+        }
+      }
+    };
     
     fetchPageData();
     fetchMeals();
+    fetchSpecialDiningImages();
   }, []);
 
   // Get meal descriptions for buffet variants of a meal type
@@ -294,7 +343,7 @@ const Dining = () => {
             <div className="bg-card border rounded-lg overflow-hidden group">
               <div className="relative h-48">
                 <img 
-                  src="https://images.unsplash.com/photo-1590846406792-0adc7f938f1d?w=600&h=400&fit=crop"
+                  src={inRoomDiningImage}
                   alt="In-Room Dining"
                   className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
                 />
@@ -320,7 +369,7 @@ const Dining = () => {
             <div className="bg-card border rounded-lg overflow-hidden group">
               <div className="relative h-48">
                 <img 
-                  src="https://images.unsplash.com/photo-1470337458703-46ad1756a187?w=600&h=400&fit=crop"
+                  src={candleLightDinnerImage}
                   alt="Candle Light Dinner"
                   className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
                 />
