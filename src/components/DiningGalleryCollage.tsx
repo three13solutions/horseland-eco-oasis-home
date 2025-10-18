@@ -50,6 +50,26 @@ const DiningGalleryCollage = () => {
     fetchDiningGallery();
   }, []);
 
+  // Reset to center set when reaching boundaries
+  useEffect(() => {
+    if (images.length === 0) return;
+    
+    const centerOffset = images.length;
+    
+    if (currentIndex <= 0) {
+      setTimeout(() => setCurrentIndex(centerOffset), 500);
+    } else if (currentIndex >= images.length * 2) {
+      setTimeout(() => setCurrentIndex(centerOffset), 500);
+    }
+  }, [currentIndex, images.length]);
+
+  // Initialize at center
+  useEffect(() => {
+    if (images.length > 0 && currentIndex === 0) {
+      setCurrentIndex(images.length);
+    }
+  }, [images.length]);
+
   if (images.length === 0) {
     return null;
   }
@@ -74,22 +94,6 @@ const DiningGalleryCollage = () => {
       handleNext();
     }
   };
-
-  // Reset to center set when reaching boundaries
-  useEffect(() => {
-    if (currentIndex <= 0) {
-      setTimeout(() => setCurrentIndex(centerOffset), 500);
-    } else if (currentIndex >= images.length * 2) {
-      setTimeout(() => setCurrentIndex(centerOffset), 500);
-    }
-  }, [currentIndex, centerOffset, images.length]);
-
-  // Initialize at center
-  useEffect(() => {
-    if (images.length > 0 && currentIndex === 0) {
-      setCurrentIndex(centerOffset);
-    }
-  }, [images.length, centerOffset]);
 
   return (
     <div className="container mx-auto px-4 sm:px-6 lg:px-8">
