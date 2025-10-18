@@ -94,7 +94,7 @@ const StayPreviewV5 = () => {
 
                 {/* Content */}
                 <div className="p-8">
-                  <div className="mb-4">
+                  <div className="mb-6">
                     <h3 className="text-2xl font-bold text-foreground mb-3">
                       {room.name}
                     </h3>
@@ -102,20 +102,6 @@ const StayPreviewV5 = () => {
                       {room.description || 'Experience comfort and luxury in this beautifully designed accommodation.'}
                     </p>
                   </div>
-
-                  {/* Amenities */}
-                  {features.length > 0 && (
-                    <div className="grid grid-cols-2 gap-2 mb-6">
-                      {features.map((feature: any, amenityIndex: number) => (
-                        <div key={amenityIndex} className="flex items-center space-x-2">
-                          <div className="w-1.5 h-1.5 bg-primary rounded-full"></div>
-                          <span className="text-sm text-muted-foreground truncate">
-                            {typeof feature === 'string' ? feature : feature.title || feature.name || 'Feature'}
-                          </span>
-                        </div>
-                      ))}
-                    </div>
-                  )}
 
                   {/* CTA */}
                   <Link to={`/stay/${room.id}`}>
