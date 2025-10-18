@@ -10,13 +10,7 @@ import { Clock, MapPin, Users, Star, Plus, Grid3x3, List, Filter, X } from 'luci
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { cn } from '@/lib/utils';
 
 interface Activity {
   id: string;
@@ -375,149 +369,468 @@ const Activities = () => {
 
                 {/* Location Group */}
                 <div>
-                  <label className="text-sm font-semibold mb-2 block">Location</label>
-                  <Select value={locationFilter} onValueChange={(value) => setLocationFilter(value as any)}>
-                    <SelectTrigger className="w-full">
-                      <SelectValue placeholder="Location" />
-                    </SelectTrigger>
-                    <SelectContent className="bg-background z-50">
-                      <SelectItem value="all">All Locations</SelectItem>
-                      <SelectItem value="on_property">On Property</SelectItem>
-                      <SelectItem value="off_property">Off Property</SelectItem>
-                    </SelectContent>
-                  </Select>
+                  <label className="text-sm font-semibold mb-3 block">Location</label>
+                  <div className="flex flex-col gap-2">
+                    <Button
+                      variant={locationFilter === 'all' ? 'default' : 'outline'}
+                      size="sm"
+                      onClick={() => setLocationFilter('all')}
+                      className="justify-start"
+                    >
+                      All Locations
+                    </Button>
+                    <Button
+                      variant={locationFilter === 'on_property' ? 'default' : 'outline'}
+                      size="sm"
+                      onClick={() => setLocationFilter('on_property')}
+                      className="justify-start"
+                    >
+                      On Property
+                    </Button>
+                    <Button
+                      variant={locationFilter === 'off_property' ? 'default' : 'outline'}
+                      size="sm"
+                      onClick={() => setLocationFilter('off_property')}
+                      className="justify-start"
+                    >
+                      Off Property
+                    </Button>
+                  </div>
                 </div>
 
                 {/* Season Group */}
                 <div>
-                  <label className="text-sm font-semibold mb-2 block">Season</label>
-                  <Select value={seasonFilter} onValueChange={setSeasonFilter}>
-                    <SelectTrigger className="w-full">
-                      <SelectValue placeholder="Season" />
-                    </SelectTrigger>
-                    <SelectContent className="bg-background z-50">
-                      <SelectItem value="all">All Seasons</SelectItem>
-                      <SelectItem value="monsoon">Monsoon</SelectItem>
-                      <SelectItem value="winter">Winter</SelectItem>
-                      <SelectItem value="spring">Spring</SelectItem>
-                      <SelectItem value="summer">Summer</SelectItem>
-                    </SelectContent>
-                  </Select>
+                  <label className="text-sm font-semibold mb-3 block">Season</label>
+                  <div className="grid grid-cols-2 gap-2">
+                    <Button
+                      variant={seasonFilter === 'all' ? 'default' : 'outline'}
+                      size="sm"
+                      onClick={() => setSeasonFilter('all')}
+                      className="justify-start"
+                    >
+                      All Seasons
+                    </Button>
+                    <Button
+                      variant={seasonFilter === 'monsoon' ? 'default' : 'outline'}
+                      size="sm"
+                      onClick={() => setSeasonFilter('monsoon')}
+                      className="justify-start"
+                    >
+                      Monsoon
+                    </Button>
+                    <Button
+                      variant={seasonFilter === 'winter' ? 'default' : 'outline'}
+                      size="sm"
+                      onClick={() => setSeasonFilter('winter')}
+                      className="justify-start"
+                    >
+                      Winter
+                    </Button>
+                    <Button
+                      variant={seasonFilter === 'spring' ? 'default' : 'outline'}
+                      size="sm"
+                      onClick={() => setSeasonFilter('spring')}
+                      className="justify-start"
+                    >
+                      Spring
+                    </Button>
+                    <Button
+                      variant={seasonFilter === 'summer' ? 'default' : 'outline'}
+                      size="sm"
+                      onClick={() => setSeasonFilter('summer')}
+                      className="justify-start"
+                    >
+                      Summer
+                    </Button>
+                  </div>
                 </div>
 
                 {/* Audience Group */}
                 <div>
-                  <label className="text-sm font-semibold mb-2 block">Suitable For</label>
-                  <Select value={audienceFilter} onValueChange={setAudienceFilter}>
-                    <SelectTrigger className="w-full">
-                      <SelectValue placeholder="Suitable For" />
-                    </SelectTrigger>
-                    <SelectContent className="bg-background z-50">
-                      <SelectItem value="all">Everyone</SelectItem>
-                      <SelectItem value="families">Families</SelectItem>
-                      <SelectItem value="couples">Couples</SelectItem>
-                      <SelectItem value="kids">Kids</SelectItem>
-                      <SelectItem value="adults">Adults</SelectItem>
-                      <SelectItem value="teens">Teens</SelectItem>
-                      <SelectItem value="groups">Groups</SelectItem>
-                      <SelectItem value="seniors">Seniors</SelectItem>
-                      <SelectItem value="solo">Solo Travelers</SelectItem>
-                    </SelectContent>
-                  </Select>
+                  <label className="text-sm font-semibold mb-3 block">Suitable For</label>
+                  <div className="grid grid-cols-2 gap-2">
+                    <Button
+                      variant={audienceFilter === 'all' ? 'default' : 'outline'}
+                      size="sm"
+                      onClick={() => setAudienceFilter('all')}
+                      className="justify-start col-span-2"
+                    >
+                      Everyone
+                    </Button>
+                    <Button
+                      variant={audienceFilter === 'families' ? 'default' : 'outline'}
+                      size="sm"
+                      onClick={() => setAudienceFilter('families')}
+                      className="justify-start"
+                    >
+                      Families
+                    </Button>
+                    <Button
+                      variant={audienceFilter === 'couples' ? 'default' : 'outline'}
+                      size="sm"
+                      onClick={() => setAudienceFilter('couples')}
+                      className="justify-start"
+                    >
+                      Couples
+                    </Button>
+                    <Button
+                      variant={audienceFilter === 'kids' ? 'default' : 'outline'}
+                      size="sm"
+                      onClick={() => setAudienceFilter('kids')}
+                      className="justify-start"
+                    >
+                      Kids
+                    </Button>
+                    <Button
+                      variant={audienceFilter === 'adults' ? 'default' : 'outline'}
+                      size="sm"
+                      onClick={() => setAudienceFilter('adults')}
+                      className="justify-start"
+                    >
+                      Adults
+                    </Button>
+                    <Button
+                      variant={audienceFilter === 'teens' ? 'default' : 'outline'}
+                      size="sm"
+                      onClick={() => setAudienceFilter('teens')}
+                      className="justify-start"
+                    >
+                      Teens
+                    </Button>
+                    <Button
+                      variant={audienceFilter === 'groups' ? 'default' : 'outline'}
+                      size="sm"
+                      onClick={() => setAudienceFilter('groups')}
+                      className="justify-start"
+                    >
+                      Groups
+                    </Button>
+                    <Button
+                      variant={audienceFilter === 'seniors' ? 'default' : 'outline'}
+                      size="sm"
+                      onClick={() => setAudienceFilter('seniors')}
+                      className="justify-start"
+                    >
+                      Seniors
+                    </Button>
+                    <Button
+                      variant={audienceFilter === 'solo' ? 'default' : 'outline'}
+                      size="sm"
+                      onClick={() => setAudienceFilter('solo')}
+                      className="justify-start"
+                    >
+                      Solo
+                    </Button>
+                  </div>
                 </div>
 
                 {/* Price Group */}
                 <div>
-                  <label className="text-sm font-semibold mb-2 block">Price Range</label>
-                  <Select value={priceFilter} onValueChange={setPriceFilter}>
-                    <SelectTrigger className="w-full">
-                      <SelectValue placeholder="Price Range" />
-                    </SelectTrigger>
-                    <SelectContent className="bg-background z-50">
-                      <SelectItem value="all">All Prices</SelectItem>
-                      <SelectItem value="free">Free</SelectItem>
-                      <SelectItem value="under_500">Under ₹500</SelectItem>
-                      <SelectItem value="500_1000">₹500 - ₹1000</SelectItem>
-                      <SelectItem value="above_1000">Above ₹1000</SelectItem>
-                    </SelectContent>
-                  </Select>
+                  <label className="text-sm font-semibold mb-3 block">Price Range</label>
+                  <div className="flex flex-col gap-2">
+                    <Button
+                      variant={priceFilter === 'all' ? 'default' : 'outline'}
+                      size="sm"
+                      onClick={() => setPriceFilter('all')}
+                      className="justify-start"
+                    >
+                      All Prices
+                    </Button>
+                    <Button
+                      variant={priceFilter === 'free' ? 'default' : 'outline'}
+                      size="sm"
+                      onClick={() => setPriceFilter('free')}
+                      className="justify-start"
+                    >
+                      Free
+                    </Button>
+                    <Button
+                      variant={priceFilter === 'under_500' ? 'default' : 'outline'}
+                      size="sm"
+                      onClick={() => setPriceFilter('under_500')}
+                      className="justify-start"
+                    >
+                      Under ₹500
+                    </Button>
+                    <Button
+                      variant={priceFilter === '500_1000' ? 'default' : 'outline'}
+                      size="sm"
+                      onClick={() => setPriceFilter('500_1000')}
+                      className="justify-start"
+                    >
+                      ₹500 - ₹1000
+                    </Button>
+                    <Button
+                      variant={priceFilter === 'above_1000' ? 'default' : 'outline'}
+                      size="sm"
+                      onClick={() => setPriceFilter('above_1000')}
+                      className="justify-start"
+                    >
+                      Above ₹1000
+                    </Button>
+                  </div>
                 </div>
 
                 {/* Activity Type Group */}
                 <div>
-                  <label className="text-sm font-semibold mb-2 block">Activity Type</label>
-                  <Select value={activityTagFilter} onValueChange={setActivityTagFilter}>
-                    <SelectTrigger className="w-full">
-                      <SelectValue placeholder="Activity Type" />
-                    </SelectTrigger>
-                    <SelectContent className="bg-background z-50">
-                      <SelectItem value="all">All Types</SelectItem>
-                      <SelectItem value="adventure">Adventure</SelectItem>
-                      <SelectItem value="relaxing">Relaxing</SelectItem>
-                      <SelectItem value="cultural">Cultural</SelectItem>
-                      <SelectItem value="sports">Sports</SelectItem>
-                      <SelectItem value="nature">Nature</SelectItem>
-                      <SelectItem value="indoor">Indoor</SelectItem>
-                      <SelectItem value="outdoor">Outdoor</SelectItem>
-                      <SelectItem value="educational">Educational</SelectItem>
-                    </SelectContent>
-                  </Select>
+                  <label className="text-sm font-semibold mb-3 block">Activity Type</label>
+                  <div className="grid grid-cols-2 gap-2">
+                    <Button
+                      variant={activityTagFilter === 'all' ? 'default' : 'outline'}
+                      size="sm"
+                      onClick={() => setActivityTagFilter('all')}
+                      className="justify-start col-span-2"
+                    >
+                      All Types
+                    </Button>
+                    <Button
+                      variant={activityTagFilter === 'adventure' ? 'default' : 'outline'}
+                      size="sm"
+                      onClick={() => setActivityTagFilter('adventure')}
+                      className="justify-start"
+                    >
+                      Adventure
+                    </Button>
+                    <Button
+                      variant={activityTagFilter === 'relaxing' ? 'default' : 'outline'}
+                      size="sm"
+                      onClick={() => setActivityTagFilter('relaxing')}
+                      className="justify-start"
+                    >
+                      Relaxing
+                    </Button>
+                    <Button
+                      variant={activityTagFilter === 'cultural' ? 'default' : 'outline'}
+                      size="sm"
+                      onClick={() => setActivityTagFilter('cultural')}
+                      className="justify-start"
+                    >
+                      Cultural
+                    </Button>
+                    <Button
+                      variant={activityTagFilter === 'sports' ? 'default' : 'outline'}
+                      size="sm"
+                      onClick={() => setActivityTagFilter('sports')}
+                      className="justify-start"
+                    >
+                      Sports
+                    </Button>
+                    <Button
+                      variant={activityTagFilter === 'nature' ? 'default' : 'outline'}
+                      size="sm"
+                      onClick={() => setActivityTagFilter('nature')}
+                      className="justify-start"
+                    >
+                      Nature
+                    </Button>
+                    <Button
+                      variant={activityTagFilter === 'indoor' ? 'default' : 'outline'}
+                      size="sm"
+                      onClick={() => setActivityTagFilter('indoor')}
+                      className="justify-start"
+                    >
+                      Indoor
+                    </Button>
+                    <Button
+                      variant={activityTagFilter === 'outdoor' ? 'default' : 'outline'}
+                      size="sm"
+                      onClick={() => setActivityTagFilter('outdoor')}
+                      className="justify-start"
+                    >
+                      Outdoor
+                    </Button>
+                    <Button
+                      variant={activityTagFilter === 'educational' ? 'default' : 'outline'}
+                      size="sm"
+                      onClick={() => setActivityTagFilter('educational')}
+                      className="justify-start"
+                    >
+                      Educational
+                    </Button>
+                  </div>
                 </div>
 
                 {/* Days Group */}
                 <div>
-                  <label className="text-sm font-semibold mb-2 block">Available Days</label>
-                  <Select value={daysFilter} onValueChange={setDaysFilter}>
-                    <SelectTrigger className="w-full">
-                      <SelectValue placeholder="Available Days" />
-                    </SelectTrigger>
-                    <SelectContent className="bg-background z-50">
-                      <SelectItem value="all">All Days</SelectItem>
-                      <SelectItem value="weekdays">Weekdays</SelectItem>
-                      <SelectItem value="weekends">Weekends</SelectItem>
-                      <SelectItem value="monday">Monday</SelectItem>
-                      <SelectItem value="tuesday">Tuesday</SelectItem>
-                      <SelectItem value="wednesday">Wednesday</SelectItem>
-                      <SelectItem value="thursday">Thursday</SelectItem>
-                      <SelectItem value="friday">Friday</SelectItem>
-                      <SelectItem value="saturday">Saturday</SelectItem>
-                      <SelectItem value="sunday">Sunday</SelectItem>
-                    </SelectContent>
-                  </Select>
+                  <label className="text-sm font-semibold mb-3 block">Available Days</label>
+                  <div className="flex flex-col gap-2">
+                    <Button
+                      variant={daysFilter === 'all' ? 'default' : 'outline'}
+                      size="sm"
+                      onClick={() => setDaysFilter('all')}
+                      className="justify-start"
+                    >
+                      All Days
+                    </Button>
+                    <Button
+                      variant={daysFilter === 'weekdays' ? 'default' : 'outline'}
+                      size="sm"
+                      onClick={() => setDaysFilter('weekdays')}
+                      className="justify-start"
+                    >
+                      Weekdays
+                    </Button>
+                    <Button
+                      variant={daysFilter === 'weekends' ? 'default' : 'outline'}
+                      size="sm"
+                      onClick={() => setDaysFilter('weekends')}
+                      className="justify-start"
+                    >
+                      Weekends
+                    </Button>
+                    <div className="grid grid-cols-2 gap-2">
+                      <Button
+                        variant={daysFilter === 'monday' ? 'default' : 'outline'}
+                        size="sm"
+                        onClick={() => setDaysFilter('monday')}
+                        className="justify-start"
+                      >
+                        Mon
+                      </Button>
+                      <Button
+                        variant={daysFilter === 'tuesday' ? 'default' : 'outline'}
+                        size="sm"
+                        onClick={() => setDaysFilter('tuesday')}
+                        className="justify-start"
+                      >
+                        Tue
+                      </Button>
+                      <Button
+                        variant={daysFilter === 'wednesday' ? 'default' : 'outline'}
+                        size="sm"
+                        onClick={() => setDaysFilter('wednesday')}
+                        className="justify-start"
+                      >
+                        Wed
+                      </Button>
+                      <Button
+                        variant={daysFilter === 'thursday' ? 'default' : 'outline'}
+                        size="sm"
+                        onClick={() => setDaysFilter('thursday')}
+                        className="justify-start"
+                      >
+                        Thu
+                      </Button>
+                      <Button
+                        variant={daysFilter === 'friday' ? 'default' : 'outline'}
+                        size="sm"
+                        onClick={() => setDaysFilter('friday')}
+                        className="justify-start"
+                      >
+                        Fri
+                      </Button>
+                      <Button
+                        variant={daysFilter === 'saturday' ? 'default' : 'outline'}
+                        size="sm"
+                        onClick={() => setDaysFilter('saturday')}
+                        className="justify-start"
+                      >
+                        Sat
+                      </Button>
+                      <Button
+                        variant={daysFilter === 'sunday' ? 'default' : 'outline'}
+                        size="sm"
+                        onClick={() => setDaysFilter('sunday')}
+                        className="justify-start"
+                      >
+                        Sun
+                      </Button>
+                    </div>
+                  </div>
                 </div>
 
                 {/* By Booking Group */}
                 <div>
-                  <label className="text-sm font-semibold mb-2 block">By Booking</label>
-                  <Select value={bookingTypeFilter} onValueChange={setBookingTypeFilter}>
-                    <SelectTrigger className="w-full">
-                      <SelectValue placeholder="By Booking" />
-                    </SelectTrigger>
-                    <SelectContent className="bg-background z-50">
-                      <SelectItem value="all">All Methods</SelectItem>
-                      <SelectItem value="reception">At Reception</SelectItem>
-                      <SelectItem value="online">Online</SelectItem>
-                      <SelectItem value="both">Both</SelectItem>
-                      <SelectItem value="third_party">Third Party</SelectItem>
-                      <SelectItem value="no_booking">No Booking</SelectItem>
-                    </SelectContent>
-                  </Select>
+                  <label className="text-sm font-semibold mb-3 block">By Booking</label>
+                  <div className="flex flex-col gap-2">
+                    <Button
+                      variant={bookingTypeFilter === 'all' ? 'default' : 'outline'}
+                      size="sm"
+                      onClick={() => setBookingTypeFilter('all')}
+                      className="justify-start"
+                    >
+                      All Methods
+                    </Button>
+                    <Button
+                      variant={bookingTypeFilter === 'reception' ? 'default' : 'outline'}
+                      size="sm"
+                      onClick={() => setBookingTypeFilter('reception')}
+                      className="justify-start"
+                    >
+                      At Reception
+                    </Button>
+                    <Button
+                      variant={bookingTypeFilter === 'online' ? 'default' : 'outline'}
+                      size="sm"
+                      onClick={() => setBookingTypeFilter('online')}
+                      className="justify-start"
+                    >
+                      Online
+                    </Button>
+                    <Button
+                      variant={bookingTypeFilter === 'both' ? 'default' : 'outline'}
+                      size="sm"
+                      onClick={() => setBookingTypeFilter('both')}
+                      className="justify-start"
+                    >
+                      Both
+                    </Button>
+                    <Button
+                      variant={bookingTypeFilter === 'third_party' ? 'default' : 'outline'}
+                      size="sm"
+                      onClick={() => setBookingTypeFilter('third_party')}
+                      className="justify-start"
+                    >
+                      Third Party
+                    </Button>
+                    <Button
+                      variant={bookingTypeFilter === 'no_booking' ? 'default' : 'outline'}
+                      size="sm"
+                      onClick={() => setBookingTypeFilter('no_booking')}
+                      className="justify-start"
+                    >
+                      No Booking
+                    </Button>
+                  </div>
                 </div>
 
                 {/* Duration Group */}
                 <div>
-                  <label className="text-sm font-semibold mb-2 block">Duration</label>
-                  <Select value={durationFilter} onValueChange={setDurationFilter}>
-                    <SelectTrigger className="w-full">
-                      <SelectValue placeholder="Duration" />
-                    </SelectTrigger>
-                    <SelectContent className="bg-background z-50">
-                      <SelectItem value="all">Any Duration</SelectItem>
-                      <SelectItem value="quick">Quick (&lt; 1 hour)</SelectItem>
-                      <SelectItem value="medium">Medium (1-3 hours)</SelectItem>
-                      <SelectItem value="long">Long (&gt; 3 hours)</SelectItem>
-                    </SelectContent>
-                  </Select>
+                  <label className="text-sm font-semibold mb-3 block">Duration</label>
+                  <div className="flex flex-col gap-2">
+                    <Button
+                      variant={durationFilter === 'all' ? 'default' : 'outline'}
+                      size="sm"
+                      onClick={() => setDurationFilter('all')}
+                      className="justify-start"
+                    >
+                      Any Duration
+                    </Button>
+                    <Button
+                      variant={durationFilter === 'quick' ? 'default' : 'outline'}
+                      size="sm"
+                      onClick={() => setDurationFilter('quick')}
+                      className="justify-start"
+                    >
+                      Quick (&lt; 1 hour)
+                    </Button>
+                    <Button
+                      variant={durationFilter === 'medium' ? 'default' : 'outline'}
+                      size="sm"
+                      onClick={() => setDurationFilter('medium')}
+                      className="justify-start"
+                    >
+                      Medium (1-3 hours)
+                    </Button>
+                    <Button
+                      variant={durationFilter === 'long' ? 'default' : 'outline'}
+                      size="sm"
+                      onClick={() => setDurationFilter('long')}
+                      className="justify-start"
+                    >
+                      Long (&gt; 3 hours)
+                    </Button>
+                  </div>
                 </div>
               </div>
             </aside>
@@ -561,142 +874,461 @@ const Activities = () => {
 
                   {/* Same filter groups as desktop */}
                   <div>
-                    <label className="text-sm font-semibold mb-2 block">Location</label>
-                    <Select value={locationFilter} onValueChange={(value) => setLocationFilter(value as any)}>
-                      <SelectTrigger className="w-full">
-                        <SelectValue placeholder="Location" />
-                      </SelectTrigger>
-                      <SelectContent className="bg-background z-50">
-                        <SelectItem value="all">All Locations</SelectItem>
-                        <SelectItem value="on_property">On Property</SelectItem>
-                        <SelectItem value="off_property">Off Property</SelectItem>
-                      </SelectContent>
-                    </Select>
+                    <label className="text-sm font-semibold mb-3 block">Location</label>
+                    <div className="flex flex-col gap-2">
+                      <Button
+                        variant={locationFilter === 'all' ? 'default' : 'outline'}
+                        size="sm"
+                        onClick={() => setLocationFilter('all')}
+                        className="justify-start"
+                      >
+                        All Locations
+                      </Button>
+                      <Button
+                        variant={locationFilter === 'on_property' ? 'default' : 'outline'}
+                        size="sm"
+                        onClick={() => setLocationFilter('on_property')}
+                        className="justify-start"
+                      >
+                        On Property
+                      </Button>
+                      <Button
+                        variant={locationFilter === 'off_property' ? 'default' : 'outline'}
+                        size="sm"
+                        onClick={() => setLocationFilter('off_property')}
+                        className="justify-start"
+                      >
+                        Off Property
+                      </Button>
+                    </div>
                   </div>
 
                   <div>
-                    <label className="text-sm font-semibold mb-2 block">Season</label>
-                    <Select value={seasonFilter} onValueChange={setSeasonFilter}>
-                      <SelectTrigger className="w-full">
-                        <SelectValue placeholder="Season" />
-                      </SelectTrigger>
-                      <SelectContent className="bg-background z-50">
-                        <SelectItem value="all">All Seasons</SelectItem>
-                        <SelectItem value="monsoon">Monsoon</SelectItem>
-                        <SelectItem value="winter">Winter</SelectItem>
-                        <SelectItem value="spring">Spring</SelectItem>
-                        <SelectItem value="summer">Summer</SelectItem>
-                      </SelectContent>
-                    </Select>
+                    <label className="text-sm font-semibold mb-3 block">Season</label>
+                    <div className="grid grid-cols-2 gap-2">
+                      <Button
+                        variant={seasonFilter === 'all' ? 'default' : 'outline'}
+                        size="sm"
+                        onClick={() => setSeasonFilter('all')}
+                        className="justify-start"
+                      >
+                        All Seasons
+                      </Button>
+                      <Button
+                        variant={seasonFilter === 'monsoon' ? 'default' : 'outline'}
+                        size="sm"
+                        onClick={() => setSeasonFilter('monsoon')}
+                        className="justify-start"
+                      >
+                        Monsoon
+                      </Button>
+                      <Button
+                        variant={seasonFilter === 'winter' ? 'default' : 'outline'}
+                        size="sm"
+                        onClick={() => setSeasonFilter('winter')}
+                        className="justify-start"
+                      >
+                        Winter
+                      </Button>
+                      <Button
+                        variant={seasonFilter === 'spring' ? 'default' : 'outline'}
+                        size="sm"
+                        onClick={() => setSeasonFilter('spring')}
+                        className="justify-start"
+                      >
+                        Spring
+                      </Button>
+                      <Button
+                        variant={seasonFilter === 'summer' ? 'default' : 'outline'}
+                        size="sm"
+                        onClick={() => setSeasonFilter('summer')}
+                        className="justify-start"
+                      >
+                        Summer
+                      </Button>
+                    </div>
                   </div>
 
                   <div>
-                    <label className="text-sm font-semibold mb-2 block">Suitable For</label>
-                    <Select value={audienceFilter} onValueChange={setAudienceFilter}>
-                      <SelectTrigger className="w-full">
-                        <SelectValue placeholder="Suitable For" />
-                      </SelectTrigger>
-                      <SelectContent className="bg-background z-50">
-                        <SelectItem value="all">Everyone</SelectItem>
-                        <SelectItem value="families">Families</SelectItem>
-                        <SelectItem value="couples">Couples</SelectItem>
-                        <SelectItem value="kids">Kids</SelectItem>
-                        <SelectItem value="adults">Adults</SelectItem>
-                        <SelectItem value="teens">Teens</SelectItem>
-                        <SelectItem value="groups">Groups</SelectItem>
-                        <SelectItem value="seniors">Seniors</SelectItem>
-                        <SelectItem value="solo">Solo Travelers</SelectItem>
-                      </SelectContent>
-                    </Select>
+                    <label className="text-sm font-semibold mb-3 block">Suitable For</label>
+                    <div className="grid grid-cols-2 gap-2">
+                      <Button
+                        variant={audienceFilter === 'all' ? 'default' : 'outline'}
+                        size="sm"
+                        onClick={() => setAudienceFilter('all')}
+                        className="justify-start col-span-2"
+                      >
+                        Everyone
+                      </Button>
+                      <Button
+                        variant={audienceFilter === 'families' ? 'default' : 'outline'}
+                        size="sm"
+                        onClick={() => setAudienceFilter('families')}
+                        className="justify-start"
+                      >
+                        Families
+                      </Button>
+                      <Button
+                        variant={audienceFilter === 'couples' ? 'default' : 'outline'}
+                        size="sm"
+                        onClick={() => setAudienceFilter('couples')}
+                        className="justify-start"
+                      >
+                        Couples
+                      </Button>
+                      <Button
+                        variant={audienceFilter === 'kids' ? 'default' : 'outline'}
+                        size="sm"
+                        onClick={() => setAudienceFilter('kids')}
+                        className="justify-start"
+                      >
+                        Kids
+                      </Button>
+                      <Button
+                        variant={audienceFilter === 'adults' ? 'default' : 'outline'}
+                        size="sm"
+                        onClick={() => setAudienceFilter('adults')}
+                        className="justify-start"
+                      >
+                        Adults
+                      </Button>
+                      <Button
+                        variant={audienceFilter === 'teens' ? 'default' : 'outline'}
+                        size="sm"
+                        onClick={() => setAudienceFilter('teens')}
+                        className="justify-start"
+                      >
+                        Teens
+                      </Button>
+                      <Button
+                        variant={audienceFilter === 'groups' ? 'default' : 'outline'}
+                        size="sm"
+                        onClick={() => setAudienceFilter('groups')}
+                        className="justify-start"
+                      >
+                        Groups
+                      </Button>
+                      <Button
+                        variant={audienceFilter === 'seniors' ? 'default' : 'outline'}
+                        size="sm"
+                        onClick={() => setAudienceFilter('seniors')}
+                        className="justify-start"
+                      >
+                        Seniors
+                      </Button>
+                      <Button
+                        variant={audienceFilter === 'solo' ? 'default' : 'outline'}
+                        size="sm"
+                        onClick={() => setAudienceFilter('solo')}
+                        className="justify-start"
+                      >
+                        Solo
+                      </Button>
+                    </div>
                   </div>
 
                   <div>
-                    <label className="text-sm font-semibold mb-2 block">Price Range</label>
-                    <Select value={priceFilter} onValueChange={setPriceFilter}>
-                      <SelectTrigger className="w-full">
-                        <SelectValue placeholder="Price Range" />
-                      </SelectTrigger>
-                      <SelectContent className="bg-background z-50">
-                        <SelectItem value="all">All Prices</SelectItem>
-                        <SelectItem value="free">Free</SelectItem>
-                        <SelectItem value="under_500">Under ₹500</SelectItem>
-                        <SelectItem value="500_1000">₹500 - ₹1000</SelectItem>
-                        <SelectItem value="above_1000">Above ₹1000</SelectItem>
-                      </SelectContent>
-                    </Select>
+                    <label className="text-sm font-semibold mb-3 block">Price Range</label>
+                    <div className="flex flex-col gap-2">
+                      <Button
+                        variant={priceFilter === 'all' ? 'default' : 'outline'}
+                        size="sm"
+                        onClick={() => setPriceFilter('all')}
+                        className="justify-start"
+                      >
+                        All Prices
+                      </Button>
+                      <Button
+                        variant={priceFilter === 'free' ? 'default' : 'outline'}
+                        size="sm"
+                        onClick={() => setPriceFilter('free')}
+                        className="justify-start"
+                      >
+                        Free
+                      </Button>
+                      <Button
+                        variant={priceFilter === 'under_500' ? 'default' : 'outline'}
+                        size="sm"
+                        onClick={() => setPriceFilter('under_500')}
+                        className="justify-start"
+                      >
+                        Under ₹500
+                      </Button>
+                      <Button
+                        variant={priceFilter === '500_1000' ? 'default' : 'outline'}
+                        size="sm"
+                        onClick={() => setPriceFilter('500_1000')}
+                        className="justify-start"
+                      >
+                        ₹500 - ₹1000
+                      </Button>
+                      <Button
+                        variant={priceFilter === 'above_1000' ? 'default' : 'outline'}
+                        size="sm"
+                        onClick={() => setPriceFilter('above_1000')}
+                        className="justify-start"
+                      >
+                        Above ₹1000
+                      </Button>
+                    </div>
                   </div>
 
                   <div>
-                    <label className="text-sm font-semibold mb-2 block">Activity Type</label>
-                    <Select value={activityTagFilter} onValueChange={setActivityTagFilter}>
-                      <SelectTrigger className="w-full">
-                        <SelectValue placeholder="Activity Type" />
-                      </SelectTrigger>
-                      <SelectContent className="bg-background z-50">
-                        <SelectItem value="all">All Types</SelectItem>
-                        <SelectItem value="adventure">Adventure</SelectItem>
-                        <SelectItem value="relaxing">Relaxing</SelectItem>
-                        <SelectItem value="cultural">Cultural</SelectItem>
-                        <SelectItem value="sports">Sports</SelectItem>
-                        <SelectItem value="nature">Nature</SelectItem>
-                        <SelectItem value="indoor">Indoor</SelectItem>
-                        <SelectItem value="outdoor">Outdoor</SelectItem>
-                        <SelectItem value="educational">Educational</SelectItem>
-                      </SelectContent>
-                    </Select>
+                    <label className="text-sm font-semibold mb-3 block">Activity Type</label>
+                    <div className="grid grid-cols-2 gap-2">
+                      <Button
+                        variant={activityTagFilter === 'all' ? 'default' : 'outline'}
+                        size="sm"
+                        onClick={() => setActivityTagFilter('all')}
+                        className="justify-start col-span-2"
+                      >
+                        All Types
+                      </Button>
+                      <Button
+                        variant={activityTagFilter === 'adventure' ? 'default' : 'outline'}
+                        size="sm"
+                        onClick={() => setActivityTagFilter('adventure')}
+                        className="justify-start"
+                      >
+                        Adventure
+                      </Button>
+                      <Button
+                        variant={activityTagFilter === 'relaxing' ? 'default' : 'outline'}
+                        size="sm"
+                        onClick={() => setActivityTagFilter('relaxing')}
+                        className="justify-start"
+                      >
+                        Relaxing
+                      </Button>
+                      <Button
+                        variant={activityTagFilter === 'cultural' ? 'default' : 'outline'}
+                        size="sm"
+                        onClick={() => setActivityTagFilter('cultural')}
+                        className="justify-start"
+                      >
+                        Cultural
+                      </Button>
+                      <Button
+                        variant={activityTagFilter === 'sports' ? 'default' : 'outline'}
+                        size="sm"
+                        onClick={() => setActivityTagFilter('sports')}
+                        className="justify-start"
+                      >
+                        Sports
+                      </Button>
+                      <Button
+                        variant={activityTagFilter === 'nature' ? 'default' : 'outline'}
+                        size="sm"
+                        onClick={() => setActivityTagFilter('nature')}
+                        className="justify-start"
+                      >
+                        Nature
+                      </Button>
+                      <Button
+                        variant={activityTagFilter === 'indoor' ? 'default' : 'outline'}
+                        size="sm"
+                        onClick={() => setActivityTagFilter('indoor')}
+                        className="justify-start"
+                      >
+                        Indoor
+                      </Button>
+                      <Button
+                        variant={activityTagFilter === 'outdoor' ? 'default' : 'outline'}
+                        size="sm"
+                        onClick={() => setActivityTagFilter('outdoor')}
+                        className="justify-start"
+                      >
+                        Outdoor
+                      </Button>
+                      <Button
+                        variant={activityTagFilter === 'educational' ? 'default' : 'outline'}
+                        size="sm"
+                        onClick={() => setActivityTagFilter('educational')}
+                        className="justify-start"
+                      >
+                        Educational
+                      </Button>
+                    </div>
                   </div>
 
                   <div>
-                    <label className="text-sm font-semibold mb-2 block">Available Days</label>
-                    <Select value={daysFilter} onValueChange={setDaysFilter}>
-                      <SelectTrigger className="w-full">
-                        <SelectValue placeholder="Available Days" />
-                      </SelectTrigger>
-                      <SelectContent className="bg-background z-50">
-                        <SelectItem value="all">All Days</SelectItem>
-                        <SelectItem value="weekdays">Weekdays</SelectItem>
-                        <SelectItem value="weekends">Weekends</SelectItem>
-                        <SelectItem value="monday">Monday</SelectItem>
-                        <SelectItem value="tuesday">Tuesday</SelectItem>
-                        <SelectItem value="wednesday">Wednesday</SelectItem>
-                        <SelectItem value="thursday">Thursday</SelectItem>
-                        <SelectItem value="friday">Friday</SelectItem>
-                        <SelectItem value="saturday">Saturday</SelectItem>
-                        <SelectItem value="sunday">Sunday</SelectItem>
-                      </SelectContent>
-                    </Select>
+                    <label className="text-sm font-semibold mb-3 block">Available Days</label>
+                    <div className="flex flex-col gap-2">
+                      <Button
+                        variant={daysFilter === 'all' ? 'default' : 'outline'}
+                        size="sm"
+                        onClick={() => setDaysFilter('all')}
+                        className="justify-start"
+                      >
+                        All Days
+                      </Button>
+                      <Button
+                        variant={daysFilter === 'weekdays' ? 'default' : 'outline'}
+                        size="sm"
+                        onClick={() => setDaysFilter('weekdays')}
+                        className="justify-start"
+                      >
+                        Weekdays
+                      </Button>
+                      <Button
+                        variant={daysFilter === 'weekends' ? 'default' : 'outline'}
+                        size="sm"
+                        onClick={() => setDaysFilter('weekends')}
+                        className="justify-start"
+                      >
+                        Weekends
+                      </Button>
+                      <div className="grid grid-cols-2 gap-2">
+                        <Button
+                          variant={daysFilter === 'monday' ? 'default' : 'outline'}
+                          size="sm"
+                          onClick={() => setDaysFilter('monday')}
+                          className="justify-start"
+                        >
+                          Mon
+                        </Button>
+                        <Button
+                          variant={daysFilter === 'tuesday' ? 'default' : 'outline'}
+                          size="sm"
+                          onClick={() => setDaysFilter('tuesday')}
+                          className="justify-start"
+                        >
+                          Tue
+                        </Button>
+                        <Button
+                          variant={daysFilter === 'wednesday' ? 'default' : 'outline'}
+                          size="sm"
+                          onClick={() => setDaysFilter('wednesday')}
+                          className="justify-start"
+                        >
+                          Wed
+                        </Button>
+                        <Button
+                          variant={daysFilter === 'thursday' ? 'default' : 'outline'}
+                          size="sm"
+                          onClick={() => setDaysFilter('thursday')}
+                          className="justify-start"
+                        >
+                          Thu
+                        </Button>
+                        <Button
+                          variant={daysFilter === 'friday' ? 'default' : 'outline'}
+                          size="sm"
+                          onClick={() => setDaysFilter('friday')}
+                          className="justify-start"
+                        >
+                          Fri
+                        </Button>
+                        <Button
+                          variant={daysFilter === 'saturday' ? 'default' : 'outline'}
+                          size="sm"
+                          onClick={() => setDaysFilter('saturday')}
+                          className="justify-start"
+                        >
+                          Sat
+                        </Button>
+                        <Button
+                          variant={daysFilter === 'sunday' ? 'default' : 'outline'}
+                          size="sm"
+                          onClick={() => setDaysFilter('sunday')}
+                          className="justify-start"
+                        >
+                          Sun
+                        </Button>
+                      </div>
+                    </div>
                   </div>
 
                   <div>
-                    <label className="text-sm font-semibold mb-2 block">By Booking</label>
-                    <Select value={bookingTypeFilter} onValueChange={setBookingTypeFilter}>
-                      <SelectTrigger className="w-full">
-                        <SelectValue placeholder="By Booking" />
-                      </SelectTrigger>
-                      <SelectContent className="bg-background z-50">
-                        <SelectItem value="all">All Methods</SelectItem>
-                        <SelectItem value="reception">At Reception</SelectItem>
-                        <SelectItem value="online">Online</SelectItem>
-                        <SelectItem value="both">Both</SelectItem>
-                        <SelectItem value="third_party">Third Party</SelectItem>
-                        <SelectItem value="no_booking">No Booking</SelectItem>
-                      </SelectContent>
-                    </Select>
+                    <label className="text-sm font-semibold mb-3 block">By Booking</label>
+                    <div className="flex flex-col gap-2">
+                      <Button
+                        variant={bookingTypeFilter === 'all' ? 'default' : 'outline'}
+                        size="sm"
+                        onClick={() => setBookingTypeFilter('all')}
+                        className="justify-start"
+                      >
+                        All Methods
+                      </Button>
+                      <Button
+                        variant={bookingTypeFilter === 'reception' ? 'default' : 'outline'}
+                        size="sm"
+                        onClick={() => setBookingTypeFilter('reception')}
+                        className="justify-start"
+                      >
+                        At Reception
+                      </Button>
+                      <Button
+                        variant={bookingTypeFilter === 'online' ? 'default' : 'outline'}
+                        size="sm"
+                        onClick={() => setBookingTypeFilter('online')}
+                        className="justify-start"
+                      >
+                        Online
+                      </Button>
+                      <Button
+                        variant={bookingTypeFilter === 'both' ? 'default' : 'outline'}
+                        size="sm"
+                        onClick={() => setBookingTypeFilter('both')}
+                        className="justify-start"
+                      >
+                        Both
+                      </Button>
+                      <Button
+                        variant={bookingTypeFilter === 'third_party' ? 'default' : 'outline'}
+                        size="sm"
+                        onClick={() => setBookingTypeFilter('third_party')}
+                        className="justify-start"
+                      >
+                        Third Party
+                      </Button>
+                      <Button
+                        variant={bookingTypeFilter === 'no_booking' ? 'default' : 'outline'}
+                        size="sm"
+                        onClick={() => setBookingTypeFilter('no_booking')}
+                        className="justify-start"
+                      >
+                        No Booking
+                      </Button>
+                    </div>
                   </div>
 
                   <div>
-                    <label className="text-sm font-semibold mb-2 block">Duration</label>
-                    <Select value={durationFilter} onValueChange={setDurationFilter}>
-                      <SelectTrigger className="w-full">
-                        <SelectValue placeholder="Duration" />
-                      </SelectTrigger>
-                      <SelectContent className="bg-background z-50">
-                        <SelectItem value="all">Any Duration</SelectItem>
-                        <SelectItem value="quick">Quick (&lt; 1 hour)</SelectItem>
-                        <SelectItem value="medium">Medium (1-3 hours)</SelectItem>
-                        <SelectItem value="long">Long (&gt; 3 hours)</SelectItem>
-                      </SelectContent>
-                    </Select>
+                    <label className="text-sm font-semibold mb-3 block">Duration</label>
+                    <div className="flex flex-col gap-2">
+                      <Button
+                        variant={durationFilter === 'all' ? 'default' : 'outline'}
+                        size="sm"
+                        onClick={() => setDurationFilter('all')}
+                        className="justify-start"
+                      >
+                        Any Duration
+                      </Button>
+                      <Button
+                        variant={durationFilter === 'quick' ? 'default' : 'outline'}
+                        size="sm"
+                        onClick={() => setDurationFilter('quick')}
+                        className="justify-start"
+                      >
+                        Quick (&lt; 1 hour)
+                      </Button>
+                      <Button
+                        variant={durationFilter === 'medium' ? 'default' : 'outline'}
+                        size="sm"
+                        onClick={() => setDurationFilter('medium')}
+                        className="justify-start"
+                      >
+                        Medium (1-3 hours)
+                      </Button>
+                      <Button
+                        variant={durationFilter === 'long' ? 'default' : 'outline'}
+                        size="sm"
+                        onClick={() => setDurationFilter('long')}
+                        className="justify-start"
+                      >
+                        Long (&gt; 3 hours)
+                      </Button>
+                    </div>
                   </div>
                 </div>
               </SheetContent>
