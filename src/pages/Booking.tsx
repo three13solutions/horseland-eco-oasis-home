@@ -1563,45 +1563,6 @@ const Booking = () => {
                         </div>
                       </TabsContent>
                       
-                      <TabsContent value="pickup" className="space-y-4">
-                        <div className="space-y-4">
-                          {pickupServices.map((pickup) => (
-                            <div key={pickup.id} className="p-4 border rounded-lg">
-                              <div className="flex items-center justify-between">
-                                <div className="flex-1">
-                                  <h4 className="font-medium capitalize">
-                                    Pickup from {pickup.from}
-                                  </h4>
-                                  <p className="text-sm text-muted-foreground">
-                                    One-way transfer to the property
-                                  </p>
-                                  <p className="text-lg font-semibold">₹{pickup.price.toLocaleString()}</p>
-                                </div>
-                                <div className="flex items-center gap-2">
-                                  <input
-                                    type="radio"
-                                    name="pickup"
-                                    className="h-4 w-4"
-                                    checked={selectedPickup?.id === pickup.id}
-                                    onChange={() => setSelectedPickup(pickup)}
-                                  />
-                                  <label className="text-sm">Select</label>
-                                </div>
-                              </div>
-                            </div>
-                          ))}
-                          {selectedPickup && (
-                            <Button
-                              variant="outline"
-                              onClick={() => setSelectedPickup(null)}
-                              className="w-full"
-                            >
-                              Remove Pickup Service
-                            </Button>
-                          )}
-                        </div>
-                      </TabsContent>
-                      
                       <TabsContent value="activities" className="space-y-8">
                         {activitiesByCategory.length === 0 ? (
                           <div className="text-center text-muted-foreground py-8">
