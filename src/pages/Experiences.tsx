@@ -30,7 +30,7 @@ const Experiences = () => {
       description: 'Horse rides, forest walks, and adventure trails that connect you with nature\'s playground.',
       icon: TreePine,
       image: 'https://images.unsplash.com/photo-1544568100-847a948585b9?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
-      link: '/experiences/activities',
+      link: '/activities',
       highlights: ['Horse Riding', 'Forest Trails', 'Sunset Points', 'Nature Walks']
     },
     {
@@ -38,7 +38,7 @@ const Experiences = () => {
       description: 'Farm-to-table dining experiences featuring local ingredients and zero-waste cooking.',
       icon: UtensilsCrossed,
       image: 'https://images.unsplash.com/photo-1544025162-d76694265947?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
-      link: '/experiences/dining',
+      link: '/dining',
       highlights: ['Buffet Dining', 'Local Cuisine', 'Organic Ingredients', 'Chef Specials']
     },
     {
@@ -46,7 +46,7 @@ const Experiences = () => {
       description: 'Rejuvenating therapies and wellness practices in harmony with mountain serenity.',
       icon: Sparkles,
       image: 'https://images.unsplash.com/photo-1544161515-4ab6ce6db874?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
-      link: '/experiences/spa',
+      link: '/spa',
       highlights: ['Ayurvedic Treatments', 'Yoga Sessions', 'Meditation', 'Wellness Therapies']
     }
   ];
@@ -154,9 +154,11 @@ const Experiences = () => {
           <p className="text-lg text-muted-foreground font-body mb-8">
             Let us curate the perfect combination of experiences for your mountain retreat.
           </p>
-          <Button size="lg" className="font-body">
-            Plan Your Stay
-          </Button>
+          <Link to="/booking">
+            <Button size="lg" className="font-body">
+              Plan Your Stay
+            </Button>
+          </Link>
         </div>
       </section>
 
