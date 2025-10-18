@@ -91,13 +91,10 @@ const StayPreviewV5 = () => {
                 {/* Content */}
                 <div className="p-8">
                   <div className="mb-4">
-                    <span className="text-primary font-medium text-sm uppercase tracking-wide">
-                      {room.name}
-                    </span>
-                    <h3 className="text-2xl font-bold text-foreground mt-2 mb-3">
+                    <h3 className="text-2xl font-bold text-foreground mb-3">
                       {room.name}
                     </h3>
-                    <p className="text-muted-foreground leading-relaxed line-clamp-2">
+                    <p className="text-muted-foreground leading-relaxed line-clamp-3">
                       {room.description || 'Experience comfort and luxury in this beautifully designed accommodation.'}
                     </p>
                   </div>
@@ -108,7 +105,9 @@ const StayPreviewV5 = () => {
                       {features.map((feature: any, amenityIndex: number) => (
                         <div key={amenityIndex} className="flex items-center space-x-2">
                           <div className="w-1.5 h-1.5 bg-primary rounded-full"></div>
-                          <span className="text-sm text-muted-foreground">{feature.title || feature}</span>
+                          <span className="text-sm text-muted-foreground truncate">
+                            {typeof feature === 'string' ? feature : feature.title || feature.name || 'Feature'}
+                          </span>
                         </div>
                       ))}
                     </div>
