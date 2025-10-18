@@ -31,10 +31,42 @@ const CategoryDetail = () => {
   const { toast } = useToast();
   const [roomType, setRoomType] = useState<RoomType | null>(null);
   const [loading, setLoading] = useState(true);
+  const [availableUnits, setAvailableUnits] = useState<number>(0);
+  const [checkingAvailability, setCheckingAvailability] = useState(false);
 
   useEffect(() => {
     loadRoomType();
   }, [categoryId]);
+
+  const checkCurrentAvailability = async () => {
+    if (!categoryId) return;
+    
+    setCheckingAvailability(true);
+    try {
+      const today = new Date();
+      const tomorrow = new Date(today);
+      tomorrow.setDate(tomorrow.getDate() + 1);
+      
+      const { data, error } = await supabase.rpc('check_room_availability', {
+        p_room_type_id: categoryId,
+        p_check_in: today.toISOString().split('T')[0],
+        p_check_out: tomorrow.toISOString().split('T')[0]
+      });
+
+      if (error) throw error;
+      setAvailableUnits(data?.[0]?.available_units || 0);
+    } catch (error) {
+      console.error('Error checking availability:', error);
+    } finally {
+      setCheckingAvailability(false);
+    }
+  };
+
+  useEffect(() => {
+    if (roomType) {
+      checkCurrentAvailability();
+    }
+  }, [roomType]);
 
   const loadRoomType = async () => {
     try {
@@ -143,7 +175,7 @@ const CategoryDetail = () => {
       <section className="py-8 bg-muted/30">
         <div className="max-w-4xl mx-auto px-4">
           <div className="bg-card rounded-lg p-6 border">
-            <h3 className="text-xl font-semibold mb-4">Pricing</h3>
+            <h3 className="text-xl font-semibold mb-4">Pricing & Availability</h3>
             <div className="grid md:grid-cols-2 gap-4">
               <div>
                 <p className="text-sm text-muted-foreground mb-1">Base Price</p>
@@ -156,6 +188,18 @@ const CategoryDetail = () => {
                   <p className="text-xs text-muted-foreground">Prices may vary based on season and demand</p>
                 </div>
               )}
+            </div>
+            <div className="mt-4 pt-4 border-t">
+              <div className="flex items-center justify-between">
+                <p className="text-sm text-muted-foreground">Currently Available</p>
+                {checkingAvailability ? (
+                  <p className="text-sm">Checking...</p>
+                ) : (
+                  <p className={`text-lg font-semibold ${availableUnits > 0 ? 'text-green-600' : 'text-red-600'}`}>
+                    {availableUnits > 0 ? `${availableUnits} room${availableUnits > 1 ? 's' : ''} available` : 'No rooms available'}
+                  </p>
+                )}
+              </div>
             </div>
           </div>
         </div>
@@ -182,6 +226,13 @@ const CategoryDetail = () => {
               </div>
             </div>
           )}
+
+          {/* Safety Deposit Information */}
+          <div className="mt-6 p-4 bg-blue-50 dark:bg-blue-950/20 rounded-lg border border-blue-200 dark:border-blue-800">
+            <p className="text-sm text-blue-900 dark:text-blue-100">
+              <strong>Note:</strong> No In-Room Safes; Generally Safety Deposit is available at Reception with Receipt.
+            </p>
+          </div>
         </div>
       </section>
 
