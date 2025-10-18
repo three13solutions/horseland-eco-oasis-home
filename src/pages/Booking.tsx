@@ -123,6 +123,12 @@ const Booking = () => {
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [activeTab, setActiveTab] = useState<string>('');
   const [guestMeals, setGuestMeals] = useState<GuestMeal[]>([]);
+  const [pickupServices, setPickupServices] = useState<PickupService[]>([]);
+  
+  // Pickup/Drop dropdown states
+  const [transferType, setTransferType] = useState<'pickup' | 'drop' | 'two-way' | ''>('');
+  const [transferLocation, setTransferLocation] = useState<'mumbai' | 'pune' | ''>('');
+  const [transferCarType, setTransferCarType] = useState<'sedan' | 'suv' | 'luxury' | ''>('');
   
   // Additional services common to all guests
   const [serviceInRoomQuantity, setServiceInRoomQuantity] = useState(0);
@@ -394,6 +400,14 @@ const Booking = () => {
         .eq('is_active', true)
         .order('title');
 
+      // Load transport/pickup addons
+      const { data: transportData } = await supabase
+        .from('addons')
+        .select('*')
+        .eq('category', 'transport')
+        .eq('is_active', true)
+        .order('name');
+
       setMeals(mealsData?.map(m => ({ 
         id: m.id,
         title: m.title,
@@ -424,8 +438,49 @@ const Booking = () => {
         category: s.category,
         type: 'spa' as const 
       })) || []);
+
+      // Map transport addons to pickup services format
+      if (transportData && transportData.length > 0) {
+        const services: PickupService[] = transportData.map(t => {
+          // Parse the name to extract direction, location, and car type
+          // Expected format: "Pickup - Mumbai - Sedan", "Drop - Pune - SUV", "Two Way - Mumbai - Sedan"
+          const nameParts = t.name.split(' - ').map(p => p.trim().toLowerCase());
+          
+          let direction: 'pickup' | 'drop' | 'two-way' = 'pickup';
+          let location: 'mumbai' | 'pune' = 'mumbai';
+          let carType: 'sedan' | 'suv' | 'luxury' = 'sedan';
+          
+          if (nameParts[0].includes('pickup')) direction = 'pickup';
+          else if (nameParts[0].includes('drop')) direction = 'drop';
+          else if (nameParts[0].includes('two way') || nameParts[0].includes('twoway')) direction = 'two-way';
+          
+          if (nameParts[1]?.includes('mumbai')) location = 'mumbai';
+          else if (nameParts[1]?.includes('pune')) location = 'pune';
+          
+          if (nameParts[2]?.includes('sedan')) carType = 'sedan';
+          else if (nameParts[2]?.includes('suv')) carType = 'suv';
+          else if (nameParts[2]?.includes('luxury')) carType = 'luxury';
+          
+          return {
+            id: t.id,
+            from: direction === 'drop' ? 'property' : location,
+            to: direction === 'drop' ? location : 'property',
+            direction,
+            carType,
+            price: Number(t.price) || 0,
+            type: 'transport'
+          };
+        });
+        
+        setPickupServices(services);
+      } else {
+        // Fallback to hardcoded services if no data in database
+        setPickupServices(getDefaultPickupServices());
+      }
     } catch (error) {
       console.error('Error loading addons:', error);
+      // Set fallback services on error
+      setPickupServices(getDefaultPickupServices());
     }
   };
 
@@ -812,31 +867,47 @@ const Booking = () => {
     return total;
   };
 
-  const pickupServices: PickupService[] = [
+  // Default/fallback pickup services
+  const getDefaultPickupServices = (): PickupService[] => [
     // Pickup only
     { id: 'pickup-mumbai-sedan', from: 'mumbai', to: 'property', direction: 'pickup', carType: 'sedan', price: 4000, type: 'transport' },
     { id: 'pickup-mumbai-suv', from: 'mumbai', to: 'property', direction: 'pickup', carType: 'suv', price: 5000, type: 'transport' },
-    { id: 'pickup-mumbai-luxury', from: 'mumbai', to: 'property', direction: 'pickup', carType: 'luxury', price: 8000, type: 'transport' },
     { id: 'pickup-pune-sedan', from: 'pune', to: 'property', direction: 'pickup', carType: 'sedan', price: 2500, type: 'transport' },
     { id: 'pickup-pune-suv', from: 'pune', to: 'property', direction: 'pickup', carType: 'suv', price: 3000, type: 'transport' },
-    { id: 'pickup-pune-luxury', from: 'pune', to: 'property', direction: 'pickup', carType: 'luxury', price: 5000, type: 'transport' },
     
     // Drop only
     { id: 'drop-mumbai-sedan', from: 'property', to: 'mumbai', direction: 'drop', carType: 'sedan', price: 4000, type: 'transport' },
     { id: 'drop-mumbai-suv', from: 'property', to: 'mumbai', direction: 'drop', carType: 'suv', price: 5000, type: 'transport' },
-    { id: 'drop-mumbai-luxury', from: 'property', to: 'mumbai', direction: 'drop', carType: 'luxury', price: 8000, type: 'transport' },
     { id: 'drop-pune-sedan', from: 'property', to: 'pune', direction: 'drop', carType: 'sedan', price: 2500, type: 'transport' },
     { id: 'drop-pune-suv', from: 'property', to: 'pune', direction: 'drop', carType: 'suv', price: 3000, type: 'transport' },
-    { id: 'drop-pune-luxury', from: 'property', to: 'pune', direction: 'drop', carType: 'luxury', price: 5000, type: 'transport' },
     
     // Two-way
     { id: 'twoway-mumbai-sedan', from: 'mumbai', to: 'mumbai', direction: 'two-way', carType: 'sedan', price: 7500, type: 'transport' },
     { id: 'twoway-mumbai-suv', from: 'mumbai', to: 'mumbai', direction: 'two-way', carType: 'suv', price: 9500, type: 'transport' },
-    { id: 'twoway-mumbai-luxury', from: 'mumbai', to: 'mumbai', direction: 'two-way', carType: 'luxury', price: 15000, type: 'transport' },
     { id: 'twoway-pune-sedan', from: 'pune', to: 'pune', direction: 'two-way', carType: 'sedan', price: 4500, type: 'transport' },
-    { id: 'twoway-pune-suv', from: 'pune', to: 'pune', direction: 'two-way', carType: 'suv', price: 5500, type: 'transport' },
-    { id: 'twoway-pune-luxury', from: 'pune', to: 'pune', direction: 'two-way', carType: 'luxury', price: 9000, type: 'transport' }
+    { id: 'twoway-pune-suv', from: 'pune', to: 'pune', direction: 'two-way', carType: 'suv', price: 5500, type: 'transport' }
   ];
+
+  // Find matching pickup service based on dropdown selections
+  const getMatchingPickupService = () => {
+    if (!transferType || !transferLocation || !transferCarType) return null;
+    
+    return pickupServices.find(service => 
+      service.direction === transferType &&
+      (transferType === 'drop' ? service.to === transferLocation : service.from === transferLocation) &&
+      service.carType === transferCarType
+    );
+  };
+
+  // Update selected pickup when dropdowns change
+  useEffect(() => {
+    const matchingService = getMatchingPickupService();
+    if (matchingService) {
+      setSelectedPickup(matchingService);
+    } else {
+      setSelectedPickup(null);
+    }
+  }, [transferType, transferLocation, transferCarType]);
 
   const beddingOptions: BeddingOption[] = [
     { id: 'extra-bed-1', title: 'Extra Bed', price: 500, type: 'bedding' },
@@ -1114,110 +1185,125 @@ const Booking = () => {
 
                       <TabsContent value="pickup" className="space-y-4">
                         <div className="space-y-6">
-                          {/* Pickup Only */}
-                          <div>
-                            <h4 className="font-medium mb-3 flex items-center gap-2">
-                              <CarFront className="h-4 w-4" />
-                              Pickup Only
-                            </h4>
-                            <div className="grid md:grid-cols-2 gap-4">
-                              {pickupServices.filter(p => p.direction === 'pickup').map((pickup) => (
-                                <div key={pickup.id} className="p-4 border rounded-lg">
-                                  <div className="flex items-center justify-between">
-                                    <div className="flex-1">
-                                      <h5 className="font-medium capitalize">
-                                        {pickup.from} → Property
-                                      </h5>
-                                      <p className="text-sm text-muted-foreground capitalize">
-                                        {pickup.carType} • One-way
-                                      </p>
-                                      <p className="text-lg font-semibold">₹{pickup.price.toLocaleString()}</p>
-                                    </div>
-                                    <input
-                                      type="radio"
-                                      name="transport"
-                                      className="h-4 w-4"
-                                      checked={selectedPickup?.id === pickup.id}
-                                      onChange={() => setSelectedPickup(pickup)}
-                                    />
-                                  </div>
-                                </div>
-                              ))}
+                          <div className="grid md:grid-cols-3 gap-4">
+                            {/* Transfer Type Dropdown */}
+                            <div className="space-y-2">
+                              <Label htmlFor="transfer-type" className="text-sm font-medium">
+                                Transfer Type
+                              </Label>
+                              <select
+                                id="transfer-type"
+                                className="w-full p-3 border rounded-lg bg-background text-foreground focus:ring-2 focus:ring-primary focus:border-primary transition-all"
+                                value={transferType}
+                                onChange={(e) => setTransferType(e.target.value as any)}
+                              >
+                                <option value="">Select transfer type</option>
+                                <option value="pickup">Pickup Only</option>
+                                <option value="drop">Drop Only</option>
+                                <option value="two-way">Two Way Transfer</option>
+                              </select>
+                            </div>
+
+                            {/* Location Dropdown */}
+                            <div className="space-y-2">
+                              <Label htmlFor="transfer-location" className="text-sm font-medium">
+                                Location
+                              </Label>
+                              <select
+                                id="transfer-location"
+                                className="w-full p-3 border rounded-lg bg-background text-foreground focus:ring-2 focus:ring-primary focus:border-primary transition-all disabled:opacity-50"
+                                value={transferLocation}
+                                onChange={(e) => setTransferLocation(e.target.value as any)}
+                                disabled={!transferType}
+                              >
+                                <option value="">Select location</option>
+                                <option value="mumbai">Mumbai</option>
+                                <option value="pune">Pune</option>
+                              </select>
+                            </div>
+
+                            {/* Car Type Dropdown */}
+                            <div className="space-y-2">
+                              <Label htmlFor="car-type" className="text-sm font-medium">
+                                Car Type
+                              </Label>
+                              <select
+                                id="car-type"
+                                className="w-full p-3 border rounded-lg bg-background text-foreground focus:ring-2 focus:ring-primary focus:border-primary transition-all disabled:opacity-50"
+                                value={transferCarType}
+                                onChange={(e) => setTransferCarType(e.target.value as any)}
+                                disabled={!transferLocation}
+                              >
+                                <option value="">Select car type</option>
+                                <option value="sedan">Sedan</option>
+                                <option value="suv">SUV</option>
+                              </select>
                             </div>
                           </div>
 
-                          {/* Drop Only */}
-                          <div>
-                            <h4 className="font-medium mb-3 flex items-center gap-2">
-                              <CarFront className="h-4 w-4 rotate-180" />
-                              Drop Only
-                            </h4>
-                            <div className="grid md:grid-cols-2 gap-4">
-                              {pickupServices.filter(p => p.direction === 'drop').map((pickup) => (
-                                <div key={pickup.id} className="p-4 border rounded-lg">
-                                  <div className="flex items-center justify-between">
-                                    <div className="flex-1">
-                                      <h5 className="font-medium capitalize">
-                                        Property → {pickup.to}
-                                      </h5>
-                                      <p className="text-sm text-muted-foreground capitalize">
-                                        {pickup.carType} • One-way
-                                      </p>
-                                      <p className="text-lg font-semibold">₹{pickup.price.toLocaleString()}</p>
-                                    </div>
-                                    <input
-                                      type="radio"
-                                      name="transport"
-                                      className="h-4 w-4"
-                                      checked={selectedPickup?.id === pickup.id}
-                                      onChange={() => setSelectedPickup(pickup)}
-                                    />
-                                  </div>
-                                </div>
-                              ))}
-                            </div>
-                          </div>
-
-                          {/* Two-way */}
-                          <div>
-                            <h4 className="font-medium mb-3 flex items-center gap-2">
-                              <Car className="h-4 w-4" />
-                              Two-Way Transfer
-                            </h4>
-                            <div className="grid md:grid-cols-2 gap-4">
-                              {pickupServices.filter(p => p.direction === 'two-way').map((pickup) => (
-                                <div key={pickup.id} className="p-4 border rounded-lg">
-                                  <div className="flex items-center justify-between">
-                                    <div className="flex-1">
-                                      <h5 className="font-medium capitalize">
-                                        {pickup.from} ↔ Property
-                                      </h5>
-                                      <p className="text-sm text-muted-foreground capitalize">
-                                        {pickup.carType} • Round trip
-                                      </p>
-                                      <p className="text-lg font-semibold">₹{pickup.price.toLocaleString()}</p>
-                                    </div>
-                                    <input
-                                      type="radio"
-                                      name="transport"
-                                      className="h-4 w-4"
-                                      checked={selectedPickup?.id === pickup.id}
-                                      onChange={() => setSelectedPickup(pickup)}
-                                    />
-                                  </div>
-                                </div>
-                              ))}
-                            </div>
-                          </div>
-
+                          {/* Selected Service Display */}
                           {selectedPickup && (
-                            <Button
-                              variant="outline"
-                              onClick={() => setSelectedPickup(null)}
-                              className="w-full"
-                            >
-                              Remove Transport Service
-                            </Button>
+                            <Card className="border-primary/20 bg-primary/5">
+                              <CardContent className="p-6">
+                                <div className="flex items-start justify-between gap-4">
+                                  <div className="flex-1">
+                                    <div className="flex items-center gap-2 mb-2">
+                                      {transferType === 'pickup' && <CarFront className="h-5 w-5 text-primary" />}
+                                      {transferType === 'drop' && <CarFront className="h-5 w-5 text-primary rotate-180" />}
+                                      {transferType === 'two-way' && <Car className="h-5 w-5 text-primary" />}
+                                      <h4 className="font-semibold text-lg capitalize">
+                                        {transferType === 'pickup' && `${transferLocation} → Property`}
+                                        {transferType === 'drop' && `Property → ${transferLocation}`}
+                                        {transferType === 'two-way' && `${transferLocation} ↔ Property`}
+                                      </h4>
+                                    </div>
+                                    <div className="space-y-1 text-sm text-muted-foreground">
+                                      <p className="capitalize">
+                                        <span className="font-medium">Car Type:</span> {transferCarType}
+                                      </p>
+                                      <p className="capitalize">
+                                        <span className="font-medium">Service:</span> {transferType === 'two-way' ? 'Round Trip' : 'One-way'}
+                                      </p>
+                                    </div>
+                                  </div>
+                                  <div className="text-right">
+                                    <p className="text-2xl font-bold text-primary">
+                                      ₹{selectedPickup.price.toLocaleString()}
+                                    </p>
+                                    <Button
+                                      variant="ghost"
+                                      size="sm"
+                                      onClick={() => {
+                                        setTransferType('');
+                                        setTransferLocation('');
+                                        setTransferCarType('');
+                                        setSelectedPickup(null);
+                                      }}
+                                      className="mt-2 text-destructive hover:text-destructive"
+                                    >
+                                      Remove
+                                    </Button>
+                                  </div>
+                                </div>
+                              </CardContent>
+                            </Card>
+                          )}
+
+                          {!selectedPickup && transferType && transferLocation && transferCarType && (
+                            <div className="text-center p-6 border rounded-lg bg-muted/50">
+                              <p className="text-muted-foreground">
+                                No service found for this combination. Please try different options or contact us.
+                              </p>
+                            </div>
+                          )}
+
+                          {!transferType && (
+                            <div className="text-center p-8 border rounded-lg bg-muted/20">
+                              <CarFront className="h-12 w-12 text-muted-foreground mx-auto mb-3" />
+                              <p className="text-muted-foreground">
+                                Select transfer type, location, and car type to view available services
+                              </p>
+                            </div>
                           )}
                         </div>
                       </TabsContent>
