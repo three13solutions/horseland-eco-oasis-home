@@ -61,6 +61,7 @@ const mapRoomToCategory = (room: any): Category => {
     viewLocations: viewLocations.length > 0 ? viewLocations : ['Standard view'],
     features,
     noise,
+    basePrice: room.base_price || 0,
   };
 };
 

@@ -19,6 +19,7 @@ export type Category = {
   viewLocations: string[];
   features: string[];
   noise: 'Lively zone' | 'Moderate' | 'Quiet';
+  basePrice: number;
 };
 
 type Props = {
@@ -99,7 +100,7 @@ const CategoryCard: React.FC<Props> = ({ category, onViewDetails, onBookNow, vie
             <div className="flex items-end justify-between gap-4 mt-4">
               <div>
                 <div className="text-xs text-muted-foreground mb-1">Starting from</div>
-                <span className="text-2xl font-heading font-bold text-primary">₹8,500</span>
+                <span className="text-2xl font-heading font-bold text-primary">₹{category.basePrice?.toLocaleString()}</span>
                 <span className="text-sm text-muted-foreground ml-1">/night</span>
               </div>
               <div className="flex gap-2">
@@ -167,7 +168,7 @@ const CategoryCard: React.FC<Props> = ({ category, onViewDetails, onBookNow, vie
         <div className="space-y-3">
           <div>
             <div className="text-xs text-muted-foreground mb-1">Starting from</div>
-            <span className="text-2xl font-heading font-bold text-primary">₹8,500</span>
+            <span className="text-2xl font-heading font-bold text-primary">₹{category.basePrice?.toLocaleString()}</span>
             <span className="text-sm text-muted-foreground ml-1">/night</span>
           </div>
           <div className="flex gap-2 w-full">
