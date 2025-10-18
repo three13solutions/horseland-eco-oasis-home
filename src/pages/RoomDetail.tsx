@@ -381,45 +381,69 @@ const RoomDetail = () => {
                         </button>
                         
                         {showSeasonalPricing && (
-                          <div className="mt-3 space-y-2 animate-in fade-in slide-in-from-top-2 duration-200">
-                            {Object.entries(roomData.seasonal_pricing)
-                              .sort(([, a]: [string, any], [, b]: [string, any]) => b - a)
-                              .map(([season, price]: [string, any], index, array) => {
-                                const isHighest = index === 0;
-                                const isLowest = index === array.length - 1;
-                                return (
-                                  <div 
-                                    key={season} 
-                                    className="flex items-center justify-between p-2.5 rounded-lg border bg-card/50"
-                                  >
-                                    <div className="flex items-center gap-2">
-                                      <div className={`w-2 h-2 rounded-full ${
-                                        isHighest 
-                                          ? 'bg-red-500' 
-                                          : isLowest 
-                                            ? 'bg-green-500' 
-                                            : 'bg-amber-500'
-                                      }`} />
-                                      <span className="text-xs font-body font-medium capitalize">
-                                        {season.replace(/_/g, ' ')}
+                          <div className="mt-3 space-y-3 animate-in fade-in slide-in-from-top-2 duration-200">
+                            <div className="space-y-2">
+                              {Object.entries(roomData.seasonal_pricing)
+                                .filter(([season]) => !season.toLowerCase().includes('shoulder'))
+                                .sort(([, a]: [string, any], [, b]: [string, any]) => b - a)
+                                .map(([season, price]: [string, any], index, array) => {
+                                  const isHighest = index === 0;
+                                  const isLowest = index === array.length - 1;
+                                  return (
+                                    <div 
+                                      key={season} 
+                                      className="flex items-center justify-between p-2.5 rounded-lg border bg-card/50"
+                                    >
+                                      <div className="flex items-center gap-2">
+                                        <div className={`w-2 h-2 rounded-full ${
+                                          isHighest 
+                                            ? 'bg-red-500' 
+                                            : isLowest 
+                                              ? 'bg-green-500' 
+                                              : 'bg-amber-500'
+                                        }`} />
+                                        <span className="text-xs font-body font-medium capitalize">
+                                          {season.replace(/_/g, ' ')}
+                                        </span>
+                                        {isHighest && (
+                                          <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-red-100 dark:bg-red-950/30 text-red-700 dark:text-red-400 font-medium">
+                                            Peak
+                                          </span>
+                                        )}
+                                        {isLowest && (
+                                          <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-green-100 dark:bg-green-950/30 text-green-700 dark:text-green-400 font-medium">
+                                            Off-season
+                                          </span>
+                                        )}
+                                      </div>
+                                      <span className="text-sm font-heading font-bold">
+                                        ₹{price?.toLocaleString('en-IN')}
                                       </span>
-                                      {isHighest && (
-                                        <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-red-100 dark:bg-red-950/30 text-red-700 dark:text-red-400 font-medium">
-                                          Peak
-                                        </span>
-                                      )}
-                                      {isLowest && (
-                                        <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-green-100 dark:bg-green-950/30 text-green-700 dark:text-green-400 font-medium">
-                                          Off-season
-                                        </span>
-                                      )}
                                     </div>
-                                    <span className="text-sm font-heading font-bold">
-                                      ₹{price?.toLocaleString('en-IN')}
-                                    </span>
-                                  </div>
-                                );
-                              })}
+                                  );
+                                })}
+                            </div>
+                            
+                            {/* Season Definitions */}
+                            <div className="pt-2 border-t space-y-1.5">
+                              <p className="text-[10px] font-body font-semibold text-muted-foreground uppercase tracking-wide mb-2">
+                                Season Guide
+                              </p>
+                              <div className="space-y-1">
+                                <div className="flex items-start gap-2">
+                                  <div className="w-1.5 h-1.5 rounded-full bg-red-500 mt-1.5 flex-shrink-0" />
+                                  <p className="text-xs font-body text-muted-foreground leading-relaxed">
+                                    <span className="font-medium">Peak:</span> Oct-May (Pleasant weather, festivals)
+                                  </p>
+                                </div>
+                                <div className="flex items-start gap-2">
+                                  <div className="w-1.5 h-1.5 rounded-full bg-green-500 mt-1.5 flex-shrink-0" />
+                                  <p className="text-xs font-body text-muted-foreground leading-relaxed">
+                                    <span className="font-medium">Off-season:</span> Jun-Sep (Monsoon, lush greenery)
+                                  </p>
+                                </div>
+                              </div>
+                            </div>
                           </div>
                         )}
                       </div>
