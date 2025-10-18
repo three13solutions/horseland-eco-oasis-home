@@ -55,18 +55,11 @@ const Dining = () => {
     }).filter(v => v.description);
   };
 
-  const diningHours = [
-    { meal: 'Breakfast', time: '7:00 AM - 10:30 AM', description: 'Continental & Indian options' },
-    { meal: 'Lunch', time: '12:30 PM - 3:00 PM', description: 'Buffet with local specialties' },
-    { meal: 'High Tea', time: '4:00 PM - 6:00 PM', description: 'Light snacks and beverages' },
-    { meal: 'Dinner', time: '7:30 PM - 10:30 PM', description: 'Multi-cuisine buffet' }
-  ];
-
   const mealTypes = [
-    { type: 'breakfast', label: 'Breakfast' },
-    { type: 'lunch', label: 'Lunch' },
-    { type: 'high_tea', label: 'High Tea' },
-    { type: 'dinner', label: 'Dinner' }
+    { type: 'breakfast', label: 'Breakfast', time: '7:00 AM - 10:30 AM' },
+    { type: 'lunch', label: 'Lunch', time: '12:30 PM - 3:00 PM' },
+    { type: 'high_tea', label: 'High Tea', time: '4:00 PM - 6:00 PM' },
+    { type: 'dinner', label: 'Dinner', time: '7:30 PM - 10:30 PM' }
   ];
 
   return (
@@ -147,30 +140,6 @@ const Dining = () => {
         </div>
       </section>
 
-      {/* Dining Hours */}
-      <section className="py-16 bg-muted/30">
-        <div className="max-w-4xl mx-auto px-4">
-          <h2 className="text-3xl md:text-4xl font-heading font-bold text-center mb-12 text-foreground">
-            Dining Hours
-          </h2>
-          
-          <div className="grid md:grid-cols-2 gap-6">
-            {diningHours.map((schedule, index) => (
-              <div key={index} className="bg-card border rounded-lg p-6">
-                <div className="flex items-center gap-3 mb-3">
-                  <UtensilsCrossed className="w-5 h-5 text-primary" />
-                  <h3 className="text-xl font-heading font-semibold">{schedule.meal}</h3>
-                </div>
-                <div className="flex items-center gap-2 mb-2">
-                  <Clock className="w-4 h-4 text-muted-foreground" />
-                  <span className="font-body font-medium text-primary">{schedule.time}</span>
-                </div>
-                <p className="text-muted-foreground font-body text-sm">{schedule.description}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
 
       {/* What to Expect */}
       <section className="py-16">
@@ -194,11 +163,20 @@ const Dining = () => {
               
               return (
                 <div key={index} className="bg-card border rounded-lg p-6">
-                  <div className="flex items-center gap-3 mb-6">
-                    <UtensilsCrossed className="w-6 h-6 text-primary" />
-                    <h3 className="text-2xl font-heading font-semibold text-foreground">
-                      {meal.label}
-                    </h3>
+                  <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-6 mb-6">
+                    <div className="flex items-center gap-3">
+                      <UtensilsCrossed className="w-6 h-6 text-primary" />
+                      <h3 className="text-2xl font-heading font-semibold text-foreground">
+                        {meal.label}
+                      </h3>
+                    </div>
+                    
+                    <div className="flex items-center gap-2 md:ml-auto">
+                      <Clock className="w-5 h-5 text-primary" />
+                      <span className="font-body font-medium text-foreground whitespace-nowrap">
+                        {meal.time}
+                      </span>
+                    </div>
                   </div>
                   
                   <div className="grid md:grid-cols-3 gap-6">
