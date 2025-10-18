@@ -77,6 +77,7 @@ interface GalleryImage {
   height?: number;
   created_at?: string;
   updated_at?: string;
+  tags?: string[];
   gallery_categories?: {
     name: string;
     slug: string;
@@ -1079,6 +1080,7 @@ const MediaForm: React.FC<MediaFormProps> = ({ image, categories, onSave, onCanc
     source_type: image?.source_type || 'upload' as 'upload' | 'external' | 'mirrored' | 'hardcoded',
     hardcoded_key: image?.hardcoded_key || '',
     is_hardcoded: image?.is_hardcoded || false,
+    tags: image?.tags || [] as string[],
   });
 
   const isGuestCategory = false; // Categories are now auto-assigned based on usage
@@ -1250,6 +1252,26 @@ const MediaForm: React.FC<MediaFormProps> = ({ image, categories, onSave, onCanc
           </p>
         </div>
       )}
+
+      {/* Tags for special filtering */}
+      <div>
+        <Label htmlFor="tags">Tags (Optional)</Label>
+        <Input
+          id="tags"
+          value={formData.tags.join(', ')}
+          onChange={(e) => {
+            const tagsArray = e.target.value
+              .split(',')
+              .map(tag => tag.trim())
+              .filter(tag => tag.length > 0);
+            setFormData({ ...formData, tags: tagsArray });
+          }}
+          placeholder="e.g., in-room-dining, candle-light-dinner"
+        />
+        <p className="text-xs text-muted-foreground mt-1">
+          Separate multiple tags with commas. Use tags like "in-room-dining" or "candle-light-dinner" to display images in specific sections.
+        </p>
+      </div>
 
       <div className="flex justify-end space-x-2 pt-4 border-t">
         <Button type="button" variant="outline" onClick={onCancel}>
