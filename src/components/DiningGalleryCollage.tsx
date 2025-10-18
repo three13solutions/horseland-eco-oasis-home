@@ -33,8 +33,7 @@ const DiningGalleryCollage = () => {
               caption
             )
           `)
-          .eq('category_id', category.id)
-          .limit(6);
+          .eq('category_id', category.id);
 
         if (imageLinks) {
           const fetchedImages = imageLinks
@@ -52,75 +51,54 @@ const DiningGalleryCollage = () => {
     return null;
   }
 
-  // Display first 6 images in creative grid
-  const displayImages = images.slice(0, 6);
+  // Duplicate images for seamless loop
+  const displayImages = [...images, ...images, ...images];
 
   return (
-    <div className="relative h-full min-h-[400px]">
-      {/* Creative Collage Grid */}
-      <div className="grid grid-cols-3 grid-rows-3 gap-2 h-full">
-        {/* Large image - top left spanning 2x2 */}
-        {displayImages[0] && (
-          <div className="col-span-2 row-span-2 relative overflow-hidden rounded-lg group">
-            <img 
-              src={displayImages[0].image_url} 
-              alt={displayImages[0].title}
-              className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+    <div className="relative overflow-hidden rounded-lg h-[400px]">
+      <style>{`
+        @keyframes scroll {
+          0% {
+            transform: translateX(0);
+          }
+          100% {
+            transform: translateX(-33.333%);
+          }
+        }
+        .animate-scroll {
+          animation: scroll 30s linear infinite;
+        }
+        .animate-scroll:hover {
+          animation-play-state: paused;
+        }
+      `}</style>
+      
+      <div className="flex gap-4 animate-scroll">
+        {displayImages.map((image, index) => (
+          <div
+            key={`${image.id}-${index}`}
+            className="flex-shrink-0 w-[300px] h-[400px] relative group"
+          >
+            <img
+              src={image.image_url}
+              alt={image.title}
+              className="w-full h-full object-cover rounded-lg transition-transform duration-300 group-hover:scale-105"
             />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+              <div className="absolute bottom-0 left-0 right-0 p-4">
+                <p className="text-white font-body font-semibold text-sm">{image.title}</p>
+                {image.caption && (
+                  <p className="text-white/80 font-body text-xs mt-1">{image.caption}</p>
+                )}
+              </div>
+            </div>
           </div>
-        )}
-
-        {/* Top right - medium */}
-        {displayImages[1] && (
-          <div className="row-span-2 relative overflow-hidden rounded-lg group">
-            <img 
-              src={displayImages[1].image_url} 
-              alt={displayImages[1].title}
-              className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-            />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-          </div>
-        )}
-
-        {/* Bottom row - 3 small images */}
-        {displayImages[2] && (
-          <div className="relative overflow-hidden rounded-lg group">
-            <img 
-              src={displayImages[2].image_url} 
-              alt={displayImages[2].title}
-              className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-            />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-          </div>
-        )}
-
-        {displayImages[3] && (
-          <div className="relative overflow-hidden rounded-lg group">
-            <img 
-              src={displayImages[3].image_url} 
-              alt={displayImages[3].title}
-              className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-            />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-          </div>
-        )}
-
-        {displayImages[4] && (
-          <div className="relative overflow-hidden rounded-lg group">
-            <img 
-              src={displayImages[4].image_url} 
-              alt={displayImages[4].title}
-              className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-            />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-          </div>
-        )}
+        ))}
       </div>
 
-      {/* Decorative overlay element */}
-      <div className="absolute -top-4 -left-4 w-24 h-24 bg-primary/5 rounded-full blur-3xl pointer-events-none" />
-      <div className="absolute -bottom-4 -right-4 w-32 h-32 bg-primary/5 rounded-full blur-3xl pointer-events-none" />
+      {/* Gradient overlays for smooth edges */}
+      <div className="absolute inset-y-0 left-0 w-20 bg-gradient-to-r from-background to-transparent pointer-events-none" />
+      <div className="absolute inset-y-0 right-0 w-20 bg-gradient-to-l from-background to-transparent pointer-events-none" />
     </div>
   );
 };
