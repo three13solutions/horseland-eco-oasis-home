@@ -209,7 +209,7 @@ export default function SeasonRules() {
         </TabsList>
 
         <TabsContent value="calendar">
-          <YearCalendarView seasons={seasons} holidays={holidays} />
+          <YearCalendarView seasons={seasons} holidays={holidays} onUpdate={loadData} />
         </TabsContent>
 
         <TabsContent value="seasons" className="space-y-4">
