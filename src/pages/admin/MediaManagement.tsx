@@ -226,11 +226,17 @@ const MediaManagement = () => {
 
   const handleSaveImage = async (imageData: Partial<GalleryImage>) => {
     try {
+      // Clean up hardcoded_key to avoid unique constraint violations
+      const cleanedData = { ...imageData };
+      if (!cleanedData.hardcoded_key || cleanedData.hardcoded_key.trim() === '') {
+        cleanedData.hardcoded_key = null;
+      }
+
       if (editingImage) {
         // Update existing image
         const { error: updateError } = await supabase
           .from('gallery_images')
-          .update(imageData)
+          .update(cleanedData)
           .eq('id', editingImage.id);
 
         if (updateError) throw updateError;
@@ -242,21 +248,21 @@ const MediaManagement = () => {
       } else {
         // Insert new image
         const insertData = {
-          title: imageData.title || '',
-          image_url: imageData.image_url || '',
-          video_url: imageData.video_url,
+          title: cleanedData.title || '',
+          image_url: cleanedData.image_url || '',
+          video_url: cleanedData.video_url,
           category: 'gallery',
-          caption: imageData.caption,
-          location: imageData.location,
-          guest_name: imageData.guest_name,
-          guest_handle: imageData.guest_handle,
-          likes_count: imageData.likes_count || 0,
-          sort_order: imageData.sort_order || 0,
-          media_type: imageData.media_type || 'image',
-          source_type: imageData.source_type || 'upload',
-          hardcoded_key: imageData.hardcoded_key,
-          is_hardcoded: imageData.is_hardcoded || false,
-          alt_text: (imageData as any).alt_text
+          caption: cleanedData.caption,
+          location: cleanedData.location,
+          guest_name: cleanedData.guest_name,
+          guest_handle: cleanedData.guest_handle,
+          likes_count: cleanedData.likes_count || 0,
+          sort_order: cleanedData.sort_order || 0,
+          media_type: cleanedData.media_type || 'image',
+          source_type: cleanedData.source_type || 'upload',
+          hardcoded_key: cleanedData.hardcoded_key || null,
+          is_hardcoded: cleanedData.is_hardcoded || false,
+          alt_text: (cleanedData as any).alt_text
         };
         
         const { error: insertError } = await supabase
