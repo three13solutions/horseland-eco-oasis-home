@@ -132,7 +132,7 @@ const PackagesPreviewV5 = () => {
 
         <div className="text-center mt-12">
           <Button className="bg-gradient-to-r from-primary to-accent hover:shadow-lg transform hover:scale-105 transition-all duration-300">
-            See All Packages
+            Explore Packages
           </Button>
         </div>
       </div>
