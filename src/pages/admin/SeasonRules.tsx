@@ -360,13 +360,39 @@ export default function SeasonRules() {
             <CardHeader>
               <CardTitle>Day Types</CardTitle>
               <CardDescription>
-                Pricing can be configured for different day types: Weekday, Weekend, Holiday, Long Weekend
+                Pricing is configured for two day types: Weekday (Mon-Thu) and Weekend (Fri-Sun + Holidays)
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <p className="text-sm text-muted-foreground">
-                Configure pricing by day type in <strong>Category Pricing</strong> section. Each season can have different rates for weekdays, weekends, holidays, and long weekends.
-              </p>
+              <div className="space-y-3 text-sm">
+                <div className="flex items-start gap-3 p-3 border rounded-lg">
+                  <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+                    <span className="text-sm font-semibold">M-T</span>
+                  </div>
+                  <div>
+                    <div className="font-medium">Weekday Pricing</div>
+                    <div className="text-muted-foreground text-xs mt-1">
+                      Applied to Monday through Thursday bookings
+                    </div>
+                  </div>
+                </div>
+                <div className="flex items-start gap-3 p-3 border rounded-lg">
+                  <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+                    <span className="text-sm font-semibold">F-S</span>
+                  </div>
+                  <div>
+                    <div className="font-medium">Weekend Pricing</div>
+                    <div className="text-muted-foreground text-xs mt-1">
+                      Applied to Friday through Sunday, plus all holidays and long weekends configured below
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div className="mt-4 pt-4 border-t">
+                <p className="text-sm text-muted-foreground">
+                  Configure pricing for each combination in <strong>Category Pricing</strong> section.
+                </p>
+              </div>
             </CardContent>
           </Card>
         </TabsContent>

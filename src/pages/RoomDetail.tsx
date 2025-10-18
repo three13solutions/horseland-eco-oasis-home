@@ -441,19 +441,21 @@ const RoomDetail = () => {
                                     </span>
                                   </div>
                                   
-                                  {seasonPrices.map((sp) => (
-                                    <div 
-                                      key={sp.id} 
-                                      className="flex items-center justify-between p-2 rounded-lg border bg-card/30 ml-4"
-                                    >
-                                      <span className="text-xs font-body text-muted-foreground">
-                                        {sp.day_type?.name}
-                                      </span>
-                                      <span className="text-sm font-heading font-bold">
-                                        ₹{sp.price?.toLocaleString('en-IN')}
-                                      </span>
-                                    </div>
-                                  ))}
+                                  <div className="grid grid-cols-2 gap-2 ml-4">
+                                    {seasonPrices.map((sp) => (
+                                      <div 
+                                        key={sp.id} 
+                                        className="flex items-center justify-between p-2 rounded-lg border bg-card/30"
+                                      >
+                                        <span className="text-xs font-body text-muted-foreground">
+                                          {sp.day_type?.name}
+                                        </span>
+                                        <span className="text-sm font-heading font-bold">
+                                          ₹{sp.price?.toLocaleString('en-IN')}
+                                        </span>
+                                      </div>
+                                    ))}
+                                  </div>
                                 </div>
                               );
                             })}
@@ -463,7 +465,7 @@ const RoomDetail = () => {
                               <p className="text-[10px] font-body font-semibold text-muted-foreground uppercase tracking-wide mb-2">
                                 Season Guide
                               </p>
-                              <div className="space-y-1">
+                              <div className="space-y-1.5">
                                 {seasons.map((season) => {
                                   const periods = season.season_periods || [];
                                   const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
@@ -487,6 +489,11 @@ const RoomDetail = () => {
                                     </div>
                                   );
                                 })}
+                                <div className="pt-1 mt-1 border-t">
+                                  <p className="text-xs font-body text-muted-foreground leading-relaxed">
+                                    <span className="font-medium">Note:</span> Weekend rates apply to Fri-Sun and all holidays
+                                  </p>
+                                </div>
                               </div>
                             </div>
                           </div>
