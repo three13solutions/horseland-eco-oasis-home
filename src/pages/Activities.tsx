@@ -342,10 +342,10 @@ const Activities = () => {
         <div className="max-w-7xl mx-auto px-4">
           <div className="flex gap-6">
             {/* Desktop Sidebar */}
-            <aside className="hidden lg:block w-72 flex-shrink-0">
-              <div className="sticky top-20 bg-card border rounded-lg p-6 space-y-6">
-                <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-lg font-heading font-semibold">Filters</h3>
+            <aside className="hidden lg:block w-64 flex-shrink-0">
+              <div className="sticky top-20 bg-card border rounded-lg p-4 space-y-4">
+                <div className="flex items-center justify-between mb-2">
+                  <h3 className="text-base font-heading font-semibold">Filters</h3>
                   {(locationFilter !== 'all' || seasonFilter !== 'all' || audienceFilter !== 'all' || priceFilter !== 'all' || activityTagFilter !== 'all' || daysFilter !== 'all' || bookingTypeFilter !== 'all' || durationFilter !== 'all') && (
                     <Button
                       variant="ghost"
@@ -369,21 +369,21 @@ const Activities = () => {
 
                 {/* Location Group */}
                 <div>
-                  <label className="text-sm font-semibold mb-3 block">Location</label>
-                  <div className="flex flex-col gap-2">
+                  <label className="text-xs font-medium text-muted-foreground mb-2 block">Location</label>
+                  <div className="flex flex-col gap-1.5">
                     <Button
                       variant={locationFilter === 'all' ? 'default' : 'outline'}
                       size="sm"
                       onClick={() => setLocationFilter('all')}
-                      className="justify-start"
+                      className="justify-start h-8 text-xs"
                     >
-                      All Locations
+                      All
                     </Button>
                     <Button
                       variant={locationFilter === 'on_property' ? 'default' : 'outline'}
                       size="sm"
                       onClick={() => setLocationFilter('on_property')}
-                      className="justify-start"
+                      className="justify-start h-8 text-xs"
                     >
                       On Property
                     </Button>
@@ -391,7 +391,7 @@ const Activities = () => {
                       variant={locationFilter === 'off_property' ? 'default' : 'outline'}
                       size="sm"
                       onClick={() => setLocationFilter('off_property')}
-                      className="justify-start"
+                      className="justify-start h-8 text-xs"
                     >
                       Off Property
                     </Button>
@@ -400,21 +400,21 @@ const Activities = () => {
 
                 {/* Season Group */}
                 <div>
-                  <label className="text-sm font-semibold mb-3 block">Season</label>
-                  <div className="grid grid-cols-2 gap-2">
+                  <label className="text-xs font-medium text-muted-foreground mb-2 block">Season</label>
+                  <div className="grid grid-cols-2 gap-1.5">
                     <Button
                       variant={seasonFilter === 'all' ? 'default' : 'outline'}
                       size="sm"
                       onClick={() => setSeasonFilter('all')}
-                      className="justify-start"
+                      className="justify-start h-8 text-xs col-span-2"
                     >
-                      All Seasons
+                      All
                     </Button>
                     <Button
                       variant={seasonFilter === 'monsoon' ? 'default' : 'outline'}
                       size="sm"
                       onClick={() => setSeasonFilter('monsoon')}
-                      className="justify-start"
+                      className="justify-start h-8 text-xs"
                     >
                       Monsoon
                     </Button>
@@ -422,7 +422,7 @@ const Activities = () => {
                       variant={seasonFilter === 'winter' ? 'default' : 'outline'}
                       size="sm"
                       onClick={() => setSeasonFilter('winter')}
-                      className="justify-start"
+                      className="justify-start h-8 text-xs"
                     >
                       Winter
                     </Button>
@@ -430,7 +430,7 @@ const Activities = () => {
                       variant={seasonFilter === 'spring' ? 'default' : 'outline'}
                       size="sm"
                       onClick={() => setSeasonFilter('spring')}
-                      className="justify-start"
+                      className="justify-start h-8 text-xs"
                     >
                       Spring
                     </Button>
@@ -438,7 +438,7 @@ const Activities = () => {
                       variant={seasonFilter === 'summer' ? 'default' : 'outline'}
                       size="sm"
                       onClick={() => setSeasonFilter('summer')}
-                      className="justify-start"
+                      className="justify-start h-8 text-xs"
                     >
                       Summer
                     </Button>
@@ -447,21 +447,21 @@ const Activities = () => {
 
                 {/* Audience Group */}
                 <div>
-                  <label className="text-sm font-semibold mb-3 block">Suitable For</label>
-                  <div className="grid grid-cols-2 gap-2">
+                  <label className="text-xs font-medium text-muted-foreground mb-2 block">Suitable For</label>
+                  <div className="grid grid-cols-2 gap-1.5">
                     <Button
                       variant={audienceFilter === 'all' ? 'default' : 'outline'}
                       size="sm"
                       onClick={() => setAudienceFilter('all')}
-                      className="justify-start col-span-2"
+                      className="justify-start col-span-2 h-8 text-xs"
                     >
-                      Everyone
+                      All
                     </Button>
                     <Button
                       variant={audienceFilter === 'families' ? 'default' : 'outline'}
                       size="sm"
                       onClick={() => setAudienceFilter('families')}
-                      className="justify-start"
+                      className="justify-start h-8 text-xs"
                     >
                       Families
                     </Button>
@@ -469,7 +469,7 @@ const Activities = () => {
                       variant={audienceFilter === 'couples' ? 'default' : 'outline'}
                       size="sm"
                       onClick={() => setAudienceFilter('couples')}
-                      className="justify-start"
+                      className="justify-start h-8 text-xs"
                     >
                       Couples
                     </Button>
@@ -477,7 +477,7 @@ const Activities = () => {
                       variant={audienceFilter === 'kids' ? 'default' : 'outline'}
                       size="sm"
                       onClick={() => setAudienceFilter('kids')}
-                      className="justify-start"
+                      className="justify-start h-8 text-xs"
                     >
                       Kids
                     </Button>
@@ -485,7 +485,7 @@ const Activities = () => {
                       variant={audienceFilter === 'adults' ? 'default' : 'outline'}
                       size="sm"
                       onClick={() => setAudienceFilter('adults')}
-                      className="justify-start"
+                      className="justify-start h-8 text-xs"
                     >
                       Adults
                     </Button>
@@ -493,7 +493,7 @@ const Activities = () => {
                       variant={audienceFilter === 'teens' ? 'default' : 'outline'}
                       size="sm"
                       onClick={() => setAudienceFilter('teens')}
-                      className="justify-start"
+                      className="justify-start h-8 text-xs"
                     >
                       Teens
                     </Button>
@@ -501,7 +501,7 @@ const Activities = () => {
                       variant={audienceFilter === 'groups' ? 'default' : 'outline'}
                       size="sm"
                       onClick={() => setAudienceFilter('groups')}
-                      className="justify-start"
+                      className="justify-start h-8 text-xs"
                     >
                       Groups
                     </Button>
@@ -509,7 +509,7 @@ const Activities = () => {
                       variant={audienceFilter === 'seniors' ? 'default' : 'outline'}
                       size="sm"
                       onClick={() => setAudienceFilter('seniors')}
-                      className="justify-start"
+                      className="justify-start h-8 text-xs"
                     >
                       Seniors
                     </Button>
@@ -517,7 +517,7 @@ const Activities = () => {
                       variant={audienceFilter === 'solo' ? 'default' : 'outline'}
                       size="sm"
                       onClick={() => setAudienceFilter('solo')}
-                      className="justify-start"
+                      className="justify-start h-8 text-xs"
                     >
                       Solo
                     </Button>
@@ -526,21 +526,21 @@ const Activities = () => {
 
                 {/* Price Group */}
                 <div>
-                  <label className="text-sm font-semibold mb-3 block">Price Range</label>
-                  <div className="flex flex-col gap-2">
+                  <label className="text-xs font-medium text-muted-foreground mb-2 block">Price Range</label>
+                  <div className="flex flex-col gap-1.5">
                     <Button
                       variant={priceFilter === 'all' ? 'default' : 'outline'}
                       size="sm"
                       onClick={() => setPriceFilter('all')}
-                      className="justify-start"
+                      className="justify-start h-8 text-xs"
                     >
-                      All Prices
+                      All
                     </Button>
                     <Button
                       variant={priceFilter === 'free' ? 'default' : 'outline'}
                       size="sm"
                       onClick={() => setPriceFilter('free')}
-                      className="justify-start"
+                      className="justify-start h-8 text-xs"
                     >
                       Free
                     </Button>
@@ -548,7 +548,7 @@ const Activities = () => {
                       variant={priceFilter === 'under_500' ? 'default' : 'outline'}
                       size="sm"
                       onClick={() => setPriceFilter('under_500')}
-                      className="justify-start"
+                      className="justify-start h-8 text-xs"
                     >
                       Under ₹500
                     </Button>
@@ -556,7 +556,7 @@ const Activities = () => {
                       variant={priceFilter === '500_1000' ? 'default' : 'outline'}
                       size="sm"
                       onClick={() => setPriceFilter('500_1000')}
-                      className="justify-start"
+                      className="justify-start h-8 text-xs"
                     >
                       ₹500 - ₹1000
                     </Button>
@@ -564,7 +564,7 @@ const Activities = () => {
                       variant={priceFilter === 'above_1000' ? 'default' : 'outline'}
                       size="sm"
                       onClick={() => setPriceFilter('above_1000')}
-                      className="justify-start"
+                      className="justify-start h-8 text-xs"
                     >
                       Above ₹1000
                     </Button>
@@ -573,21 +573,21 @@ const Activities = () => {
 
                 {/* Activity Type Group */}
                 <div>
-                  <label className="text-sm font-semibold mb-3 block">Activity Type</label>
-                  <div className="grid grid-cols-2 gap-2">
+                  <label className="text-xs font-medium text-muted-foreground mb-2 block">Activity Type</label>
+                  <div className="grid grid-cols-2 gap-1.5">
                     <Button
                       variant={activityTagFilter === 'all' ? 'default' : 'outline'}
                       size="sm"
                       onClick={() => setActivityTagFilter('all')}
-                      className="justify-start col-span-2"
+                      className="justify-start col-span-2 h-8 text-xs"
                     >
-                      All Types
+                      All
                     </Button>
                     <Button
                       variant={activityTagFilter === 'adventure' ? 'default' : 'outline'}
                       size="sm"
                       onClick={() => setActivityTagFilter('adventure')}
-                      className="justify-start"
+                      className="justify-start h-8 text-xs"
                     >
                       Adventure
                     </Button>
@@ -595,7 +595,7 @@ const Activities = () => {
                       variant={activityTagFilter === 'relaxing' ? 'default' : 'outline'}
                       size="sm"
                       onClick={() => setActivityTagFilter('relaxing')}
-                      className="justify-start"
+                      className="justify-start h-8 text-xs"
                     >
                       Relaxing
                     </Button>
@@ -603,7 +603,7 @@ const Activities = () => {
                       variant={activityTagFilter === 'cultural' ? 'default' : 'outline'}
                       size="sm"
                       onClick={() => setActivityTagFilter('cultural')}
-                      className="justify-start"
+                      className="justify-start h-8 text-xs"
                     >
                       Cultural
                     </Button>
@@ -611,7 +611,7 @@ const Activities = () => {
                       variant={activityTagFilter === 'sports' ? 'default' : 'outline'}
                       size="sm"
                       onClick={() => setActivityTagFilter('sports')}
-                      className="justify-start"
+                      className="justify-start h-8 text-xs"
                     >
                       Sports
                     </Button>
@@ -619,7 +619,7 @@ const Activities = () => {
                       variant={activityTagFilter === 'nature' ? 'default' : 'outline'}
                       size="sm"
                       onClick={() => setActivityTagFilter('nature')}
-                      className="justify-start"
+                      className="justify-start h-8 text-xs"
                     >
                       Nature
                     </Button>
@@ -627,7 +627,7 @@ const Activities = () => {
                       variant={activityTagFilter === 'indoor' ? 'default' : 'outline'}
                       size="sm"
                       onClick={() => setActivityTagFilter('indoor')}
-                      className="justify-start"
+                      className="justify-start h-8 text-xs"
                     >
                       Indoor
                     </Button>
@@ -635,7 +635,7 @@ const Activities = () => {
                       variant={activityTagFilter === 'outdoor' ? 'default' : 'outline'}
                       size="sm"
                       onClick={() => setActivityTagFilter('outdoor')}
-                      className="justify-start"
+                      className="justify-start h-8 text-xs"
                     >
                       Outdoor
                     </Button>
@@ -643,7 +643,7 @@ const Activities = () => {
                       variant={activityTagFilter === 'educational' ? 'default' : 'outline'}
                       size="sm"
                       onClick={() => setActivityTagFilter('educational')}
-                      className="justify-start"
+                      className="justify-start h-8 text-xs"
                     >
                       Educational
                     </Button>
@@ -652,21 +652,21 @@ const Activities = () => {
 
                 {/* Days Group */}
                 <div>
-                  <label className="text-sm font-semibold mb-3 block">Available Days</label>
-                  <div className="flex flex-col gap-2">
+                  <label className="text-xs font-medium text-muted-foreground mb-2 block">Available Days</label>
+                  <div className="flex flex-col gap-1.5">
                     <Button
                       variant={daysFilter === 'all' ? 'default' : 'outline'}
                       size="sm"
                       onClick={() => setDaysFilter('all')}
-                      className="justify-start"
+                      className="justify-start h-8 text-xs"
                     >
-                      All Days
+                      All
                     </Button>
                     <Button
                       variant={daysFilter === 'weekdays' ? 'default' : 'outline'}
                       size="sm"
                       onClick={() => setDaysFilter('weekdays')}
-                      className="justify-start"
+                      className="justify-start h-8 text-xs"
                     >
                       Weekdays
                     </Button>
@@ -674,66 +674,66 @@ const Activities = () => {
                       variant={daysFilter === 'weekends' ? 'default' : 'outline'}
                       size="sm"
                       onClick={() => setDaysFilter('weekends')}
-                      className="justify-start"
+                      className="justify-start h-8 text-xs"
                     >
                       Weekends
                     </Button>
-                    <div className="grid grid-cols-2 gap-2">
+                    <div className="grid grid-cols-2 gap-1.5">
                       <Button
                         variant={daysFilter === 'monday' ? 'default' : 'outline'}
                         size="sm"
                         onClick={() => setDaysFilter('monday')}
-                        className="justify-start"
+                        className="justify-center h-8 text-xs px-2"
                       >
-                        Mon
+                        M
                       </Button>
                       <Button
                         variant={daysFilter === 'tuesday' ? 'default' : 'outline'}
                         size="sm"
                         onClick={() => setDaysFilter('tuesday')}
-                        className="justify-start"
+                        className="justify-center h-8 text-xs px-2"
                       >
-                        Tue
+                        T
                       </Button>
                       <Button
                         variant={daysFilter === 'wednesday' ? 'default' : 'outline'}
                         size="sm"
                         onClick={() => setDaysFilter('wednesday')}
-                        className="justify-start"
+                        className="justify-center h-8 text-xs px-2"
                       >
-                        Wed
+                        W
                       </Button>
                       <Button
                         variant={daysFilter === 'thursday' ? 'default' : 'outline'}
                         size="sm"
                         onClick={() => setDaysFilter('thursday')}
-                        className="justify-start"
+                        className="justify-center h-8 text-xs px-2"
                       >
-                        Thu
+                        Th
                       </Button>
                       <Button
                         variant={daysFilter === 'friday' ? 'default' : 'outline'}
                         size="sm"
                         onClick={() => setDaysFilter('friday')}
-                        className="justify-start"
+                        className="justify-center h-8 text-xs px-2"
                       >
-                        Fri
+                        F
                       </Button>
                       <Button
                         variant={daysFilter === 'saturday' ? 'default' : 'outline'}
                         size="sm"
                         onClick={() => setDaysFilter('saturday')}
-                        className="justify-start"
+                        className="justify-center h-8 text-xs px-2"
                       >
-                        Sat
+                        S
                       </Button>
                       <Button
                         variant={daysFilter === 'sunday' ? 'default' : 'outline'}
                         size="sm"
                         onClick={() => setDaysFilter('sunday')}
-                        className="justify-start"
+                        className="justify-center h-8 text-xs px-2"
                       >
-                        Sun
+                        Su
                       </Button>
                     </div>
                   </div>
@@ -741,21 +741,21 @@ const Activities = () => {
 
                 {/* By Booking Group */}
                 <div>
-                  <label className="text-sm font-semibold mb-3 block">By Booking</label>
-                  <div className="flex flex-col gap-2">
+                  <label className="text-xs font-medium text-muted-foreground mb-2 block">By Booking</label>
+                  <div className="flex flex-col gap-1.5">
                     <Button
                       variant={bookingTypeFilter === 'all' ? 'default' : 'outline'}
                       size="sm"
                       onClick={() => setBookingTypeFilter('all')}
-                      className="justify-start"
+                      className="justify-start h-8 text-xs"
                     >
-                      All Methods
+                      All
                     </Button>
                     <Button
                       variant={bookingTypeFilter === 'reception' ? 'default' : 'outline'}
                       size="sm"
                       onClick={() => setBookingTypeFilter('reception')}
-                      className="justify-start"
+                      className="justify-start h-8 text-xs"
                     >
                       At Reception
                     </Button>
@@ -763,7 +763,7 @@ const Activities = () => {
                       variant={bookingTypeFilter === 'online' ? 'default' : 'outline'}
                       size="sm"
                       onClick={() => setBookingTypeFilter('online')}
-                      className="justify-start"
+                      className="justify-start h-8 text-xs"
                     >
                       Online
                     </Button>
@@ -771,7 +771,7 @@ const Activities = () => {
                       variant={bookingTypeFilter === 'both' ? 'default' : 'outline'}
                       size="sm"
                       onClick={() => setBookingTypeFilter('both')}
-                      className="justify-start"
+                      className="justify-start h-8 text-xs"
                     >
                       Both
                     </Button>
@@ -779,7 +779,7 @@ const Activities = () => {
                       variant={bookingTypeFilter === 'third_party' ? 'default' : 'outline'}
                       size="sm"
                       onClick={() => setBookingTypeFilter('third_party')}
-                      className="justify-start"
+                      className="justify-start h-8 text-xs"
                     >
                       Third Party
                     </Button>
@@ -787,7 +787,7 @@ const Activities = () => {
                       variant={bookingTypeFilter === 'no_booking' ? 'default' : 'outline'}
                       size="sm"
                       onClick={() => setBookingTypeFilter('no_booking')}
-                      className="justify-start"
+                      className="justify-start h-8 text-xs"
                     >
                       No Booking
                     </Button>
@@ -796,39 +796,39 @@ const Activities = () => {
 
                 {/* Duration Group */}
                 <div>
-                  <label className="text-sm font-semibold mb-3 block">Duration</label>
-                  <div className="flex flex-col gap-2">
+                  <label className="text-xs font-medium text-muted-foreground mb-2 block">Duration</label>
+                  <div className="flex flex-col gap-1.5">
                     <Button
                       variant={durationFilter === 'all' ? 'default' : 'outline'}
                       size="sm"
                       onClick={() => setDurationFilter('all')}
-                      className="justify-start"
+                      className="justify-start h-8 text-xs"
                     >
-                      Any Duration
+                      Any
                     </Button>
                     <Button
                       variant={durationFilter === 'quick' ? 'default' : 'outline'}
                       size="sm"
                       onClick={() => setDurationFilter('quick')}
-                      className="justify-start"
+                      className="justify-start h-8 text-xs"
                     >
-                      Quick (&lt; 1 hour)
+                      &lt; 1hr
                     </Button>
                     <Button
                       variant={durationFilter === 'medium' ? 'default' : 'outline'}
                       size="sm"
                       onClick={() => setDurationFilter('medium')}
-                      className="justify-start"
+                      className="justify-start h-8 text-xs"
                     >
-                      Medium (1-3 hours)
+                      1-3hrs
                     </Button>
                     <Button
                       variant={durationFilter === 'long' ? 'default' : 'outline'}
                       size="sm"
                       onClick={() => setDurationFilter('long')}
-                      className="justify-start"
+                      className="justify-start h-8 text-xs"
                     >
-                      Long (&gt; 3 hours)
+                      &gt; 3hrs
                     </Button>
                   </div>
                 </div>
