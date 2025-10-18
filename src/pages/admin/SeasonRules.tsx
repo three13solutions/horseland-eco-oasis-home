@@ -11,6 +11,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Textarea } from '@/components/ui/textarea';
+import YearCalendarView from '@/components/admin/YearCalendarView';
 
 export default function SeasonRules() {
   const [seasons, setSeasons] = useState<any[]>([]);
@@ -197,11 +198,19 @@ export default function SeasonRules() {
         </div>
       </div>
 
-      <Tabs defaultValue="seasons" className="space-y-6">
+      <Tabs defaultValue="calendar" className="space-y-6">
         <TabsList>
+          <TabsTrigger value="calendar">
+            <Calendar className="h-4 w-4 mr-2" />
+            Calendar View
+          </TabsTrigger>
           <TabsTrigger value="seasons">Seasons</TabsTrigger>
           <TabsTrigger value="holidays">Holidays</TabsTrigger>
         </TabsList>
+
+        <TabsContent value="calendar">
+          <YearCalendarView seasons={seasons} holidays={holidays} />
+        </TabsContent>
 
         <TabsContent value="seasons" className="space-y-4">
           <Card>
