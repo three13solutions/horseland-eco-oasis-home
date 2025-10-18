@@ -546,7 +546,15 @@ const Booking = () => {
     if (!checkIn || !checkOut) return 0;
     const start = new Date(checkIn);
     const end = new Date(checkOut);
-    return Math.ceil((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24));
+    
+    // Validate that dates are valid
+    if (isNaN(start.getTime()) || isNaN(end.getTime())) {
+      console.warn('Invalid dates:', { checkIn, checkOut });
+      return 0;
+    }
+    
+    const nights = Math.ceil((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24));
+    return Math.max(0, nights); // Ensure non-negative
   };
 
   const calculateTotal = () => {
