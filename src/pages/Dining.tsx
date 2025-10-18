@@ -2,6 +2,7 @@ import React from 'react';
 import NavigationV5 from '../components/v5/NavigationV5';
 import DynamicFooter from '../components/DynamicFooter';
 import CombinedFloatingV5 from '../components/v5/CombinedFloatingV5';
+import DiningGalleryCollage from '../components/DiningGalleryCollage';
 import { Button } from '@/components/ui/button';
 import { Clock, Leaf, Award, UtensilsCrossed, ChefHat, Home, Sparkles } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
@@ -127,11 +128,7 @@ const Dining = () => {
               </div>
             </div>
             <div className="relative">
-              <img 
-                src="https://images.unsplash.com/photo-1556909114-a7811625ccc1?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80"
-                alt="Chef preparing food"
-                className="rounded-lg shadow-lg w-full"
-              />
+              <DiningGalleryCollage />
             </div>
           </div>
         </div>
