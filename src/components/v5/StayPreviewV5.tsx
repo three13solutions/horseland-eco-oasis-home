@@ -19,11 +19,13 @@ const StayPreviewV5 = () => {
         .from('room_types')
         .select('*')
         .eq('is_published', true)
-        .order('base_price', { ascending: true })
-        .limit(3);
+        .in('name', ['Classic Pods', 'Basement Hideouts', 'Pool Deck Rooms']);
       
       if (error) throw error;
-      return data;
+      
+      // Sort in the desired order
+      const order = ['Classic Pods', 'Basement Hideouts', 'Pool Deck Rooms'];
+      return data?.sort((a, b) => order.indexOf(a.name) - order.indexOf(b.name)) || [];
     }
   });
 
