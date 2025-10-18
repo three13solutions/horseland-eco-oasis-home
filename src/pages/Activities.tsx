@@ -44,6 +44,10 @@ const Activities = () => {
   const [seasonFilter, setSeasonFilter] = useState<string>('all');
   const [audienceFilter, setAudienceFilter] = useState<string>('all');
   const [priceFilter, setPriceFilter] = useState<string>('all');
+  const [activityTagFilter, setActivityTagFilter] = useState<string>('all');
+  const [daysFilter, setDaysFilter] = useState<string>('all');
+  const [bookingTypeFilter, setBookingTypeFilter] = useState<string>('all');
+  const [durationFilter, setDurationFilter] = useState<string>('all');
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   
   const { toast } = useToast();
@@ -153,6 +157,43 @@ const Activities = () => {
         if (priceType === 'fixed' && (!priceAmount || priceAmount <= 1000)) return false;
         if (priceType === 'range' && (!priceMin || priceMin <= 1000)) return false;
       }
+    }
+    
+    // Activity Tags filter
+    if (activityTagFilter !== 'all') {
+      const activityTags = (activity as any).activity_tags || [];
+      if (!activityTags.includes(activityTagFilter)) return false;
+    }
+    
+    // Available Days filter
+    if (daysFilter !== 'all') {
+      const availableDays = (activity as any).available_days || [];
+      if (daysFilter === 'weekdays') {
+        const weekdays = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday'];
+        if (!weekdays.some(day => availableDays.includes(day))) return false;
+      } else if (daysFilter === 'weekends') {
+        if (!availableDays.includes('saturday') && !availableDays.includes('sunday')) return false;
+      } else {
+        // Specific day filter
+        if (!availableDays.includes(daysFilter)) return false;
+      }
+    }
+    
+    // Booking Type filter
+    if (bookingTypeFilter !== 'all') {
+      const bookingType = (activity as any).booking_type;
+      if (bookingType !== bookingTypeFilter) return false;
+    }
+    
+    // Duration filter
+    if (durationFilter !== 'all') {
+      const hours = (activity as any).duration_hours || 0;
+      const minutes = (activity as any).duration_minutes || 0;
+      const totalMinutes = hours * 60 + minutes;
+      
+      if (durationFilter === 'quick' && totalMinutes > 60) return false; // Under 1 hour
+      if (durationFilter === 'medium' && (totalMinutes < 60 || totalMinutes > 180)) return false; // 1-3 hours
+      if (durationFilter === 'long' && totalMinutes <= 180) return false; // Over 3 hours
     }
     
     return true;
@@ -368,8 +409,73 @@ const Activities = () => {
               </SelectContent>
             </Select>
 
+            {/* Activity Type Filter */}
+            <Select value={activityTagFilter} onValueChange={setActivityTagFilter}>
+              <SelectTrigger className="w-[180px] bg-background">
+                <SelectValue placeholder="Activity Type" />
+              </SelectTrigger>
+              <SelectContent className="bg-background z-50">
+                <SelectItem value="all">All Types</SelectItem>
+                <SelectItem value="adventure">Adventure</SelectItem>
+                <SelectItem value="relaxing">Relaxing</SelectItem>
+                <SelectItem value="cultural">Cultural</SelectItem>
+                <SelectItem value="sports">Sports</SelectItem>
+                <SelectItem value="nature">Nature</SelectItem>
+                <SelectItem value="indoor">Indoor</SelectItem>
+                <SelectItem value="outdoor">Outdoor</SelectItem>
+                <SelectItem value="educational">Educational</SelectItem>
+              </SelectContent>
+            </Select>
+
+            {/* Days Filter */}
+            <Select value={daysFilter} onValueChange={setDaysFilter}>
+              <SelectTrigger className="w-[180px] bg-background">
+                <SelectValue placeholder="Available Days" />
+              </SelectTrigger>
+              <SelectContent className="bg-background z-50">
+                <SelectItem value="all">All Days</SelectItem>
+                <SelectItem value="weekdays">Weekdays</SelectItem>
+                <SelectItem value="weekends">Weekends</SelectItem>
+                <SelectItem value="monday">Monday</SelectItem>
+                <SelectItem value="tuesday">Tuesday</SelectItem>
+                <SelectItem value="wednesday">Wednesday</SelectItem>
+                <SelectItem value="thursday">Thursday</SelectItem>
+                <SelectItem value="friday">Friday</SelectItem>
+                <SelectItem value="saturday">Saturday</SelectItem>
+                <SelectItem value="sunday">Sunday</SelectItem>
+              </SelectContent>
+            </Select>
+
+            {/* Booking Type Filter */}
+            <Select value={bookingTypeFilter} onValueChange={setBookingTypeFilter}>
+              <SelectTrigger className="w-[180px] bg-background">
+                <SelectValue placeholder="Booking Method" />
+              </SelectTrigger>
+              <SelectContent className="bg-background z-50">
+                <SelectItem value="all">All Methods</SelectItem>
+                <SelectItem value="reception">At Reception</SelectItem>
+                <SelectItem value="online">Online</SelectItem>
+                <SelectItem value="both">Both</SelectItem>
+                <SelectItem value="third_party">Third Party</SelectItem>
+                <SelectItem value="no_booking">No Booking</SelectItem>
+              </SelectContent>
+            </Select>
+
+            {/* Duration Filter */}
+            <Select value={durationFilter} onValueChange={setDurationFilter}>
+              <SelectTrigger className="w-[180px] bg-background">
+                <SelectValue placeholder="Duration" />
+              </SelectTrigger>
+              <SelectContent className="bg-background z-50">
+                <SelectItem value="all">Any Duration</SelectItem>
+                <SelectItem value="quick">Quick (&lt; 1 hour)</SelectItem>
+                <SelectItem value="medium">Medium (1-3 hours)</SelectItem>
+                <SelectItem value="long">Long (&gt; 3 hours)</SelectItem>
+              </SelectContent>
+            </Select>
+
             {/* Clear Filters */}
-            {(locationFilter !== 'all' || seasonFilter !== 'all' || audienceFilter !== 'all' || priceFilter !== 'all') && (
+            {(locationFilter !== 'all' || seasonFilter !== 'all' || audienceFilter !== 'all' || priceFilter !== 'all' || activityTagFilter !== 'all' || daysFilter !== 'all' || bookingTypeFilter !== 'all' || durationFilter !== 'all') && (
               <Button
                 variant="ghost"
                 size="sm"
@@ -378,6 +484,10 @@ const Activities = () => {
                   setSeasonFilter('all');
                   setAudienceFilter('all');
                   setPriceFilter('all');
+                  setActivityTagFilter('all');
+                  setDaysFilter('all');
+                  setBookingTypeFilter('all');
+                  setDurationFilter('all');
                 }}
                 className="font-body text-xs"
               >
