@@ -1,4 +1,5 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 import { useTranslationContext } from '@/components/admin/TranslationProvider';
 import { Star, Quote, MapPin, ChevronLeft, ChevronRight } from 'lucide-react';
 import useEmblaCarousel from 'embla-carousel-react';
@@ -188,12 +189,20 @@ const GuestReviewsV5 = () => {
               {getTranslation('reviews.cta.description', 'Continue to read more stories on TripAdvisor 4.8/5 and Google Reviews 4.9/5 or Book your stay today and create your own memorable experience in Matheran.')}
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <button className="bg-gradient-to-r from-primary to-accent text-white px-6 py-3 rounded-xl font-semibold hover:shadow-lg transform hover:scale-105 transition-all">
+              <Link 
+                to="/booking" 
+                className="bg-gradient-to-r from-primary to-accent text-white px-6 py-3 rounded-xl font-semibold hover:shadow-lg transform hover:scale-105 transition-all text-center"
+              >
                 {getTranslation('reviews.cta.bookStay', 'Book Your Stay')}
-              </button>
-              <button className="border border-primary text-primary px-6 py-3 rounded-xl font-semibold hover:bg-primary/10 transition-all">
+              </Link>
+              <a 
+                href="https://www.google.com/search?q=Horseland+Hotel+Matheran+reviews" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="border border-primary text-primary px-6 py-3 rounded-xl font-semibold hover:bg-primary/10 transition-all text-center"
+              >
                 {getTranslation('reviews.cta.viewAllReviews', 'View All Reviews')}
-              </button>
+              </a>
             </div>
           </div>
         </div>
