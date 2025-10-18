@@ -1381,6 +1381,7 @@ export type Database = {
           parent_id: string | null
           slug: string
           sort_order: number
+          structured_content: Json | null
           subtitle: string | null
           template_type: string
           title: string
@@ -1404,6 +1405,7 @@ export type Database = {
           parent_id?: string | null
           slug: string
           sort_order?: number
+          structured_content?: Json | null
           subtitle?: string | null
           template_type?: string
           title: string
@@ -1427,6 +1429,7 @@ export type Database = {
           parent_id?: string | null
           slug?: string
           sort_order?: number
+          structured_content?: Json | null
           subtitle?: string | null
           template_type?: string
           title?: string

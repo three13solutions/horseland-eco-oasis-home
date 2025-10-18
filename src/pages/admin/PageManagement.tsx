@@ -14,6 +14,7 @@ import { toast } from "sonner";
 import { Plus, Pencil, Trash2, Eye, EyeOff, Search, Languages, Loader2 } from "lucide-react";
 import { MediaPicker } from "@/components/admin/MediaPicker";
 import { TranslationField } from "@/components/admin/TranslationField";
+import { PageContentEditor } from "@/components/admin/PageContentEditor";
 
 interface Page {
   id: string;
@@ -79,6 +80,7 @@ export default function PageManagement() {
     title: "",
     subtitle: "",
     content: "",
+    structured_content: {} as any,
     meta_title: "",
     meta_description: "",
     meta_keywords: "",
@@ -257,6 +259,7 @@ export default function PageManagement() {
       title: page.title,
       subtitle: page.subtitle || "",
       content: page.content || "",
+      structured_content: (page as any).structured_content || {},
       meta_title: page.meta_title || "",
       meta_description: page.meta_description || "",
       meta_keywords: page.meta_keywords || "",
@@ -297,6 +300,7 @@ export default function PageManagement() {
       title: "",
       subtitle: "",
       content: "",
+      structured_content: {},
       meta_title: "",
       meta_description: "",
       meta_keywords: "",
@@ -435,17 +439,31 @@ export default function PageManagement() {
                         </p>
                       </div>
 
-                      <div>
-                        <Label htmlFor="content">Content (Markdown/HTML)</Label>
+                      <div className="border-t pt-4">
+                        <h3 className="text-lg font-semibold mb-4">Page Sections & Content</h3>
+                        <PageContentEditor
+                          pageSlug={formData.slug}
+                          content={formData.structured_content}
+                          onChange={(newContent) =>
+                            setFormData({ ...formData, structured_content: newContent })
+                          }
+                        />
+                      </div>
+
+                      <div className="border-t pt-4">
+                        <Label htmlFor="content">Additional Content (Markdown/HTML - Optional)</Label>
                         <Textarea
                           id="content"
                           value={formData.content}
                           onChange={(e) =>
                             setFormData({ ...formData, content: e.target.value })
                           }
-                          rows={12}
-                          placeholder="Enter your page content here..."
+                          rows={6}
+                          placeholder="Additional content if needed..."
                         />
+                        <p className="text-xs text-muted-foreground mt-1">
+                          Most content is managed via structured sections above. Use this only for additional custom content.
+                        </p>
                       </div>
                     </>
                   ) : (
