@@ -69,8 +69,8 @@ const DiningGalleryCollage = () => {
     <div className="relative group h-[240px] -mx-4 sm:-mx-6 lg:-mx-8">
       <div className="overflow-hidden h-full">
         <div 
-          className="flex gap-3 transition-transform duration-500 ease-out"
-          style={{ transform: `translateX(-${currentIndex * (180 + 12)}px)` }}
+          className="flex transition-transform duration-500 ease-out"
+          style={{ transform: `translateX(-${currentIndex * 180}px)` }}
         >
           {images.map((image, index) => (
           <div
