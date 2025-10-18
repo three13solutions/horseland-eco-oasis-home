@@ -97,8 +97,7 @@ const DiningGalleryCollage = () => {
 
   return (
     <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-      <div className="relative group h-[200px]">
-      <div className="overflow-hidden h-full">
+      <div className="relative group h-[200px] max-w-[1260px] mx-auto overflow-hidden">
         <div 
           className="flex transition-transform duration-500 ease-out"
           style={{ transform: `translateX(-${currentIndex * 280}px)` }}
@@ -125,27 +124,26 @@ const DiningGalleryCollage = () => {
             </div>
           ))}
         </div>
-      </div>
 
-      {/* Navigation Buttons */}
-      <Button
-        variant="outline"
-        size="icon"
-        className="absolute left-2 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity bg-background/80 backdrop-blur-sm"
-        onClick={handlePrev}
-      >
-        <ChevronLeft className="h-4 w-4" />
-      </Button>
-      
-      <Button
-        variant="outline"
-        size="icon"
-        className="absolute right-2 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity bg-background/80 backdrop-blur-sm"
-        onClick={handleNext}
-      >
-        <ChevronRight className="h-4 w-4" />
-      </Button>
-    </div>
+        {/* Navigation Buttons */}
+        <Button
+          variant="outline"
+          size="icon"
+          className="absolute left-2 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity bg-background/80 backdrop-blur-sm z-10"
+          onClick={handlePrev}
+        >
+          <ChevronLeft className="h-4 w-4" />
+        </Button>
+        
+        <Button
+          variant="outline"
+          size="icon"
+          className="absolute right-2 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity bg-background/80 backdrop-blur-sm z-10"
+          onClick={handleNext}
+        >
+          <ChevronRight className="h-4 w-4" />
+        </Button>
+      </div>
     </div>
   );
 };
