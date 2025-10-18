@@ -169,12 +169,6 @@ const mediaMenuItems = [
 
 const systemMenuItems = [
   { 
-    icon: FileText, 
-    label: 'Content', 
-    path: '/admin/content', 
-    description: 'Website content' 
-  },
-  { 
     icon: BookOpen, 
     label: 'Blog', 
     path: '/admin/blog', 
@@ -184,7 +178,7 @@ const systemMenuItems = [
     icon: FileCode, 
     label: 'Pages', 
     path: '/admin/pages', 
-    description: 'Dynamic pages' 
+    description: 'Page content & translations' 
   },
   { 
     icon: Plug, 
