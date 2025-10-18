@@ -115,25 +115,44 @@ const Activities = () => {
     if (locationFilter === 'on_property' && activity.is_on_property !== true) return false;
     if (locationFilter === 'off_property' && activity.is_on_property !== false) return false;
     
-    // Season filter
+    // Season filter - check available_seasons array
     if (seasonFilter !== 'all') {
-      const seasons = activity.tags || [];
-      if (!seasons.includes(seasonFilter)) return false;
+      const seasons = (activity as any).available_seasons || [];
+      // Handle "all season" as matching any season filter
+      if (!seasons.includes(seasonFilter) && !seasons.includes('all season')) return false;
     }
     
-    // Audience filter
+    // Audience filter - check audience_tags array
     if (audienceFilter !== 'all') {
-      const audiences = activity.tags || [];
+      const audiences = (activity as any).audience_tags || [];
       if (!audiences.includes(audienceFilter)) return false;
     }
     
-    // Price filter
+    // Price filter - handle different price types
     if (priceFilter !== 'all') {
-      const price = activity.price_amount || 0;
-      if (priceFilter === 'free' && price > 0) return false;
-      if (priceFilter === 'under_500' && price >= 500) return false;
-      if (priceFilter === '500_1000' && (price < 500 || price > 1000)) return false;
-      if (priceFilter === 'above_1000' && price <= 1000) return false;
+      const priceType = (activity as any).price_type;
+      const priceAmount = activity.price_amount;
+      const priceMin = (activity as any).price_range_min;
+      const priceMax = (activity as any).price_range_max;
+      
+      if (priceFilter === 'free') {
+        if (priceType !== 'free') return false;
+      } else if (priceFilter === 'under_500') {
+        if (priceType === 'free') return true; // Free activities pass
+        if (priceType === 'fixed' && (!priceAmount || priceAmount >= 500)) return false;
+        if (priceType === 'range' && (!priceMin || priceMin >= 500)) return false;
+      } else if (priceFilter === '500_1000') {
+        if (priceType === 'free') return false;
+        if (priceType === 'fixed' && (!priceAmount || priceAmount < 500 || priceAmount > 1000)) return false;
+        if (priceType === 'range') {
+          // Check if range overlaps with 500-1000
+          if (!priceMin || !priceMax || priceMax < 500 || priceMin > 1000) return false;
+        }
+      } else if (priceFilter === 'above_1000') {
+        if (priceType === 'free') return false;
+        if (priceType === 'fixed' && (!priceAmount || priceAmount <= 1000)) return false;
+        if (priceType === 'range' && (!priceMin || priceMin <= 1000)) return false;
+      }
     }
     
     return true;
@@ -312,6 +331,7 @@ const Activities = () => {
                 <SelectItem value="all">All Seasons</SelectItem>
                 <SelectItem value="monsoon">Monsoon</SelectItem>
                 <SelectItem value="winter">Winter</SelectItem>
+                <SelectItem value="spring">Spring</SelectItem>
                 <SelectItem value="summer">Summer</SelectItem>
               </SelectContent>
             </Select>
@@ -323,10 +343,14 @@ const Activities = () => {
               </SelectTrigger>
               <SelectContent className="bg-background z-50">
                 <SelectItem value="all">Everyone</SelectItem>
-                <SelectItem value="family">Family</SelectItem>
-                <SelectItem value="adventure">Adventure Seekers</SelectItem>
-                <SelectItem value="nature">Nature Lovers</SelectItem>
+                <SelectItem value="families">Families</SelectItem>
+                <SelectItem value="couples">Couples</SelectItem>
                 <SelectItem value="kids">Kids</SelectItem>
+                <SelectItem value="adults">Adults</SelectItem>
+                <SelectItem value="teens">Teens</SelectItem>
+                <SelectItem value="groups">Groups</SelectItem>
+                <SelectItem value="seniors">Seniors</SelectItem>
+                <SelectItem value="solo">Solo Travelers</SelectItem>
               </SelectContent>
             </Select>
 
