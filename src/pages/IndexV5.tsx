@@ -43,8 +43,8 @@ const IndexV5 = () => {
         <HeroSectionV5 />
         <WelcomeAndMatheranV5 />
         <StayPreviewV5 />
-        <ExperiencesTeaserV5 />
-        <PackagesPreviewV5 />
+        {/* <ExperiencesTeaserV5 /> */}
+        {/* <PackagesPreviewV5 /> */}
         <GuestReviewsV5 />
         
         <GalleryV5 />
