@@ -1252,7 +1252,7 @@ const Booking = () => {
                                   },
                                   ...(isPoolDeckRoom ? [{ 
                                     key: 'sitoutBreakfast', 
-                                    label: 'Sitout at Room', 
+                                    label: 'Service in Room', 
                                     quantityKey: 'specialArrangements', 
                                     price: 200 
                                   }] : [])
@@ -1270,7 +1270,7 @@ const Booking = () => {
                                   },
                                   ...(isPoolDeckRoom ? [{ 
                                     key: 'sitoutLunch', 
-                                    label: 'Sitout at Room', 
+                                    label: 'Service in Room', 
                                     quantityKey: 'specialArrangements', 
                                     price: 300 
                                   }] : [])
@@ -1288,7 +1288,7 @@ const Booking = () => {
                                   },
                                   ...(isPoolDeckRoom ? [{ 
                                     key: 'sitoutHighTea', 
-                                    label: 'Sitout at Room', 
+                                    label: 'Service in Room', 
                                     quantityKey: 'specialArrangements', 
                                     price: 150 
                                   }] : [])
@@ -1306,7 +1306,7 @@ const Booking = () => {
                                   },
                                   ...(isPoolDeckRoom ? [{ 
                                     key: 'sitoutDinner', 
-                                    label: 'Sitout at Room', 
+                                    label: 'Service in Room', 
                                     quantityKey: 'specialArrangements', 
                                     price: 400 
                                   }] : []),
@@ -1771,10 +1771,10 @@ const Booking = () => {
                                       if (!quantity || quantity === 0) return null;
                                       
                                       const specialPrices = {
-                                        sitoutBreakfast: { label: 'Breakfast Sitout', price: 200 },
-                                        sitoutLunch: { label: 'Lunch Sitout', price: 300 },
-                                        sitoutHighTea: { label: 'High Tea Sitout', price: 150 },
-                                        sitoutDinner: { label: 'Dinner Sitout', price: 400 },
+                                        sitoutBreakfast: { label: 'Breakfast Service in Room', price: 200 },
+                                        sitoutLunch: { label: 'Lunch Service in Room', price: 300 },
+                                        sitoutHighTea: { label: 'High Tea Service in Room', price: 150 },
+                                        sitoutDinner: { label: 'Dinner Service in Room', price: 400 },
                                         candleLightDinner: { label: 'Candle Night Dinner', price: 1500 }
                                       };
                                       
