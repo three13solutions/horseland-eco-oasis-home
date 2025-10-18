@@ -291,36 +291,56 @@ const Dining = () => {
           </h2>
           
           <div className="grid md:grid-cols-2 gap-8 mb-12">
-            <div className="bg-card border rounded-lg p-8">
-              <div className="flex items-center gap-3 mb-4">
-                <Home className="w-8 h-8 text-primary" />
-                <h3 className="text-2xl font-heading font-semibold text-foreground">
-                  In-Room Dining
-                </h3>
+            <div className="bg-card border rounded-lg overflow-hidden group">
+              <div className="relative h-48">
+                <img 
+                  src="https://images.unsplash.com/photo-1590846406792-0adc7f938f1d?w=600&h=400&fit=crop"
+                  alt="In-Room Dining"
+                  className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
               </div>
-              <p className="text-muted-foreground font-body leading-relaxed mb-4">
-                For select rooms including poolside rooms with private sitouts, meals can be served 
-                directly to your room for a private and intimate dining experience.
-              </p>
-              <p className="text-sm text-primary font-body font-semibold">
-                Available at an additional service charge
-              </p>
+              <div className="p-8">
+                <div className="flex items-center gap-3 mb-4">
+                  <Home className="w-8 h-8 text-primary" />
+                  <h3 className="text-2xl font-heading font-semibold text-foreground">
+                    In-Room Dining
+                  </h3>
+                </div>
+                <p className="text-muted-foreground font-body leading-relaxed mb-4">
+                  For select rooms including poolside rooms with private sitouts, meals can be served 
+                  directly to your room for a private and intimate dining experience.
+                </p>
+                <p className="text-sm text-primary font-body font-semibold">
+                  Available at an additional service charge
+                </p>
+              </div>
             </div>
 
-            <div className="bg-card border rounded-lg p-8">
-              <div className="flex items-center gap-3 mb-4">
-                <Sparkles className="w-8 h-8 text-primary" />
-                <h3 className="text-2xl font-heading font-semibold text-foreground">
-                  Candle Light Dinner
-                </h3>
+            <div className="bg-card border rounded-lg overflow-hidden group">
+              <div className="relative h-48">
+                <img 
+                  src="https://images.unsplash.com/photo-1470337458703-46ad1756a187?w=600&h=400&fit=crop"
+                  alt="Candle Light Dinner"
+                  className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
               </div>
-              <p className="text-muted-foreground font-body leading-relaxed mb-4">
-                Create magical moments with a candle light dinner arranged by the poolside, 
-                in select rooms with dining arrangements, or in our elegant dining area.
-              </p>
-              <p className="text-sm text-primary font-body font-semibold">
-                Available on request at an additional service charge
-              </p>
+              <div className="p-8">
+                <div className="flex items-center gap-3 mb-4">
+                  <Sparkles className="w-8 h-8 text-primary" />
+                  <h3 className="text-2xl font-heading font-semibold text-foreground">
+                    Candle Light Dinner
+                  </h3>
+                </div>
+                <p className="text-muted-foreground font-body leading-relaxed mb-4">
+                  Create magical moments with a candle light dinner arranged by the poolside, 
+                  in select rooms with dining arrangements, or in our elegant dining area.
+                </p>
+                <p className="text-sm text-primary font-body font-semibold">
+                  Available on request at an additional service charge
+                </p>
+              </div>
             </div>
           </div>
         </div>
