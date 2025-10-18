@@ -331,7 +331,11 @@ const Activities = () => {
                   </div>
 
                   <div className="flex gap-2">
-                    <Button variant="outline" className="font-body flex-1 h-10">
+                    <Button 
+                      variant="outline" 
+                      className="font-body flex-1 h-10"
+                      onClick={() => navigate(`/activities/${activity.id}`)}
+                    >
                       Learn More
                     </Button>
                     <Button 
