@@ -7,6 +7,13 @@ import { Leaf, Award, Heart, Mountain, Users, Lightbulb } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useContentTranslation } from '@/hooks/useContentTranslation';
 import { useTranslation } from 'react-i18next';
+import {
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+  CarouselNext,
+  CarouselPrevious,
+} from "@/components/ui/carousel";
 
 const About = () => {
   const { i18n } = useTranslation();
@@ -125,25 +132,39 @@ const About = () => {
           </div>
 
           {team.items && team.items.length > 0 && (
-            <div className="grid md:grid-cols-3 gap-12 mb-16">
-              {team.items.map((member: any, index: number) => (
-                <div key={index} className="group">
-                  <div className="relative mb-6 overflow-hidden rounded-xl">
-                    <img 
-                      src={member.image || 'https://images.unsplash.com/photo-1488590528505-98d2b5aba04b?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80'}
-                      alt={member.name}
-                      className="w-full aspect-square object-cover transition-transform duration-300 group-hover:scale-105"
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-                  </div>
-                  <h3 className="text-2xl font-heading font-bold mb-2 text-foreground">{member.name}</h3>
-                  <p className="text-primary font-semibold text-lg mb-3">{member.role}</p>
-                  <p className="text-muted-foreground font-body leading-relaxed">
-                    {member.description}
-                  </p>
-                </div>
-              ))}
-            </div>
+            <Carousel
+              opts={{
+                align: "start",
+                loop: true,
+              }}
+              className="w-full max-w-5xl mx-auto mb-16"
+            >
+              <CarouselContent>
+                {team.items.map((member: any, index: number) => (
+                  <CarouselItem key={index} className="md:basis-1/2 lg:basis-1/3">
+                    <div className="p-4">
+                      <div className="group">
+                        <div className="relative mb-4 overflow-hidden rounded-lg">
+                          <img 
+                            src={member.image || 'https://images.unsplash.com/photo-1488590528505-98d2b5aba04b?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80'}
+                            alt={member.name}
+                            className="w-full aspect-square object-cover transition-transform duration-300 group-hover:scale-105"
+                          />
+                          <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                        </div>
+                        <h3 className="text-xl font-heading font-bold mb-1 text-foreground">{member.name}</h3>
+                        <p className="text-primary font-semibold mb-2">{member.role}</p>
+                        <p className="text-sm text-muted-foreground font-body leading-relaxed">
+                          {member.description}
+                        </p>
+                      </div>
+                    </div>
+                  </CarouselItem>
+                ))}
+              </CarouselContent>
+              <CarouselPrevious />
+              <CarouselNext />
+            </Carousel>
           )}
 
           {team.quote && (
