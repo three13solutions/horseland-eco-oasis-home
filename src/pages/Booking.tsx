@@ -749,6 +749,42 @@ const Booking = () => {
     });
   };
 
+  const handleMealPlanSelect = (guestIndex: number, plan: 'none' | 'breakfast-only' | 'all-meals') => {
+    const nights = calculateNights();
+    
+    setGuestMeals(prev => {
+      const updated = [...prev];
+      const guest = updated[guestIndex];
+      
+      if (plan === 'none') {
+        // Clear all meal selections
+        guest.mealTypeQuantities = {};
+      } else if (plan === 'breakfast-only') {
+        // Set only breakfast to max nights
+        guest.mealTypeQuantities = {
+          breakfast: nights
+        };
+      } else if (plan === 'all-meals') {
+        // Set all meals to max nights
+        guest.mealTypeQuantities = {
+          breakfast: nights,
+          lunch: nights,
+          high_tea: nights,
+          dinner: nights
+        };
+      }
+      
+      return updated;
+    });
+    
+    toast({
+      title: "Meal Plan Applied",
+      description: plan === 'none' ? "Meal selections cleared" : 
+                   plan === 'breakfast-only' ? `Breakfast selected for all ${nights} days` :
+                   `All meals selected for all ${nights} days`,
+    });
+  };
+
   const calculateGuestMealsTotal = () => {
     let total = 0;
     
@@ -1305,8 +1341,44 @@ const Booking = () => {
                                   </div>
                                 </CardHeader>
                                 <CardContent>
-                                  <div className="text-sm text-muted-foreground mb-4">
-                                    {maxDays} {maxDays === 1 ? 'day' : 'days'} stay
+                                  <div className="space-y-4">
+                                    {/* Quick Meal Plan Selector */}
+                                    <div className="flex items-center gap-2 pb-3 border-b">
+                                      <Label className="text-sm font-medium whitespace-nowrap">Quick Select:</Label>
+                                      <div className="flex gap-2">
+                                        <Button
+                                          type="button"
+                                          variant="outline"
+                                          size="sm"
+                                          onClick={() => handleMealPlanSelect(index, 'breakfast-only')}
+                                          className="text-xs"
+                                        >
+                                          Breakfast Only
+                                        </Button>
+                                        <Button
+                                          type="button"
+                                          variant="outline"
+                                          size="sm"
+                                          onClick={() => handleMealPlanSelect(index, 'all-meals')}
+                                          className="text-xs"
+                                        >
+                                          All Meals
+                                        </Button>
+                                        <Button
+                                          type="button"
+                                          variant="ghost"
+                                          size="sm"
+                                          onClick={() => handleMealPlanSelect(index, 'none')}
+                                          className="text-xs"
+                                        >
+                                          Clear
+                                        </Button>
+                                      </div>
+                                    </div>
+                                    
+                                    <div className="text-sm text-muted-foreground">
+                                      {maxDays} {maxDays === 1 ? 'day' : 'days'} stay
+                                    </div>
                                   </div>
                                   
                                   {/* Meal Types in columns with services stacked vertically */}
