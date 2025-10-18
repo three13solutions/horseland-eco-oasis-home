@@ -100,14 +100,9 @@ const Dining = () => {
                 sustainable practices, and wholesome nourishment. Our buffet-style dining experience 
                 showcases the best of regional cuisine while honoring our commitment to zero-waste cooking.
               </p>
-              <p className="text-muted-foreground font-body mb-6 leading-relaxed">
+              <p className="text-muted-foreground font-body mb-8 leading-relaxed">
                 Every dish tells a story of the land, from organic vegetables grown in nearby farms 
                 to traditional recipes passed down through generations of local communities.
-              </p>
-              <p className="text-muted-foreground font-body mb-8 leading-relaxed">
-                <strong className="text-foreground">Hygiene & Quality:</strong> Horseland takes pride in maintaining 
-                <span className="text-primary font-semibold"> separate vegetarian and non-vegetarian kitchens</span>, 
-                ensuring the highest standards of food safety and respecting dietary preferences.
               </p>
               
               <div className="grid grid-cols-2 gap-6">
@@ -121,7 +116,7 @@ const Dining = () => {
                 </div>
                 <div className="flex items-center gap-3">
                   <ChefHat className="w-6 h-6 text-primary" />
-                  <span className="font-body font-medium">Separate Kitchens</span>
+                  <span className="font-body font-medium">Expert Chefs</span>
                 </div>
                 <div className="flex items-center gap-3">
                   <UtensilsCrossed className="w-6 h-6 text-primary" />
@@ -135,6 +130,63 @@ const Dining = () => {
                 alt="Chef preparing food"
                 className="rounded-lg shadow-lg w-full"
               />
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Separate Kitchens Section */}
+      <section className="py-16 bg-muted/30">
+        <div className="max-w-6xl mx-auto px-4">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl md:text-4xl font-heading font-bold mb-4 text-foreground">
+              Dedicated Kitchen Facilities
+            </h2>
+            <p className="text-lg text-muted-foreground font-body max-w-3xl mx-auto">
+              Respecting dietary preferences and ensuring the highest standards of food safety
+            </p>
+          </div>
+
+          <div className="grid md:grid-cols-2 gap-8 max-w-5xl mx-auto">
+            <div className="bg-card border rounded-lg p-8">
+              <div className="flex items-center justify-center mb-6">
+                <div className="p-4 rounded-full bg-primary/10">
+                  <Leaf className="w-12 h-12 text-primary" />
+                </div>
+              </div>
+              <h3 className="text-2xl font-heading font-semibold text-center mb-4 text-foreground">
+                Vegetarian Kitchen
+              </h3>
+              <p className="text-muted-foreground font-body text-center leading-relaxed">
+                Our dedicated vegetarian kitchen is maintained with strict protocols to ensure no cross-contamination. 
+                All utensils, cookware, and preparation surfaces are exclusively used for vegetarian and Jain meal preparation, 
+                giving you complete peace of mind.
+              </p>
+            </div>
+
+            <div className="bg-card border rounded-lg p-8">
+              <div className="flex items-center justify-center mb-6">
+                <div className="p-4 rounded-full bg-primary/10">
+                  <ChefHat className="w-12 h-12 text-primary" />
+                </div>
+              </div>
+              <h3 className="text-2xl font-heading font-semibold text-center mb-4 text-foreground">
+                Non-Vegetarian Kitchen
+              </h3>
+              <p className="text-muted-foreground font-body text-center leading-relaxed">
+                Our separate non-vegetarian kitchen operates independently with its own set of equipment, 
+                preparation areas, and trained staff. This ensures optimal hygiene standards while preparing 
+                delicious chicken and egg-based dishes for our guests.
+              </p>
+            </div>
+          </div>
+
+          <div className="mt-12 text-center">
+            <div className="inline-flex items-center gap-3 bg-card border rounded-lg px-6 py-4">
+              <Award className="w-6 h-6 text-primary" />
+              <p className="text-foreground font-body font-semibold">
+                Certified Food Safety Standards | FSSAI Compliant
+              </p>
             </div>
           </div>
         </div>
