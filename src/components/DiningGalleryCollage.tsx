@@ -92,7 +92,8 @@ const DiningGalleryCollage = () => {
   }, [images.length, centerOffset]);
 
   return (
-    <div className="relative group h-[200px]">
+    <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="relative group h-[200px]">
       <div className="overflow-hidden h-full">
         <div 
           className="flex transition-transform duration-500 ease-out"
@@ -140,6 +141,7 @@ const DiningGalleryCollage = () => {
       >
         <ChevronRight className="h-4 w-4" />
       </Button>
+    </div>
     </div>
   );
 };
