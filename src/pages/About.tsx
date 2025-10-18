@@ -11,37 +11,49 @@ import { useTranslation } from 'react-i18next';
 const About = () => {
   const { i18n } = useTranslation();
   const { getTranslation } = useContentTranslation('pages');
-  const [heroImage, setHeroImage] = useState('https://images.unsplash.com/photo-1506905925346-21bda4d32df4?ixlib=rb-4.0.3&auto=format&fit=crop&w=2000&q=80');
-  const [subtitle, setSubtitle] = useState('Where time slows down and nature whispers its ancient secrets. Welcome to Horseland Hotel.');
-  const [title, setTitle] = useState('Our Story Began in the Hills');
   const [pageData, setPageData] = useState<any>(null);
 
   useEffect(() => {
     const fetchPageData = async () => {
       const { data } = await supabase
         .from('pages')
-        .select('title, subtitle, hero_image, slug')
+        .select('*')
         .eq('slug', 'about')
         .single();
       
       if (data) {
         setPageData(data);
-        setTitle(data.title);
-        if (data.subtitle) setSubtitle(data.subtitle);
-        if (data.hero_image) setHeroImage(data.hero_image);
       }
     };
     
     fetchPageData();
   }, []);
 
-  const displayTitle = pageData && i18n.language !== 'en'
-    ? getTranslation(`page.${pageData.slug}.title`, title)
-    : title;
+  if (!pageData) {
+    return (
+      <div className="min-h-screen bg-background overflow-x-hidden">
+        <NavigationV5 />
+        <div className="flex items-center justify-center min-h-[60vh]">
+          <p className="text-muted-foreground">Loading...</p>
+        </div>
+      </div>
+    );
+  }
 
-  const displaySubtitle = pageData && i18n.language !== 'en'
-    ? getTranslation(`page.${pageData.slug}.subtitle`, subtitle)
-    : subtitle;
+  const content = pageData.structured_content || {};
+  const legacy = content.legacy || {};
+  const founder = content.founder || {};
+  const team = content.team || {};
+  const matheran = content.matheran || {};
+  const recognition = content.recognition || {};
+
+  const displayTitle = i18n.language !== 'en'
+    ? getTranslation(`page.${pageData.slug}.title`, pageData.title)
+    : pageData.title;
+
+  const displaySubtitle = i18n.language !== 'en'
+    ? getTranslation(`page.${pageData.slug}.subtitle`, pageData.subtitle)
+    : pageData.subtitle;
 
   return (
     <div className="min-h-screen bg-background overflow-x-hidden">
@@ -52,7 +64,7 @@ const About = () => {
         <div 
           className="absolute inset-0 bg-cover bg-center bg-no-repeat"
           style={{
-            backgroundImage: `url('${heroImage}')`
+            backgroundImage: `url('${pageData.hero_image || 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?ixlib=rb-4.0.3&auto=format&fit=crop&w=2000&q=80'}')`
           }}
         >
           <div className="absolute inset-0 bg-black/40"></div>
@@ -74,25 +86,21 @@ const About = () => {
           <div className="grid md:grid-cols-2 gap-12 items-center">
             <div>
               <h2 className="text-3xl md:text-4xl font-heading font-bold mb-6 text-foreground">
-                A Legacy of Hospitality
+                {legacy.heading || 'A Legacy of Hospitality'}
               </h2>
               <p className="text-muted-foreground font-body mb-6 leading-relaxed">
-                Since our founding in 1987, Horseland has been a sanctuary for those seeking 
-                respite from urban life. Nestled in the pristine hills of Matheran, we've 
-                cultivated an experience that honors both heritage and sustainability.
+                {legacy.paragraph1 || ''}
               </p>
               <p className="text-muted-foreground font-body mb-8 leading-relaxed">
-                Our commitment to eco-conscious hospitality and authentic wellness has made 
-                us a cherished destination for families, couples, and conscious travelers 
-                from around the world.
+                {legacy.paragraph2 || ''}
               </p>
               <Button size="lg" className="font-body">
-                Our Values
+                {legacy.buttonText || 'Our Values'}
               </Button>
             </div>
             <div className="relative">
               <img 
-                src="https://images.unsplash.com/photo-1571896349842-33c89424de2d?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80"
+                src={legacy.image || 'https://images.unsplash.com/photo-1571896349842-33c89424de2d?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80'}
                 alt="Historic hotel building"
                 className="rounded-lg shadow-lg w-full"
               />
@@ -107,8 +115,8 @@ const About = () => {
           <div className="grid md:grid-cols-2 gap-12 items-center">
             <div className="relative">
               <img 
-                src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80"
-                alt="Adi Bharucha, Founder of Horseland Hotel"
+                src={founder.image || 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80'}
+                alt={`${founder.name || 'Founder'}, ${founder.role || ''}`}
                 className="rounded-lg shadow-lg w-full"
               />
               <div className="absolute -bottom-4 -right-4 w-20 h-20 bg-primary/10 rounded-full flex items-center justify-center">
@@ -117,23 +125,17 @@ const About = () => {
             </div>
             <div>
               <h2 className="text-3xl md:text-4xl font-heading font-bold mb-6 text-foreground">
-                Meet Our Founder
+                {founder.heading || 'Meet Our Founder'}
               </h2>
-              <h3 className="text-xl font-semibold text-primary mb-4">Adi Bharucha</h3>
+              <h3 className="text-xl font-semibold text-primary mb-4">{founder.name || 'Adi Bharucha'}</h3>
               <p className="text-muted-foreground font-body mb-6 leading-relaxed">
-                A visionary hotelier with over 30 years of experience in sustainable tourism, 
-                Adi founded Horseland in 1987 with a simple dream: to create a sanctuary 
-                where guests could reconnect with nature without compromising on comfort.
+                {founder.bio1 || ''}
               </p>
               <p className="text-muted-foreground font-body mb-6 leading-relaxed">
-                His passion for eco-conscious hospitality and deep respect for Matheran's 
-                natural heritage has shaped every aspect of Horseland's philosophy. Under 
-                his leadership, the hotel has become a pioneering example of sustainable 
-                comfort in India's hospitality industry.
+                {founder.bio2 || ''}
               </p>
               <blockquote className="border-l-4 border-primary pl-4 italic text-muted-foreground">
-                "Hospitality is not just about providing comfort—it's about creating memories 
-                that last a lifetime while preserving the beauty that surrounds us."
+                "{founder.quote || ''}"
               </blockquote>
             </div>
           </div>
@@ -148,104 +150,62 @@ const About = () => {
               <Users className="w-8 h-8 text-primary" />
             </div>
             <h2 className="text-3xl md:text-4xl font-heading font-bold mb-6 text-foreground">
-              The Heart of Horseland
+              {team.heading || 'The Heart of Horseland'}
             </h2>
             <p className="text-lg text-muted-foreground font-body max-w-3xl mx-auto">
-              Our dedicated team brings together decades of hospitality experience, 
-              local expertise, and a shared passion for creating unforgettable experiences.
+              {team.description || ''}
             </p>
           </div>
 
-          <div className="grid md:grid-cols-3 gap-8 mb-12">
-            <div className="text-center">
-              <div className="w-24 h-24 rounded-full mx-auto mb-4 overflow-hidden">
-                <img 
-                  src="https://images.unsplash.com/photo-1488590528505-98d2b5aba04b?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80"
-                  alt="Mahesh"
-                  className="w-full h-full object-cover"
-                />
-              </div>
-              <h3 className="text-xl font-heading font-semibold mb-2">Mahesh</h3>
-              <p className="text-primary font-medium mb-3">General Manager</p>
-              <p className="text-muted-foreground font-body text-sm">
-                15 years of hospitality excellence, ensuring every guest feels like family. 
-                Mahesh's attention to detail and warm leadership style sets the tone for our service culture.
+          {team.items && team.items.length > 0 && (
+            <div className="grid md:grid-cols-3 gap-8 mb-12">
+              {team.items.slice(0, 3).map((member: any, index: number) => (
+                <div key={index} className="text-center">
+                  <div className="w-24 h-24 rounded-full mx-auto mb-4 overflow-hidden">
+                    <img 
+                      src={member.image || 'https://images.unsplash.com/photo-1488590528505-98d2b5aba04b?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80'}
+                      alt={member.name}
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                  <h3 className="text-xl font-heading font-semibold mb-2">{member.name}</h3>
+                  <p className="text-primary font-medium mb-3">{member.role}</p>
+                  <p className="text-muted-foreground font-body text-sm">
+                    {member.description}
+                  </p>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {team.items && team.items.length > 3 && (
+            <div className="grid md:grid-cols-2 gap-8">
+              {team.items.slice(3).map((member: any, index: number) => (
+                <div key={index} className="text-center">
+                  <div className="w-24 h-24 rounded-full mx-auto mb-4 overflow-hidden">
+                    <img 
+                      src={member.image || 'https://images.unsplash.com/photo-1488590528505-98d2b5aba04b?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80'}
+                      alt={member.name}
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                  <h3 className="text-xl font-heading font-semibold mb-2">{member.name}</h3>
+                  <p className="text-primary font-medium mb-3">{member.role}</p>
+                  <p className="text-muted-foreground font-body text-sm">
+                    {member.description}
+                  </p>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {team.quote && (
+            <div className="text-center mt-12">
+              <p className="text-muted-foreground font-body italic max-w-2xl mx-auto">
+                "{team.quote}"
               </p>
             </div>
-
-            <div className="text-center">
-              <div className="w-24 h-24 rounded-full mx-auto mb-4 overflow-hidden">
-                <img 
-                  src="https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80"
-                  alt="Anai Bharucha"
-                  className="w-full h-full object-cover"
-                />
-              </div>
-              <h3 className="text-xl font-heading font-semibold mb-2">Anai Bharucha</h3>
-              <p className="text-primary font-medium mb-3">Marketing Director</p>
-              <p className="text-muted-foreground font-body text-sm">
-                Creative marketing strategist with a passion for storytelling. Anai brings Horseland's 
-                unique experiences to life through compelling campaigns and authentic brand connections.
-              </p>
-            </div>
-
-            <div className="text-center">
-              <div className="w-24 h-24 rounded-full mx-auto mb-4 overflow-hidden">
-                <img 
-                  src="https://images.unsplash.com/photo-1486312338219-ce68d2c6f44d?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80"
-                  alt="Arjun Kulkarni"
-                  className="w-full h-full object-cover"
-                />
-              </div>
-              <h3 className="text-xl font-heading font-semibold mb-2">Arjun Kulkarni</h3>
-              <p className="text-primary font-medium mb-3">Executive Chef</p>
-              <p className="text-muted-foreground font-body text-sm">
-                Master of farm-to-table cuisine, Arjun creates culinary experiences using fresh, 
-                local ingredients. His innovative approach celebrates traditional flavors with a modern twist.
-              </p>
-            </div>
-          </div>
-
-          <div className="grid md:grid-cols-2 gap-8">
-            <div className="text-center">
-              <div className="w-24 h-24 rounded-full mx-auto mb-4 overflow-hidden">
-                <img 
-                  src="https://images.unsplash.com/photo-1487058792275-0ad4aaf24ca7?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80"
-                  alt="Vikram Thakur"
-                  className="w-full h-full object-cover"
-                />
-              </div>
-              <h3 className="text-xl font-heading font-semibold mb-2">Vikram Thakur</h3>
-              <p className="text-primary font-medium mb-3">Adventure Activities Coordinator</p>
-              <p className="text-muted-foreground font-body text-sm">
-                Born and raised in Matheran, Vikram knows every trail and secret spot. 
-                His guided experiences reveal the hidden gems of this magical hill station.
-              </p>
-            </div>
-
-            <div className="text-center">
-              <div className="w-24 h-24 rounded-full mx-auto mb-4 overflow-hidden">
-                <img 
-                  src="https://images.unsplash.com/photo-1519389950473-47ba0277781c?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80"
-                  alt="Ravi Desai"
-                  className="w-full h-full object-cover"
-                />
-              </div>
-              <h3 className="text-xl font-heading font-semibold mb-2">Ravi Desai</h3>
-              <p className="text-primary font-medium mb-3">Sustainability Manager</p>
-              <p className="text-muted-foreground font-body text-sm">
-                Environmental scientist turned hospitality expert, Ravi ensures our operations 
-                maintain harmony with nature while delivering exceptional guest experiences.
-              </p>
-            </div>
-          </div>
-
-          <div className="text-center mt-12">
-            <p className="text-muted-foreground font-body italic max-w-2xl mx-auto">
-              "Together, we don't just work at Horseland—we live and breathe its values, 
-              creating a home away from home for every guest who walks through our doors."
-            </p>
-          </div>
+          )}
         </div>
       </section>
 
@@ -254,11 +214,10 @@ const About = () => {
         <div className="max-w-6xl mx-auto px-4">
           <div className="text-center mb-12">
             <h2 className="text-3xl md:text-4xl font-heading font-bold mb-6 text-foreground">
-              Discover Matheran
+              {matheran.heading || 'Discover Matheran'}
             </h2>
             <p className="text-lg text-muted-foreground font-body max-w-3xl mx-auto">
-              India's only vehicle-free hill station, where red mud trails wind through 
-              ancient forests and clean mountain air fills your lungs.
+              {matheran.description || ''}
             </p>
           </div>
 
@@ -267,9 +226,11 @@ const About = () => {
               <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
                 <Leaf className="w-8 h-8 text-primary" />
               </div>
-              <h3 className="text-xl font-heading font-semibold mb-3">Vehicle-Free Zone</h3>
+              <h3 className="text-xl font-heading font-semibold mb-3">
+                {matheran.feature1?.title || 'Vehicle-Free Zone'}
+              </h3>
               <p className="text-muted-foreground font-body">
-                Pure air, peaceful walks, and the symphony of nature undisturbed by engines.
+                {matheran.feature1?.description || ''}
               </p>
             </div>
 
@@ -277,9 +238,11 @@ const About = () => {
               <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
                 <Mountain className="w-8 h-8 text-primary" />
               </div>
-              <h3 className="text-xl font-heading font-semibold mb-3">Red Mud Trails</h3>
+              <h3 className="text-xl font-heading font-semibold mb-3">
+                {matheran.feature2?.title || 'Red Mud Trails'}
+              </h3>
               <p className="text-muted-foreground font-body">
-                Distinctive rust-colored paths that lead to breathtaking viewpoints and hidden groves.
+                {matheran.feature2?.description || ''}
               </p>
             </div>
 
@@ -287,9 +250,11 @@ const About = () => {
               <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
                 <Heart className="w-8 h-8 text-primary" />
               </div>
-              <h3 className="text-xl font-heading font-semibold mb-3">Forest Living</h3>
+              <h3 className="text-xl font-heading font-semibold mb-3">
+                {matheran.feature3?.title || 'Forest Living'}
+              </h3>
               <p className="text-muted-foreground font-body">
-                Immerse yourself in nature where ancient trees create natural sanctuaries of calm.
+                {matheran.feature3?.description || ''}
               </p>
             </div>
           </div>
@@ -300,33 +265,43 @@ const About = () => {
       <section className="py-16">
         <div className="max-w-4xl mx-auto px-4 text-center">
           <h2 className="text-3xl md:text-4xl font-heading font-bold mb-8 text-foreground">
-            Recognition & Awards
+            {recognition.heading || 'Recognition & Awards'}
           </h2>
           
           <div className="grid md:grid-cols-2 gap-8">
-            <div className="bg-card border rounded-lg p-6">
-              <Award className="w-12 h-12 text-primary mx-auto mb-4" />
-              <h3 className="text-xl font-heading font-semibold mb-3">Eco-Tourism Excellence</h3>
-              <p className="text-muted-foreground font-body">
-                Maharashtra Tourism Board, 2023
-              </p>
-            </div>
+            {recognition.award1 && (
+              <div className="bg-card border rounded-lg p-6">
+                <Award className="w-12 h-12 text-primary mx-auto mb-4" />
+                <h3 className="text-xl font-heading font-semibold mb-3">
+                  {recognition.award1.title}
+                </h3>
+                <p className="text-muted-foreground font-body">
+                  {recognition.award1.source}
+                </p>
+              </div>
+            )}
 
-            <div className="bg-card border rounded-lg p-6">
-              <Award className="w-12 h-12 text-primary mx-auto mb-4" />
-              <h3 className="text-xl font-heading font-semibold mb-3">Sustainable Hospitality</h3>
-              <p className="text-muted-foreground font-body">
-                India Hospitality Awards, 2022
-              </p>
-            </div>
+            {recognition.award2 && (
+              <div className="bg-card border rounded-lg p-6">
+                <Award className="w-12 h-12 text-primary mx-auto mb-4" />
+                <h3 className="text-xl font-heading font-semibold mb-3">
+                  {recognition.award2.title}
+                </h3>
+                <p className="text-muted-foreground font-body">
+                  {recognition.award2.source}
+                </p>
+              </div>
+            )}
           </div>
 
-          <div className="mt-12">
-            <p className="text-muted-foreground font-body italic">
-              "A perfect blend of comfort and sustainability in the heart of nature." 
-              <br />— Travel + Leisure India
-            </p>
-          </div>
+          {recognition.testimonial && (
+            <div className="mt-12">
+              <p className="text-muted-foreground font-body italic">
+                "{recognition.testimonial}" 
+                <br />{recognition.testimonialSource}
+              </p>
+            </div>
+          )}
         </div>
       </section>
 
