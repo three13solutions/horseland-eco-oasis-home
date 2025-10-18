@@ -37,10 +37,17 @@ const Dining = () => {
     fetchMeals();
   }, []);
 
-  // Get meal description for a specific meal type (any variant)
-  const getMealDescription = (mealType: string): string => {
-    const meal = meals.find(m => m.meal_type === mealType);
-    return meal?.description || 'A delicious selection from our kitchen';
+  // Get meal descriptions for all variants of a meal type
+  const getMealVariants = (mealType: string) => {
+    const variants = ['veg', 'non_veg', 'jain'];
+    return variants.map(variant => {
+      const meal = meals.find(m => m.meal_type === mealType && m.variant === variant);
+      return {
+        variant,
+        label: variant === 'veg' ? 'Vegetarian' : variant === 'non_veg' ? 'Non-Vegetarian' : 'Jain',
+        description: meal?.description || ''
+      };
+    }).filter(v => v.description);
   };
 
   const diningHours = [
@@ -160,46 +167,52 @@ const Dining = () => {
         </div>
       </section>
 
-      {/* Today's Menu */}
+      {/* What to Expect */}
       <section className="py-16">
         <div className="max-w-6xl mx-auto px-4">
           <div className="text-center mb-12">
             <h2 className="text-3xl md:text-4xl font-heading font-bold mb-4 text-foreground">
-              Today's Special Menu
+              What to Expect
             </h2>
             <p className="text-lg text-muted-foreground font-body mb-3">
-              A curated selection from our daily buffet offerings
+              Our wholesome buffet dining experience with diverse options
             </p>
             <p className="text-base text-primary font-body font-semibold">
               All meals available in Vegetarian, Non-Vegetarian & Jain options
             </p>
           </div>
 
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {mealTypes.map((meal, index) => (
-              <div key={index} className="bg-card border rounded-lg p-6 hover:shadow-lg transition-shadow">
-                <div className="flex items-center gap-3 mb-4">
-                  <UtensilsCrossed className="w-6 h-6 text-primary" />
-                  <h3 className="text-xl font-heading font-semibold text-foreground">
-                    {meal.label}
-                  </h3>
+          <div className="space-y-8">
+            {mealTypes.map((meal, index) => {
+              const variants = getMealVariants(meal.type);
+              if (variants.length === 0) return null;
+              
+              return (
+                <div key={index} className="bg-card border rounded-lg p-6">
+                  <div className="flex items-center gap-3 mb-6">
+                    <UtensilsCrossed className="w-6 h-6 text-primary" />
+                    <h3 className="text-2xl font-heading font-semibold text-foreground">
+                      {meal.label}
+                    </h3>
+                  </div>
+                  
+                  <div className="grid md:grid-cols-3 gap-6">
+                    {variants.map((variant, idx) => (
+                      <div key={idx} className="space-y-2">
+                        <div className="flex items-center gap-2 mb-2">
+                          <span className="inline-flex items-center text-sm font-semibold px-3 py-1 rounded-full bg-primary/10 text-primary font-body">
+                            {variant.label}
+                          </span>
+                        </div>
+                        <p className="text-sm text-muted-foreground font-body leading-relaxed">
+                          {variant.description}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
                 </div>
-                <p className="text-sm text-muted-foreground font-body leading-relaxed">
-                  {getMealDescription(meal.type)}
-                </p>
-                <div className="mt-4 pt-4 border-t flex flex-wrap gap-2">
-                  <span className="inline-flex items-center text-xs px-2 py-1 rounded-full bg-primary/10 text-primary font-body">
-                    Veg
-                  </span>
-                  <span className="inline-flex items-center text-xs px-2 py-1 rounded-full bg-primary/10 text-primary font-body">
-                    Non-Veg
-                  </span>
-                  <span className="inline-flex items-center text-xs px-2 py-1 rounded-full bg-primary/10 text-primary font-body">
-                    Jain
-                  </span>
-                </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
       </section>
