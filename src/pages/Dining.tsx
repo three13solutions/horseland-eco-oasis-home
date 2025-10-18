@@ -93,7 +93,7 @@ const Dining = () => {
       {/* Philosophy Section */}
       <section className="py-16">
         <div className="max-w-6xl mx-auto px-4">
-          <div className="grid md:grid-cols-2 gap-12 items-center">
+          <div className="grid md:grid-cols-2 gap-12 items-start mb-12">
             <div>
               <h2 className="text-3xl md:text-4xl font-heading font-bold mb-6 text-foreground">
                 Our Culinary Philosophy
@@ -103,34 +103,50 @@ const Dining = () => {
                 sustainable practices, and wholesome nourishment. Our buffet-style dining experience 
                 showcases the best of regional cuisine while honoring our commitment to zero-waste cooking.
               </p>
-              <p className="text-muted-foreground font-body mb-8 leading-relaxed">
+              <p className="text-muted-foreground font-body leading-relaxed">
                 Every dish tells a story of the land, from organic vegetables grown in nearby farms 
                 to traditional recipes passed down through generations of local communities.
               </p>
-              
-              <div className="grid grid-cols-2 gap-6">
-                <div className="flex items-center gap-3">
-                  <Leaf className="w-6 h-6 text-primary" />
-                  <span className="font-body font-medium">Organic Ingredients</span>
+            </div>
+            
+            <div className="grid grid-cols-2 gap-6">
+              <div className="bg-card border rounded-lg p-6 hover:shadow-lg transition-shadow">
+                <div className="flex flex-col items-center text-center gap-3">
+                  <div className="p-3 rounded-full bg-primary/10">
+                    <Leaf className="w-8 h-8 text-primary" />
+                  </div>
+                  <span className="font-body font-semibold text-foreground">Organic Ingredients</span>
                 </div>
-                <div className="flex items-center gap-3">
-                  <Award className="w-6 h-6 text-primary" />
-                  <span className="font-body font-medium">Zero-Waste Kitchen</span>
+              </div>
+              <div className="bg-card border rounded-lg p-6 hover:shadow-lg transition-shadow">
+                <div className="flex flex-col items-center text-center gap-3">
+                  <div className="p-3 rounded-full bg-primary/10">
+                    <Award className="w-8 h-8 text-primary" />
+                  </div>
+                  <span className="font-body font-semibold text-foreground">Zero-Waste Kitchen</span>
                 </div>
-                <div className="flex items-center gap-3">
-                  <ChefHat className="w-6 h-6 text-primary" />
-                  <span className="font-body font-medium">Expert Chefs</span>
+              </div>
+              <div className="bg-card border rounded-lg p-6 hover:shadow-lg transition-shadow">
+                <div className="flex flex-col items-center text-center gap-3">
+                  <div className="p-3 rounded-full bg-primary/10">
+                    <ChefHat className="w-8 h-8 text-primary" />
+                  </div>
+                  <span className="font-body font-semibold text-foreground">Expert Chefs</span>
                 </div>
-                <div className="flex items-center gap-3">
-                  <UtensilsCrossed className="w-6 h-6 text-primary" />
-                  <span className="font-body font-medium">Buffet Style</span>
+              </div>
+              <div className="bg-card border rounded-lg p-6 hover:shadow-lg transition-shadow">
+                <div className="flex flex-col items-center text-center gap-3">
+                  <div className="p-3 rounded-full bg-primary/10">
+                    <UtensilsCrossed className="w-8 h-8 text-primary" />
+                  </div>
+                  <span className="font-body font-semibold text-foreground">Buffet Style</span>
                 </div>
               </div>
             </div>
-            <div className="relative">
-              <DiningGalleryCollage />
-            </div>
           </div>
+          
+          {/* Carousel below */}
+          <DiningGalleryCollage />
         </div>
       </section>
 
