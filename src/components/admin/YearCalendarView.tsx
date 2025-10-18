@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { Button } from '@/components/ui/button';
-import { Save, Paintbrush } from 'lucide-react';
+import { Save, Paintbrush, ChevronLeft, ChevronRight, Zap } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
@@ -32,10 +32,12 @@ interface YearCalendarViewProps {
   holidays: Holiday[];
   year?: number;
   onUpdate?: () => void;
+  onYearChange?: (year: number) => void;
 }
 
-export default function YearCalendarView({ seasons, holidays, year = new Date().getFullYear(), onUpdate }: YearCalendarViewProps) {
+export default function YearCalendarView({ seasons, holidays, year: initialYear = new Date().getFullYear(), onUpdate, onYearChange }: YearCalendarViewProps) {
   const { toast } = useToast();
+  const [year, setYear] = useState(initialYear);
   const [selectedSeason, setSelectedSeason] = useState<Season | null>(seasons[0] || null);
   const [isDrawing, setIsDrawing] = useState(false);
   const [pendingChanges, setPendingChanges] = useState<Map<string, string>>(new Map());
@@ -229,6 +231,62 @@ export default function YearCalendarView({ seasons, holidays, year = new Date().
     setHasChanges(false);
   };
 
+  const handlePreviousYear = () => {
+    const newYear = year - 1;
+    setYear(newYear);
+    setPendingChanges(new Map());
+    setHasChanges(false);
+    if (onYearChange) {
+      onYearChange(newYear);
+    }
+  };
+
+  const handleNextYear = () => {
+    const newYear = year + 1;
+    setYear(newYear);
+    setPendingChanges(new Map());
+    setHasChanges(false);
+    if (onYearChange) {
+      onYearChange(newYear);
+    }
+  };
+
+  const handleMarkWeekendsAndHolidays = () => {
+    if (!selectedSeason) {
+      toast({
+        title: "Error",
+        description: "Please select a season first",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const newChanges = new Map(pendingChanges);
+    
+    // Mark all weekends
+    for (let month = 0; month < 12; month++) {
+      const daysInMonth = getDaysInMonth(month);
+      for (let day = 1; day <= daysInMonth; day++) {
+        const date = new Date(year, month, day);
+        const isWeekend = date.getDay() === 0 || date.getDay() === 6; // Sunday or Saturday
+        const holiday = getHolidayForDate(month, day);
+        
+        if (isWeekend || holiday) {
+          const dateKey = getDateKey(month, day);
+          newChanges.set(dateKey, selectedSeason.id);
+        }
+      }
+    }
+
+    setPendingChanges(newChanges);
+    setHasChanges(true);
+    
+    toast({
+      title: "Success",
+      description: `Marked all weekends and holidays with ${selectedSeason.name}`,
+    });
+  };
+
   const renderMonth = (monthIndex: number) => {
     const daysInMonth = getDaysInMonth(monthIndex);
     const firstDay = getFirstDayOfMonth(monthIndex);
@@ -358,9 +416,30 @@ export default function YearCalendarView({ seasons, holidays, year = new Date().
       style={{ userSelect: isDrawing ? 'none' : 'auto' }}
     >
       <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-xl font-semibold">Calendar Year View - {year}</h2>
-          <p className="text-sm text-muted-foreground mt-1">
+        <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2">
+            <Button
+              size="icon"
+              variant="outline"
+              onClick={handlePreviousYear}
+              disabled={isDrawing}
+            >
+              <ChevronLeft className="h-4 w-4" />
+            </Button>
+            <h2 className="text-xl font-semibold min-w-[120px] text-center">
+              {year}
+            </h2>
+            <Button
+              size="icon"
+              variant="outline"
+              onClick={handleNextYear}
+              disabled={isDrawing}
+            >
+              <ChevronRight className="h-4 w-4" />
+            </Button>
+          </div>
+          <div className="h-8 w-px bg-border" />
+          <p className="text-sm text-muted-foreground">
             {isDrawing ? (
               <span className="text-primary font-medium">
                 Painting with {selectedSeason?.name}... Release to stop
@@ -376,12 +455,12 @@ export default function YearCalendarView({ seasons, holidays, year = new Date().
         "flex items-center justify-between gap-4 p-4 border rounded-lg transition-colors",
         isDrawing ? "bg-primary/10 border-primary" : "bg-muted/30"
       )}>
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-3 flex-1">
           <Paintbrush className={cn(
             "h-5 w-5 transition-colors",
             isDrawing ? "text-primary" : "text-muted-foreground"
           )} />
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-wrap">
             <span className="text-sm font-medium">
               {isDrawing ? "Painting:" : "Select season:"}
             </span>
@@ -401,6 +480,17 @@ export default function YearCalendarView({ seasons, holidays, year = new Date().
                 {season.name}
               </Button>
             ))}
+            <div className="h-6 w-px bg-border mx-1" />
+            <Button
+              size="sm"
+              variant="secondary"
+              onClick={handleMarkWeekendsAndHolidays}
+              disabled={!selectedSeason || isDrawing}
+              className="gap-2"
+            >
+              <Zap className="h-4 w-4" />
+              Mark All Weekends & Holidays
+            </Button>
           </div>
         </div>
         

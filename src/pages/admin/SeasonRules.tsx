@@ -18,6 +18,7 @@ export default function SeasonRules() {
   const [holidays, setHolidays] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [editingSeasonId, setEditingSeasonId] = useState<string | null>(null);
+  const [currentYear, setCurrentYear] = useState(new Date().getFullYear());
   const [newHoliday, setNewHoliday] = useState({
     name: '',
     date: '',
@@ -49,12 +50,12 @@ export default function SeasonRules() {
       if (seasonsError) throw seasonsError;
       setSeasons(seasonsData || []);
 
-      // Load holidays
-      const currentYear = new Date().getFullYear();
+      // Load holidays for the current year and next year
       const { data: holidaysData, error: holidaysError } = await supabase
         .from('holidays')
         .select('*')
         .gte('year', currentYear)
+        .lte('year', currentYear + 1)
         .order('date');
 
       if (holidaysError) throw holidaysError;
@@ -209,7 +210,13 @@ export default function SeasonRules() {
         </TabsList>
 
         <TabsContent value="calendar">
-          <YearCalendarView seasons={seasons} holidays={holidays} onUpdate={loadData} />
+          <YearCalendarView 
+            seasons={seasons} 
+            holidays={holidays} 
+            year={currentYear}
+            onUpdate={loadData}
+            onYearChange={setCurrentYear}
+          />
         </TabsContent>
 
         <TabsContent value="seasons" className="space-y-4">
