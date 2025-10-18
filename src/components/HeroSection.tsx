@@ -16,28 +16,8 @@ const HeroSection = () => {
   const [guests, setGuests] = useState('2');
   const [heroTitle, setHeroTitle] = useState('Escape to Nature\'s Embrace');
   const [heroSubtitle, setHeroSubtitle] = useState('A mindful retreat in Matheran\'s no-car eco zone');
-  const [slides, setSlides] = useState([
-    {
-      type: 'image',
-      content: "/lovable-uploads/9699e81e-78aa-4ce4-b652-cf46c4bd7075.png",
-      alt: "Horse riding on red mud trails in Matheran"
-    },
-    {
-      type: 'image',
-      content: "/lovable-uploads/d4df921c-30f4-4f92-92f2-c84dbcd5b591.png",
-      alt: "Beautiful lake with red earth shores in Matheran"
-    },
-    {
-      type: 'image',
-      content: "/lovable-uploads/b7049d8c-bd59-4733-b040-30b3f79f881c.png",
-      alt: "Winding mountain roads leading to Matheran"
-    },
-    {
-      type: 'image',
-      content: "/lovable-uploads/6df7505d-8906-4590-b67e-a18c9f9da7f5.png",
-      alt: "Matheran toy train through misty mountains"
-    }
-  ]);
+  const [slides, setSlides] = useState<Array<{ type: string; content: string; alt: string }>>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     const fetchPageData = async () => {
@@ -58,6 +38,7 @@ const HeroSection = () => {
           })));
         }
       }
+      setIsLoading(false);
     };
     
     fetchPageData();
@@ -81,7 +62,7 @@ const HeroSection = () => {
   return (
     <section className="relative h-screen w-full overflow-hidden">
       {/* Background Images */}
-      {slides.map((slide, index) => (
+      {!isLoading && slides.length > 0 && slides.map((slide, index) => (
         <div
           key={index}
           className={`absolute inset-0 transition-opacity duration-1000 ${
