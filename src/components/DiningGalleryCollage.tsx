@@ -13,6 +13,9 @@ interface GalleryImage {
 const DiningGalleryCollage = () => {
   const [images, setImages] = useState<GalleryImage[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
+  const [isDragging, setIsDragging] = useState(false);
+  const [startX, setStartX] = useState(0);
+  const [scrollLeft, setScrollLeft] = useState(0);
 
   useEffect(() => {
     const fetchDiningGallery = async () => {
@@ -86,32 +89,76 @@ const DiningGalleryCollage = () => {
     setCurrentIndex((prev) => prev + 1);
   };
 
-  const handleImageClick = (index: number) => {
-    const actualIndex = index % images.length;
-    const currentActual = currentIndex % images.length;
-    
-    if (actualIndex !== currentActual) {
-      handleNext();
-    }
+  const handleMouseDown = (e: React.MouseEvent) => {
+    setIsDragging(true);
+    setStartX(e.pageX);
+    setScrollLeft(currentIndex);
+  };
+
+  const handleMouseMove = (e: React.MouseEvent) => {
+    if (!isDragging) return;
+    e.preventDefault();
+    const x = e.pageX;
+    const walk = (startX - x) / 280; // Adjust sensitivity
+    const newIndex = Math.round(scrollLeft + walk);
+    setCurrentIndex(newIndex);
+  };
+
+  const handleMouseUp = () => {
+    setIsDragging(false);
+  };
+
+  const handleMouseLeave = () => {
+    setIsDragging(false);
+  };
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    setIsDragging(true);
+    setStartX(e.touches[0].pageX);
+    setScrollLeft(currentIndex);
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    if (!isDragging) return;
+    const x = e.touches[0].pageX;
+    const walk = (startX - x) / 280;
+    const newIndex = Math.round(scrollLeft + walk);
+    setCurrentIndex(newIndex);
+  };
+
+  const handleTouchEnd = () => {
+    setIsDragging(false);
   };
 
   return (
     <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-      <div className="relative group h-[200px] max-w-[1260px] mx-auto overflow-hidden">
+      <div 
+        className="relative group h-[200px] max-w-[1260px] mx-auto overflow-hidden cursor-grab active:cursor-grabbing"
+        onMouseDown={handleMouseDown}
+        onMouseMove={handleMouseMove}
+        onMouseUp={handleMouseUp}
+        onMouseLeave={handleMouseLeave}
+        onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMove}
+        onTouchEnd={handleTouchEnd}
+      >
         <div 
-          className="flex transition-transform duration-500 ease-out"
-          style={{ transform: `translateX(-${currentIndex * 280}px)` }}
+          className="flex gap-2 transition-transform duration-300 ease-out"
+          style={{ 
+            transform: `translateX(-${currentIndex * 282}px)`,
+            transitionDuration: isDragging ? '0ms' : '300ms'
+          }}
         >
           {displayImages.map((image, index) => (
             <div
               key={`${image.id}-${index}`}
-              className="flex-shrink-0 w-[280px] h-[200px] relative group/item cursor-pointer"
-              onClick={() => handleImageClick(index)}
+              className="flex-shrink-0 w-[280px] h-[200px] relative group/item pointer-events-none"
             >
               <img
                 src={image.image_url}
                 alt={image.title}
-                className="w-full h-full object-cover"
+                className="w-full h-full object-cover select-none"
+                draggable="false"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover/item:opacity-100 transition-opacity duration-300">
                 <div className="absolute bottom-0 left-0 right-0 p-3">
