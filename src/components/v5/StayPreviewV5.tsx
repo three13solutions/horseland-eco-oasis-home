@@ -133,7 +133,7 @@ const StayPreviewV5 = () => {
           <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
             <a href={`tel:${settings.phone_number || '+919404224600'}`}>
               <Button className="bg-gradient-to-r from-primary to-accent">
-                {getTranslation('stay.undecided.call', 'Call: ')} {settings.phone_number || '+91 9404224600'}
+                Call: {settings.phone_number || '+91 9404224600'}
               </Button>
             </a>
             <a href={`https://wa.me/${(settings.whatsapp_number || '+919404224600').replace(/[^0-9]/g, '')}`} target="_blank" rel="noopener noreferrer">
