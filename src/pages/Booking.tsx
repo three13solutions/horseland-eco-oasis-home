@@ -687,15 +687,33 @@ const Booking = () => {
     });
   };
 
+  // Helper to calculate total meals selected for a guest
+  const getTotalMealsForGuest = (guestIndex: number) => {
+    const guest = guestMeals[guestIndex];
+    return Object.values(guest.mealTypeQuantities).reduce((sum, qty) => sum + qty, 0);
+  };
+
   const handleServiceInRoomChange = (guestIndex: number, change: number) => {
+    const totalMeals = getTotalMealsForGuest(guestIndex);
+    
     setGuestMeals(prev => {
       const updated = [...prev];
       const guest = updated[guestIndex];
-      const newQty = Math.max(0, guest.serviceInRoomQuantity + change);
+      const newQty = guest.serviceInRoomQuantity + change;
+      
+      // Check if total would exceed total meals selected
+      if (newQty > totalMeals) {
+        toast({
+          title: "Limit Reached",
+          description: `Meal Service to the Room cannot exceed ${totalMeals} total meals selected`,
+          variant: "destructive"
+        });
+        return prev;
+      }
       
       updated[guestIndex] = {
         ...guest,
-        serviceInRoomQuantity: newQty
+        serviceInRoomQuantity: Math.max(0, newQty)
       };
       
       return updated;
@@ -1394,7 +1412,7 @@ const Booking = () => {
                                             <div className="font-medium text-sm">Meal Service to the Room</div>
                                             <div className="text-xs text-muted-foreground">₹300 per meal</div>
                                             <div className="text-xs text-muted-foreground mt-1">
-                                              How many meals do you want served in your room?
+                                              Limited to {getTotalMealsForGuest(index)} total meals selected
                                             </div>
                                           </div>
                                           <div className="flex items-center justify-center gap-2">
