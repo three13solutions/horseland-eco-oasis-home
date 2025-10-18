@@ -109,89 +109,36 @@ const About = () => {
         </div>
       </section>
 
-      {/* Founder Section */}
-      <section className="py-16 bg-muted/20">
+      {/* Team Section - Moved up and made more prominent */}
+      <section className="py-16 md:py-24">
         <div className="max-w-6xl mx-auto px-4">
-          <div className="grid md:grid-cols-2 gap-12 items-center">
-            <div className="relative">
-              <img 
-                src={founder.image || 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80'}
-                alt={`${founder.name || 'Founder'}, ${founder.role || ''}`}
-                className="rounded-lg shadow-lg w-full"
-              />
-              <div className="absolute -bottom-4 -right-4 w-20 h-20 bg-primary/10 rounded-full flex items-center justify-center">
-                <Lightbulb className="w-10 h-10 text-primary" />
-              </div>
+          <div className="text-center mb-16">
+            <div className="w-20 h-20 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-6">
+              <Users className="w-10 h-10 text-primary" />
             </div>
-            <div>
-              <h2 className="text-3xl md:text-4xl font-heading font-bold mb-6 text-foreground">
-                {founder.heading || 'Meet Our Founder'}
-              </h2>
-              <h3 className="text-xl font-semibold text-primary mb-4">{founder.name || 'Adi Bharucha'}</h3>
-              <p className="text-muted-foreground font-body mb-6 leading-relaxed">
-                {founder.bio1 || ''}
-              </p>
-              <p className="text-muted-foreground font-body mb-6 leading-relaxed">
-                {founder.bio2 || ''}
-              </p>
-              <blockquote className="border-l-4 border-primary pl-4 italic text-muted-foreground">
-                "{founder.quote || ''}"
-              </blockquote>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Team Section */}
-      <section className="py-16">
-        <div className="max-w-6xl mx-auto px-4">
-          <div className="text-center mb-12">
-            <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-6">
-              <Users className="w-8 h-8 text-primary" />
-            </div>
-            <h2 className="text-3xl md:text-4xl font-heading font-bold mb-6 text-foreground">
-              {team.heading || 'The Heart of Horseland'}
+            <h2 className="text-4xl md:text-5xl font-heading font-bold mb-6 text-foreground">
+              {team.heading || 'Meet Our Team'}
             </h2>
-            <p className="text-lg text-muted-foreground font-body max-w-3xl mx-auto">
-              {team.description || ''}
+            <p className="text-xl text-muted-foreground font-body max-w-3xl mx-auto leading-relaxed">
+              {team.description || 'The dedicated professionals who make your stay exceptional'}
             </p>
           </div>
 
           {team.items && team.items.length > 0 && (
-            <div className="grid md:grid-cols-3 gap-8 mb-12">
-              {team.items.slice(0, 3).map((member: any, index: number) => (
-                <div key={index} className="text-center">
-                  <div className="w-24 h-24 rounded-full mx-auto mb-4 overflow-hidden">
+            <div className="grid md:grid-cols-3 gap-12 mb-16">
+              {team.items.map((member: any, index: number) => (
+                <div key={index} className="group">
+                  <div className="relative mb-6 overflow-hidden rounded-xl">
                     <img 
                       src={member.image || 'https://images.unsplash.com/photo-1488590528505-98d2b5aba04b?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80'}
                       alt={member.name}
-                      className="w-full h-full object-cover"
+                      className="w-full aspect-square object-cover transition-transform duration-300 group-hover:scale-105"
                     />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                   </div>
-                  <h3 className="text-xl font-heading font-semibold mb-2">{member.name}</h3>
-                  <p className="text-primary font-medium mb-3">{member.role}</p>
-                  <p className="text-muted-foreground font-body text-sm">
-                    {member.description}
-                  </p>
-                </div>
-              ))}
-            </div>
-          )}
-
-          {team.items && team.items.length > 3 && (
-            <div className="grid md:grid-cols-2 gap-8">
-              {team.items.slice(3).map((member: any, index: number) => (
-                <div key={index} className="text-center">
-                  <div className="w-24 h-24 rounded-full mx-auto mb-4 overflow-hidden">
-                    <img 
-                      src={member.image || 'https://images.unsplash.com/photo-1488590528505-98d2b5aba04b?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80'}
-                      alt={member.name}
-                      className="w-full h-full object-cover"
-                    />
-                  </div>
-                  <h3 className="text-xl font-heading font-semibold mb-2">{member.name}</h3>
-                  <p className="text-primary font-medium mb-3">{member.role}</p>
-                  <p className="text-muted-foreground font-body text-sm">
+                  <h3 className="text-2xl font-heading font-bold mb-2 text-foreground">{member.name}</h3>
+                  <p className="text-primary font-semibold text-lg mb-3">{member.role}</p>
+                  <p className="text-muted-foreground font-body leading-relaxed">
                     {member.description}
                   </p>
                 </div>
@@ -200,12 +147,50 @@ const About = () => {
           )}
 
           {team.quote && (
-            <div className="text-center mt-12">
-              <p className="text-muted-foreground font-body italic max-w-2xl mx-auto">
+            <div className="text-center mt-16 max-w-4xl mx-auto">
+              <blockquote className="text-2xl font-body text-muted-foreground italic border-l-4 border-primary pl-8">
                 "{team.quote}"
-              </p>
+              </blockquote>
             </div>
           )}
+        </div>
+      </section>
+
+      {/* Founder Section - Condensed and moved down */}
+      <section className="py-12 bg-muted/20">
+        <div className="max-w-4xl mx-auto px-4">
+          <div className="bg-card rounded-xl shadow-lg p-8 md:p-12">
+            <div className="flex flex-col md:flex-row gap-8 items-start">
+              <div className="flex-shrink-0">
+                <div className="relative">
+                  <img 
+                    src={founder.image || 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80'}
+                    alt={`${founder.name || 'Founder'}`}
+                    className="w-32 h-32 md:w-40 md:h-40 rounded-full object-cover shadow-lg"
+                  />
+                  <div className="absolute -bottom-2 -right-2 w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center">
+                    <Lightbulb className="w-6 h-6 text-primary" />
+                  </div>
+                </div>
+              </div>
+              <div className="flex-1">
+                <div className="mb-4">
+                  <h3 className="text-2xl font-heading font-bold text-foreground mb-1">
+                    {founder.name || 'Adi Bharucha'}
+                  </h3>
+                  <p className="text-primary font-semibold">{founder.role || 'Founder'}</p>
+                </div>
+                <p className="text-muted-foreground font-body leading-relaxed mb-4">
+                  {founder.bio1 || ''}
+                </p>
+                {founder.quote && (
+                  <blockquote className="border-l-4 border-primary pl-4 italic text-muted-foreground text-sm">
+                    "{founder.quote}"
+                  </blockquote>
+                )}
+              </div>
+            </div>
+          </div>
         </div>
       </section>
 
