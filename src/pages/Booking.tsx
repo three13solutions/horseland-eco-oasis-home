@@ -1142,13 +1142,43 @@ const Booking = () => {
                       <TabsContent value="meals" className="space-y-6">
                         <div className="space-y-6">
                           {guestMeals.map((guest, index) => {
-                            const mealTypes = [
-                              { value: 'breakfast', label: 'Breakfast' },
-                              { value: 'lunch', label: 'Lunch' },
-                              { value: 'high_tea', label: 'High Tea' },
-                              { value: 'dinner', label: 'Dinner' }
-                            ];
                             const maxDays = calculateNights();
+                            
+                            const mealOptions = [
+                              { 
+                                mealType: 'breakfast', 
+                                label: 'Breakfast',
+                                services: [
+                                  { key: 'breakfast', label: 'Buffet', quantityKey: 'mealTypeQuantities' },
+                                  { key: 'sitoutBreakfast', label: 'Sitout at Room', quantityKey: 'specialArrangements', price: 200 }
+                                ]
+                              },
+                              { 
+                                mealType: 'lunch', 
+                                label: 'Lunch',
+                                services: [
+                                  { key: 'lunch', label: 'Buffet', quantityKey: 'mealTypeQuantities' },
+                                  { key: 'sitoutLunch', label: 'Sitout at Room', quantityKey: 'specialArrangements', price: 300 }
+                                ]
+                              },
+                              { 
+                                mealType: 'high_tea', 
+                                label: 'High Tea',
+                                services: [
+                                  { key: 'high_tea', label: 'Buffet', quantityKey: 'mealTypeQuantities' },
+                                  { key: 'sitoutHighTea', label: 'Sitout at Room', quantityKey: 'specialArrangements', price: 150 }
+                                ]
+                              },
+                              { 
+                                mealType: 'dinner', 
+                                label: 'Dinner',
+                                services: [
+                                  { key: 'dinner', label: 'Buffet', quantityKey: 'mealTypeQuantities' },
+                                  { key: 'sitoutDinner', label: 'Sitout at Room', quantityKey: 'specialArrangements', price: 400 },
+                                  { key: 'candleLightDinner', label: 'Candle Night', quantityKey: 'specialArrangements', price: 1500 }
+                                ]
+                              }
+                            ];
                             
                             return (
                               <Card key={index}>
@@ -1156,14 +1186,15 @@ const Booking = () => {
                                   <CardTitle className="text-lg">Guest {guest.guestNumber}</CardTitle>
                                 </CardHeader>
                                 <CardContent className="space-y-4">
-                                  <div className="flex gap-4 items-center">
-                                    <div className="flex-1">
-                                      <Label htmlFor={`dietary-${index}`} className="text-sm font-medium mb-2 block">
-                                        Dietary Preference
+                                  {/* Dietary Preference and Days Info on one line */}
+                                  <div className="flex items-center gap-4 pb-3 border-b">
+                                    <div className="flex items-center gap-2">
+                                      <Label htmlFor={`dietary-${index}`} className="text-sm font-medium whitespace-nowrap">
+                                        Dietary Preference:
                                       </Label>
                                       <select
                                         id={`dietary-${index}`}
-                                        className="w-full p-2 border rounded-md text-sm"
+                                        className="p-2 border rounded-md text-sm"
                                         value={guest.dietaryPreference}
                                         onChange={(e) => handleGuestDietaryChange(index, e.target.value as any)}
                                       >
@@ -1172,108 +1203,78 @@ const Booking = () => {
                                         <option value="jain">Jain</option>
                                       </select>
                                     </div>
+                                    <div className="text-sm text-muted-foreground">
+                                      • {maxDays} {maxDays === 1 ? 'day' : 'days'} stay
+                                    </div>
                                   </div>
                                   
-                                  <div>
-                                    <Label className="text-sm font-medium mb-3 block">
-                                      Select Meals ({maxDays} {maxDays === 1 ? 'day' : 'days'})
-                                    </Label>
-                                    <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                                      {mealTypes.map((mealType) => {
-                                        const quantity = guest.mealTypeQuantities[mealType.value] || 0;
-                                        
-                                        return (
-                                          <div key={mealType.value} className="p-3 border rounded-lg space-y-2">
-                                            <div className="font-medium text-sm text-center">{mealType.label}</div>
-                                            <div className="flex items-center justify-center gap-2">
-                                              <Button
-                                                type="button"
-                                                variant="outline"
-                                                size="icon"
-                                                className="h-8 w-8"
-                                                onClick={() => handleMealQuantityChange(index, mealType.value, -1)}
-                                                disabled={quantity === 0}
-                                              >
-                                                <Minus className="h-3 w-3" />
-                                              </Button>
-                                              <span className="w-8 text-center font-semibold">{quantity}</span>
-                                              <Button
-                                                type="button"
-                                                variant="outline"
-                                                size="icon"
-                                                className="h-8 w-8"
-                                                onClick={() => handleMealQuantityChange(index, mealType.value, 1)}
-                                                disabled={quantity >= maxDays}
-                                              >
-                                                <Plus className="h-3 w-3" />
-                                              </Button>
-                                            </div>
+                                  {/* Meal Types with inline service options */}
+                                  <div className="space-y-3">
+                                    {mealOptions.map((meal) => (
+                                      <div key={meal.mealType} className="p-3 border rounded-lg">
+                                        <div className="flex items-center gap-3 flex-wrap">
+                                          <div className="font-medium text-sm min-w-[80px]">{meal.label}</div>
+                                          <div className="flex-1 flex items-center gap-4 flex-wrap">
+                                            {meal.services.map((service) => {
+                                              const quantity = service.quantityKey === 'mealTypeQuantities'
+                                                ? guest.mealTypeQuantities[service.key] || 0
+                                                : guest.specialArrangements[service.key as keyof typeof guest.specialArrangements] || 0;
+                                              
+                                              return (
+                                                <div key={service.key} className="flex items-center gap-2">
+                                                  <span className="text-sm whitespace-nowrap">
+                                                    {service.label}
+                                                    {service.price && <span className="text-muted-foreground ml-1">(₹{service.price})</span>}
+                                                  </span>
+                                                  <div className="flex items-center gap-1">
+                                                    <Button
+                                                      type="button"
+                                                      variant="outline"
+                                                      size="icon"
+                                                      className="h-7 w-7"
+                                                      onClick={() => {
+                                                        if (service.quantityKey === 'mealTypeQuantities') {
+                                                          handleMealQuantityChange(index, service.key, -1);
+                                                        } else {
+                                                          handleSpecialArrangementChange(index, service.key, -1);
+                                                        }
+                                                      }}
+                                                      disabled={quantity === 0}
+                                                    >
+                                                      <Minus className="h-3 w-3" />
+                                                    </Button>
+                                                    <span className="w-6 text-center text-sm font-semibold">{quantity}</span>
+                                                    <Button
+                                                      type="button"
+                                                      variant="outline"
+                                                      size="icon"
+                                                      className="h-7 w-7"
+                                                      onClick={() => {
+                                                        if (service.quantityKey === 'mealTypeQuantities') {
+                                                          handleMealQuantityChange(index, service.key, 1);
+                                                        } else {
+                                                          handleSpecialArrangementChange(index, service.key, 1);
+                                                        }
+                                                      }}
+                                                      disabled={quantity >= maxDays}
+                                                    >
+                                                      <Plus className="h-3 w-3" />
+                                                    </Button>
+                                                  </div>
+                                                </div>
+                                              );
+                                            })}
                                           </div>
-                                        );
-                                      })}
-                                     </div>
-                                   </div>
-                                   
-                                   {/* Special Service Arrangements */}
-                                   <div className="mt-6 pt-6 border-t">
-                                     <Label className="text-sm font-medium mb-3 block">
-                                       Special Service Arrangements
-                                     </Label>
-                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                                       {[
-                                         { key: 'sitoutBreakfast', label: 'Sitout Breakfast at Room', icon: '☕', price: 200 },
-                                         { key: 'sitoutLunch', label: 'Sitout Lunch at Room', icon: '🍱', price: 300 },
-                                         { key: 'sitoutHighTea', label: 'Sitout High Tea at Room', icon: '🫖', price: 150 },
-                                         { key: 'sitoutDinner', label: 'Sitout Dinner at Room', icon: '🍽️', price: 400 },
-                                         { key: 'candleLightDinner', label: 'Candle Light Dinner', icon: '🕯️', price: 1500 }
-                                       ].map(arrangement => {
-                                         const quantity = guest.specialArrangements[arrangement.key as keyof typeof guest.specialArrangements] || 0;
-                                         
-                                         return (
-                                           <div key={arrangement.key} className="p-3 border rounded-lg space-y-2">
-                                             <div className="flex items-center justify-between">
-                                               <div className="text-sm">
-                                                 <div className="font-medium flex items-center gap-1">
-                                                   <span>{arrangement.icon}</span>
-                                                   <span>{arrangement.label}</span>
-                                                 </div>
-                                                 <div className="text-muted-foreground text-xs">₹{arrangement.price}</div>
-                                               </div>
-                                             </div>
-                                             <div className="flex items-center justify-center gap-2">
-                                               <Button
-                                                 type="button"
-                                                 variant="outline"
-                                                 size="icon"
-                                                 className="h-8 w-8"
-                                                 onClick={() => handleSpecialArrangementChange(index, arrangement.key, -1)}
-                                                 disabled={quantity === 0}
-                                               >
-                                                 <Minus className="h-3 w-3" />
-                                               </Button>
-                                               <span className="w-8 text-center font-semibold">{quantity}</span>
-                                               <Button
-                                                 type="button"
-                                                 variant="outline"
-                                                 size="icon"
-                                                 className="h-8 w-8"
-                                                 onClick={() => handleSpecialArrangementChange(index, arrangement.key, 1)}
-                                                 disabled={quantity >= maxDays}
-                                               >
-                                                 <Plus className="h-3 w-3" />
-                                               </Button>
-                                             </div>
-                                           </div>
-                                         );
-                                       })}
-                                     </div>
-                                   </div>
-                                 </CardContent>
-                               </Card>
-                             );
-                           })}
-                         </div>
-                       </TabsContent>
+                                        </div>
+                                      </div>
+                                    ))}
+                                  </div>
+                                </CardContent>
+                              </Card>
+                            );
+                          })}
+                        </div>
+                      </TabsContent>
                       
                       <TabsContent value="pickup" className="space-y-4">
                         <div className="space-y-4">
