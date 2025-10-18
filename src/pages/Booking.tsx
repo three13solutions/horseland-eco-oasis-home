@@ -629,11 +629,22 @@ const Booking = () => {
     });
   };
 
+  // Helper function to map dietary preference to database variant
+  const mapDietaryPreferenceToVariant = (preference: 'vegetarian' | 'non-vegetarian' | 'jain'): string => {
+    const mapping: Record<string, string> = {
+      'vegetarian': 'veg',
+      'non-vegetarian': 'non_veg',
+      'jain': 'jain'
+    };
+    return mapping[preference] || preference;
+  };
+
   // Helper function to get meal price from database
   const getMealPrice = (mealType: string, variant: 'vegetarian' | 'non-vegetarian' | 'jain'): number => {
+    const dbVariant = mapDietaryPreferenceToVariant(variant);
     const meal = meals.find(m => {
       const mealData = m as any;
-      return mealData.meal_type === mealType && mealData.variant === variant;
+      return mealData.meal_type === mealType && mealData.variant === dbVariant;
     });
     return meal?.price || 0;
   };
@@ -778,10 +789,10 @@ const Booking = () => {
     // Calculate regular meals
     guestMeals.forEach(guest => {
       Object.entries(guest.mealTypeQuantities).forEach(([mealType, quantity]) => {
-        const variant = guest.dietaryPreference;
+        const dbVariant = mapDietaryPreferenceToVariant(guest.dietaryPreference);
         const meal = meals.find(m => {
           const mealData = m as any;
-          return mealData.meal_type === mealType && mealData.variant === variant;
+          return mealData.meal_type === mealType && mealData.variant === dbVariant;
         });
         
         if (meal) {
@@ -1762,9 +1773,10 @@ const Booking = () => {
                                     
                                     {/* Regular meals (buffet) */}
                                     {Object.entries(guest.mealTypeQuantities).map(([mealType, quantity]) => {
+                                      const dbVariant = mapDietaryPreferenceToVariant(guest.dietaryPreference);
                                       const meal = meals.find(m => {
                                         const mealData = m as any;
-                                        return mealData.meal_type === mealType && mealData.variant === guest.dietaryPreference;
+                                        return mealData.meal_type === mealType && mealData.variant === dbVariant;
                                       });
                                       if (!meal) return null;
                                       const mealTypeLabel = mealType === 'breakfast' ? 'Breakfast' : 
