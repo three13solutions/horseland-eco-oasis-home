@@ -6,9 +6,10 @@ import CombinedFloatingV5 from '../components/v5/CombinedFloatingV5';
 import MediaAsset from '@/components/MediaAsset';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Clock, MapPin, Users, Star, Plus, Grid3x3, List, Filter } from 'lucide-react';
+import { Clock, MapPin, Users, Star, Plus, Grid3x3, List, Filter, X } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import {
   Select,
   SelectContent,
@@ -49,6 +50,7 @@ const Activities = () => {
   const [bookingTypeFilter, setBookingTypeFilter] = useState<string>('all');
   const [durationFilter, setDurationFilter] = useState<string>('all');
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+  const [sidebarOpen, setSidebarOpen] = useState(false);
   
   const { toast } = useToast();
   const navigate = useNavigate();
@@ -341,216 +343,421 @@ const Activities = () => {
         </div>
       </section>
 
-      {/* Filter Section */}
-      <section className="py-6 bg-muted/30 border-b sticky top-16 z-40 backdrop-blur-sm bg-background/95">
-        <div className="max-w-6xl mx-auto px-4">
-          <div className="flex flex-wrap items-center gap-4">
-            {/* Filters Label */}
-            <div className="flex items-center gap-2">
-              <Filter className="h-4 w-4 text-muted-foreground" />
-              <span className="text-sm font-semibold text-foreground font-heading">Filters:</span>
-            </div>
+      {/* Main Content Section with Sidebar */}
+      <section className="py-8">
+        <div className="max-w-7xl mx-auto px-4">
+          <div className="flex gap-6">
+            {/* Desktop Sidebar */}
+            <aside className="hidden lg:block w-72 flex-shrink-0">
+              <div className="sticky top-20 bg-card border rounded-lg p-6 space-y-6">
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-lg font-heading font-semibold">Filters</h3>
+                  {(locationFilter !== 'all' || seasonFilter !== 'all' || audienceFilter !== 'all' || priceFilter !== 'all' || activityTagFilter !== 'all' || daysFilter !== 'all' || bookingTypeFilter !== 'all' || durationFilter !== 'all') && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => {
+                        setLocationFilter('all');
+                        setSeasonFilter('all');
+                        setAudienceFilter('all');
+                        setPriceFilter('all');
+                        setActivityTagFilter('all');
+                        setDaysFilter('all');
+                        setBookingTypeFilter('all');
+                        setDurationFilter('all');
+                      }}
+                      className="text-xs h-8"
+                    >
+                      Clear All
+                    </Button>
+                  )}
+                </div>
 
-            {/* Location Filter */}
-            <Select value={locationFilter} onValueChange={(value) => setLocationFilter(value as any)}>
-              <SelectTrigger className="w-[180px] bg-background">
-                <SelectValue placeholder="Location" />
-              </SelectTrigger>
-              <SelectContent className="bg-background z-50">
-                <SelectItem value="all">All Locations</SelectItem>
-                <SelectItem value="on_property">On Property</SelectItem>
-                <SelectItem value="off_property">Off Property</SelectItem>
-              </SelectContent>
-            </Select>
+                {/* Location Group */}
+                <div>
+                  <label className="text-sm font-semibold mb-2 block">Location</label>
+                  <Select value={locationFilter} onValueChange={(value) => setLocationFilter(value as any)}>
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder="Location" />
+                    </SelectTrigger>
+                    <SelectContent className="bg-background z-50">
+                      <SelectItem value="all">All Locations</SelectItem>
+                      <SelectItem value="on_property">On Property</SelectItem>
+                      <SelectItem value="off_property">Off Property</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
 
-            {/* Season Filter */}
-            <Select value={seasonFilter} onValueChange={setSeasonFilter}>
-              <SelectTrigger className="w-[180px] bg-background">
-                <SelectValue placeholder="Season" />
-              </SelectTrigger>
-              <SelectContent className="bg-background z-50">
-                <SelectItem value="all">All Seasons</SelectItem>
-                <SelectItem value="monsoon">Monsoon</SelectItem>
-                <SelectItem value="winter">Winter</SelectItem>
-                <SelectItem value="spring">Spring</SelectItem>
-                <SelectItem value="summer">Summer</SelectItem>
-              </SelectContent>
-            </Select>
+                {/* Season Group */}
+                <div>
+                  <label className="text-sm font-semibold mb-2 block">Season</label>
+                  <Select value={seasonFilter} onValueChange={setSeasonFilter}>
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder="Season" />
+                    </SelectTrigger>
+                    <SelectContent className="bg-background z-50">
+                      <SelectItem value="all">All Seasons</SelectItem>
+                      <SelectItem value="monsoon">Monsoon</SelectItem>
+                      <SelectItem value="winter">Winter</SelectItem>
+                      <SelectItem value="spring">Spring</SelectItem>
+                      <SelectItem value="summer">Summer</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
 
-            {/* Audience Filter */}
-            <Select value={audienceFilter} onValueChange={setAudienceFilter}>
-              <SelectTrigger className="w-[180px] bg-background">
-                <SelectValue placeholder="Suitable For" />
-              </SelectTrigger>
-              <SelectContent className="bg-background z-50">
-                <SelectItem value="all">Everyone</SelectItem>
-                <SelectItem value="families">Families</SelectItem>
-                <SelectItem value="couples">Couples</SelectItem>
-                <SelectItem value="kids">Kids</SelectItem>
-                <SelectItem value="adults">Adults</SelectItem>
-                <SelectItem value="teens">Teens</SelectItem>
-                <SelectItem value="groups">Groups</SelectItem>
-                <SelectItem value="seniors">Seniors</SelectItem>
-                <SelectItem value="solo">Solo Travelers</SelectItem>
-              </SelectContent>
-            </Select>
+                {/* Audience Group */}
+                <div>
+                  <label className="text-sm font-semibold mb-2 block">Suitable For</label>
+                  <Select value={audienceFilter} onValueChange={setAudienceFilter}>
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder="Suitable For" />
+                    </SelectTrigger>
+                    <SelectContent className="bg-background z-50">
+                      <SelectItem value="all">Everyone</SelectItem>
+                      <SelectItem value="families">Families</SelectItem>
+                      <SelectItem value="couples">Couples</SelectItem>
+                      <SelectItem value="kids">Kids</SelectItem>
+                      <SelectItem value="adults">Adults</SelectItem>
+                      <SelectItem value="teens">Teens</SelectItem>
+                      <SelectItem value="groups">Groups</SelectItem>
+                      <SelectItem value="seniors">Seniors</SelectItem>
+                      <SelectItem value="solo">Solo Travelers</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
 
-            {/* Price Filter */}
-            <Select value={priceFilter} onValueChange={setPriceFilter}>
-              <SelectTrigger className="w-[180px] bg-background">
-                <SelectValue placeholder="Price Range" />
-              </SelectTrigger>
-              <SelectContent className="bg-background z-50">
-                <SelectItem value="all">All Prices</SelectItem>
-                <SelectItem value="free">Free</SelectItem>
-                <SelectItem value="under_500">Under ₹500</SelectItem>
-                <SelectItem value="500_1000">₹500 - ₹1000</SelectItem>
-                <SelectItem value="above_1000">Above ₹1000</SelectItem>
-              </SelectContent>
-            </Select>
+                {/* Price Group */}
+                <div>
+                  <label className="text-sm font-semibold mb-2 block">Price Range</label>
+                  <Select value={priceFilter} onValueChange={setPriceFilter}>
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder="Price Range" />
+                    </SelectTrigger>
+                    <SelectContent className="bg-background z-50">
+                      <SelectItem value="all">All Prices</SelectItem>
+                      <SelectItem value="free">Free</SelectItem>
+                      <SelectItem value="under_500">Under ₹500</SelectItem>
+                      <SelectItem value="500_1000">₹500 - ₹1000</SelectItem>
+                      <SelectItem value="above_1000">Above ₹1000</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
 
-            {/* Activity Type Filter */}
-            <Select value={activityTagFilter} onValueChange={setActivityTagFilter}>
-              <SelectTrigger className="w-[180px] bg-background">
-                <SelectValue placeholder="Activity Type" />
-              </SelectTrigger>
-              <SelectContent className="bg-background z-50">
-                <SelectItem value="all">All Types</SelectItem>
-                <SelectItem value="adventure">Adventure</SelectItem>
-                <SelectItem value="relaxing">Relaxing</SelectItem>
-                <SelectItem value="cultural">Cultural</SelectItem>
-                <SelectItem value="sports">Sports</SelectItem>
-                <SelectItem value="nature">Nature</SelectItem>
-                <SelectItem value="indoor">Indoor</SelectItem>
-                <SelectItem value="outdoor">Outdoor</SelectItem>
-                <SelectItem value="educational">Educational</SelectItem>
-              </SelectContent>
-            </Select>
+                {/* Activity Type Group */}
+                <div>
+                  <label className="text-sm font-semibold mb-2 block">Activity Type</label>
+                  <Select value={activityTagFilter} onValueChange={setActivityTagFilter}>
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder="Activity Type" />
+                    </SelectTrigger>
+                    <SelectContent className="bg-background z-50">
+                      <SelectItem value="all">All Types</SelectItem>
+                      <SelectItem value="adventure">Adventure</SelectItem>
+                      <SelectItem value="relaxing">Relaxing</SelectItem>
+                      <SelectItem value="cultural">Cultural</SelectItem>
+                      <SelectItem value="sports">Sports</SelectItem>
+                      <SelectItem value="nature">Nature</SelectItem>
+                      <SelectItem value="indoor">Indoor</SelectItem>
+                      <SelectItem value="outdoor">Outdoor</SelectItem>
+                      <SelectItem value="educational">Educational</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
 
-            {/* Days Filter */}
-            <Select value={daysFilter} onValueChange={setDaysFilter}>
-              <SelectTrigger className="w-[180px] bg-background">
-                <SelectValue placeholder="Available Days" />
-              </SelectTrigger>
-              <SelectContent className="bg-background z-50">
-                <SelectItem value="all">All Days</SelectItem>
-                <SelectItem value="weekdays">Weekdays</SelectItem>
-                <SelectItem value="weekends">Weekends</SelectItem>
-                <SelectItem value="monday">Monday</SelectItem>
-                <SelectItem value="tuesday">Tuesday</SelectItem>
-                <SelectItem value="wednesday">Wednesday</SelectItem>
-                <SelectItem value="thursday">Thursday</SelectItem>
-                <SelectItem value="friday">Friday</SelectItem>
-                <SelectItem value="saturday">Saturday</SelectItem>
-                <SelectItem value="sunday">Sunday</SelectItem>
-              </SelectContent>
-            </Select>
+                {/* Days Group */}
+                <div>
+                  <label className="text-sm font-semibold mb-2 block">Available Days</label>
+                  <Select value={daysFilter} onValueChange={setDaysFilter}>
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder="Available Days" />
+                    </SelectTrigger>
+                    <SelectContent className="bg-background z-50">
+                      <SelectItem value="all">All Days</SelectItem>
+                      <SelectItem value="weekdays">Weekdays</SelectItem>
+                      <SelectItem value="weekends">Weekends</SelectItem>
+                      <SelectItem value="monday">Monday</SelectItem>
+                      <SelectItem value="tuesday">Tuesday</SelectItem>
+                      <SelectItem value="wednesday">Wednesday</SelectItem>
+                      <SelectItem value="thursday">Thursday</SelectItem>
+                      <SelectItem value="friday">Friday</SelectItem>
+                      <SelectItem value="saturday">Saturday</SelectItem>
+                      <SelectItem value="sunday">Sunday</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
 
-            {/* Booking Type Filter */}
-            <Select value={bookingTypeFilter} onValueChange={setBookingTypeFilter}>
-              <SelectTrigger className="w-[180px] bg-background">
-                <SelectValue placeholder="Booking Method" />
-              </SelectTrigger>
-              <SelectContent className="bg-background z-50">
-                <SelectItem value="all">All Methods</SelectItem>
-                <SelectItem value="reception">At Reception</SelectItem>
-                <SelectItem value="online">Online</SelectItem>
-                <SelectItem value="both">Both</SelectItem>
-                <SelectItem value="third_party">Third Party</SelectItem>
-                <SelectItem value="no_booking">No Booking</SelectItem>
-              </SelectContent>
-            </Select>
+                {/* By Booking Group */}
+                <div>
+                  <label className="text-sm font-semibold mb-2 block">By Booking</label>
+                  <Select value={bookingTypeFilter} onValueChange={setBookingTypeFilter}>
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder="By Booking" />
+                    </SelectTrigger>
+                    <SelectContent className="bg-background z-50">
+                      <SelectItem value="all">All Methods</SelectItem>
+                      <SelectItem value="reception">At Reception</SelectItem>
+                      <SelectItem value="online">Online</SelectItem>
+                      <SelectItem value="both">Both</SelectItem>
+                      <SelectItem value="third_party">Third Party</SelectItem>
+                      <SelectItem value="no_booking">No Booking</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
 
-            {/* Duration Filter */}
-            <Select value={durationFilter} onValueChange={setDurationFilter}>
-              <SelectTrigger className="w-[180px] bg-background">
-                <SelectValue placeholder="Duration" />
-              </SelectTrigger>
-              <SelectContent className="bg-background z-50">
-                <SelectItem value="all">Any Duration</SelectItem>
-                <SelectItem value="quick">Quick (&lt; 1 hour)</SelectItem>
-                <SelectItem value="medium">Medium (1-3 hours)</SelectItem>
-                <SelectItem value="long">Long (&gt; 3 hours)</SelectItem>
-              </SelectContent>
-            </Select>
+                {/* Duration Group */}
+                <div>
+                  <label className="text-sm font-semibold mb-2 block">Duration</label>
+                  <Select value={durationFilter} onValueChange={setDurationFilter}>
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder="Duration" />
+                    </SelectTrigger>
+                    <SelectContent className="bg-background z-50">
+                      <SelectItem value="all">Any Duration</SelectItem>
+                      <SelectItem value="quick">Quick (&lt; 1 hour)</SelectItem>
+                      <SelectItem value="medium">Medium (1-3 hours)</SelectItem>
+                      <SelectItem value="long">Long (&gt; 3 hours)</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+            </aside>
 
-            {/* Clear Filters */}
-            {(locationFilter !== 'all' || seasonFilter !== 'all' || audienceFilter !== 'all' || priceFilter !== 'all' || activityTagFilter !== 'all' || daysFilter !== 'all' || bookingTypeFilter !== 'all' || durationFilter !== 'all') && (
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => {
-                  setLocationFilter('all');
-                  setSeasonFilter('all');
-                  setAudienceFilter('all');
-                  setPriceFilter('all');
-                  setActivityTagFilter('all');
-                  setDaysFilter('all');
-                  setBookingTypeFilter('all');
-                  setDurationFilter('all');
-                }}
-                className="font-body text-xs"
-              >
-                Clear All
-              </Button>
-            )}
+            {/* Mobile Filter Sheet */}
+            <Sheet open={sidebarOpen} onOpenChange={setSidebarOpen}>
+              <SheetTrigger asChild>
+                <Button 
+                  variant="outline" 
+                  className="lg:hidden fixed bottom-20 left-4 z-50 shadow-lg"
+                  size="lg"
+                >
+                  <Filter className="h-5 w-5 mr-2" />
+                  Filters
+                </Button>
+              </SheetTrigger>
+              <SheetContent side="left" className="w-80 overflow-y-auto">
+                <SheetHeader>
+                  <SheetTitle>Filters</SheetTitle>
+                </SheetHeader>
+                <div className="mt-6 space-y-6">
+                  {(locationFilter !== 'all' || seasonFilter !== 'all' || audienceFilter !== 'all' || priceFilter !== 'all' || activityTagFilter !== 'all' || daysFilter !== 'all' || bookingTypeFilter !== 'all' || durationFilter !== 'all') && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        setLocationFilter('all');
+                        setSeasonFilter('all');
+                        setAudienceFilter('all');
+                        setPriceFilter('all');
+                        setActivityTagFilter('all');
+                        setDaysFilter('all');
+                        setBookingTypeFilter('all');
+                        setDurationFilter('all');
+                      }}
+                      className="w-full"
+                    >
+                      Clear All Filters
+                    </Button>
+                  )}
 
-            {/* View Mode Toggle - Push to right */}
-            <div className="ml-auto flex items-center gap-2">
-              <Button
-                variant={viewMode === 'grid' ? 'default' : 'outline'}
-                size="sm"
-                onClick={() => setViewMode('grid')}
-                className="gap-2"
-              >
-                <Grid3x3 className="h-4 w-4" />
-                Grid
-              </Button>
-              <Button
-                variant={viewMode === 'list' ? 'default' : 'outline'}
-                size="sm"
-                onClick={() => setViewMode('list')}
-                className="gap-2"
-              >
-                <List className="h-4 w-4" />
-                List
-              </Button>
-            </div>
-          </div>
-        </div>
-      </section>
+                  {/* Same filter groups as desktop */}
+                  <div>
+                    <label className="text-sm font-semibold mb-2 block">Location</label>
+                    <Select value={locationFilter} onValueChange={(value) => setLocationFilter(value as any)}>
+                      <SelectTrigger className="w-full">
+                        <SelectValue placeholder="Location" />
+                      </SelectTrigger>
+                      <SelectContent className="bg-background z-50">
+                        <SelectItem value="all">All Locations</SelectItem>
+                        <SelectItem value="on_property">On Property</SelectItem>
+                        <SelectItem value="off_property">Off Property</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
 
-      {/* Activities Grid/List */}
-      <section className="py-16">
-        <div className="max-w-6xl mx-auto px-4">
-          {/* Results count */}
-          <div className="mb-6">
-            <p className="text-muted-foreground font-body">
-              Showing <span className="font-semibold text-foreground">{filteredActivities.length}</span> {filteredActivities.length === 1 ? 'activity' : 'activities'}
-            </p>
-          </div>
+                  <div>
+                    <label className="text-sm font-semibold mb-2 block">Season</label>
+                    <Select value={seasonFilter} onValueChange={setSeasonFilter}>
+                      <SelectTrigger className="w-full">
+                        <SelectValue placeholder="Season" />
+                      </SelectTrigger>
+                      <SelectContent className="bg-background z-50">
+                        <SelectItem value="all">All Seasons</SelectItem>
+                        <SelectItem value="monsoon">Monsoon</SelectItem>
+                        <SelectItem value="winter">Winter</SelectItem>
+                        <SelectItem value="spring">Spring</SelectItem>
+                        <SelectItem value="summer">Summer</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
 
-          {filteredActivities.length === 0 ? (
-            <div className="text-center py-16">
-              <p className="text-muted-foreground font-body text-lg mb-4">No activities found matching your filters.</p>
-              <Button
-                variant="outline"
-                onClick={() => {
-                  setLocationFilter('all');
-                  setSeasonFilter('all');
-                  setAudienceFilter('all');
-                  setPriceFilter('all');
-                }}
-                className="font-body"
-              >
-                Clear All Filters
-              </Button>
-            </div>
-          ) : (
-            <>
-              {/* Grid View */}
-              {viewMode === 'grid' && (
-                <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+                  <div>
+                    <label className="text-sm font-semibold mb-2 block">Suitable For</label>
+                    <Select value={audienceFilter} onValueChange={setAudienceFilter}>
+                      <SelectTrigger className="w-full">
+                        <SelectValue placeholder="Suitable For" />
+                      </SelectTrigger>
+                      <SelectContent className="bg-background z-50">
+                        <SelectItem value="all">Everyone</SelectItem>
+                        <SelectItem value="families">Families</SelectItem>
+                        <SelectItem value="couples">Couples</SelectItem>
+                        <SelectItem value="kids">Kids</SelectItem>
+                        <SelectItem value="adults">Adults</SelectItem>
+                        <SelectItem value="teens">Teens</SelectItem>
+                        <SelectItem value="groups">Groups</SelectItem>
+                        <SelectItem value="seniors">Seniors</SelectItem>
+                        <SelectItem value="solo">Solo Travelers</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div>
+                    <label className="text-sm font-semibold mb-2 block">Price Range</label>
+                    <Select value={priceFilter} onValueChange={setPriceFilter}>
+                      <SelectTrigger className="w-full">
+                        <SelectValue placeholder="Price Range" />
+                      </SelectTrigger>
+                      <SelectContent className="bg-background z-50">
+                        <SelectItem value="all">All Prices</SelectItem>
+                        <SelectItem value="free">Free</SelectItem>
+                        <SelectItem value="under_500">Under ₹500</SelectItem>
+                        <SelectItem value="500_1000">₹500 - ₹1000</SelectItem>
+                        <SelectItem value="above_1000">Above ₹1000</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div>
+                    <label className="text-sm font-semibold mb-2 block">Activity Type</label>
+                    <Select value={activityTagFilter} onValueChange={setActivityTagFilter}>
+                      <SelectTrigger className="w-full">
+                        <SelectValue placeholder="Activity Type" />
+                      </SelectTrigger>
+                      <SelectContent className="bg-background z-50">
+                        <SelectItem value="all">All Types</SelectItem>
+                        <SelectItem value="adventure">Adventure</SelectItem>
+                        <SelectItem value="relaxing">Relaxing</SelectItem>
+                        <SelectItem value="cultural">Cultural</SelectItem>
+                        <SelectItem value="sports">Sports</SelectItem>
+                        <SelectItem value="nature">Nature</SelectItem>
+                        <SelectItem value="indoor">Indoor</SelectItem>
+                        <SelectItem value="outdoor">Outdoor</SelectItem>
+                        <SelectItem value="educational">Educational</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div>
+                    <label className="text-sm font-semibold mb-2 block">Available Days</label>
+                    <Select value={daysFilter} onValueChange={setDaysFilter}>
+                      <SelectTrigger className="w-full">
+                        <SelectValue placeholder="Available Days" />
+                      </SelectTrigger>
+                      <SelectContent className="bg-background z-50">
+                        <SelectItem value="all">All Days</SelectItem>
+                        <SelectItem value="weekdays">Weekdays</SelectItem>
+                        <SelectItem value="weekends">Weekends</SelectItem>
+                        <SelectItem value="monday">Monday</SelectItem>
+                        <SelectItem value="tuesday">Tuesday</SelectItem>
+                        <SelectItem value="wednesday">Wednesday</SelectItem>
+                        <SelectItem value="thursday">Thursday</SelectItem>
+                        <SelectItem value="friday">Friday</SelectItem>
+                        <SelectItem value="saturday">Saturday</SelectItem>
+                        <SelectItem value="sunday">Sunday</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div>
+                    <label className="text-sm font-semibold mb-2 block">By Booking</label>
+                    <Select value={bookingTypeFilter} onValueChange={setBookingTypeFilter}>
+                      <SelectTrigger className="w-full">
+                        <SelectValue placeholder="By Booking" />
+                      </SelectTrigger>
+                      <SelectContent className="bg-background z-50">
+                        <SelectItem value="all">All Methods</SelectItem>
+                        <SelectItem value="reception">At Reception</SelectItem>
+                        <SelectItem value="online">Online</SelectItem>
+                        <SelectItem value="both">Both</SelectItem>
+                        <SelectItem value="third_party">Third Party</SelectItem>
+                        <SelectItem value="no_booking">No Booking</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div>
+                    <label className="text-sm font-semibold mb-2 block">Duration</label>
+                    <Select value={durationFilter} onValueChange={setDurationFilter}>
+                      <SelectTrigger className="w-full">
+                        <SelectValue placeholder="Duration" />
+                      </SelectTrigger>
+                      <SelectContent className="bg-background z-50">
+                        <SelectItem value="all">Any Duration</SelectItem>
+                        <SelectItem value="quick">Quick (&lt; 1 hour)</SelectItem>
+                        <SelectItem value="medium">Medium (1-3 hours)</SelectItem>
+                        <SelectItem value="long">Long (&gt; 3 hours)</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+              </SheetContent>
+            </Sheet>
+
+            {/* Main Content Area */}
+            <div className="flex-1 min-w-0">
+              {/* Header with Results count and View Toggle */}
+              <div className="flex items-center justify-between mb-6">
+                <p className="text-muted-foreground font-body">
+                  Showing <span className="font-semibold text-foreground">{filteredActivities.length}</span> {filteredActivities.length === 1 ? 'activity' : 'activities'}
+                </p>
+                
+                {/* View Mode Toggle */}
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant={viewMode === 'grid' ? 'default' : 'outline'}
+                    size="sm"
+                    onClick={() => setViewMode('grid')}
+                    className="gap-2"
+                  >
+                    <Grid3x3 className="h-4 w-4" />
+                    <span className="hidden sm:inline">Grid</span>
+                  </Button>
+                  <Button
+                    variant={viewMode === 'list' ? 'default' : 'outline'}
+                    size="sm"
+                    onClick={() => setViewMode('list')}
+                    className="gap-2"
+                  >
+                    <List className="h-4 w-4" />
+                    <span className="hidden sm:inline">List</span>
+                  </Button>
+                </div>
+              </div>
+
+              {filteredActivities.length === 0 ? (
+                <div className="text-center py-16">
+                  <p className="text-muted-foreground font-body text-lg mb-4">No activities found matching your filters.</p>
+                  <Button
+                    variant="outline"
+                    onClick={() => {
+                      setLocationFilter('all');
+                      setSeasonFilter('all');
+                      setAudienceFilter('all');
+                      setPriceFilter('all');
+                      setActivityTagFilter('all');
+                      setDaysFilter('all');
+                      setBookingTypeFilter('all');
+                      setDurationFilter('all');
+                    }}
+                    className="font-body"
+                  >
+                    Clear All Filters
+                  </Button>
+                </div>
+              ) : (
+                <>
+                  {/* Grid View */}
+                  {viewMode === 'grid' && (
+                    <div className="grid sm:grid-cols-2 xl:grid-cols-3 gap-6">
                   {filteredActivities.map((activity) => (
                     <div key={activity.id} className="bg-card border rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-all duration-300">
                       <div className="relative">
@@ -612,13 +819,13 @@ const Activities = () => {
                         </div>
                       </div>
                     </div>
-                  ))}
-                </div>
-              )}
+                    ))}
+                  </div>
+                )}
 
-              {/* List View */}
-              {viewMode === 'list' && (
-                <div className="space-y-4">
+                {/* List View */}
+                {viewMode === 'list' && (
+                  <div className="space-y-4">
                   {filteredActivities.map((activity) => (
                     <div key={activity.id} className="bg-card border rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-all duration-300">
                       <div className="flex flex-col md:flex-row">
@@ -689,11 +896,13 @@ const Activities = () => {
                         </div>
                       </div>
                     </div>
-                  ))}
-                </div>
+                    ))}
+                  </div>
+                )}
+              </>
               )}
-            </>
-          )}
+            </div>
+          </div>
         </div>
       </section>
 
