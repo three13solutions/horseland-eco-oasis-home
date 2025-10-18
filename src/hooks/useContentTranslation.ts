@@ -53,8 +53,8 @@ export const useContentTranslation = (section?: string) => {
       return translations[key];
     }
     
-    // Fallback to i18next translations (JSON files)
-    const i18nextValue = t(key, { defaultValue: null });
+    // Fallback to i18next translations (JSON files) with explicit namespace
+    const i18nextValue = t(key, { ns: 'common', defaultValue: null });
     if (i18nextValue && i18nextValue !== key) {
       return i18nextValue;
     }
