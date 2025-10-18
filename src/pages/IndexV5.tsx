@@ -7,7 +7,7 @@ import StayPreviewV5 from '../components/v5/StayPreviewV5';
 import ExperiencesTeaserV5 from '../components/v5/ExperiencesTeaserV5';
 import PackagesPreviewV5 from '../components/v5/PackagesPreviewV5';
 import GuestReviewsV5 from '../components/v5/GuestReviewsV5';
-import TrustedByV5 from '../components/v5/TrustedByV5';
+
 import GalleryV5 from '../components/v5/GalleryV5';
 import JournalPreviewV5 from '../components/v5/JournalPreviewV5';
 import DynamicFooter from '../components/DynamicFooter';
@@ -46,7 +46,7 @@ const IndexV5 = () => {
         <ExperiencesTeaserV5 />
         <PackagesPreviewV5 />
         <GuestReviewsV5 />
-        <TrustedByV5 />
+        
         <GalleryV5 />
         <JournalPreviewV5 />
         <DynamicFooter />
