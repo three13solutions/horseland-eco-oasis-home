@@ -625,6 +625,15 @@ const Booking = () => {
     });
   };
 
+  // Helper function to get meal price from database
+  const getMealPrice = (mealType: string, variant: 'vegetarian' | 'non-vegetarian' | 'jain'): number => {
+    const meal = meals.find(m => {
+      const mealData = m as any;
+      return mealData.meal_type === mealType && mealData.variant === variant;
+    });
+    return meal?.price || 0;
+  };
+
   // Helper function to get meal type from arrangement key
   const getMealTypeFromArrangement = (arrangement: string): string | null => {
     if (arrangement.includes('Breakfast')) return 'breakfast';
@@ -1199,33 +1208,78 @@ const Booking = () => {
                                 mealType: 'breakfast', 
                                 label: 'Breakfast',
                                 services: [
-                                  { key: 'breakfast', label: 'Buffet', quantityKey: 'mealTypeQuantities' },
-                                  ...(isPoolDeckRoom ? [{ key: 'sitoutBreakfast', label: 'Sitout at Room', quantityKey: 'specialArrangements', price: 200 }] : [])
+                                  { 
+                                    key: 'breakfast', 
+                                    label: 'Buffet', 
+                                    quantityKey: 'mealTypeQuantities',
+                                    getPrice: () => getMealPrice('breakfast', guest.dietaryPreference)
+                                  },
+                                  ...(isPoolDeckRoom ? [{ 
+                                    key: 'sitoutBreakfast', 
+                                    label: 'Sitout at Room', 
+                                    quantityKey: 'specialArrangements', 
+                                    price: 200 
+                                  }] : [])
                                 ]
                               },
                               { 
                                 mealType: 'lunch', 
                                 label: 'Lunch',
                                 services: [
-                                  { key: 'lunch', label: 'Buffet', quantityKey: 'mealTypeQuantities' },
-                                  ...(isPoolDeckRoom ? [{ key: 'sitoutLunch', label: 'Sitout at Room', quantityKey: 'specialArrangements', price: 300 }] : [])
+                                  { 
+                                    key: 'lunch', 
+                                    label: 'Buffet', 
+                                    quantityKey: 'mealTypeQuantities',
+                                    getPrice: () => getMealPrice('lunch', guest.dietaryPreference)
+                                  },
+                                  ...(isPoolDeckRoom ? [{ 
+                                    key: 'sitoutLunch', 
+                                    label: 'Sitout at Room', 
+                                    quantityKey: 'specialArrangements', 
+                                    price: 300 
+                                  }] : [])
                                 ]
                               },
                               { 
                                 mealType: 'high_tea', 
                                 label: 'High Tea',
                                 services: [
-                                  { key: 'high_tea', label: 'Buffet', quantityKey: 'mealTypeQuantities' },
-                                  ...(isPoolDeckRoom ? [{ key: 'sitoutHighTea', label: 'Sitout at Room', quantityKey: 'specialArrangements', price: 150 }] : [])
+                                  { 
+                                    key: 'high_tea', 
+                                    label: 'Buffet', 
+                                    quantityKey: 'mealTypeQuantities',
+                                    getPrice: () => getMealPrice('high_tea', guest.dietaryPreference)
+                                  },
+                                  ...(isPoolDeckRoom ? [{ 
+                                    key: 'sitoutHighTea', 
+                                    label: 'Sitout at Room', 
+                                    quantityKey: 'specialArrangements', 
+                                    price: 150 
+                                  }] : [])
                                 ]
                               },
                               { 
                                 mealType: 'dinner', 
                                 label: 'Dinner',
                                 services: [
-                                  { key: 'dinner', label: 'Buffet', quantityKey: 'mealTypeQuantities' },
-                                  ...(isPoolDeckRoom ? [{ key: 'sitoutDinner', label: 'Sitout at Room', quantityKey: 'specialArrangements', price: 400 }] : []),
-                                  { key: 'candleLightDinner', label: 'Candle Night', quantityKey: 'specialArrangements', price: 1500 }
+                                  { 
+                                    key: 'dinner', 
+                                    label: 'Buffet', 
+                                    quantityKey: 'mealTypeQuantities',
+                                    getPrice: () => getMealPrice('dinner', guest.dietaryPreference)
+                                  },
+                                  ...(isPoolDeckRoom ? [{ 
+                                    key: 'sitoutDinner', 
+                                    label: 'Sitout at Room', 
+                                    quantityKey: 'specialArrangements', 
+                                    price: 400 
+                                  }] : []),
+                                  { 
+                                    key: 'candleLightDinner', 
+                                    label: 'Candle Night', 
+                                    quantityKey: 'specialArrangements', 
+                                    price: 1500 
+                                  }
                                 ]
                               }
                             ];
@@ -1263,16 +1317,20 @@ const Booking = () => {
                                           {meal.label}
                                         </div>
                                         <div className="space-y-3">
-                                          {meal.services.map((service) => {
+                                          {meal.services.map((service: any) => {
                                             const quantity = service.quantityKey === 'mealTypeQuantities'
                                               ? guest.mealTypeQuantities[service.key] || 0
                                               : guest.specialArrangements[service.key as keyof typeof guest.specialArrangements] || 0;
+                                            
+                                            const displayPrice = service.getPrice ? service.getPrice() : service.price;
                                             
                                             return (
                                               <div key={service.key} className="space-y-2">
                                                 <div className="text-xs text-center">
                                                   {service.label}
-                                                  {service.price && <div className="text-muted-foreground">(₹{service.price})</div>}
+                                                  <div className="text-muted-foreground font-semibold">
+                                                    ₹{displayPrice}
+                                                  </div>
                                                 </div>
                                                 <div className="flex items-center justify-center gap-1">
                                                   <Button
@@ -1607,10 +1665,18 @@ const Booking = () => {
                               <Separator />
                               <div className="font-medium text-sm">Meals:</div>
                               {guestMeals.map((guest, idx) => {
-                                if (Object.keys(guest.mealTypeQuantities).length === 0) return null;
+                                const hasRegularMeals = Object.keys(guest.mealTypeQuantities).length > 0;
+                                const hasSpecialArrangements = Object.values(guest.specialArrangements).some(qty => qty > 0);
+                                
+                                if (!hasRegularMeals && !hasSpecialArrangements) return null;
+                                
                                 return (
                                   <div key={idx} className="space-y-1 pl-2">
-                                    <div className="text-xs font-medium text-muted-foreground">Guest {guest.guestNumber} ({guest.dietaryPreference})</div>
+                                    <div className="text-xs font-medium text-muted-foreground">
+                                      Guest {guest.guestNumber} ({guest.dietaryPreference})
+                                    </div>
+                                    
+                                    {/* Regular meals (buffet) */}
                                     {Object.entries(guest.mealTypeQuantities).map(([mealType, quantity]) => {
                                       const meal = meals.find(m => {
                                         const mealData = m as any;
@@ -1622,8 +1688,31 @@ const Booking = () => {
                                                           mealType === 'high_tea' ? 'High Tea' : 'Dinner';
                                       return (
                                         <div key={mealType} className="flex justify-between gap-2 text-sm">
-                                          <span className="text-muted-foreground break-words">• {mealTypeLabel} × {quantity}</span>
+                                          <span className="text-muted-foreground break-words">• {mealTypeLabel} Buffet × {quantity}</span>
                                           <span className="font-medium whitespace-nowrap">₹{(meal.price * quantity).toLocaleString()}</span>
+                                        </div>
+                                      );
+                                    })}
+                                    
+                                    {/* Special arrangements */}
+                                    {Object.entries(guest.specialArrangements).map(([arrangement, quantity]) => {
+                                      if (!quantity || quantity === 0) return null;
+                                      
+                                      const specialPrices = {
+                                        sitoutBreakfast: { label: 'Breakfast Sitout', price: 200 },
+                                        sitoutLunch: { label: 'Lunch Sitout', price: 300 },
+                                        sitoutHighTea: { label: 'High Tea Sitout', price: 150 },
+                                        sitoutDinner: { label: 'Dinner Sitout', price: 400 },
+                                        candleLightDinner: { label: 'Candle Night Dinner', price: 1500 }
+                                      };
+                                      
+                                      const arrangementData = specialPrices[arrangement as keyof typeof specialPrices];
+                                      if (!arrangementData) return null;
+                                      
+                                      return (
+                                        <div key={arrangement} className="flex justify-between gap-2 text-sm">
+                                          <span className="text-muted-foreground break-words">• {arrangementData.label} × {quantity}</span>
+                                          <span className="font-medium whitespace-nowrap">₹{(arrangementData.price * quantity).toLocaleString()}</span>
                                         </div>
                                       );
                                     })}
