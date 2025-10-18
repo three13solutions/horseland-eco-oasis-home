@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
-import { Calendar, Users, Clock, MapPin, Wifi, Coffee, Car, Utensils, Plus, Minus, Bed, CarFront, Sparkles } from 'lucide-react';
+import { Calendar, Users, Clock, MapPin, Wifi, Coffee, Car, Utensils, Plus, Minus, Bed, CarFront, Sparkles, Package } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -92,14 +92,17 @@ const Booking = () => {
   const checkOut = searchParams.get('checkOut') || '';
   const guests = parseInt(searchParams.get('guests') || '2');
   const roomTypeId = searchParams.get('roomTypeId');
+  const packageId = searchParams.get('packageId');
   const tabParam = searchParams.get('tab');
   
   // State
   const [availableRooms, setAvailableRooms] = useState<AvailableRoom[]>([]);
   const [loading, setLoading] = useState(true);
-  const [searchCheckIn, setSearchCheckIn] = useState(checkIn);
-  const [searchCheckOut, setSearchCheckOut] = useState(checkOut);
+  const [searchCheckIn, setSearchCheckIn] = useState('');
+  const [searchCheckOut, setSearchCheckOut] = useState('');
   const [searchGuests, setSearchGuests] = useState(guests.toString());
+  const [selectedPackage, setSelectedPackage] = useState<any>(null);
+  const [packageLoading, setPackageLoading] = useState(false);
   const [heroImage, setHeroImage] = useState<string>('');
   
   // Addon states
@@ -133,6 +136,49 @@ const Booking = () => {
   // Additional services common to all guests
   const [serviceInRoomQuantity, setServiceInRoomQuantity] = useState(0);
   const [candleLightDinnerQuantity, setCandleLightDinnerQuantity] = useState(0);
+
+  // Load package if packageId is present
+  useEffect(() => {
+    if (packageId) {
+      loadPackageDetails(packageId);
+    }
+  }, [packageId]);
+
+  const loadPackageDetails = async (pkgId: string) => {
+    setPackageLoading(true);
+    try {
+      const { data, error } = await supabase
+        .from('packages')
+        .select('*')
+        .eq('id', pkgId)
+        .eq('is_active', true)
+        .single();
+
+      if (error) throw error;
+      
+      setSelectedPackage(data);
+      
+      // Clear dates and rooms to start fresh
+      setSearchCheckIn('');
+      setSearchCheckOut('');
+      setSelectedRoomType(null);
+      setShowBookingForm(false);
+      
+      toast({
+        title: "Package Selected",
+        description: `${data.title} - Please select your check-in and check-out dates to continue.`,
+      });
+    } catch (error) {
+      console.error('Error loading package:', error);
+      toast({
+        title: "Error",
+        description: "Failed to load package details",
+        variant: "destructive",
+      });
+    } finally {
+      setPackageLoading(false);
+    }
+  };
 
   // Initialize guest meals when guests count changes
   useEffect(() => {
@@ -2000,6 +2046,45 @@ const Booking = () => {
   return (
     <div className="min-h-screen bg-background">
       <NavigationV5 />
+      
+      {/* Package Banner */}
+      {selectedPackage && (
+        <div className="bg-primary/10 border-b border-primary/20">
+          <div className="max-w-6xl mx-auto px-4 py-6">
+            <div className="flex items-center justify-between flex-wrap gap-4">
+              <div className="flex-1">
+                <div className="flex items-center gap-2 mb-2">
+                  <Package className="h-5 w-5 text-primary" />
+                  <Badge className="bg-primary text-primary-foreground">Package Booking</Badge>
+                </div>
+                <h2 className="text-2xl font-bold mb-1">{selectedPackage.title}</h2>
+                <p className="text-muted-foreground">{selectedPackage.subtitle || selectedPackage.description}</p>
+                <div className="flex items-center gap-4 mt-3 text-sm">
+                  <span className="flex items-center gap-1">
+                    <Clock className="h-4 w-4" />
+                    {selectedPackage.duration_days} Days
+                  </span>
+                  <span className="flex items-center gap-1">
+                    <Users className="h-4 w-4" />
+                    Max {selectedPackage.max_guests} Guests
+                  </span>
+                </div>
+              </div>
+              <div className="text-right">
+                <div className="text-sm text-muted-foreground mb-1">Starting from</div>
+                <div className="text-3xl font-bold text-primary">
+                  ₹{selectedPackage.weekday_price?.toLocaleString()}
+                </div>
+                {selectedPackage.weekend_price && selectedPackage.weekend_price !== selectedPackage.weekday_price && (
+                  <div className="text-sm text-muted-foreground">
+                    Weekend: ₹{selectedPackage.weekend_price?.toLocaleString()}
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
       
       {/* Banner */}
       <section className="relative h-[60vh] min-h-[500px] w-full overflow-hidden">
