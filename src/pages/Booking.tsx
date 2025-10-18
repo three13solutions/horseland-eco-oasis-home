@@ -63,13 +63,8 @@ interface GuestMeal {
   guestNumber: number;
   dietaryPreference: 'vegetarian' | 'non-vegetarian' | 'jain';
   mealTypeQuantities: { [key: string]: number }; // meal type to quantity mapping
-  specialArrangements: {
-    sitoutBreakfast?: number;
-    sitoutLunch?: number;
-    sitoutHighTea?: number;
-    sitoutDinner?: number;
-    candleLightDinner?: number;
-  };
+  serviceInRoomQuantity: number; // Number of meals to be served in room
+  candleLightDinnerQuantity: number; // Candle light dinner count
 }
 
 interface PickupService {
@@ -138,7 +133,8 @@ const Booking = () => {
         guestNumber: i + 1,
         dietaryPreference: 'vegetarian',
         mealTypeQuantities: {},
-        specialArrangements: {}
+        serviceInRoomQuantity: 0,
+        candleLightDinnerQuantity: 0
       }));
       setGuestMeals(newGuestMeals);
     }
@@ -646,25 +642,7 @@ const Booking = () => {
   // Helper function to calculate total meals for a specific meal type
   const getTotalMealsForType = (guest: GuestMeal, mealType: string): number => {
     let total = guest.mealTypeQuantities[mealType] || 0;
-    
-    // Add special arrangements for this meal type
-    const arrangementMap: { [key: string]: string } = {
-      'breakfast': 'sitoutBreakfast',
-      'lunch': 'sitoutLunch',
-      'high_tea': 'sitoutHighTea',
-      'dinner': 'sitoutDinner'
-    };
-    
-    const arrangementKey = arrangementMap[mealType];
-    if (arrangementKey) {
-      total += guest.specialArrangements[arrangementKey as keyof typeof guest.specialArrangements] || 0;
-    }
-    
-    // For dinner, also add candle light dinner
-    if (mealType === 'dinner') {
-      total += guest.specialArrangements.candleLightDinner || 0;
-    }
-    
+    // Service in room and candle light dinner are separate services, not counted per meal type
     return total;
   };
 
@@ -701,40 +679,42 @@ const Booking = () => {
     });
   };
 
-  const handleSpecialArrangementChange = (guestIndex: number, arrangement: string, change: number) => {
+  const handleServiceInRoomChange = (guestIndex: number, change: number) => {
+    setGuestMeals(prev => {
+      const updated = [...prev];
+      const guest = updated[guestIndex];
+      const newQty = Math.max(0, guest.serviceInRoomQuantity + change);
+      
+      updated[guestIndex] = {
+        ...guest,
+        serviceInRoomQuantity: newQty
+      };
+      
+      return updated;
+    });
+  };
+
+  const handleCandleLightDinnerChange = (guestIndex: number, change: number) => {
     const nights = calculateNights();
     
     setGuestMeals(prev => {
       const updated = [...prev];
       const guest = updated[guestIndex];
-      const currentQty = guest.specialArrangements[arrangement as keyof typeof guest.specialArrangements] || 0;
-      const newQty = currentQty + change;
+      const newQty = guest.candleLightDinnerQuantity + change;
       
-      // Get the meal type for this arrangement
-      const mealType = getMealTypeFromArrangement(arrangement);
-      
-      if (mealType) {
-        // Calculate total for this meal type (buffet + special arrangements)
-        const currentTotal = getTotalMealsForType(guest, mealType);
-        const newTotal = currentTotal + change;
-        
-        // Check if total for this meal type would exceed max nights
-        if (newTotal > nights) {
-          toast({
-            title: "Meal Type Limit Reached",
-            description: `Total meals for this type cannot exceed ${nights} days. You've already selected ${currentTotal} meal(s) for this type.`,
-            variant: "destructive"
-          });
-          return prev;
-        }
+      // Check if total would exceed max nights
+      if (newQty > nights) {
+        toast({
+          title: "Limit Reached",
+          description: `Candle light dinner cannot exceed ${nights} nights`,
+          variant: "destructive"
+        });
+        return prev;
       }
       
       updated[guestIndex] = {
         ...guest,
-        specialArrangements: {
-          ...guest.specialArrangements,
-          [arrangement]: Math.max(0, newQty)
-        }
+        candleLightDinnerQuantity: Math.max(0, newQty)
       };
       
       return updated;
@@ -802,20 +782,13 @@ const Booking = () => {
         }
       });
       
-      // Calculate special arrangements (with pricing)
-      const specialPrices = {
-        sitoutBreakfast: 200,
-        sitoutLunch: 300,
-        sitoutHighTea: 150,
-        sitoutDinner: 400,
-        candleLightDinner: 1500
-      };
-      
-      Object.entries(guest.specialArrangements).forEach(([arrangement, quantity]) => {
-        if (quantity && quantity > 0) {
-          total += (specialPrices[arrangement as keyof typeof specialPrices] || 0) * quantity;
-        }
-      });
+      // Calculate service in room and candle light dinner
+      if (guest.serviceInRoomQuantity > 0) {
+        total += 300 * guest.serviceInRoomQuantity; // Service in room price
+      }
+      if (guest.candleLightDinnerQuantity > 0) {
+        total += 1500 * guest.candleLightDinnerQuantity; // Candle light dinner price
+      }
     });
     
     return total;
@@ -1249,13 +1222,7 @@ const Booking = () => {
                                     label: 'Buffet', 
                                     quantityKey: 'mealTypeQuantities',
                                     getPrice: () => getMealPrice('breakfast', guest.dietaryPreference)
-                                  },
-                                  ...(isPoolDeckRoom ? [{ 
-                                    key: 'sitoutBreakfast', 
-                                    label: 'Service in Room', 
-                                    quantityKey: 'specialArrangements', 
-                                    price: 200 
-                                  }] : [])
+                                  }
                                 ]
                               },
                               { 
@@ -1267,13 +1234,7 @@ const Booking = () => {
                                     label: 'Buffet', 
                                     quantityKey: 'mealTypeQuantities',
                                     getPrice: () => getMealPrice('lunch', guest.dietaryPreference)
-                                  },
-                                  ...(isPoolDeckRoom ? [{ 
-                                    key: 'sitoutLunch', 
-                                    label: 'Service in Room', 
-                                    quantityKey: 'specialArrangements', 
-                                    price: 300 
-                                  }] : [])
+                                  }
                                 ]
                               },
                               { 
@@ -1285,13 +1246,7 @@ const Booking = () => {
                                     label: 'Buffet', 
                                     quantityKey: 'mealTypeQuantities',
                                     getPrice: () => getMealPrice('high_tea', guest.dietaryPreference)
-                                  },
-                                  ...(isPoolDeckRoom ? [{ 
-                                    key: 'sitoutHighTea', 
-                                    label: 'Service in Room', 
-                                    quantityKey: 'specialArrangements', 
-                                    price: 150 
-                                  }] : [])
+                                  }
                                 ]
                               },
                               { 
@@ -1303,18 +1258,6 @@ const Booking = () => {
                                     label: 'Buffet', 
                                     quantityKey: 'mealTypeQuantities',
                                     getPrice: () => getMealPrice('dinner', guest.dietaryPreference)
-                                  },
-                                  ...(isPoolDeckRoom ? [{ 
-                                    key: 'sitoutDinner', 
-                                    label: 'Service in Room', 
-                                    quantityKey: 'specialArrangements', 
-                                    price: 400 
-                                  }] : []),
-                                  { 
-                                    key: 'candleLightDinner', 
-                                    label: 'Candle Night', 
-                                    quantityKey: 'specialArrangements', 
-                                    price: 1500 
                                   }
                                 ]
                               }
@@ -1390,10 +1333,7 @@ const Booking = () => {
                                         </div>
                                         <div className="space-y-3">
                                           {meal.services.map((service: any) => {
-                                            const quantity = service.quantityKey === 'mealTypeQuantities'
-                                              ? guest.mealTypeQuantities[service.key] || 0
-                                              : guest.specialArrangements[service.key as keyof typeof guest.specialArrangements] || 0;
-                                            
+                                            const quantity = guest.mealTypeQuantities[service.key] || 0;
                                             const displayPrice = service.getPrice ? service.getPrice() : service.price;
                                             
                                             return (
@@ -1410,13 +1350,7 @@ const Booking = () => {
                                                     variant="outline"
                                                     size="icon"
                                                     className="h-7 w-7"
-                                                    onClick={() => {
-                                                      if (service.quantityKey === 'mealTypeQuantities') {
-                                                        handleMealQuantityChange(index, service.key, -1);
-                                                      } else {
-                                                        handleSpecialArrangementChange(index, service.key, -1);
-                                                      }
-                                                    }}
+                                                    onClick={() => handleMealQuantityChange(index, service.key, -1)}
                                                     disabled={quantity === 0}
                                                   >
                                                     <Minus className="h-3 w-3" />
@@ -1427,13 +1361,7 @@ const Booking = () => {
                                                     variant="outline"
                                                     size="icon"
                                                     className="h-7 w-7"
-                                                    onClick={() => {
-                                                      if (service.quantityKey === 'mealTypeQuantities') {
-                                                        handleMealQuantityChange(index, service.key, 1);
-                                                      } else {
-                                                        handleSpecialArrangementChange(index, service.key, 1);
-                                                      }
-                                                    }}
+                                                    onClick={() => handleMealQuantityChange(index, service.key, 1)}
                                                     disabled={quantity >= maxDays}
                                                   >
                                                     <Plus className="h-3 w-3" />
@@ -1446,6 +1374,81 @@ const Booking = () => {
                                       </div>
                                     ))}
                                   </div>
+                                  
+                                  {/* Additional Services Section */}
+                                  {isPoolDeckRoom && (
+                                    <div className="mt-6 pt-6 border-t space-y-4">
+                                      <div className="font-medium text-sm">Additional Services</div>
+                                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        {/* Service in Room */}
+                                        <div className="border rounded-lg p-4 space-y-3">
+                                          <div className="text-center">
+                                            <div className="font-medium text-sm">Service in Room</div>
+                                            <div className="text-xs text-muted-foreground">₹300 per meal</div>
+                                            <div className="text-xs text-muted-foreground mt-1">
+                                              How many meals do you want served in your room?
+                                            </div>
+                                          </div>
+                                          <div className="flex items-center justify-center gap-2">
+                                            <Button
+                                              type="button"
+                                              variant="outline"
+                                              size="icon"
+                                              className="h-8 w-8"
+                                              onClick={() => handleServiceInRoomChange(index, -1)}
+                                              disabled={guest.serviceInRoomQuantity === 0}
+                                            >
+                                              <Minus className="h-4 w-4" />
+                                            </Button>
+                                            <span className="w-10 text-center font-semibold">{guest.serviceInRoomQuantity}</span>
+                                            <Button
+                                              type="button"
+                                              variant="outline"
+                                              size="icon"
+                                              className="h-8 w-8"
+                                              onClick={() => handleServiceInRoomChange(index, 1)}
+                                            >
+                                              <Plus className="h-4 w-4" />
+                                            </Button>
+                                          </div>
+                                        </div>
+                                        
+                                        {/* Candle Light Dinner */}
+                                        <div className="border rounded-lg p-4 space-y-3">
+                                          <div className="text-center">
+                                            <div className="font-medium text-sm">Candle Light Dinner</div>
+                                            <div className="text-xs text-muted-foreground">₹1,500 per night</div>
+                                            <div className="text-xs text-muted-foreground mt-1">
+                                              Limited to {maxDays} {maxDays === 1 ? 'night' : 'nights'}
+                                            </div>
+                                          </div>
+                                          <div className="flex items-center justify-center gap-2">
+                                            <Button
+                                              type="button"
+                                              variant="outline"
+                                              size="icon"
+                                              className="h-8 w-8"
+                                              onClick={() => handleCandleLightDinnerChange(index, -1)}
+                                              disabled={guest.candleLightDinnerQuantity === 0}
+                                            >
+                                              <Minus className="h-4 w-4" />
+                                            </Button>
+                                            <span className="w-10 text-center font-semibold">{guest.candleLightDinnerQuantity}</span>
+                                            <Button
+                                              type="button"
+                                              variant="outline"
+                                              size="icon"
+                                              className="h-8 w-8"
+                                              onClick={() => handleCandleLightDinnerChange(index, 1)}
+                                              disabled={guest.candleLightDinnerQuantity >= maxDays}
+                                            >
+                                              <Plus className="h-4 w-4" />
+                                            </Button>
+                                          </div>
+                                        </div>
+                                      </div>
+                                    </div>
+                                  )}
                                 </CardContent>
                               </Card>
                             );
@@ -1738,9 +1741,9 @@ const Booking = () => {
                               <div className="font-medium text-sm">Meals:</div>
                               {guestMeals.map((guest, idx) => {
                                 const hasRegularMeals = Object.keys(guest.mealTypeQuantities).length > 0;
-                                const hasSpecialArrangements = Object.values(guest.specialArrangements).some(qty => qty > 0);
+                                const hasServices = guest.serviceInRoomQuantity > 0 || guest.candleLightDinnerQuantity > 0;
                                 
-                                if (!hasRegularMeals && !hasSpecialArrangements) return null;
+                                if (!hasRegularMeals && !hasServices) return null;
                                 
                                 return (
                                   <div key={idx} className="space-y-1 pl-2">
@@ -1766,28 +1769,21 @@ const Booking = () => {
                                       );
                                     })}
                                     
-                                    {/* Special arrangements */}
-                                    {Object.entries(guest.specialArrangements).map(([arrangement, quantity]) => {
-                                      if (!quantity || quantity === 0) return null;
-                                      
-                                      const specialPrices = {
-                                        sitoutBreakfast: { label: 'Breakfast Service in Room', price: 200 },
-                                        sitoutLunch: { label: 'Lunch Service in Room', price: 300 },
-                                        sitoutHighTea: { label: 'High Tea Service in Room', price: 150 },
-                                        sitoutDinner: { label: 'Dinner Service in Room', price: 400 },
-                                        candleLightDinner: { label: 'Candle Night Dinner', price: 1500 }
-                                      };
-                                      
-                                      const arrangementData = specialPrices[arrangement as keyof typeof specialPrices];
-                                      if (!arrangementData) return null;
-                                      
-                                      return (
-                                        <div key={arrangement} className="flex justify-between gap-2 text-sm">
-                                          <span className="text-muted-foreground break-words">• {arrangementData.label} × {quantity}</span>
-                                          <span className="font-medium whitespace-nowrap">₹{(arrangementData.price * quantity).toLocaleString()}</span>
-                                        </div>
-                                      );
-                                    })}
+                                    {/* Service in Room */}
+                                    {guest.serviceInRoomQuantity > 0 && (
+                                      <div className="flex justify-between gap-2 text-sm">
+                                        <span className="text-muted-foreground break-words">• Service in Room × {guest.serviceInRoomQuantity}</span>
+                                        <span className="font-medium whitespace-nowrap">₹{(300 * guest.serviceInRoomQuantity).toLocaleString()}</span>
+                                      </div>
+                                    )}
+                                    
+                                    {/* Candle Light Dinner */}
+                                    {guest.candleLightDinnerQuantity > 0 && (
+                                      <div className="flex justify-between gap-2 text-sm">
+                                        <span className="text-muted-foreground break-words">• Candle Light Dinner × {guest.candleLightDinnerQuantity}</span>
+                                        <span className="font-medium whitespace-nowrap">₹{(1500 * guest.candleLightDinnerQuantity).toLocaleString()}</span>
+                                      </div>
+                                    )}
                                   </div>
                                 );
                               })}
