@@ -39,48 +39,28 @@ const Dining = () => {
     };
 
     const fetchSpecialDiningImages = async () => {
-      // Fetch dining gallery category
-      const { data: category } = await supabase
-        .from('gallery_categories')
-        .select('id')
-        .eq('slug', 'dining')
-        .eq('is_active', true)
+      // Fetch in-room dining image by tag
+      const { data: inRoomData } = await supabase
+        .from('gallery_images')
+        .select('image_url')
+        .contains('tags', ['in-room-dining'])
+        .limit(1)
         .maybeSingle();
+      
+      if (inRoomData?.image_url) {
+        setInRoomDiningImage(inRoomData.image_url);
+      }
 
-      if (category) {
-        // Fetch in-room dining image
-        const { data: inRoomData } = await supabase
-          .from('image_categories')
-          .select('gallery_images(image_url)')
-          .eq('category_id', category.id)
-          .limit(1);
-        
-        if (inRoomData?.[0]?.gallery_images) {
-          const images = inRoomData as any[];
-          const inRoomImage = images.find((img: any) => 
-            img.gallery_images?.tags?.includes('in-room-dining')
-          );
-          if (inRoomImage?.gallery_images?.image_url) {
-            setInRoomDiningImage(inRoomImage.gallery_images.image_url);
-          }
-        }
-
-        // Fetch candle light dinner image
-        const { data: candleData } = await supabase
-          .from('image_categories')
-          .select('gallery_images(image_url)')
-          .eq('category_id', category.id)
-          .limit(1);
-        
-        if (candleData?.[0]?.gallery_images) {
-          const images = candleData as any[];
-          const candleImage = images.find((img: any) => 
-            img.gallery_images?.tags?.includes('candle-light-dinner')
-          );
-          if (candleImage?.gallery_images?.image_url) {
-            setCandleLightDinnerImage(candleImage.gallery_images.image_url);
-          }
-        }
+      // Fetch candle light dinner image by tag
+      const { data: candleData } = await supabase
+        .from('gallery_images')
+        .select('image_url')
+        .contains('tags', ['candle-light-dinner'])
+        .limit(1)
+        .maybeSingle();
+      
+      if (candleData?.image_url) {
+        setCandleLightDinnerImage(candleData.image_url);
       }
     };
     
