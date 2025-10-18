@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import NavigationV5 from '../components/v5/NavigationV5';
 import DynamicFooter from '../components/DynamicFooter';
 import CombinedFloatingV5 from '../components/v5/CombinedFloatingV5';
+import MediaAsset from '../components/MediaAsset';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { supabase } from '@/integrations/supabase/client';
@@ -11,7 +12,8 @@ import {
   ChevronLeft, 
   ChevronRight,
   Bed,
-  Mountain
+  Mountain,
+  Info
 } from 'lucide-react';
 
 const RoomDetail = () => {
@@ -20,6 +22,8 @@ const RoomDetail = () => {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [roomData, setRoomData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [availableUnits, setAvailableUnits] = useState<number>(0);
+  const [checkingAvailability, setCheckingAvailability] = useState(false);
 
   // Fetch room data from database
   useEffect(() => {
@@ -49,6 +53,41 @@ const RoomDetail = () => {
     fetchRoomData();
   }, [roomId]);
 
+  // Check room availability
+  const checkCurrentAvailability = async () => {
+    if (!roomData?.id) return;
+    
+    setCheckingAvailability(true);
+    try {
+      const today = new Date();
+      const tomorrow = new Date(today);
+      tomorrow.setDate(tomorrow.getDate() + 1);
+      
+      const { data, error } = await supabase.rpc('check_room_availability', {
+        p_room_type_id: roomData.id,
+        p_check_in: today.toISOString().split('T')[0],
+        p_check_out: tomorrow.toISOString().split('T')[0]
+      });
+
+      if (error) throw error;
+      
+      if (data && data.length > 0) {
+        setAvailableUnits(data[0].available_units || 0);
+      }
+    } catch (error) {
+      console.error('Error checking availability:', error);
+    } finally {
+      setCheckingAvailability(false);
+    }
+  };
+
+  // Check availability when room data loads
+  useEffect(() => {
+    if (roomData) {
+      checkCurrentAvailability();
+    }
+  }, [roomData]);
+
   if (loading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
@@ -71,16 +110,22 @@ const RoomDetail = () => {
     );
   }
 
-  // Prepare images array from gallery and hero_image
-  const images = [];
-  if (roomData.hero_image) images.push(roomData.hero_image);
-  if (roomData.gallery && Array.isArray(roomData.gallery)) {
-    images.push(...roomData.gallery);
-  }
+  // Prepare images array with keys and URLs
+  const imageKeys = roomData.hero_image_key 
+    ? [roomData.hero_image_key, ...(roomData.gallery_keys || [])]
+    : (roomData.gallery_keys || []);
+  
+  const imageUrls = roomData.hero_image 
+    ? [roomData.hero_image, ...(roomData.gallery || [])]
+    : (roomData.gallery || []);
+  
+  const images = imageKeys.length > 0 
+    ? imageKeys.map((key: string, idx: number) => ({ key, url: imageUrls[idx] }))
+    : imageUrls.map((url: string) => ({ key: null, url }));
   
   // Fallback if no images
   if (images.length === 0) {
-    images.push('https://images.unsplash.com/photo-1631049307264-da0ec9d70304?auto=format&fit=crop&w=800&q=80');
+    images.push({ key: null, url: 'https://images.unsplash.com/photo-1631049307264-da0ec9d70304?auto=format&fit=crop&w=800&q=80' });
   }
 
   const features = roomData.features || [];
@@ -115,11 +160,20 @@ const RoomDetail = () => {
       {/* Hero Section with Image Carousel */}
       <section className="relative h-[60vh] min-h-[500px]">
         <div className="relative w-full h-full overflow-hidden">
-          <img 
-            src={images[currentImageIndex]}
-            alt={`${roomData.name} - Image ${currentImageIndex + 1}`}
-            className="w-full h-full object-cover"
-          />
+          {images[currentImageIndex].key ? (
+            <MediaAsset
+              hardcodedKey={images[currentImageIndex].key}
+              fallbackUrl={images[currentImageIndex].url}
+              alt={`${roomData.name} - Image ${currentImageIndex + 1}`}
+              className="w-full h-full object-cover"
+            />
+          ) : (
+            <img 
+              src={images[currentImageIndex].url}
+              alt={`${roomData.name} - Image ${currentImageIndex + 1}`}
+              className="w-full h-full object-cover"
+            />
+          )}
           
           {/* Navigation Arrows */}
           {images.length > 1 && (
@@ -206,11 +260,20 @@ const RoomDetail = () => {
                         className="relative aspect-[4/3] rounded-lg overflow-hidden cursor-pointer group"
                         onClick={() => setCurrentImageIndex(index)}
                       >
-                        <img
-                          src={image}
-                          alt={`${roomData.name} - Gallery ${index + 1}`}
-                          className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
-                        />
+                        {image.key ? (
+                          <MediaAsset
+                            hardcodedKey={image.key}
+                            fallbackUrl={image.url}
+                            alt={`${roomData.name} - Gallery ${index + 1}`}
+                            className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
+                          />
+                        ) : (
+                          <img
+                            src={image.url}
+                            alt={`${roomData.name} - Gallery ${index + 1}`}
+                            className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
+                          />
+                        )}
                         <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors duration-300 flex items-center justify-center">
                           <span className="text-white opacity-0 group-hover:opacity-100 transition-opacity duration-300 font-body text-sm">
                             View Full Size
@@ -237,6 +300,16 @@ const RoomDetail = () => {
                       </div>
                     ))}
                   </div>
+                  
+                  {/* Safety Deposit Note */}
+                  <div className="mt-6 p-4 bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-800 rounded-lg">
+                    <div className="flex items-start gap-3">
+                      <Info className="w-5 h-5 text-blue-600 dark:text-blue-400 mt-0.5 flex-shrink-0" />
+                      <div className="text-sm font-body text-blue-900 dark:text-blue-100">
+                        <strong>Note:</strong> No In-Room Safes; Generally Safety Deposit is available at Reception with Receipt.
+                      </div>
+                    </div>
+                  </div>
                 </div>
               )}
 
@@ -260,6 +333,25 @@ const RoomDetail = () => {
             <div className="lg:col-span-1">
               <Card className="sticky top-24">
                 <CardContent className="p-6">
+                  {/* Availability Status */}
+                  <div className="mb-4 p-3 bg-muted/50 rounded-lg">
+                    {checkingAvailability ? (
+                      <p className="text-sm font-body text-muted-foreground text-center">
+                        Checking availability...
+                      </p>
+                    ) : (
+                      <p className={`text-sm font-body font-medium text-center ${
+                        availableUnits > 0 
+                          ? 'text-green-600 dark:text-green-400' 
+                          : 'text-red-600 dark:text-red-400'
+                      }`}>
+                        {availableUnits > 0 
+                          ? `${availableUnits} room${availableUnits > 1 ? 's' : ''} available` 
+                          : 'No rooms available'}
+                      </p>
+                    )}
+                  </div>
+
                   <div className="mb-6">
                     <div className="flex items-center gap-3 mb-2">
                       <span className="text-3xl font-heading font-bold text-primary">
@@ -267,6 +359,11 @@ const RoomDetail = () => {
                       </span>
                     </div>
                     <span className="text-sm text-muted-foreground font-body">per night (base price)</span>
+                    {roomData.seasonal_pricing && Object.keys(roomData.seasonal_pricing).length > 0 && (
+                      <p className="text-xs text-muted-foreground font-body mt-1">
+                        * Prices may vary based on season
+                      </p>
+                    )}
                   </div>
 
                   <div className="space-y-4 mb-6">
