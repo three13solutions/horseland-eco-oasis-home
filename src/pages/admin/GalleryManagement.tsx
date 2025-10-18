@@ -122,22 +122,40 @@ const GalleryManagement = () => {
     if (!files || !selectedCategory) return;
     
     const category = categories.find(c => c.id === selectedCategory);
+    let successCount = 0;
+    let failCount = 0;
     
     for (const file of Array.from(files)) {
-      const result = await uploadMedia(file, {
-        folder: 'gallery',
-        category: category?.slug || 'gallery',
-        categoryId: selectedCategory,
-        title: file.name.split('.')[0],
-      });
-      
-      if (result) {
-        // Auto-link uploaded image to the gallery
-        await linkImagesMutation.mutateAsync({ 
-          imageIds: [result.id], 
-          categoryId: selectedCategory 
+      try {
+        const result = await uploadMedia(file, {
+          folder: 'gallery',
+          category: category?.slug || 'gallery',
+          categoryId: selectedCategory,
+          title: file.name.split('.')[0],
         });
+        
+        if (result) {
+          // Auto-link uploaded image to the gallery
+          await linkImagesMutation.mutateAsync({ 
+            imageIds: [result.id], 
+            categoryId: selectedCategory 
+          });
+          successCount++;
+        } else {
+          failCount++;
+        }
+      } catch (error) {
+        console.error('Upload or link error:', error);
+        failCount++;
       }
+    }
+    
+    // Show summary toast
+    if (successCount > 0) {
+      toast({
+        title: 'Upload Complete',
+        description: `${successCount} image${successCount > 1 ? 's' : ''} uploaded successfully${failCount > 0 ? `. ${failCount} failed.` : ''}`,
+      });
     }
     
     queryClient.invalidateQueries({ queryKey: ['category-images'] });
