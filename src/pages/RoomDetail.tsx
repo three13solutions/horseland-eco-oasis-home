@@ -13,7 +13,10 @@ import {
   ChevronRight,
   Bed,
   Mountain,
-  Info
+  Info,
+  ChevronDown,
+  ChevronUp,
+  Calendar
 } from 'lucide-react';
 
 const RoomDetail = () => {
@@ -24,6 +27,7 @@ const RoomDetail = () => {
   const [loading, setLoading] = useState(true);
   const [availableUnits, setAvailableUnits] = useState<number>(0);
   const [checkingAvailability, setCheckingAvailability] = useState(false);
+  const [showSeasonalPricing, setShowSeasonalPricing] = useState(false);
 
   // Fetch room data from database
   useEffect(() => {
@@ -359,10 +363,66 @@ const RoomDetail = () => {
                       </span>
                     </div>
                     <span className="text-sm text-muted-foreground font-body">per night (base price)</span>
+                    
+                    {/* Seasonal Pricing Toggle */}
                     {roomData.seasonal_pricing && Object.keys(roomData.seasonal_pricing).length > 0 && (
-                      <p className="text-xs text-muted-foreground font-body mt-1">
-                        * Prices may vary based on season
-                      </p>
+                      <div className="mt-3">
+                        <button
+                          onClick={() => setShowSeasonalPricing(!showSeasonalPricing)}
+                          className="flex items-center gap-2 text-xs text-primary hover:text-primary/80 transition-colors font-body"
+                        >
+                          <Calendar className="w-3.5 h-3.5" />
+                          <span>See seasonal rates</span>
+                          {showSeasonalPricing ? (
+                            <ChevronUp className="w-3.5 h-3.5" />
+                          ) : (
+                            <ChevronDown className="w-3.5 h-3.5" />
+                          )}
+                        </button>
+                        
+                        {showSeasonalPricing && (
+                          <div className="mt-3 space-y-2 animate-in fade-in slide-in-from-top-2 duration-200">
+                            {Object.entries(roomData.seasonal_pricing)
+                              .sort(([, a]: [string, any], [, b]: [string, any]) => b - a)
+                              .map(([season, price]: [string, any], index, array) => {
+                                const isHighest = index === 0;
+                                const isLowest = index === array.length - 1;
+                                return (
+                                  <div 
+                                    key={season} 
+                                    className="flex items-center justify-between p-2.5 rounded-lg border bg-card/50"
+                                  >
+                                    <div className="flex items-center gap-2">
+                                      <div className={`w-2 h-2 rounded-full ${
+                                        isHighest 
+                                          ? 'bg-red-500' 
+                                          : isLowest 
+                                            ? 'bg-green-500' 
+                                            : 'bg-amber-500'
+                                      }`} />
+                                      <span className="text-xs font-body font-medium capitalize">
+                                        {season.replace(/_/g, ' ')}
+                                      </span>
+                                      {isHighest && (
+                                        <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-red-100 dark:bg-red-950/30 text-red-700 dark:text-red-400 font-medium">
+                                          Peak
+                                        </span>
+                                      )}
+                                      {isLowest && (
+                                        <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-green-100 dark:bg-green-950/30 text-green-700 dark:text-green-400 font-medium">
+                                          Off-season
+                                        </span>
+                                      )}
+                                    </div>
+                                    <span className="text-sm font-heading font-bold">
+                                      ₹{price?.toLocaleString('en-IN')}
+                                    </span>
+                                  </div>
+                                );
+                              })}
+                          </div>
+                        )}
+                      </div>
                     )}
                   </div>
 
