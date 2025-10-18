@@ -37,11 +37,16 @@ const Dining = () => {
     fetchMeals();
   }, []);
 
-  // Get meal descriptions for all variants of a meal type
+  // Get meal descriptions for buffet variants of a meal type
   const getMealVariants = (mealType: string) => {
     const variants = ['veg', 'non_veg', 'jain'];
     return variants.map(variant => {
-      const meal = meals.find(m => m.meal_type === mealType && m.variant === variant);
+      // Find buffet meals by filtering out sitout meals
+      const meal = meals.find(m => 
+        m.meal_type === mealType && 
+        m.variant === variant &&
+        !m.title?.toLowerCase().includes('sitout')
+      );
       return {
         variant,
         label: variant === 'veg' ? 'Vegetarian' : variant === 'non_veg' ? 'Non-Vegetarian' : 'Jain',
@@ -224,15 +229,11 @@ const Dining = () => {
             Chef's Notes
           </h2>
           <div className="bg-card border rounded-lg p-8">
-            <blockquote className="text-lg font-body text-muted-foreground italic mb-4 leading-relaxed">
+            <blockquote className="text-lg font-body text-muted-foreground italic leading-relaxed">
               "Our kitchen celebrates the bounty of the Western Ghats. Each meal is crafted with 
               ingredients sourced within a 50-kilometer radius, ensuring freshness while supporting 
-              local farming communities. Today's highlight is our forest mushroom risotto, featuring 
-              wild mushrooms foraged from the surrounding hills."
+              local farming communities."
             </blockquote>
-            <cite className="font-body font-semibold text-foreground">
-              — Chef Priya Sharma, Executive Chef
-            </cite>
           </div>
         </div>
       </section>
