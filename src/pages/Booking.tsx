@@ -62,7 +62,7 @@ interface GuestDetails {
 interface GuestMeal {
   guestNumber: number;
   dietaryPreference: 'vegetarian' | 'non-vegetarian' | 'jain';
-  selectedMeals: string[]; // meal IDs
+  selectedMealTypes: string[]; // meal types: 'breakfast', 'lunch', 'high_tea', 'dinner'
 }
 
 interface PickupService {
@@ -130,7 +130,7 @@ const Booking = () => {
       const newGuestMeals: GuestMeal[] = Array.from({ length: guests }, (_, i) => ({
         guestNumber: i + 1,
         dietaryPreference: 'vegetarian',
-        selectedMeals: []
+        selectedMealTypes: []
       }));
       setGuestMeals(newGuestMeals);
     }
@@ -396,8 +396,10 @@ const Booking = () => {
         price: m.price,
         description: m.description,
         image: m.featured_media,
-        type: 'meal' as const 
-      })) || []);
+        type: 'meal' as const,
+        meal_type: m.meal_type,
+        variant: m.variant
+      } as any)) || []);
       
       setActivities(activitiesData?.map(a => ({ 
         id: a.id,
@@ -615,15 +617,28 @@ const Booking = () => {
     });
   };
 
-  const handleGuestMealToggle = (guestIndex: number, mealId: string) => {
+  const handleGuestMealTypeToggle = (guestIndex: number, mealType: string) => {
     setGuestMeals(prev => {
       const updated = [...prev];
       const guest = updated[guestIndex];
-      if (guest.selectedMeals.includes(mealId)) {
-        guest.selectedMeals = guest.selectedMeals.filter(id => id !== mealId);
+      
+      if (mealType === 'all') {
+        // If "All" is selected, toggle all meal types
+        const allMealTypes = ['breakfast', 'lunch', 'high_tea', 'dinner'];
+        if (guest.selectedMealTypes.length === allMealTypes.length) {
+          guest.selectedMealTypes = [];
+        } else {
+          guest.selectedMealTypes = [...allMealTypes];
+        }
       } else {
-        guest.selectedMeals.push(mealId);
+        // Toggle individual meal type
+        if (guest.selectedMealTypes.includes(mealType)) {
+          guest.selectedMealTypes = guest.selectedMealTypes.filter(type => type !== mealType);
+        } else {
+          guest.selectedMealTypes.push(mealType);
+        }
       }
+      
       return updated;
     });
   };
@@ -632,19 +647,33 @@ const Booking = () => {
     setGuestMeals(prev => {
       const updated = [...prev];
       updated[guestIndex].dietaryPreference = preference;
-      updated[guestIndex].selectedMeals = []; // Clear selections when preference changes
+      // Keep meal type selections when preference changes
       return updated;
     });
   };
 
   const calculateGuestMealsTotal = () => {
     let total = 0;
+    const nights = calculateNights();
+    
     guestMeals.forEach(guest => {
-      guest.selectedMeals.forEach(mealId => {
-        const meal = meals.find(m => m.id === mealId);
-        if (meal) total += meal.price;
+      guest.selectedMealTypes.forEach(mealType => {
+        // Map dietary preference to variant
+        const variant = guest.dietaryPreference;
+        
+        // Find the meal from database that matches meal_type and variant
+        const meal = meals.find(m => {
+          const mealData = m as any;
+          return mealData.meal_type === mealType && mealData.variant === variant;
+        });
+        
+        if (meal) {
+          // Multiply by number of nights for the stay
+          total += meal.price * nights;
+        }
       });
     });
+    
     return total;
   };
 
@@ -1061,7 +1090,17 @@ const Booking = () => {
                       <TabsContent value="meals" className="space-y-6">
                         <div className="space-y-6">
                           {guestMeals.map((guest, index) => {
-                            const filteredMeals = getFilteredMealsByPreference(guest.dietaryPreference);
+                            const mealTypes = [
+                              { value: 'all', label: 'All Meals' },
+                              { value: 'breakfast', label: 'Breakfast' },
+                              { value: 'lunch', label: 'Lunch' },
+                              { value: 'high_tea', label: 'High Tea' },
+                              { value: 'dinner', label: 'Dinner' }
+                            ];
+                            
+                            const allMealTypesSelected = guest.selectedMealTypes.length === 4 && 
+                              ['breakfast', 'lunch', 'high_tea', 'dinner'].every(type => guest.selectedMealTypes.includes(type));
+                            
                             return (
                               <Card key={index}>
                                 <CardHeader>
@@ -1085,35 +1124,34 @@ const Booking = () => {
                                   </div>
                                   
                                   <div>
-                                    <Label className="text-sm font-medium mb-3 block">Select Meals</Label>
-                                    {filteredMeals.length === 0 ? (
-                                      <div className="text-sm text-muted-foreground text-center py-4">
-                                        No meals available for this dietary preference
-                                      </div>
-                                    ) : (
-                                      <div className="space-y-3">
-                                        {filteredMeals.map((meal) => (
-                                          <div key={meal.id} className="flex items-start gap-3 p-3 border rounded-lg hover:bg-muted/50 transition-colors">
+                                    <Label className="text-sm font-medium mb-3 block">Select Meal Types</Label>
+                                    <div className="space-y-3">
+                                      {mealTypes.map((mealType) => {
+                                        const isChecked = mealType.value === 'all' 
+                                          ? allMealTypesSelected 
+                                          : guest.selectedMealTypes.includes(mealType.value);
+                                        
+                                        return (
+                                          <div key={mealType.value} className="flex items-center gap-3 p-3 border rounded-lg hover:bg-muted/50 transition-colors">
                                             <Checkbox
-                                              id={`meal-${index}-${meal.id}`}
-                                              checked={guest.selectedMeals.includes(meal.id)}
-                                              onCheckedChange={() => handleGuestMealToggle(index, meal.id)}
+                                              id={`meal-type-${index}-${mealType.value}`}
+                                              checked={isChecked}
+                                              onCheckedChange={() => handleGuestMealTypeToggle(index, mealType.value)}
                                               className="mt-1"
                                             />
                                             <label
-                                              htmlFor={`meal-${index}-${meal.id}`}
+                                              htmlFor={`meal-type-${index}-${mealType.value}`}
                                               className="flex-1 cursor-pointer"
                                             >
-                                              <div className="font-medium text-sm">{meal.title}</div>
-                                              {meal.description && (
-                                                <div className="text-xs text-muted-foreground mt-1">{meal.description}</div>
-                                              )}
-                                              <div className="font-semibold text-primary text-sm mt-1">₹{meal.price}</div>
+                                              <div className="font-medium text-sm">{mealType.label}</div>
+                                              <div className="text-xs text-muted-foreground mt-0.5">
+                                                Per {mealType.value === 'all' ? 'day' : 'meal'} for the entire stay
+                                              </div>
                                             </label>
                                           </div>
-                                        ))}
-                                      </div>
-                                    )}
+                                        );
+                                      })}
+                                    </div>
                                   </div>
                                 </CardContent>
                               </Card>
@@ -1406,17 +1444,23 @@ const Booking = () => {
                               <Separator />
                               <div className="font-medium text-sm">Meals:</div>
                               {guestMeals.map((guest, idx) => {
-                                if (guest.selectedMeals.length === 0) return null;
+                                if (guest.selectedMealTypes.length === 0) return null;
                                 return (
                                   <div key={idx} className="space-y-1 pl-2">
                                     <div className="text-xs font-medium text-muted-foreground">Guest {guest.guestNumber} ({guest.dietaryPreference})</div>
-                                    {guest.selectedMeals.map(mealId => {
-                                      const meal = meals.find(m => m.id === mealId);
+                                    {guest.selectedMealTypes.map(mealType => {
+                                      const meal = meals.find(m => {
+                                        const mealData = m as any;
+                                        return mealData.meal_type === mealType && mealData.variant === guest.dietaryPreference;
+                                      });
                                       if (!meal) return null;
+                                      const mealTypeLabel = mealType === 'breakfast' ? 'Breakfast' : 
+                                                          mealType === 'lunch' ? 'Lunch' : 
+                                                          mealType === 'high_tea' ? 'High Tea' : 'Dinner';
                                       return (
-                                        <div key={mealId} className="flex justify-between gap-2 text-sm">
-                                          <span className="text-muted-foreground break-words">• {meal.title}</span>
-                                          <span className="font-medium whitespace-nowrap">₹{meal.price.toLocaleString()}</span>
+                                        <div key={mealType} className="flex justify-between gap-2 text-sm">
+                                          <span className="text-muted-foreground break-words">• {mealTypeLabel} × {nights} nights</span>
+                                          <span className="font-medium whitespace-nowrap">₹{(meal.price * nights).toLocaleString()}</span>
                                         </div>
                                       );
                                     })}
