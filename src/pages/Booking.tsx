@@ -625,6 +625,40 @@ const Booking = () => {
     });
   };
 
+  // Helper function to get meal type from arrangement key
+  const getMealTypeFromArrangement = (arrangement: string): string | null => {
+    if (arrangement.includes('Breakfast')) return 'breakfast';
+    if (arrangement.includes('Lunch')) return 'lunch';
+    if (arrangement.includes('HighTea')) return 'high_tea';
+    if (arrangement.includes('Dinner')) return 'dinner';
+    return null;
+  };
+
+  // Helper function to calculate total meals for a specific meal type
+  const getTotalMealsForType = (guest: GuestMeal, mealType: string): number => {
+    let total = guest.mealTypeQuantities[mealType] || 0;
+    
+    // Add special arrangements for this meal type
+    const arrangementMap: { [key: string]: string } = {
+      'breakfast': 'sitoutBreakfast',
+      'lunch': 'sitoutLunch',
+      'high_tea': 'sitoutHighTea',
+      'dinner': 'sitoutDinner'
+    };
+    
+    const arrangementKey = arrangementMap[mealType];
+    if (arrangementKey) {
+      total += guest.specialArrangements[arrangementKey as keyof typeof guest.specialArrangements] || 0;
+    }
+    
+    // For dinner, also add candle light dinner
+    if (mealType === 'dinner') {
+      total += guest.specialArrangements.candleLightDinner || 0;
+    }
+    
+    return total;
+  };
+
   const handleMealQuantityChange = (guestIndex: number, mealType: string, change: number) => {
     const nights = calculateNights();
     
@@ -634,11 +668,15 @@ const Booking = () => {
       const currentQty = guest.mealTypeQuantities[mealType] || 0;
       const newQty = currentQty + change;
       
-      // Check if trying to exceed max nights
-      if (newQty > nights) {
+      // Calculate total for this meal type (buffet + special arrangements)
+      const currentTotal = getTotalMealsForType(guest, mealType);
+      const newTotal = currentTotal + change;
+      
+      // Check if total for this meal type would exceed max nights
+      if (newTotal > nights) {
         toast({
-          title: "Limit Reached",
-          description: `Meal count cannot exceed the number of days (${nights}) in your stay`,
+          title: "Meal Type Limit Reached",
+          description: `Total meals for this type cannot exceed ${nights} days. You've already selected ${currentTotal} meal(s) for this type.`,
           variant: "destructive"
         });
         return prev;
@@ -663,14 +701,23 @@ const Booking = () => {
       const currentQty = guest.specialArrangements[arrangement as keyof typeof guest.specialArrangements] || 0;
       const newQty = currentQty + change;
       
-      // Check if trying to exceed max nights
-      if (newQty > nights) {
-        toast({
-          title: "Limit Reached",
-          description: `Special arrangement count cannot exceed the number of days (${nights}) in your stay`,
-          variant: "destructive"
-        });
-        return prev;
+      // Get the meal type for this arrangement
+      const mealType = getMealTypeFromArrangement(arrangement);
+      
+      if (mealType) {
+        // Calculate total for this meal type (buffet + special arrangements)
+        const currentTotal = getTotalMealsForType(guest, mealType);
+        const newTotal = currentTotal + change;
+        
+        // Check if total for this meal type would exceed max nights
+        if (newTotal > nights) {
+          toast({
+            title: "Meal Type Limit Reached",
+            description: `Total meals for this type cannot exceed ${nights} days. You've already selected ${currentTotal} meal(s) for this type.`,
+            variant: "destructive"
+          });
+          return prev;
+        }
       }
       
       updated[guestIndex] = {
