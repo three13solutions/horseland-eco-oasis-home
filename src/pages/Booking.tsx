@@ -63,8 +63,6 @@ interface GuestMeal {
   guestNumber: number;
   dietaryPreference: 'vegetarian' | 'non-vegetarian' | 'jain';
   mealTypeQuantities: { [key: string]: number }; // meal type to quantity mapping
-  serviceInRoomQuantity: number; // Number of meals to be served in room
-  candleLightDinnerQuantity: number; // Candle light dinner count
 }
 
 interface PickupService {
@@ -125,6 +123,10 @@ const Booking = () => {
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [activeTab, setActiveTab] = useState<string>('');
   const [guestMeals, setGuestMeals] = useState<GuestMeal[]>([]);
+  
+  // Additional services common to all guests
+  const [serviceInRoomQuantity, setServiceInRoomQuantity] = useState(0);
+  const [candleLightDinnerQuantity, setCandleLightDinnerQuantity] = useState(0);
 
   // Initialize guest meals when guests count changes
   useEffect(() => {
@@ -132,9 +134,7 @@ const Booking = () => {
       const newGuestMeals: GuestMeal[] = Array.from({ length: guests }, (_, i) => ({
         guestNumber: i + 1,
         dietaryPreference: 'vegetarian',
-        mealTypeQuantities: {},
-        serviceInRoomQuantity: 0,
-        candleLightDinnerQuantity: 0
+        mealTypeQuantities: {}
       }));
       setGuestMeals(newGuestMeals);
     }
@@ -687,64 +687,45 @@ const Booking = () => {
     });
   };
 
-  // Helper to calculate total meals selected for a guest
-  const getTotalMealsForGuest = (guestIndex: number) => {
-    const guest = guestMeals[guestIndex];
-    return Object.values(guest.mealTypeQuantities).reduce((sum, qty) => sum + qty, 0);
+  // Helper to calculate total meals selected across all guests
+  const getTotalMealsAcrossAllGuests = () => {
+    return guestMeals.reduce((total, guest) => {
+      return total + Object.values(guest.mealTypeQuantities).reduce((sum, qty) => sum + qty, 0);
+    }, 0);
   };
 
-  const handleServiceInRoomChange = (guestIndex: number, change: number) => {
-    const totalMeals = getTotalMealsForGuest(guestIndex);
+  const handleServiceInRoomChange = (change: number) => {
+    const totalMeals = getTotalMealsAcrossAllGuests();
+    const newQty = serviceInRoomQuantity + change;
     
-    setGuestMeals(prev => {
-      const updated = [...prev];
-      const guest = updated[guestIndex];
-      const newQty = guest.serviceInRoomQuantity + change;
-      
-      // Check if total would exceed total meals selected
-      if (newQty > totalMeals) {
-        toast({
-          title: "Limit Reached",
-          description: `Meal Service to the Room cannot exceed ${totalMeals} total meals selected`,
-          variant: "destructive"
-        });
-        return prev;
-      }
-      
-      updated[guestIndex] = {
-        ...guest,
-        serviceInRoomQuantity: Math.max(0, newQty)
-      };
-      
-      return updated;
-    });
+    // Check if total would exceed total meals selected
+    if (newQty > totalMeals) {
+      toast({
+        title: "Limit Reached",
+        description: `Meal Service to the Room cannot exceed ${totalMeals} total meals selected`,
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    setServiceInRoomQuantity(Math.max(0, newQty));
   };
 
-  const handleCandleLightDinnerChange = (guestIndex: number, change: number) => {
+  const handleCandleLightDinnerChange = (change: number) => {
     const nights = calculateNights();
+    const newQty = candleLightDinnerQuantity + change;
     
-    setGuestMeals(prev => {
-      const updated = [...prev];
-      const guest = updated[guestIndex];
-      const newQty = guest.candleLightDinnerQuantity + change;
-      
-      // Check if total would exceed max nights
-      if (newQty > nights) {
-        toast({
-          title: "Limit Reached",
-          description: `Candle light dinner cannot exceed ${nights} nights`,
-          variant: "destructive"
-        });
-        return prev;
-      }
-      
-      updated[guestIndex] = {
-        ...guest,
-        candleLightDinnerQuantity: Math.max(0, newQty)
-      };
-      
-      return updated;
-    });
+    // Check if total would exceed max nights
+    if (newQty > nights) {
+      toast({
+        title: "Limit Reached",
+        description: `Candle light dinner cannot exceed ${nights} nights`,
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    setCandleLightDinnerQuantity(Math.max(0, newQty));
   };
 
   const handleGuestDietaryChange = (guestIndex: number, preference: 'vegetarian' | 'non-vegetarian' | 'jain') => {
@@ -807,15 +788,15 @@ const Booking = () => {
           total += meal.price * quantity;
         }
       });
-      
-      // Calculate meal service to the room and candle light dinner
-      if (guest.serviceInRoomQuantity > 0) {
-        total += 300 * guest.serviceInRoomQuantity; // Meal service to the room price
-      }
-      if (guest.candleLightDinnerQuantity > 0) {
-        total += 1500 * guest.candleLightDinnerQuantity; // Candle light dinner price
-      }
     });
+    
+    // Add common additional services
+    if (serviceInRoomQuantity > 0) {
+      total += 300 * serviceInRoomQuantity; // Meal service to the room price
+    }
+    if (candleLightDinnerQuantity > 0) {
+      total += 1500 * candleLightDinnerQuantity; // Candle light dinner price
+    }
     
     return total;
   };
@@ -1400,85 +1381,88 @@ const Booking = () => {
                                       </div>
                                     ))}
                                   </div>
-                                  
-                                  {/* Additional Services Section */}
-                                  {isPoolDeckRoom && (
-                                    <div className="mt-6 pt-6 border-t space-y-4">
-                                      <div className="font-medium text-sm">Additional Services</div>
-                                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                        {/* Meal Service to the Room */}
-                                        <div className="border rounded-lg p-4 space-y-3">
-                                          <div className="text-center">
-                                            <div className="font-medium text-sm">Meal Service to the Room</div>
-                                            <div className="text-xs text-muted-foreground">₹300 per meal</div>
-                                            <div className="text-xs text-muted-foreground mt-1">
-                                              Limited to {getTotalMealsForGuest(index)} total meals selected
-                                            </div>
-                                          </div>
-                                          <div className="flex items-center justify-center gap-2">
-                                            <Button
-                                              type="button"
-                                              variant="outline"
-                                              size="icon"
-                                              className="h-8 w-8"
-                                              onClick={() => handleServiceInRoomChange(index, -1)}
-                                              disabled={guest.serviceInRoomQuantity === 0}
-                                            >
-                                              <Minus className="h-4 w-4" />
-                                            </Button>
-                                            <span className="w-10 text-center font-semibold">{guest.serviceInRoomQuantity}</span>
-                                            <Button
-                                              type="button"
-                                              variant="outline"
-                                              size="icon"
-                                              className="h-8 w-8"
-                                              onClick={() => handleServiceInRoomChange(index, 1)}
-                                            >
-                                              <Plus className="h-4 w-4" />
-                                            </Button>
-                                          </div>
-                                        </div>
-                                        
-                                        {/* Candle Light Dinner */}
-                                        <div className="border rounded-lg p-4 space-y-3">
-                                          <div className="text-center">
-                                            <div className="font-medium text-sm">Candle Light Dinner</div>
-                                            <div className="text-xs text-muted-foreground">₹1,500 per night</div>
-                                            <div className="text-xs text-muted-foreground mt-1">
-                                              Limited to {maxDays} {maxDays === 1 ? 'night' : 'nights'}
-                                            </div>
-                                          </div>
-                                          <div className="flex items-center justify-center gap-2">
-                                            <Button
-                                              type="button"
-                                              variant="outline"
-                                              size="icon"
-                                              className="h-8 w-8"
-                                              onClick={() => handleCandleLightDinnerChange(index, -1)}
-                                              disabled={guest.candleLightDinnerQuantity === 0}
-                                            >
-                                              <Minus className="h-4 w-4" />
-                                            </Button>
-                                            <span className="w-10 text-center font-semibold">{guest.candleLightDinnerQuantity}</span>
-                                            <Button
-                                              type="button"
-                                              variant="outline"
-                                              size="icon"
-                                              className="h-8 w-8"
-                                              onClick={() => handleCandleLightDinnerChange(index, 1)}
-                                              disabled={guest.candleLightDinnerQuantity >= maxDays}
-                                            >
-                                              <Plus className="h-4 w-4" />
-                                            </Button>
-                                          </div>
-                                        </div>
-                                      </div>
-                                    </div>
-                                  )}
                                 </CardContent>
                               </Card>
                             );
                           })}
+                          
+                          {/* Additional Services Section (common to all guests) */}
+                          {selectedRoomType?.name?.toLowerCase().includes('pool deck') && (
+                            <Card>
+                              <CardHeader>
+                                <CardTitle className="text-lg">Additional Services</CardTitle>
+                              </CardHeader>
+                              <CardContent>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                  {/* Meal Service to the Room */}
+                                  <div className="border rounded-lg p-4 space-y-3">
+                                    <div className="text-center">
+                                      <div className="font-medium text-sm">Meal Service to the Room</div>
+                                      <div className="text-xs text-muted-foreground">₹300 per meal</div>
+                                      <div className="text-xs text-muted-foreground mt-1">
+                                        Limited to {getTotalMealsAcrossAllGuests()} total meals selected
+                                      </div>
+                                    </div>
+                                    <div className="flex items-center justify-center gap-2">
+                                      <Button
+                                        type="button"
+                                        variant="outline"
+                                        size="icon"
+                                        className="h-8 w-8"
+                                        onClick={() => handleServiceInRoomChange(-1)}
+                                        disabled={serviceInRoomQuantity === 0}
+                                      >
+                                        <Minus className="h-4 w-4" />
+                                      </Button>
+                                      <span className="w-10 text-center font-semibold">{serviceInRoomQuantity}</span>
+                                      <Button
+                                        type="button"
+                                        variant="outline"
+                                        size="icon"
+                                        className="h-8 w-8"
+                                        onClick={() => handleServiceInRoomChange(1)}
+                                      >
+                                        <Plus className="h-4 w-4" />
+                                      </Button>
+                                    </div>
+                                  </div>
+                                  
+                                  {/* Candle Light Dinner */}
+                                  <div className="border rounded-lg p-4 space-y-3">
+                                    <div className="text-center">
+                                      <div className="font-medium text-sm">Candle Light Dinner</div>
+                                      <div className="text-xs text-muted-foreground">₹1,500 per night</div>
+                                      <div className="text-xs text-muted-foreground mt-1">
+                                        Limited to {calculateNights()} {calculateNights() === 1 ? 'night' : 'nights'}
+                                      </div>
+                                    </div>
+                                    <div className="flex items-center justify-center gap-2">
+                                      <Button
+                                        type="button"
+                                        variant="outline"
+                                        size="icon"
+                                        className="h-8 w-8"
+                                        onClick={() => handleCandleLightDinnerChange(-1)}
+                                        disabled={candleLightDinnerQuantity === 0}
+                                      >
+                                        <Minus className="h-4 w-4" />
+                                      </Button>
+                                      <span className="w-10 text-center font-semibold">{candleLightDinnerQuantity}</span>
+                                      <Button
+                                        type="button"
+                                        variant="outline"
+                                        size="icon"
+                                        className="h-8 w-8"
+                                        onClick={() => handleCandleLightDinnerChange(1)}
+                                      >
+                                        <Plus className="h-4 w-4" />
+                                      </Button>
+                                    </div>
+                                  </div>
+                                </div>
+                              </CardContent>
+                            </Card>
+                          )}
                         </div>
                       </TabsContent>
                       
@@ -1767,9 +1751,8 @@ const Booking = () => {
                               <div className="font-medium text-sm">Meals:</div>
                               {guestMeals.map((guest, idx) => {
                                 const hasRegularMeals = Object.keys(guest.mealTypeQuantities).length > 0;
-                                const hasServices = guest.serviceInRoomQuantity > 0 || guest.candleLightDinnerQuantity > 0;
                                 
-                                if (!hasRegularMeals && !hasServices) return null;
+                                if (!hasRegularMeals) return null;
                                 
                                 return (
                                   <div key={idx} className="space-y-1 pl-2">
@@ -1794,25 +1777,32 @@ const Booking = () => {
                                         </div>
                                       );
                                     })}
-                                    
-                                    {/* Meal Service to the Room */}
-                                    {guest.serviceInRoomQuantity > 0 && (
-                                      <div className="flex justify-between gap-2 text-sm">
-                                        <span className="text-muted-foreground break-words">• Meal Service to the Room × {guest.serviceInRoomQuantity}</span>
-                                        <span className="font-medium whitespace-nowrap">₹{(300 * guest.serviceInRoomQuantity).toLocaleString()}</span>
-                                      </div>
-                                    )}
-                                    
-                                    {/* Candle Light Dinner */}
-                                    {guest.candleLightDinnerQuantity > 0 && (
-                                      <div className="flex justify-between gap-2 text-sm">
-                                        <span className="text-muted-foreground break-words">• Candle Light Dinner × {guest.candleLightDinnerQuantity}</span>
-                                        <span className="font-medium whitespace-nowrap">₹{(1500 * guest.candleLightDinnerQuantity).toLocaleString()}</span>
-                                      </div>
-                                    )}
                                   </div>
                                 );
                               })}
+                              
+                              {/* Additional Services (common to all guests) */}
+                              {(serviceInRoomQuantity > 0 || candleLightDinnerQuantity > 0) && (
+                                <div className="space-y-1 pl-2 mt-2 pt-2 border-t">
+                                  <div className="text-xs font-medium text-muted-foreground">
+                                    Additional Services
+                                  </div>
+                                  
+                                  {serviceInRoomQuantity > 0 && (
+                                    <div className="flex justify-between gap-2 text-sm">
+                                      <span className="text-muted-foreground break-words">• Meal Service to the Room × {serviceInRoomQuantity}</span>
+                                      <span className="font-medium whitespace-nowrap">₹{(300 * serviceInRoomQuantity).toLocaleString()}</span>
+                                    </div>
+                                  )}
+                                  
+                                  {candleLightDinnerQuantity > 0 && (
+                                    <div className="flex justify-between gap-2 text-sm">
+                                      <span className="text-muted-foreground break-words">• Candle Light Dinner × {candleLightDinnerQuantity}</span>
+                                      <span className="font-medium whitespace-nowrap">₹{(1500 * candleLightDinnerQuantity).toLocaleString()}</span>
+                                    </div>
+                                  )}
+                                </div>
+                              )}
                             </div>
                           )}
                      </div>
