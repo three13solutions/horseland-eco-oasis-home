@@ -6,9 +6,16 @@ import CombinedFloatingV5 from '../components/v5/CombinedFloatingV5';
 import MediaAsset from '@/components/MediaAsset';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Clock, MapPin, Users, Star, Plus } from 'lucide-react';
+import { Clock, MapPin, Users, Star, Plus, Grid3x3, List, Filter } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 interface Activity {
   id: string;
@@ -37,6 +44,7 @@ const Activities = () => {
   const [seasonFilter, setSeasonFilter] = useState<string>('all');
   const [audienceFilter, setAudienceFilter] = useState<string>('all');
   const [priceFilter, setPriceFilter] = useState<string>('all');
+  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   
   const { toast } = useToast();
   const navigate = useNavigate();
@@ -274,197 +282,111 @@ const Activities = () => {
       </section>
 
       {/* Filter Section */}
-      <section className="py-8 bg-muted/30">
+      <section className="py-6 bg-muted/30 border-b sticky top-16 z-40 backdrop-blur-sm bg-background/95">
         <div className="max-w-6xl mx-auto px-4">
-          <div className="space-y-6">
-            {/* Location Filter */}
-            <div>
-              <h3 className="text-sm font-semibold text-foreground mb-3 font-heading">Location</h3>
-              <div className="flex flex-wrap gap-3">
-                <Button 
-                  variant={locationFilter === 'all' ? 'default' : 'outline'}
-                  onClick={() => setLocationFilter('all')}
-                  className="font-body"
-                  size="sm"
-                >
-                  All Locations
-                </Button>
-                <Button 
-                  variant={locationFilter === 'on_property' ? 'default' : 'outline'}
-                  onClick={() => setLocationFilter('on_property')}
-                  className="font-body"
-                  size="sm"
-                >
-                  On Property
-                </Button>
-                <Button 
-                  variant={locationFilter === 'off_property' ? 'default' : 'outline'}
-                  onClick={() => setLocationFilter('off_property')}
-                  className="font-body"
-                  size="sm"
-                >
-                  Off Property
-                </Button>
-              </div>
+          <div className="flex flex-wrap items-center gap-4">
+            {/* Filters Label */}
+            <div className="flex items-center gap-2">
+              <Filter className="h-4 w-4 text-muted-foreground" />
+              <span className="text-sm font-semibold text-foreground font-heading">Filters:</span>
             </div>
+
+            {/* Location Filter */}
+            <Select value={locationFilter} onValueChange={(value) => setLocationFilter(value as any)}>
+              <SelectTrigger className="w-[180px] bg-background">
+                <SelectValue placeholder="Location" />
+              </SelectTrigger>
+              <SelectContent className="bg-background z-50">
+                <SelectItem value="all">All Locations</SelectItem>
+                <SelectItem value="on_property">On Property</SelectItem>
+                <SelectItem value="off_property">Off Property</SelectItem>
+              </SelectContent>
+            </Select>
 
             {/* Season Filter */}
-            <div>
-              <h3 className="text-sm font-semibold text-foreground mb-3 font-heading">Best Season</h3>
-              <div className="flex flex-wrap gap-3">
-                <Button 
-                  variant={seasonFilter === 'all' ? 'default' : 'outline'}
-                  onClick={() => setSeasonFilter('all')}
-                  className="font-body"
-                  size="sm"
-                >
-                  All Seasons
-                </Button>
-                <Button 
-                  variant={seasonFilter === 'monsoon' ? 'default' : 'outline'}
-                  onClick={() => setSeasonFilter('monsoon')}
-                  className="font-body"
-                  size="sm"
-                >
-                  Monsoon
-                </Button>
-                <Button 
-                  variant={seasonFilter === 'winter' ? 'default' : 'outline'}
-                  onClick={() => setSeasonFilter('winter')}
-                  className="font-body"
-                  size="sm"
-                >
-                  Winter
-                </Button>
-                <Button 
-                  variant={seasonFilter === 'summer' ? 'default' : 'outline'}
-                  onClick={() => setSeasonFilter('summer')}
-                  className="font-body"
-                  size="sm"
-                >
-                  Summer
-                </Button>
-              </div>
-            </div>
+            <Select value={seasonFilter} onValueChange={setSeasonFilter}>
+              <SelectTrigger className="w-[180px] bg-background">
+                <SelectValue placeholder="Season" />
+              </SelectTrigger>
+              <SelectContent className="bg-background z-50">
+                <SelectItem value="all">All Seasons</SelectItem>
+                <SelectItem value="monsoon">Monsoon</SelectItem>
+                <SelectItem value="winter">Winter</SelectItem>
+                <SelectItem value="summer">Summer</SelectItem>
+              </SelectContent>
+            </Select>
 
             {/* Audience Filter */}
-            <div>
-              <h3 className="text-sm font-semibold text-foreground mb-3 font-heading">Suitable For</h3>
-              <div className="flex flex-wrap gap-3">
-                <Button 
-                  variant={audienceFilter === 'all' ? 'default' : 'outline'}
-                  onClick={() => setAudienceFilter('all')}
-                  className="font-body"
-                  size="sm"
-                >
-                  Everyone
-                </Button>
-                <Button 
-                  variant={audienceFilter === 'family' ? 'default' : 'outline'}
-                  onClick={() => setAudienceFilter('family')}
-                  className="font-body"
-                  size="sm"
-                >
-                  Family
-                </Button>
-                <Button 
-                  variant={audienceFilter === 'adventure' ? 'default' : 'outline'}
-                  onClick={() => setAudienceFilter('adventure')}
-                  className="font-body"
-                  size="sm"
-                >
-                  Adventure Seekers
-                </Button>
-                <Button 
-                  variant={audienceFilter === 'nature' ? 'default' : 'outline'}
-                  onClick={() => setAudienceFilter('nature')}
-                  className="font-body"
-                  size="sm"
-                >
-                  Nature Lovers
-                </Button>
-                <Button 
-                  variant={audienceFilter === 'kids' ? 'default' : 'outline'}
-                  onClick={() => setAudienceFilter('kids')}
-                  className="font-body"
-                  size="sm"
-                >
-                  Kids
-                </Button>
-              </div>
-            </div>
+            <Select value={audienceFilter} onValueChange={setAudienceFilter}>
+              <SelectTrigger className="w-[180px] bg-background">
+                <SelectValue placeholder="Suitable For" />
+              </SelectTrigger>
+              <SelectContent className="bg-background z-50">
+                <SelectItem value="all">Everyone</SelectItem>
+                <SelectItem value="family">Family</SelectItem>
+                <SelectItem value="adventure">Adventure Seekers</SelectItem>
+                <SelectItem value="nature">Nature Lovers</SelectItem>
+                <SelectItem value="kids">Kids</SelectItem>
+              </SelectContent>
+            </Select>
 
             {/* Price Filter */}
-            <div>
-              <h3 className="text-sm font-semibold text-foreground mb-3 font-heading">Price Range</h3>
-              <div className="flex flex-wrap gap-3">
-                <Button 
-                  variant={priceFilter === 'all' ? 'default' : 'outline'}
-                  onClick={() => setPriceFilter('all')}
-                  className="font-body"
-                  size="sm"
-                >
-                  All Prices
-                </Button>
-                <Button 
-                  variant={priceFilter === 'free' ? 'default' : 'outline'}
-                  onClick={() => setPriceFilter('free')}
-                  className="font-body"
-                  size="sm"
-                >
-                  Free
-                </Button>
-                <Button 
-                  variant={priceFilter === 'under_500' ? 'default' : 'outline'}
-                  onClick={() => setPriceFilter('under_500')}
-                  className="font-body"
-                  size="sm"
-                >
-                  Under ₹500
-                </Button>
-                <Button 
-                  variant={priceFilter === '500_1000' ? 'default' : 'outline'}
-                  onClick={() => setPriceFilter('500_1000')}
-                  className="font-body"
-                  size="sm"
-                >
-                  ₹500 - ₹1000
-                </Button>
-                <Button 
-                  variant={priceFilter === 'above_1000' ? 'default' : 'outline'}
-                  onClick={() => setPriceFilter('above_1000')}
-                  className="font-body"
-                  size="sm"
-                >
-                  Above ₹1000
-                </Button>
-              </div>
-            </div>
+            <Select value={priceFilter} onValueChange={setPriceFilter}>
+              <SelectTrigger className="w-[180px] bg-background">
+                <SelectValue placeholder="Price Range" />
+              </SelectTrigger>
+              <SelectContent className="bg-background z-50">
+                <SelectItem value="all">All Prices</SelectItem>
+                <SelectItem value="free">Free</SelectItem>
+                <SelectItem value="under_500">Under ₹500</SelectItem>
+                <SelectItem value="500_1000">₹500 - ₹1000</SelectItem>
+                <SelectItem value="above_1000">Above ₹1000</SelectItem>
+              </SelectContent>
+            </Select>
 
-            {/* Active Filters Summary */}
+            {/* Clear Filters */}
             {(locationFilter !== 'all' || seasonFilter !== 'all' || audienceFilter !== 'all' || priceFilter !== 'all') && (
-              <div className="flex items-center gap-3 pt-4 border-t">
-                <span className="text-sm text-muted-foreground font-body">Active filters:</span>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => {
-                    setLocationFilter('all');
-                    setSeasonFilter('all');
-                    setAudienceFilter('all');
-                    setPriceFilter('all');
-                  }}
-                  className="font-body text-xs h-8"
-                >
-                  Clear All
-                </Button>
-              </div>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => {
+                  setLocationFilter('all');
+                  setSeasonFilter('all');
+                  setAudienceFilter('all');
+                  setPriceFilter('all');
+                }}
+                className="font-body text-xs"
+              >
+                Clear All
+              </Button>
             )}
+
+            {/* View Mode Toggle - Push to right */}
+            <div className="ml-auto flex items-center gap-2">
+              <Button
+                variant={viewMode === 'grid' ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => setViewMode('grid')}
+                className="gap-2"
+              >
+                <Grid3x3 className="h-4 w-4" />
+                Grid
+              </Button>
+              <Button
+                variant={viewMode === 'list' ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => setViewMode('list')}
+                className="gap-2"
+              >
+                <List className="h-4 w-4" />
+                List
+              </Button>
+            </div>
           </div>
         </div>
       </section>
 
-      {/* Activities Grid */}
+      {/* Activities Grid/List */}
       <section className="py-16">
         <div className="max-w-6xl mx-auto px-4">
           {/* Results count */}
@@ -491,70 +413,152 @@ const Activities = () => {
               </Button>
             </div>
           ) : (
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-              {filteredActivities.map((activity) => (
-                <div key={activity.id} className="bg-card border rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-all duration-300">
-                  <div className="relative">
-                    <MediaAsset
-                      hardcodedKey={activity.image_key || ''}
-                      fallbackUrl={activity.image || 'https://images.unsplash.com/photo-1544568100-847a948585b9?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80'}
-                      alt={activity.title}
-                      className="w-full h-48 object-cover"
-                    />
-                    <Badge className="absolute top-3 right-3 bg-white/90 text-foreground">
-                      <Star className="w-3 h-3 mr-1 fill-current" />
-                      4.5
-                    </Badge>
-                    <Badge className="absolute top-3 left-3 bg-primary text-primary-foreground">
-                      Book Now
-                    </Badge>
-                  </div>
-                  
-                  <div className="p-6">
-                    <h3 className="text-xl font-heading font-semibold mb-2">{activity.title}</h3>
-                    <p className="text-muted-foreground font-body text-sm mb-4 leading-relaxed">
-                      {activity.description || 'An exciting activity to enhance your stay at Matheran.'}
-                    </p>
-                    
-                    <div className="space-y-2 mb-4 text-sm text-muted-foreground">
-                      {activity.distance && (
-                        <div className="flex items-center gap-2">
-                          <MapPin className="w-4 h-4" />
-                          {activity.distance}
+            <>
+              {/* Grid View */}
+              {viewMode === 'grid' && (
+                <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+                  {filteredActivities.map((activity) => (
+                    <div key={activity.id} className="bg-card border rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-all duration-300">
+                      <div className="relative">
+                        <MediaAsset
+                          hardcodedKey={activity.image_key || ''}
+                          fallbackUrl={activity.image || 'https://images.unsplash.com/photo-1544568100-847a948585b9?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80'}
+                          alt={activity.title}
+                          className="w-full h-48 object-cover"
+                        />
+                        <Badge className="absolute top-3 right-3 bg-white/90 text-foreground">
+                          <Star className="w-3 h-3 mr-1 fill-current" />
+                          4.5
+                        </Badge>
+                        <Badge className="absolute top-3 left-3 bg-primary text-primary-foreground">
+                          Book Now
+                        </Badge>
+                      </div>
+                      
+                      <div className="p-6">
+                        <h3 className="text-xl font-heading font-semibold mb-2">{activity.title}</h3>
+                        <p className="text-muted-foreground font-body text-sm mb-4 leading-relaxed line-clamp-2">
+                          {activity.description || 'An exciting activity to enhance your stay at Matheran.'}
+                        </p>
+                        
+                        <div className="space-y-2 mb-4 text-sm text-muted-foreground">
+                          {activity.distance && (
+                            <div className="flex items-center gap-2">
+                              <MapPin className="w-4 h-4" />
+                              {activity.distance}
+                            </div>
+                          )}
+                          {activity.booking_required && (
+                            <div className="flex items-center gap-2">
+                              <Clock className="w-4 h-4" />
+                              Booking Required
+                            </div>
+                          )}
+                          <div className="flex items-center gap-2">
+                            <Users className="w-4 h-4" />
+                            Suitable for All Ages
+                          </div>
                         </div>
-                      )}
-                      {activity.booking_required && (
-                        <div className="flex items-center gap-2">
-                          <Clock className="w-4 h-4" />
-                          Booking Required
+
+                        <div className="flex gap-2">
+                          <Button 
+                            variant="outline" 
+                            className="font-body flex-1 h-10"
+                            onClick={() => navigate(`/activities/${activity.id}`)}
+                          >
+                            Learn More
+                          </Button>
+                          <Button 
+                            className="font-body flex-1 h-10"
+                            onClick={() => handleAddToStay(activity)}
+                            variant={addedActivityIds.includes(activity.id) ? "secondary" : "default"}
+                          >
+                            {addedActivityIds.includes(activity.id) ? "✓ Added" : <><Plus className="h-4 w-4 mr-2" />Add to Stay</>}
+                          </Button>
                         </div>
-                      )}
-                      <div className="flex items-center gap-2">
-                        <Users className="w-4 h-4" />
-                        Suitable for All Ages
                       </div>
                     </div>
-
-                    <div className="flex gap-2">
-                      <Button 
-                        variant="outline" 
-                        className="font-body flex-1 h-10"
-                        onClick={() => navigate(`/activities/${activity.id}`)}
-                      >
-                        Learn More
-                      </Button>
-                      <Button 
-                        className="font-body flex-1 h-10"
-                        onClick={() => handleAddToStay(activity)}
-                        variant={addedActivityIds.includes(activity.id) ? "secondary" : "default"}
-                      >
-                        {addedActivityIds.includes(activity.id) ? "✓ Added" : <><Plus className="h-4 w-4 mr-2" />Add to Stay</>}
-                      </Button>
-                    </div>
-                  </div>
+                  ))}
                 </div>
-              ))}
-            </div>
+              )}
+
+              {/* List View */}
+              {viewMode === 'list' && (
+                <div className="space-y-4">
+                  {filteredActivities.map((activity) => (
+                    <div key={activity.id} className="bg-card border rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-all duration-300">
+                      <div className="flex flex-col md:flex-row">
+                        <div className="relative md:w-64 h-48 md:h-auto flex-shrink-0">
+                          <MediaAsset
+                            hardcodedKey={activity.image_key || ''}
+                            fallbackUrl={activity.image || 'https://images.unsplash.com/photo-1544568100-847a948585b9?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80'}
+                            alt={activity.title}
+                            className="w-full h-full object-cover"
+                          />
+                          <Badge className="absolute top-3 right-3 bg-white/90 text-foreground">
+                            <Star className="w-3 h-3 mr-1 fill-current" />
+                            4.5
+                          </Badge>
+                        </div>
+                        
+                        <div className="flex-1 p-6">
+                          <div className="flex flex-col h-full">
+                            <div className="flex-1">
+                              <div className="flex items-start justify-between mb-2">
+                                <h3 className="text-2xl font-heading font-semibold">{activity.title}</h3>
+                                <Badge className="ml-2 bg-primary text-primary-foreground whitespace-nowrap">
+                                  Book Now
+                                </Badge>
+                              </div>
+                              
+                              <p className="text-muted-foreground font-body text-sm mb-4 leading-relaxed line-clamp-2">
+                                {activity.description || 'An exciting activity to enhance your stay at Matheran.'}
+                              </p>
+                              
+                              <div className="flex flex-wrap gap-4 mb-4 text-sm text-muted-foreground">
+                                {activity.distance && (
+                                  <div className="flex items-center gap-2">
+                                    <MapPin className="w-4 h-4" />
+                                    {activity.distance}
+                                  </div>
+                                )}
+                                {activity.booking_required && (
+                                  <div className="flex items-center gap-2">
+                                    <Clock className="w-4 h-4" />
+                                    Booking Required
+                                  </div>
+                                )}
+                                <div className="flex items-center gap-2">
+                                  <Users className="w-4 h-4" />
+                                  Suitable for All Ages
+                                </div>
+                              </div>
+                            </div>
+
+                            <div className="flex gap-2 mt-auto">
+                              <Button 
+                                variant="outline" 
+                                className="font-body h-10"
+                                onClick={() => navigate(`/activities/${activity.id}`)}
+                              >
+                                Learn More
+                              </Button>
+                              <Button 
+                                className="font-body h-10"
+                                onClick={() => handleAddToStay(activity)}
+                                variant={addedActivityIds.includes(activity.id) ? "secondary" : "default"}
+                              >
+                                {addedActivityIds.includes(activity.id) ? "✓ Added" : <><Plus className="h-4 w-4 mr-2" />Add to Stay</>}
+                              </Button>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </>
           )}
         </div>
       </section>
