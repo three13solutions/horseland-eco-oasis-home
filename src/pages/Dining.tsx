@@ -6,9 +6,11 @@ import { Button } from '@/components/ui/button';
 import { Clock, Leaf, Award, UtensilsCrossed, ChefHat, Home, Sparkles } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useNavigate } from 'react-router-dom';
+import { useToast } from '@/hooks/use-toast';
 
 const Dining = () => {
   const navigate = useNavigate();
+  const { toast } = useToast();
   const [heroImage, setHeroImage] = React.useState('https://images.unsplash.com/photo-1544025162-d76694265947?ixlib=rb-4.0.3&auto=format&fit=crop&w=2000&q=80');
   const [heroTitle, setHeroTitle] = React.useState('Farm-to-Table Dining');
   const [heroSubtitle, setHeroSubtitle] = React.useState('Savor authentic flavors crafted from local ingredients');
@@ -324,7 +326,64 @@ const Dining = () => {
           <Button 
             size="lg" 
             className="font-body"
-            onClick={() => navigate('/booking?tab=meals')}
+            onClick={() => {
+              const bookingData = localStorage.getItem('currentBooking');
+              
+              if (!bookingData) {
+                toast({
+                  title: "Select Your Stay First",
+                  description: "Please select your accommodation and dates on the booking page first.",
+                  variant: "destructive",
+                  action: (
+                    <button onClick={() => navigate('/booking')} className="underline">
+                      Go to Booking
+                    </button>
+                  ),
+                });
+                return;
+              }
+
+              try {
+                const booking = JSON.parse(bookingData);
+                
+                if (!booking.checkIn || !booking.checkOut) {
+                  toast({
+                    title: "Select Dates First",
+                    description: "Please select your check-in and check-out dates on the booking page.",
+                    variant: "destructive",
+                    action: (
+                      <button onClick={() => navigate('/booking')} className="underline">
+                        Go to Booking
+                      </button>
+                    ),
+                  });
+                  return;
+                }
+
+                if (!booking.selectedRoom && !booking.roomType && !booking.roomUnit) {
+                  toast({
+                    title: "Select a Room First",
+                    description: "Please select your accommodation before managing dietary needs.",
+                    variant: "destructive",
+                    action: (
+                      <button onClick={() => navigate('/booking')} className="underline">
+                        Go to Booking
+                      </button>
+                    ),
+                  });
+                  return;
+                }
+
+                navigate('/booking?tab=meals');
+              } catch (error) {
+                console.error('Error checking booking:', error);
+                toast({
+                  title: "Oops!",
+                  description: "We encountered a small issue. Please try again.",
+                  variant: "destructive",
+                });
+              }
+            }}
           >
             Inform About Dietary Needs
           </Button>
