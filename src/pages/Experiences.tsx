@@ -1,7 +1,7 @@
 import React from 'react';
-import NavigationV5 from '../components/v5/NavigationV5';
+import Navigation from '../components/Navigation';
 import DynamicFooter from '../components/DynamicFooter';
-import CombinedFloatingV5 from '../components/v5/CombinedFloatingV5';
+import CombinedFloating from '../components/CombinedFloating';
 import { Button } from '@/components/ui/button';
 import { TreePine, UtensilsCrossed, Sparkles } from 'lucide-react';
 import { Link } from 'react-router-dom';
@@ -53,7 +53,7 @@ const Experiences = () => {
 
   return (
     <div className="min-h-screen bg-background overflow-x-hidden">
-      <NavigationV5 />
+      <Navigation />
       
       {/* Hero Section */}
       <section className="relative h-[60vh] min-h-[500px] flex items-center justify-center">
@@ -163,7 +163,7 @@ const Experiences = () => {
       </section>
 
       <DynamicFooter />
-      <CombinedFloatingV5 />
+      <CombinedFloating />
     </div>
   );
 };

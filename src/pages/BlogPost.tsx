@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
-import NavigationV5 from '../components/v5/NavigationV5';
+import Navigation from '../components/Navigation';
 import DynamicFooter from '../components/DynamicFooter';
-import CombinedFloatingV5 from '../components/v5/CombinedFloatingV5';
+import CombinedFloating from '../components/CombinedFloating';
 import MediaAsset from '@/components/MediaAsset';
 import SEO from '../components/SEO';
 import { generateArticleSchema, generateBreadcrumbSchema } from '../lib/seo';
@@ -112,7 +112,7 @@ const BlogPost = () => {
   if (!post) {
     return (
       <div className="min-h-screen bg-background">
-        <NavigationV5 />
+        <Navigation />
         <div className="max-w-4xl mx-auto px-4 py-16 text-center">
           <h1 className="text-4xl font-bold mb-4">Post Not Found</h1>
           <p className="text-muted-foreground mb-8">The blog post you're looking for doesn't exist.</p>
@@ -169,7 +169,7 @@ const BlogPost = () => {
       />
       
       <div className="min-h-screen bg-background">
-        <NavigationV5 />
+        <Navigation />
         
         {/* Hero Banner */}
         {post.featured_image && (
@@ -340,7 +340,7 @@ const BlogPost = () => {
         )}
 
         <DynamicFooter />
-        <CombinedFloatingV5 />
+        <CombinedFloating />
       </div>
     </>
   );

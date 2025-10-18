@@ -1,9 +1,9 @@
 import { useEffect, useState } from "react";
 import { useParams, Navigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import NavigationV5 from "@/components/v5/NavigationV5";
-import FooterV5 from "@/components/v5/FooterV5";
-import CombinedFloatingV5 from "@/components/v5/CombinedFloatingV5";
+import Navigation from "@/components/Navigation";
+import Footer from "@/components/Footer";
+import CombinedFloating from "@/components/CombinedFloating";
 import SEO from "@/components/SEO";
 import MediaAsset from "@/components/MediaAsset";
 import { toast } from "sonner";
@@ -227,7 +227,7 @@ export default function DynamicPage() {
       />
 
       <div className="min-h-screen bg-background">
-        <NavigationV5 />
+        <Navigation />
 
         {renderHero()}
 
@@ -245,8 +245,8 @@ export default function DynamicPage() {
           </div>
         </main>
 
-        <FooterV5 />
-        <CombinedFloatingV5 />
+        <Footer />
+        <CombinedFloating />
       </div>
     </>
   );

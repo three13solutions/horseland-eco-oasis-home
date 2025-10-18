@@ -10,7 +10,7 @@ import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from '@/components/ui/carousel';
-import NavigationV5 from '@/components/v5/NavigationV5';
+import Navigation from '@/components/Navigation';
 import DynamicFooter from '@/components/DynamicFooter';
 import { PaymentModal } from '@/components/PaymentModal';
 import { supabase } from '@/integrations/supabase/client';
@@ -1128,7 +1128,7 @@ const Booking = () => {
   if (showBookingForm && selectedRoomType) {
     return (
       <div className="min-h-screen bg-background">
-        <NavigationV5 />
+          <Navigation />
         
         {/* Banner */}
         <section className="relative h-64 bg-gradient-to-r from-primary to-accent">
@@ -2045,7 +2045,7 @@ const Booking = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <NavigationV5 />
+      <Navigation />
       
       {/* Package Banner */}
       {selectedPackage && (

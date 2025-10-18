@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
-import NavigationV5 from '../components/v5/NavigationV5';
+import Navigation from '../components/Navigation';
 import DynamicFooter from '../components/DynamicFooter';
-import CombinedFloatingV5 from '../components/v5/CombinedFloatingV5';
+import CombinedFloating from '../components/CombinedFloating';
 import SEO from '../components/SEO';
 import { generateBreadcrumbSchema } from '../lib/seo';
 import { Button } from '@/components/ui/button';
@@ -106,7 +106,7 @@ const Journal = () => {
       />
       
       <div className="min-h-screen bg-background overflow-x-hidden">
-        <NavigationV5 />
+        <Navigation />
       
       {/* Hero Section */}
       <section className="relative h-[60vh] min-h-[500px] flex items-center justify-center">
@@ -331,7 +331,7 @@ const Journal = () => {
       </section>
 
         <DynamicFooter />
-        <CombinedFloatingV5 />
+        <CombinedFloating />
       </div>
     </>
   );

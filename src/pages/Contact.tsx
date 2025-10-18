@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import NavigationV5 from "@/components/v5/NavigationV5";
+import Navigation from "@/components/Navigation";
 import DynamicFooter from "@/components/DynamicFooter";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -108,7 +108,7 @@ const Contact = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <NavigationV5 />
+      <Navigation />
 
       {/* Hero Section */}
       <section className="relative h-[60vh] min-h-[500px] flex items-center justify-center">

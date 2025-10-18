@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import NavigationV5 from '../components/v5/NavigationV5';
+import Navigation from '../components/Navigation';
 import DynamicFooter from '../components/DynamicFooter';
-import CombinedFloatingV5 from '../components/v5/CombinedFloatingV5';
+import CombinedFloating from '../components/CombinedFloating';
 import MediaAsset from '@/components/MediaAsset';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -249,7 +249,7 @@ const ActivityDetail = () => {
   if (loading) {
     return (
       <div className="min-h-screen bg-background">
-        <NavigationV5 />
+        <Navigation />
         <div className="flex justify-center items-center min-h-[60vh]">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
         </div>
@@ -264,7 +264,7 @@ const ActivityDetail = () => {
 
   return (
     <div className="min-h-screen bg-background overflow-x-hidden">
-      <NavigationV5 />
+      <Navigation />
       
       {/* Hero Section */}
       <section className="relative h-[60vh] min-h-[500px] flex items-center justify-center">
@@ -452,7 +452,7 @@ const ActivityDetail = () => {
       </section>
 
       <DynamicFooter />
-      <CombinedFloatingV5 />
+      <CombinedFloating />
     </div>
   );
 };

@@ -1,7 +1,7 @@
 import React from 'react';
-import NavigationV5 from '../components/v5/NavigationV5';
+import Navigation from '../components/Navigation';
 import DynamicFooter from '../components/DynamicFooter';
-import CombinedFloatingV5 from '../components/v5/CombinedFloatingV5';
+import CombinedFloating from '../components/CombinedFloating';
 import DiningGalleryCollage from '../components/DiningGalleryCollage';
 import { Button } from '@/components/ui/button';
 import { Clock, Leaf, Award, UtensilsCrossed, ChefHat, Home, Sparkles } from 'lucide-react';
@@ -96,7 +96,7 @@ const Dining = () => {
 
   return (
     <div className="min-h-screen bg-background overflow-x-hidden">
-      <NavigationV5 />
+      <Navigation />
       
       {/* Hero Section */}
       <section className="relative h-[60vh] min-h-[500px] flex items-center justify-center">
@@ -453,7 +453,7 @@ const Dining = () => {
       </section>
 
       <DynamicFooter />
-      <CombinedFloatingV5 />
+      <CombinedFloating />
     </div>
   );
 };

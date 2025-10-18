@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import NavigationV5 from '@/components/v5/NavigationV5';
+import Navigation from '@/components/Navigation';
 import DynamicFooter from '@/components/DynamicFooter';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -109,7 +109,7 @@ const Policies = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <NavigationV5 />
+      <Navigation />
       
       {/* Hero Section */}
       <section className="relative h-[60vh] min-h-[500px] w-full overflow-hidden">

@@ -1,114 +1,144 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Calendar, Users, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Card, CardContent } from '@/components/ui/card';
-import {
-  Carousel,
-  CarouselContent,
-  CarouselItem,
-  CarouselNext,
-  CarouselPrevious,
-} from '@/components/ui/carousel';
-import { useMediaAsset } from '@/hooks/useMediaAsset';
+import { Calendar, Users, ArrowRight, ChevronLeft, ChevronRight } from 'lucide-react';
+import { useTranslationContext } from '@/components/admin/TranslationProvider';
+import { supabase } from '@/integrations/supabase/client';
 
-const HeroSection = () => {
+const HeroSectionV5 = () => {
   const navigate = useNavigate();
+  const { getTranslation } = useTranslationContext();
+  const [currentSlide, setCurrentSlide] = useState(0);
   const [checkIn, setCheckIn] = useState('');
   const [checkOut, setCheckOut] = useState('');
   const [guests, setGuests] = useState('2');
-
-  // Use media assets for hero slides with fallback URLs
-  const { asset: heroSlide1 } = useMediaAsset('hero.v4.slide1', 'https://images.unsplash.com/photo-1469474968028-56623f02e42e?w=1920&h=1080&fit=crop');
-  const { asset: heroSlide2 } = useMediaAsset('hero.v4.slide2', 'https://images.unsplash.com/photo-1482938289607-e9573fc25ebb?w=1920&h=1080&fit=crop');
-  const { asset: heroSlide3 } = useMediaAsset('hero.v4.slide3', 'https://images.unsplash.com/photo-1501854140801-50d01698950b?w=1920&h=1080&fit=crop');
-
-  const heroImages = [
-    heroSlide1?.image_url || 'https://images.unsplash.com/photo-1469474968028-56623f02e42e?w=1920&h=1080&fit=crop',
-    heroSlide2?.image_url || 'https://images.unsplash.com/photo-1482938289607-e9573fc25ebb?w=1920&h=1080&fit=crop',
-    heroSlide3?.image_url || 'https://images.unsplash.com/photo-1501854140801-50d01698950b?w=1920&h=1080&fit=crop',
-  ];
-
-  const handleCheckAvailability = () => {
-    if (!checkIn || !checkOut) {
-      alert('Please select check-in and check-out dates');
-      return;
+  const [heroTitle, setHeroTitle] = useState('Escape to Nature\'s Embrace');
+  const [heroSubtitle, setHeroSubtitle] = useState('A mindful retreat in Matheran\'s no-car eco zone');
+  const [slides, setSlides] = useState([
+    {
+      type: 'image',
+      content: "/lovable-uploads/9699e81e-78aa-4ce4-b652-cf46c4bd7075.png",
+      alt: "Horse riding on red mud trails in Matheran"
+    },
+    {
+      type: 'image',
+      content: "/lovable-uploads/d4df921c-30f4-4f92-92f2-c84dbcd5b591.png",
+      alt: "Beautiful lake with red earth shores in Matheran"
+    },
+    {
+      type: 'image',
+      content: "/lovable-uploads/b7049d8c-bd59-4733-b040-30b3f79f881c.png",
+      alt: "Winding mountain roads leading to Matheran"
+    },
+    {
+      type: 'image',
+      content: "/lovable-uploads/6df7505d-8906-4590-b67e-a18c9f9da7f5.png",
+      alt: "Matheran toy train through misty mountains"
     }
+  ]);
 
-    const searchParams = new URLSearchParams({
-      checkIn,
-      checkOut,
-      guests
-    });
+  useEffect(() => {
+    const fetchPageData = async () => {
+      const { data } = await supabase
+        .from('pages')
+        .select('title, subtitle, hero_gallery')
+        .eq('slug', 'home')
+        .single();
+      
+      if (data) {
+        if (data.title) setHeroTitle(data.title);
+        if (data.subtitle) setHeroSubtitle(data.subtitle);
+        if (data.hero_gallery && Array.isArray(data.hero_gallery) && data.hero_gallery.length > 0) {
+          setSlides(data.hero_gallery.map((url: string, index: number) => ({
+            type: 'image',
+            content: url,
+            alt: `Matheran hero image ${index + 1}`
+          })));
+        }
+      }
+    };
     
-    navigate(`/booking?${searchParams.toString()}`);
+    fetchPageData();
+  }, []);
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrentSlide((prev) => (prev + 1) % slides.length);
+    }, 5000);
+    return () => clearInterval(timer);
+  }, [slides.length]);
+
+  const nextSlide = () => {
+    setCurrentSlide((prev) => (prev + 1) % slides.length);
+  };
+
+  const prevSlide = () => {
+    setCurrentSlide((prev) => (prev - 1 + slides.length) % slides.length);
   };
 
   return (
-    <section className="relative h-screen overflow-hidden">
-      <Carousel className="h-full">
-        <CarouselContent>
-          {heroImages.map((image, index) => (
-            <CarouselItem key={index}>
-              <div className="relative h-screen">
-                <img
-                  src={image}
-                  alt={`Hero ${index + 1}`}
-                  className="w-full h-full object-cover"
-                />
-                <div className="absolute inset-0 bg-black/40" />
-              </div>
-            </CarouselItem>
-          ))}
-        </CarouselContent>
-        <CarouselPrevious className="left-8" />
-        <CarouselNext className="right-8" />
-      </Carousel>
+    <section className="relative h-screen w-full overflow-hidden">
+      {/* Background Images */}
+      {slides.map((slide, index) => (
+        <div
+          key={index}
+          className={`absolute inset-0 transition-opacity duration-1000 ${
+            index === currentSlide ? 'opacity-100' : 'opacity-0'
+          }`}
+        >
+          <img
+            src={slide.content}
+            alt={slide.alt}
+            className="w-full h-full object-cover"
+          />
+          <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-transparent to-black/60" />
+        </div>
+      ))}
 
-      {/* Hero Content */}
-      <div className="absolute inset-0 flex items-center justify-center">
-        <div className="text-center text-white px-4 max-w-4xl">
-          <h1 className="text-4xl md:text-6xl font-bold mb-6">
-            Escape to Nature's Embrace
-          </h1>
-          <p className="text-xl md:text-2xl mb-8 opacity-90">
-            Comfortable eco-retreat in the heart of Matheran's pristine hills
-          </p>
-          
-          {/* Booking Widget */}
-          <Card className="bg-white/95 backdrop-blur-sm max-w-4xl mx-auto">
-            <CardContent className="p-6">
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+      {/* Content Overlay */}
+      <div className="relative z-10 h-full flex items-center">
+        <div className="container mx-auto px-4">
+          <div className="max-w-4xl mx-auto text-center text-white">
+            <h1 className="text-4xl md:text-6xl lg:text-7xl font-heading font-bold mb-6 leading-tight">
+              {getTranslation('hero.title', heroTitle)}
+            </h1>
+            <p className="text-lg md:text-xl mb-12 text-white/90 font-body font-light max-w-2xl mx-auto">
+              {getTranslation('hero.subtitle', heroSubtitle)}
+            </p>
+
+            {/* Glassmorphism Booking Widget - Inside Hero */}
+            <div className="bg-white/10 backdrop-blur-xl rounded-3xl p-6 md:p-8 border border-white/20 max-w-4xl mx-auto">
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-4 md:gap-6 items-end">
                 <div className="space-y-2">
-                  <label className="text-sm font-medium text-gray-700">Check-in</label>
+                  <label className="text-white/80 text-sm font-medium block text-left">{getTranslation('hero.checkIn', 'Check-in')}</label>
                   <div className="relative">
                     <Input
                       type="date"
                       value={checkIn}
                       onChange={(e) => setCheckIn(e.target.value)}
-                      className="pl-10"
+                      className="bg-white/20 border-white/30 text-white placeholder:text-white/60 rounded-xl h-12"
                     />
-                    <Calendar className="absolute left-3 top-3 h-4 w-4 text-gray-500" />
+                    <Calendar className="absolute right-3 top-3 h-6 w-6 text-white/60 pointer-events-none" />
                   </div>
                 </div>
                 
                 <div className="space-y-2">
-                  <label className="text-sm font-medium text-gray-700">Check-out</label>
+                  <label className="text-white/80 text-sm font-medium block text-left">{getTranslation('hero.checkOut', 'Check-out')}</label>
                   <div className="relative">
                     <Input
                       type="date"
                       value={checkOut}
                       onChange={(e) => setCheckOut(e.target.value)}
-                      className="pl-10"
+                      className="bg-white/20 border-white/30 text-white placeholder:text-white/60 rounded-xl h-12"
                     />
-                    <Calendar className="absolute left-3 top-3 h-4 w-4 text-gray-500" />
+                    <Calendar className="absolute right-3 top-3 h-6 w-6 text-white/60 pointer-events-none" />
                   </div>
                 </div>
                 
                 <div className="space-y-2">
-                  <label className="text-sm font-medium text-gray-700">Guests</label>
+                  <label className="text-white/80 text-sm font-medium block text-left">{getTranslation('hero.guests', 'Guests')}</label>
                   <div className="relative">
                     <Input
                       type="number"
@@ -116,27 +146,51 @@ const HeroSection = () => {
                       max="8"
                       value={guests}
                       onChange={(e) => setGuests(e.target.value)}
-                      className="pl-10"
+                      className="bg-white/20 border-white/30 text-white placeholder:text-white/60 rounded-xl h-12"
                     />
-                    <Users className="absolute left-3 top-3 h-4 w-4 text-gray-500" />
+                    <Users className="absolute right-3 top-3 h-6 w-6 text-white/60 pointer-events-none" />
                   </div>
                 </div>
                 
-                <div className="flex items-end">
-                  <Button 
-                    onClick={handleCheckAvailability}
-                    className="w-full bg-primary hover:bg-primary/90 text-primary-foreground"
-                  >
-                    Check Availability
-                  </Button>
-                </div>
+                <Button 
+                  onClick={() => {
+                    if (checkIn && checkOut) {
+                      const searchParams = new URLSearchParams({
+                        checkIn,
+                        checkOut,
+                        guests
+                      });
+                      navigate(`/booking?${searchParams.toString()}`);
+                    } else {
+                      navigate('/stay');
+                    }
+                  }}
+                  className="h-12 bg-gradient-to-r from-primary to-accent hover:shadow-2xl transform hover:scale-105 transition-all duration-300 rounded-xl text-lg font-semibold px-6"
+                >
+                  {getTranslation('hero.exploreStay', 'Explore Stay')}
+                  <ArrowRight className="ml-2 h-5 w-5" />
+                </Button>
               </div>
-            </CardContent>
-          </Card>
+            </div>
+          </div>
         </div>
       </div>
+
+      {/* Navigation Arrows */}
+      <button
+        onClick={prevSlide}
+        className="absolute left-4 top-1/2 -translate-y-1/2 z-20 flex items-center justify-center w-12 h-12 bg-white/20 backdrop-blur-sm rounded-full hover:bg-white/30 transition-colors"
+      >
+        <ChevronLeft className="w-6 h-6 text-white" />
+      </button>
+      <button
+        onClick={nextSlide}
+        className="absolute right-4 top-1/2 -translate-y-1/2 z-20 flex items-center justify-center w-12 h-12 bg-white/20 backdrop-blur-sm rounded-full hover:bg-white/30 transition-colors"
+      >
+        <ChevronRight className="w-6 h-6 text-white" />
+      </button>
     </section>
   );
 };
 
-export default HeroSection;
+export default HeroSectionV5;

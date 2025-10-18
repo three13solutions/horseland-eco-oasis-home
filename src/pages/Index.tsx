@@ -1,20 +1,20 @@
 import React from 'react';
 import SEO from '../components/SEO';
-import NavigationV5 from '../components/v5/NavigationV5';
-import HeroSectionV5 from '../components/v5/HeroSectionV5';
-import WelcomeAndMatheranV5 from '../components/v5/WelcomeAndMatheranV5';
-import StayPreviewV5 from '../components/v5/StayPreviewV5';
-import ExperiencesTeaserV5 from '../components/v5/ExperiencesTeaserV5';
-import PackagesPreviewV5 from '../components/v5/PackagesPreviewV5';
-import GuestReviewsV5 from '../components/v5/GuestReviewsV5';
+import Navigation from '../components/Navigation';
+import HeroSection from '../components/HeroSection';
+import WelcomeAndMatheran from '../components/WelcomeAndMatheran';
+import StayPreview from '../components/StayPreview';
+import ExperiencesTeaser from '../components/ExperiencesTeaser';
+import PackagesPreview from '../components/PackagesPreview';
+import GuestReviews from '../components/GuestReviews';
 
-import GalleryV5 from '../components/v5/GalleryV5';
-import JournalPreviewV5 from '../components/v5/JournalPreviewV5';
+import Gallery from '../components/Gallery';
+import JournalPreview from '../components/JournalPreview';
 import DynamicFooter from '../components/DynamicFooter';
-import CombinedFloatingV5 from '../components/v5/CombinedFloatingV5';
+import CombinedFloating from '../components/CombinedFloating';
 import { generateHotelSchema } from '../lib/seo';
 
-const IndexV5 = () => {
+const Index = () => {
   const hotelSchema = generateHotelSchema({
     name: "Horseland Eco Oasis",
     description: "Experience sustainable luxury at Horseland Eco Oasis in Matheran. An eco-friendly resort offering comfortable stays, authentic experiences, and breathtaking mountain views.",
@@ -39,21 +39,21 @@ const IndexV5 = () => {
         schema={hotelSchema}
       />
       <div className="min-h-screen bg-background overflow-x-hidden">
-        <NavigationV5 />
-        <HeroSectionV5 />
-        <WelcomeAndMatheranV5 />
-        <StayPreviewV5 />
-        {/* <ExperiencesTeaserV5 /> */}
-        {/* <PackagesPreviewV5 /> */}
-        <GuestReviewsV5 />
+        <Navigation />
+        <HeroSection />
+        <WelcomeAndMatheran />
+        <StayPreview />
+        {/* <ExperiencesTeaser /> */}
+        {/* <PackagesPreview /> */}
+        <GuestReviews />
         
-        <GalleryV5 />
-        <JournalPreviewV5 />
+        <Gallery />
+        <JournalPreview />
         <DynamicFooter />
-        <CombinedFloatingV5 />
+        <CombinedFloating />
       </div>
     </>
   );
 };
 
-export default IndexV5;
+export default Index;

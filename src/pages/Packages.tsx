@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import NavigationV5 from '../components/v5/NavigationV5';
+import Navigation from '../components/Navigation';
 import DynamicFooter from '../components/DynamicFooter';
-import CombinedFloatingV5 from '../components/v5/CombinedFloatingV5';
+import CombinedFloating from '../components/CombinedFloating';
 import MediaAsset from '@/components/MediaAsset';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -150,7 +150,7 @@ const Packages = () => {
   if (loading) {
     return (
       <div className="min-h-screen bg-background overflow-x-hidden">
-        <NavigationV5 />
+        <Navigation />
         <div className="flex items-center justify-center min-h-96">
           <div className="text-center">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
@@ -158,14 +158,14 @@ const Packages = () => {
           </div>
         </div>
         <DynamicFooter />
-        <CombinedFloatingV5 />
+        <CombinedFloating />
       </div>
     );
   }
 
   return (
     <div className="min-h-screen bg-background overflow-x-hidden">
-      <NavigationV5 />
+      <Navigation />
       
       {/* Hero Section */}
       <section className="relative h-[60vh] min-h-[500px] flex items-center justify-center">
@@ -305,7 +305,7 @@ const Packages = () => {
       </section>
 
       <DynamicFooter />
-      <CombinedFloatingV5 />
+      <CombinedFloating />
     </div>
   );
 };

@@ -1,7 +1,7 @@
 import React, { useMemo, useState, useEffect } from 'react';
-import NavigationV5 from '../components/v5/NavigationV5';
+import Navigation from '../components/Navigation';
 import DynamicFooter from '../components/DynamicFooter';
-import CombinedFloatingV5 from '../components/v5/CombinedFloatingV5';
+import CombinedFloating from '../components/CombinedFloating';
 import { Filters } from '@/components/stay/CategoryFilters';
 import CategoryCard, { Category } from '@/components/stay/CategoryCard';
 import { supabase } from '@/integrations/supabase/client';
@@ -166,7 +166,7 @@ const Stay = () => {
 
   return (
     <div className="min-h-screen bg-background overflow-x-hidden">
-      <NavigationV5 />
+      <Navigation />
       
       {/* Hero Section */}
       <section className="relative h-[60vh] min-h-[500px] flex items-center justify-center">
@@ -742,7 +742,7 @@ const Stay = () => {
       </section>
 
       <DynamicFooter />
-      <CombinedFloatingV5 />
+      <CombinedFloating />
     </div>
   );
 };

@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
-import NavigationV5 from '../components/v5/NavigationV5';
+import Navigation from '../components/Navigation';
 import DynamicFooter from '../components/DynamicFooter';
-import CombinedFloatingV5 from '../components/v5/CombinedFloatingV5';
+import CombinedFloating from '../components/CombinedFloating';
 import { Button } from '@/components/ui/button';
 import { Leaf, Award, Heart, Mountain, Users, Lightbulb } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
@@ -39,7 +39,7 @@ const About = () => {
   if (!pageData) {
     return (
       <div className="min-h-screen bg-background overflow-x-hidden">
-        <NavigationV5 />
+          <Navigation />
         <div className="flex items-center justify-center min-h-[60vh]">
           <p className="text-muted-foreground">Loading...</p>
         </div>
@@ -64,7 +64,7 @@ const About = () => {
 
   return (
     <div className="min-h-screen bg-background overflow-x-hidden">
-      <NavigationV5 />
+      <Navigation />
       
       {/* Hero Section */}
       <section className="relative h-[60vh] min-h-[500px] flex items-center justify-center">
@@ -312,7 +312,7 @@ const About = () => {
       </section>
 
       <DynamicFooter />
-      <CombinedFloatingV5 />
+      <CombinedFloating />
     </div>
   );
 };

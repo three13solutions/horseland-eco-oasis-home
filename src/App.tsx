@@ -10,7 +10,7 @@ import { TranslationProvider } from './components/admin/TranslationProvider';
 import { useFavicon } from './hooks/useFavicon';
 
 // General
-import IndexV5 from "./pages/IndexV5";
+import Index from "./pages/Index";
 import About from "./pages/About";
 import Contact from "./pages/Contact";
 import Stay from "./pages/Stay";
@@ -76,7 +76,7 @@ function App() {
               <ScrollToTop />
               <Routes>
               {/* General Routes */}
-              <Route path="/" element={<IndexV5 />} />
+              <Route path="/" element={<Index />} />
               <Route path="/about" element={<About />} />
               <Route path="/contact" element={<Contact />} />
               <Route path="/stay" element={<Stay />} />
