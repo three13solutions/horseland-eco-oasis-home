@@ -63,6 +63,13 @@ interface GuestMeal {
   guestNumber: number;
   dietaryPreference: 'vegetarian' | 'non-vegetarian' | 'jain';
   mealTypeQuantities: { [key: string]: number }; // meal type to quantity mapping
+  specialArrangements: {
+    sitoutBreakfast?: number;
+    sitoutLunch?: number;
+    sitoutHighTea?: number;
+    sitoutDinner?: number;
+    candleLightDinner?: number;
+  };
 }
 
 interface PickupService {
@@ -130,7 +137,8 @@ const Booking = () => {
       const newGuestMeals: GuestMeal[] = Array.from({ length: guests }, (_, i) => ({
         guestNumber: i + 1,
         dietaryPreference: 'vegetarian',
-        mealTypeQuantities: {}
+        mealTypeQuantities: {},
+        specialArrangements: {}
       }));
       setGuestMeals(newGuestMeals);
     }
@@ -618,18 +626,60 @@ const Booking = () => {
   };
 
   const handleMealQuantityChange = (guestIndex: number, mealType: string, change: number) => {
+    const nights = calculateNights();
+    
     setGuestMeals(prev => {
       const updated = [...prev];
       const guest = updated[guestIndex];
-      const nights = calculateNights();
       const currentQty = guest.mealTypeQuantities[mealType] || 0;
-      const newQty = Math.max(0, Math.min(nights, currentQty + change));
+      const newQty = currentQty + change;
+      
+      // Check if trying to exceed max nights
+      if (newQty > nights) {
+        toast({
+          title: "Limit Reached",
+          description: `Meal count cannot exceed the number of days (${nights}) in your stay`,
+          variant: "destructive"
+        });
+        return prev;
+      }
       
       if (newQty === 0) {
         delete guest.mealTypeQuantities[mealType];
       } else {
-        guest.mealTypeQuantities[mealType] = newQty;
+        guest.mealTypeQuantities[mealType] = Math.max(0, newQty);
       }
+      
+      return updated;
+    });
+  };
+
+  const handleSpecialArrangementChange = (guestIndex: number, arrangement: string, change: number) => {
+    const nights = calculateNights();
+    
+    setGuestMeals(prev => {
+      const updated = [...prev];
+      const guest = updated[guestIndex];
+      const currentQty = guest.specialArrangements[arrangement as keyof typeof guest.specialArrangements] || 0;
+      const newQty = currentQty + change;
+      
+      // Check if trying to exceed max nights
+      if (newQty > nights) {
+        toast({
+          title: "Limit Reached",
+          description: `Special arrangement count cannot exceed the number of days (${nights}) in your stay`,
+          variant: "destructive"
+        });
+        return prev;
+      }
+      
+      updated[guestIndex] = {
+        ...guest,
+        specialArrangements: {
+          ...guest.specialArrangements,
+          [arrangement]: Math.max(0, newQty)
+        }
+      };
       
       return updated;
     });
@@ -646,6 +696,7 @@ const Booking = () => {
   const calculateGuestMealsTotal = () => {
     let total = 0;
     
+    // Calculate regular meals
     guestMeals.forEach(guest => {
       Object.entries(guest.mealTypeQuantities).forEach(([mealType, quantity]) => {
         const variant = guest.dietaryPreference;
@@ -656,6 +707,21 @@ const Booking = () => {
         
         if (meal) {
           total += meal.price * quantity;
+        }
+      });
+      
+      // Calculate special arrangements (with pricing)
+      const specialPrices = {
+        sitoutBreakfast: 200,
+        sitoutLunch: 300,
+        sitoutHighTea: 150,
+        sitoutDinner: 400,
+        candleLightDinner: 1500
+      };
+      
+      Object.entries(guest.specialArrangements).forEach(([arrangement, quantity]) => {
+        if (quantity && quantity > 0) {
+          total += (specialPrices[arrangement as keyof typeof specialPrices] || 0) * quantity;
         }
       });
     });
@@ -1145,14 +1211,69 @@ const Booking = () => {
                                           </div>
                                         );
                                       })}
-                                    </div>
-                                  </div>
-                                </CardContent>
-                              </Card>
-                            );
-                          })}
-                        </div>
-                      </TabsContent>
+                                     </div>
+                                   </div>
+                                   
+                                   {/* Special Service Arrangements */}
+                                   <div className="mt-6 pt-6 border-t">
+                                     <Label className="text-sm font-medium mb-3 block">
+                                       Special Service Arrangements
+                                     </Label>
+                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                       {[
+                                         { key: 'sitoutBreakfast', label: 'Sitout Breakfast at Room', icon: '☕', price: 200 },
+                                         { key: 'sitoutLunch', label: 'Sitout Lunch at Room', icon: '🍱', price: 300 },
+                                         { key: 'sitoutHighTea', label: 'Sitout High Tea at Room', icon: '🫖', price: 150 },
+                                         { key: 'sitoutDinner', label: 'Sitout Dinner at Room', icon: '🍽️', price: 400 },
+                                         { key: 'candleLightDinner', label: 'Candle Light Dinner', icon: '🕯️', price: 1500 }
+                                       ].map(arrangement => {
+                                         const quantity = guest.specialArrangements[arrangement.key as keyof typeof guest.specialArrangements] || 0;
+                                         
+                                         return (
+                                           <div key={arrangement.key} className="p-3 border rounded-lg space-y-2">
+                                             <div className="flex items-center justify-between">
+                                               <div className="text-sm">
+                                                 <div className="font-medium flex items-center gap-1">
+                                                   <span>{arrangement.icon}</span>
+                                                   <span>{arrangement.label}</span>
+                                                 </div>
+                                                 <div className="text-muted-foreground text-xs">₹{arrangement.price}</div>
+                                               </div>
+                                             </div>
+                                             <div className="flex items-center justify-center gap-2">
+                                               <Button
+                                                 type="button"
+                                                 variant="outline"
+                                                 size="icon"
+                                                 className="h-8 w-8"
+                                                 onClick={() => handleSpecialArrangementChange(index, arrangement.key, -1)}
+                                                 disabled={quantity === 0}
+                                               >
+                                                 <Minus className="h-3 w-3" />
+                                               </Button>
+                                               <span className="w-8 text-center font-semibold">{quantity}</span>
+                                               <Button
+                                                 type="button"
+                                                 variant="outline"
+                                                 size="icon"
+                                                 className="h-8 w-8"
+                                                 onClick={() => handleSpecialArrangementChange(index, arrangement.key, 1)}
+                                                 disabled={quantity >= maxDays}
+                                               >
+                                                 <Plus className="h-3 w-3" />
+                                               </Button>
+                                             </div>
+                                           </div>
+                                         );
+                                       })}
+                                     </div>
+                                   </div>
+                                 </CardContent>
+                               </Card>
+                             );
+                           })}
+                         </div>
+                       </TabsContent>
                       
                       <TabsContent value="pickup" className="space-y-4">
                         <div className="space-y-4">
