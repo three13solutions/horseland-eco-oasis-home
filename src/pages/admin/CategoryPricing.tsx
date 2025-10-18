@@ -241,15 +241,13 @@ export default function CategoryPricing() {
               <TableHeader>
                 <TableRow>
                   <TableHead className="w-[200px] font-semibold">Room Category</TableHead>
-                  {seasons.map((season) => (
-                    <React.Fragment key={season.id}>
-                      {dayTypes.map((dayType) => (
-                        <TableHead key={`${season.id}_${dayType.id}`} className="text-center">
-                          {getColumnHeader(season, dayType)}
-                        </TableHead>
-                      ))}
-                    </React.Fragment>
-                  ))}
+                  {seasons.flatMap((season) =>
+                    dayTypes.map((dayType) => (
+                      <TableHead key={`${season.id}_${dayType.id}`} className="text-center">
+                        {getColumnHeader(season, dayType)}
+                      </TableHead>
+                    ))
+                  )}
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -263,31 +261,29 @@ export default function CategoryPricing() {
                         </div>
                       </div>
                     </TableCell>
-                    {seasons.map((season) => (
-                      <React.Fragment key={season.id}>
-                        {dayTypes.map((dayType) => {
-                          const key = `${season.slug}_${dayType.slug}`;
-                          return (
-                            <TableCell key={`${season.id}_${dayType.id}`} className="p-2">
-                              <div className="relative">
-                                <IndianRupee className="absolute left-2 top-1/2 transform -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
-                                <Input
-                                  type="number"
-                                  min="0"
-                                  step="100"
-                                  value={prices[room.id]?.[key] || ''}
-                                  onChange={(e) => 
-                                    handlePriceChange(room.id, season.slug, dayType.slug, e.target.value)
-                                  }
-                                  className="pl-7 h-9 text-sm"
-                                  placeholder={room.base_price.toString()}
-                                />
-                              </div>
-                            </TableCell>
-                          );
-                        })}
-                      </React.Fragment>
-                    ))}
+                    {seasons.flatMap((season) =>
+                      dayTypes.map((dayType) => {
+                        const key = `${season.slug}_${dayType.slug}`;
+                        return (
+                          <TableCell key={`${season.id}_${dayType.id}`} className="p-2">
+                            <div className="relative">
+                              <IndianRupee className="absolute left-2 top-1/2 transform -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
+                              <Input
+                                type="number"
+                                min="0"
+                                step="100"
+                                value={prices[room.id]?.[key] || ''}
+                                onChange={(e) => 
+                                  handlePriceChange(room.id, season.slug, dayType.slug, e.target.value)
+                                }
+                                className="pl-7 h-9 text-sm"
+                                placeholder={room.base_price.toString()}
+                              />
+                            </div>
+                          </TableCell>
+                        );
+                      })
+                    )}
                   </TableRow>
                 ))}
               </TableBody>

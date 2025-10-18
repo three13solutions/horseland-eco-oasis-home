@@ -384,9 +384,65 @@ export default function RoomManagement() {
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm('Are you sure you want to delete this room?')) return;
+    if (!confirm('Are you sure you want to delete this room category?')) return;
 
     try {
+      // Check if there are any bookings for this room type
+      const { data: bookings, error: bookingsError } = await supabase
+        .from('bookings')
+        .select('id')
+        .eq('room_type_id', id)
+        .limit(1);
+
+      if (bookingsError) throw bookingsError;
+
+      if (bookings && bookings.length > 0) {
+        toast({
+          title: "Cannot Delete",
+          description: "This room category has existing bookings and cannot be deleted. Consider unpublishing it instead.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // Check if there are any room units
+      const { data: units, error: unitsError } = await supabase
+        .from('room_units')
+        .select('id')
+        .eq('room_type_id', id)
+        .limit(1);
+
+      if (unitsError) throw unitsError;
+
+      if (units && units.length > 0) {
+        toast({
+          title: "Cannot Delete",
+          description: "This room category has room units. Please delete all units first or unpublish the category.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // Check if there are any seasonal pricing records
+      const { data: pricing, error: pricingError } = await supabase
+        .from('seasonal_pricing')
+        .select('id')
+        .eq('room_type_id', id)
+        .limit(1);
+
+      if (pricingError) throw pricingError;
+
+      if (pricing && pricing.length > 0) {
+        // Delete seasonal pricing first
+        const { error: deletePricingError } = await supabase
+          .from('seasonal_pricing')
+          .delete()
+          .eq('room_type_id', id);
+
+        if (deletePricingError) throw deletePricingError;
+      }
+
+      // Now safe to delete the room type
       const { error } = await supabase
         .from('room_types')
         .delete()
@@ -396,7 +452,7 @@ export default function RoomManagement() {
 
       toast({
         title: "Success",
-        description: "Room deleted successfully",
+        description: "Room category deleted successfully",
       });
 
       loadRooms();
@@ -404,7 +460,7 @@ export default function RoomManagement() {
       console.error('Error deleting room:', error);
       toast({
         title: "Error",
-        description: "Failed to delete room",
+        description: "Failed to delete room category",
         variant: "destructive",
       });
     }
