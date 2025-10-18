@@ -54,16 +54,42 @@ const DiningGalleryCollage = () => {
     return null;
   }
 
-  const itemsToShow = 5;
-  const maxIndex = images.length;
+  // Create infinite loop by duplicating images
+  const displayImages = [...images, ...images, ...images];
+  const centerOffset = images.length;
 
   const handlePrev = () => {
-    setCurrentIndex((prev) => (prev === 0 ? images.length - 1 : prev - 1));
+    setCurrentIndex((prev) => prev - 1);
   };
 
   const handleNext = () => {
-    setCurrentIndex((prev) => (prev === images.length - 1 ? 0 : prev + 1));
+    setCurrentIndex((prev) => prev + 1);
   };
+
+  const handleImageClick = (index: number) => {
+    const actualIndex = index % images.length;
+    const currentActual = currentIndex % images.length;
+    
+    if (actualIndex !== currentActual) {
+      handleNext();
+    }
+  };
+
+  // Reset to center set when reaching boundaries
+  useEffect(() => {
+    if (currentIndex <= 0) {
+      setTimeout(() => setCurrentIndex(centerOffset), 500);
+    } else if (currentIndex >= images.length * 2) {
+      setTimeout(() => setCurrentIndex(centerOffset), 500);
+    }
+  }, [currentIndex, centerOffset, images.length]);
+
+  // Initialize at center
+  useEffect(() => {
+    if (images.length > 0 && currentIndex === 0) {
+      setCurrentIndex(centerOffset);
+    }
+  }, [images.length, centerOffset]);
 
   return (
     <div className="relative group h-[200px]">
@@ -72,10 +98,11 @@ const DiningGalleryCollage = () => {
           className="flex transition-transform duration-500 ease-out"
           style={{ transform: `translateX(-${currentIndex * 280}px)` }}
         >
-          {images.map((image, index) => (
+          {displayImages.map((image, index) => (
             <div
               key={`${image.id}-${index}`}
-              className="flex-shrink-0 w-[280px] h-[200px] relative group/item"
+              className="flex-shrink-0 w-[280px] h-[200px] relative group/item cursor-pointer"
+              onClick={() => handleImageClick(index)}
             >
               <img
                 src={image.image_url}
