@@ -61,10 +61,10 @@ const PackagesPreviewV5 = () => {
       <div className="container mx-auto px-4">
         <div className="text-center mb-12">
           <h2 className="text-3xl md:text-4xl font-serif font-bold text-foreground mb-4">
-            {getTranslation('packages.title', 'Tailored Experiences for Every Journey')}
+            {getTranslation('packages.title', 'Exclusive Packages')}
           </h2>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-            {getTranslation('packages.subtitle', 'Choose from our thoughtfully curated packages designed to create unforgettable memories in Matheran\'s pristine wilderness.')}
+            {getTranslation('packages.subtitle', 'Choose Your Perfect Mountain Getaway')}
           </p>
         </div>
 

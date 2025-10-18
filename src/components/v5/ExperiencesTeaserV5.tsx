@@ -51,7 +51,7 @@ const ExperiencesTeaserV5 = () => {
             {getTranslation('experiences.title', 'Curated Experiences')}
           </h2>
           <p className="text-xl text-muted-foreground max-w-3xl mx-auto font-body">
-            {getTranslation('experiences.subtitle', 'Discover the magic of Matheran through thoughtfully designed experiences that connect you with nature, wellness, and local culture.')}
+            {getTranslation('experiences.subtitle', 'Every moment at Horseland is thoughtfully designed to create lasting memories')}
           </p>
         </div>
 
