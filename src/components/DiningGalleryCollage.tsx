@@ -51,10 +51,30 @@ const DiningGalleryCollage = () => {
     return null;
   }
 
+  // Duplicate images for seamless loop
+  const displayImages = [...images, ...images, ...images];
+
   return (
-    <div className="relative overflow-x-auto h-[240px] -mx-4 sm:-mx-6 lg:-mx-8">
-      <div className="flex gap-3 px-4 sm:px-6 lg:px-8">
-        {images.map((image, index) => (
+    <div className="relative overflow-hidden h-[240px] -mx-4 sm:-mx-6 lg:-mx-8">
+      <style>{`
+        @keyframes scroll {
+          0% {
+            transform: translateX(0);
+          }
+          100% {
+            transform: translateX(-33.333%);
+          }
+        }
+        .animate-scroll {
+          animation: scroll 30s linear infinite;
+        }
+        .animate-scroll:hover {
+          animation-play-state: paused;
+        }
+      `}</style>
+      
+      <div className="flex gap-3 animate-scroll">
+        {displayImages.map((image, index) => (
           <div
             key={`${image.id}-${index}`}
             className="flex-shrink-0 w-[180px] h-[240px] relative group"
