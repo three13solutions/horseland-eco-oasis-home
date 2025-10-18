@@ -143,13 +143,14 @@ export default function YearCalendarView({ seasons, holidays, year: initialYear 
         seasonChanges.get(seasonId)!.push({ month, day });
       });
 
-      // Delete existing season periods and create new consolidated ones
+      // Delete existing season periods for this year and create new consolidated ones
       for (const [seasonId, dates] of seasonChanges) {
-        // Delete old periods for this season
+        // Delete old periods for this season and year
         const { error: deleteError } = await supabase
           .from('season_periods')
           .delete()
-          .eq('season_id', seasonId);
+          .eq('season_id', seasonId)
+          .eq('year', year);
 
         if (deleteError) throw deleteError;
 
@@ -181,7 +182,8 @@ export default function YearCalendarView({ seasons, holidays, year: initialYear 
               start_month: periodStart.month + 1,
               start_day: periodStart.day,
               end_month: periodEnd.month + 1,
-              end_day: periodEnd.day
+              end_day: periodEnd.day,
+              year: year
             });
             periodStart = dates[i];
             periodEnd = dates[i];
@@ -194,7 +196,8 @@ export default function YearCalendarView({ seasons, holidays, year: initialYear 
           start_month: periodStart.month + 1,
           start_day: periodStart.day,
           end_month: periodEnd.month + 1,
-          end_day: periodEnd.day
+          end_day: periodEnd.day,
+          year: year
         });
 
         // Insert new periods

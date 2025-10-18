@@ -1672,6 +1672,7 @@ export type Database = {
           season_id: string
           start_day: number
           start_month: number
+          year: number
         }
         Insert: {
           created_at?: string
@@ -1681,6 +1682,7 @@ export type Database = {
           season_id: string
           start_day: number
           start_month: number
+          year: number
         }
         Update: {
           created_at?: string
@@ -1690,6 +1692,7 @@ export type Database = {
           season_id?: string
           start_day?: number
           start_month?: number
+          year?: number
         }
         Relationships: [
           {

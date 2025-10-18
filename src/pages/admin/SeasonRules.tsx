@@ -34,11 +34,11 @@ export default function SeasonRules() {
 
   useEffect(() => {
     loadData();
-  }, []);
+  }, [currentYear]);
 
   const loadData = async () => {
     try {
-      // Load seasons with their periods
+      // Load seasons with their periods filtered by current year
       const { data: seasonsData, error: seasonsError } = await supabase
         .from('seasons')
         .select(`
@@ -48,7 +48,14 @@ export default function SeasonRules() {
         .order('display_order');
 
       if (seasonsError) throw seasonsError;
-      setSeasons(seasonsData || []);
+      
+      // Filter periods by current year on the client side
+      const seasonsWithYearPeriods = seasonsData?.map(season => ({
+        ...season,
+        season_periods: season.season_periods?.filter((p: any) => p.year === currentYear) || []
+      })) || [];
+      
+      setSeasons(seasonsWithYearPeriods);
 
       // Load holidays for the current year and next year
       const { data: holidaysData, error: holidaysError } = await supabase
