@@ -92,7 +92,7 @@ const Dining = () => {
 
       {/* Philosophy Section */}
       <section className="py-16">
-        <div className="max-w-6xl mx-auto px-4">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid md:grid-cols-2 gap-12 items-start mb-12">
             <div>
               <h2 className="text-3xl md:text-4xl font-heading font-bold mb-6 text-foreground">
@@ -144,10 +144,10 @@ const Dining = () => {
               </div>
             </div>
           </div>
-          
-          {/* Carousel below */}
-          <DiningGalleryCollage />
         </div>
+        
+        {/* Full-width Carousel */}
+        <DiningGalleryCollage />
       </section>
 
       {/* Separate Kitchens Section */}
