@@ -13,6 +13,7 @@ import JournalPreview from '../components/JournalPreview';
 import DynamicFooter from '../components/DynamicFooter';
 import CombinedFloating from '../components/CombinedFloating';
 import { generateHotelSchema } from '../lib/seo';
+import { TranslationProvider } from '../components/admin/TranslationProvider';
 
 const Index = () => {
   const hotelSchema = generateHotelSchema({
@@ -38,20 +39,22 @@ const Index = () => {
         keywords="Matheran hotel, eco resort, sustainable luxury, Matheran accommodation, hill station resort, eco-friendly stay"
         schema={hotelSchema}
       />
-      <div className="min-h-screen bg-background overflow-x-hidden">
-        <Navigation />
-        <HeroSection />
-        <WelcomeAndMatheran />
-        <StayPreview />
-        {/* <ExperiencesTeaser /> */}
-        {/* <PackagesPreview /> */}
-        <GuestReviews />
-        
-        <Gallery />
-        <JournalPreview />
-        <DynamicFooter />
-        <CombinedFloating />
-      </div>
+      <TranslationProvider>
+        <div className="min-h-screen bg-background overflow-x-hidden">
+          <Navigation />
+          <HeroSection />
+          <WelcomeAndMatheran />
+          <StayPreview />
+          {/* <ExperiencesTeaser /> */}
+          {/* <PackagesPreview /> */}
+          <GuestReviews />
+          
+          <Gallery />
+          <JournalPreview />
+          <DynamicFooter />
+          <CombinedFloating />
+        </div>
+      </TranslationProvider>
     </>
   );
 };

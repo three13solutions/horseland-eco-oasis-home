@@ -2,7 +2,7 @@ import React from 'react';
 import { Leaf, Heart, Coffee, Car, Mountain, Activity, Train } from 'lucide-react';
 import { useTranslationContext } from '@/components/admin/TranslationProvider';
 
-const WelcomeAndMatheranV5 = () => {
+const WelcomeAndMatheran = () => {
   const { getTranslation } = useTranslationContext();
   
   const welcomeFeatures = [
@@ -142,4 +142,4 @@ const WelcomeAndMatheranV5 = () => {
   );
 };
 
-export default WelcomeAndMatheranV5;
+export default WelcomeAndMatheran;

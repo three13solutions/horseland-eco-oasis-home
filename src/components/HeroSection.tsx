@@ -7,7 +7,7 @@ import { Calendar, Users, ArrowRight, ChevronLeft, ChevronRight } from 'lucide-r
 import { useTranslationContext } from '@/components/admin/TranslationProvider';
 import { supabase } from '@/integrations/supabase/client';
 
-const HeroSectionV5 = () => {
+const HeroSection = () => {
   const navigate = useNavigate();
   const { getTranslation } = useTranslationContext();
   const [currentSlide, setCurrentSlide] = useState(0);
@@ -193,4 +193,4 @@ const HeroSectionV5 = () => {
   );
 };
 
-export default HeroSectionV5;
+export default HeroSection;
