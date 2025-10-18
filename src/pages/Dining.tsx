@@ -41,11 +41,11 @@ const Dining = () => {
   const getMealVariants = (mealType: string) => {
     const variants = ['veg', 'non_veg', 'jain'];
     return variants.map(variant => {
-      // Find buffet meals by filtering out sitout meals
+      // Find buffet meals specifically
       const meal = meals.find(m => 
         m.meal_type === mealType && 
         m.variant === variant &&
-        !m.title?.toLowerCase().includes('sitout')
+        m.title?.toLowerCase().includes('buffet')
       );
       return {
         variant,
