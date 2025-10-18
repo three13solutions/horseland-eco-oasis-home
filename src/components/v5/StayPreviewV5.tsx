@@ -6,9 +6,11 @@ import { useTranslationContext } from '@/components/admin/TranslationProvider';
 import { Button } from '@/components/ui/button';
 import { ArrowRight, Sparkles } from 'lucide-react';
 import { useMediaAsset } from '@/hooks/useMediaAsset';
+import { useSiteSettings } from '@/hooks/useSiteSettings';
 
 const StayPreviewV5 = () => {
   const { getTranslation } = useTranslationContext();
+  const { settings } = useSiteSettings();
   
   const { data: rooms, isLoading } = useQuery({
     queryKey: ['room-types-preview'],
@@ -141,12 +143,16 @@ const StayPreviewV5 = () => {
             {getTranslation('stay.undecided.description', 'Call us for personalized recommendations based on your needs and budget.')}
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
-            <Button className="bg-gradient-to-r from-primary to-accent">
-              {getTranslation('stay.undecided.call', 'Call: +91 98765 43210')}
-            </Button>
-            <Button variant="outline">
-              {getTranslation('stay.undecided.whatsapp', 'WhatsApp us')}
-            </Button>
+            <a href={`tel:${settings.phone_number || '+919404224600'}`}>
+              <Button className="bg-gradient-to-r from-primary to-accent">
+                {getTranslation('stay.undecided.call', `Call: ${settings.phone_number || '+91 9404224600'}`)}
+              </Button>
+            </a>
+            <a href={`https://wa.me/${(settings.whatsapp_number || '+919404224600').replace(/[^0-9]/g, '')}`} target="_blank" rel="noopener noreferrer">
+              <Button variant="outline">
+                {getTranslation('stay.undecided.whatsapp', 'WhatsApp us')}
+              </Button>
+            </a>
             <Link to="/stay">
               <Button variant="outline" className="hover:bg-primary hover:text-primary-foreground transition-all duration-300">
                 {getTranslation('stay.undecided.viewAll', 'View All Accommodations')}
