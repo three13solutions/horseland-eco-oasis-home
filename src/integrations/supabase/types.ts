@@ -651,6 +651,36 @@ export type Database = {
         }
         Relationships: []
       }
+      day_types: {
+        Row: {
+          created_at: string
+          description: string | null
+          display_order: number
+          id: string
+          is_active: boolean
+          name: string
+          slug: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          display_order?: number
+          id?: string
+          is_active?: boolean
+          name: string
+          slug: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          display_order?: number
+          id?: string
+          is_active?: boolean
+          name?: string
+          slug?: string
+        }
+        Relationships: []
+      }
       footer_sections: {
         Row: {
           content: Json
@@ -1031,6 +1061,36 @@ export type Database = {
           phone?: string | null
           special_requirements?: string | null
           updated_at?: string
+        }
+        Relationships: []
+      }
+      holidays: {
+        Row: {
+          created_at: string
+          date: string
+          description: string | null
+          id: string
+          is_long_weekend: boolean
+          name: string
+          year: number
+        }
+        Insert: {
+          created_at?: string
+          date: string
+          description?: string | null
+          id?: string
+          is_long_weekend?: boolean
+          name: string
+          year: number
+        }
+        Update: {
+          created_at?: string
+          date?: string
+          description?: string | null
+          id?: string
+          is_long_weekend?: boolean
+          name?: string
+          year?: number
         }
         Relationships: []
       }
@@ -1602,6 +1662,135 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      season_periods: {
+        Row: {
+          created_at: string
+          end_day: number
+          end_month: number
+          id: string
+          season_id: string
+          start_day: number
+          start_month: number
+        }
+        Insert: {
+          created_at?: string
+          end_day: number
+          end_month: number
+          id?: string
+          season_id: string
+          start_day: number
+          start_month: number
+        }
+        Update: {
+          created_at?: string
+          end_day?: number
+          end_month?: number
+          id?: string
+          season_id?: string
+          start_day?: number
+          start_month?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "season_periods_season_id_fkey"
+            columns: ["season_id"]
+            isOneToOne: false
+            referencedRelation: "seasons"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      seasonal_pricing: {
+        Row: {
+          created_at: string
+          day_type_id: string
+          id: string
+          price: number
+          room_type_id: string
+          season_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          day_type_id: string
+          id?: string
+          price: number
+          room_type_id: string
+          season_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          day_type_id?: string
+          id?: string
+          price?: number
+          room_type_id?: string
+          season_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "seasonal_pricing_day_type_id_fkey"
+            columns: ["day_type_id"]
+            isOneToOne: false
+            referencedRelation: "day_types"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "seasonal_pricing_room_type_id_fkey"
+            columns: ["room_type_id"]
+            isOneToOne: false
+            referencedRelation: "room_types"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "seasonal_pricing_season_id_fkey"
+            columns: ["season_id"]
+            isOneToOne: false
+            referencedRelation: "seasons"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      seasons: {
+        Row: {
+          color: string
+          created_at: string
+          description: string | null
+          display_order: number
+          icon: string | null
+          id: string
+          is_active: boolean
+          name: string
+          slug: string
+          updated_at: string
+        }
+        Insert: {
+          color?: string
+          created_at?: string
+          description?: string | null
+          display_order?: number
+          icon?: string | null
+          id?: string
+          is_active?: boolean
+          name: string
+          slug: string
+          updated_at?: string
+        }
+        Update: {
+          color?: string
+          created_at?: string
+          description?: string | null
+          display_order?: number
+          icon?: string | null
+          id?: string
+          is_active?: boolean
+          name?: string
+          slug?: string
+          updated_at?: string
+        }
+        Relationships: []
       }
       site_settings: {
         Row: {

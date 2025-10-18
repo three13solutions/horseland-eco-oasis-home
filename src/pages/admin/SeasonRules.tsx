@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { CalendarRange, Edit, Save, X } from 'lucide-react';
+import { CalendarRange, Edit, Save, X, Plus, Trash2, Calendar } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -8,58 +8,21 @@ import { useToast } from '@/hooks/use-toast';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { supabase } from '@/integrations/supabase/client';
-
-interface SeasonPeriod {
-  startMonth: number;
-  startDay: number;
-  endMonth: number;
-  endDay: number;
-}
-
-interface SeasonDefinition {
-  id: string;
-  name: string;
-  periods: SeasonPeriod[];
-  color: string;
-  description: string;
-}
-
-const defaultSeasons: SeasonDefinition[] = [
-  {
-    id: 'peak',
-    name: 'Peak Season',
-    periods: [
-      { startMonth: 10, startDay: 1, endMonth: 2, endDay: 28 }
-    ],
-    color: 'hsl(var(--destructive))',
-    description: 'High demand period with best weather and festivals'
-  },
-  {
-    id: 'shoulder',
-    name: 'Shoulder Season',
-    periods: [
-      { startMonth: 3, startDay: 1, endMonth: 5, endDay: 31 },
-      { startMonth: 9, startDay: 1, endMonth: 9, endDay: 30 }
-    ],
-    color: 'hsl(var(--warning))',
-    description: 'Moderate demand with pleasant weather'
-  },
-  {
-    id: 'off_peak',
-    name: 'Off-Peak Season',
-    periods: [
-      { startMonth: 6, startDay: 1, endMonth: 8, endDay: 31 }
-    ],
-    color: 'hsl(var(--success))',
-    description: 'Lower demand period, often with special rates'
-  }
-];
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Textarea } from '@/components/ui/textarea';
 
 export default function SeasonRules() {
-  const [seasons, setSeasons] = useState<SeasonDefinition[]>(defaultSeasons);
-  const [editingId, setEditingId] = useState<string | null>(null);
-  const [editingSeasons, setEditingSeasons] = useState<SeasonDefinition[]>([]);
+  const [seasons, setSeasons] = useState<any[]>([]);
+  const [holidays, setHolidays] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [editingSeasonId, setEditingSeasonId] = useState<string | null>(null);
+  const [newHoliday, setNewHoliday] = useState({
+    name: '',
+    date: '',
+    is_long_weekend: false,
+    description: ''
+  });
   const { toast } = useToast();
 
   const monthNames = [
@@ -68,81 +31,151 @@ export default function SeasonRules() {
   ];
 
   useEffect(() => {
-    loadSeasonDefinitions();
+    loadData();
   }, []);
 
-  const loadSeasonDefinitions = async () => {
+  const loadData = async () => {
     try {
-      const { data, error } = await supabase
-        .from('site_settings')
-        .select('setting_value')
-        .eq('setting_key', 'season_definitions')
-        .maybeSingle();
+      // Load seasons with their periods
+      const { data: seasonsData, error: seasonsError } = await supabase
+        .from('seasons')
+        .select(`
+          *,
+          season_periods(*)
+        `)
+        .order('display_order');
 
-      if (error) throw error;
+      if (seasonsError) throw seasonsError;
+      setSeasons(seasonsData || []);
 
-      if (data?.setting_value && Array.isArray(data.setting_value)) {
-        setSeasons(data.setting_value as unknown as SeasonDefinition[]);
-      }
+      // Load holidays
+      const currentYear = new Date().getFullYear();
+      const { data: holidaysData, error: holidaysError } = await supabase
+        .from('holidays')
+        .select('*')
+        .gte('year', currentYear)
+        .order('date');
+
+      if (holidaysError) throw holidaysError;
+      setHolidays(holidaysData || []);
     } catch (error) {
-      console.error('Error loading season definitions:', error);
+      console.error('Error loading data:', error);
+      toast({
+        title: "Error",
+        description: "Failed to load season rules",
+        variant: "destructive",
+      });
     } finally {
       setLoading(false);
     }
   };
 
-  const handleSave = async () => {
+  const handleSaveSeason = async (season: any) => {
     try {
       const { error } = await supabase
-        .from('site_settings')
-        .upsert({
-          setting_key: 'season_definitions',
-          setting_value: editingSeasons as any
-        }, {
-          onConflict: 'setting_key'
-        });
+        .from('seasons')
+        .update({
+          name: season.name,
+          description: season.description,
+          color: season.color
+        })
+        .eq('id', season.id);
 
       if (error) throw error;
 
-      setSeasons(editingSeasons);
-      setEditingId(null);
+      await loadData();
+      setEditingSeasonId(null);
       toast({
         title: "Success",
-        description: "Season definitions updated successfully",
+        description: "Season updated successfully",
       });
     } catch (error) {
-      console.error('Error saving season definitions:', error);
+      console.error('Error saving season:', error);
       toast({
         title: "Error",
-        description: "Failed to save season definitions",
+        description: "Failed to save season",
         variant: "destructive",
       });
     }
   };
 
-  const handleEdit = (seasonId: string) => {
-    setEditingId(seasonId);
-    setEditingSeasons(JSON.parse(JSON.stringify(seasons)));
+  const handleUpdatePeriod = async (periodId: string, field: string, value: number) => {
+    try {
+      const { error } = await supabase
+        .from('season_periods')
+        .update({ [field]: value })
+        .eq('id', periodId);
+
+      if (error) throw error;
+      await loadData();
+    } catch (error) {
+      console.error('Error updating period:', error);
+    }
   };
 
-  const handleCancel = () => {
-    setEditingId(null);
-    setEditingSeasons([]);
+  const handleAddHoliday = async () => {
+    if (!newHoliday.name || !newHoliday.date) {
+      toast({
+        title: "Error",
+        description: "Please fill in holiday name and date",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      const year = new Date(newHoliday.date).getFullYear();
+      const { error } = await supabase
+        .from('holidays')
+        .insert({
+          ...newHoliday,
+          year
+        });
+
+      if (error) throw error;
+
+      setNewHoliday({ name: '', date: '', is_long_weekend: false, description: '' });
+      await loadData();
+      toast({
+        title: "Success",
+        description: "Holiday added successfully",
+      });
+    } catch (error) {
+      console.error('Error adding holiday:', error);
+      toast({
+        title: "Error",
+        description: "Failed to add holiday",
+        variant: "destructive",
+      });
+    }
   };
 
-  const updatePeriod = (seasonId: string, periodIndex: number, field: keyof SeasonPeriod, value: number) => {
-    setEditingSeasons(prev => prev.map(season => {
-      if (season.id === seasonId) {
-        const newPeriods = [...season.periods];
-        newPeriods[periodIndex] = { ...newPeriods[periodIndex], [field]: value };
-        return { ...season, periods: newPeriods };
-      }
-      return season;
-    }));
+  const handleDeleteHoliday = async (id: string) => {
+    try {
+      const { error } = await supabase
+        .from('holidays')
+        .delete()
+        .eq('id', id);
+
+      if (error) throw error;
+
+      await loadData();
+      toast({
+        title: "Success",
+        description: "Holiday deleted successfully",
+      });
+    } catch (error) {
+      console.error('Error deleting holiday:', error);
+      toast({
+        title: "Error",
+        description: "Failed to delete holiday",
+        variant: "destructive",
+      });
+    }
   };
 
-  const formatDateRange = (period: SeasonPeriod) => {
-    return `${monthNames[period.startMonth - 1]} ${period.startDay} - ${monthNames[period.endMonth - 1]} ${period.endDay}`;
+  const formatDateRange = (period: any) => {
+    return `${monthNames[period.start_month - 1]} ${period.start_day} - ${monthNames[period.end_month - 1]} ${period.end_day}`;
   };
 
   if (loading) {
@@ -157,174 +190,293 @@ export default function SeasonRules() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Season Rules</h1>
+          <h1 className="text-3xl font-bold tracking-tight">Season Rules & Holidays</h1>
           <p className="text-muted-foreground mt-2">
-            Define seasonal periods that apply to pricing across all room categories
+            Configure seasonal periods and holidays for dynamic pricing
           </p>
         </div>
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Season Definitions</CardTitle>
-          <CardDescription>
-            Configure seasonal periods used for pricing across all room categories
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          {(editingId ? editingSeasons : seasons).map((season) => {
-            const isEditing = editingId === season.id;
-            return (
-              <Card key={season.id}>
-                <CardContent className="pt-6">
-                  <div className="space-y-4">
-                    <div className="flex items-start justify-between">
-                      <div className="flex items-start gap-4 flex-1">
-                        <div 
-                          className="w-4 h-4 rounded-full mt-1" 
-                          style={{ backgroundColor: season.color }}
-                        />
-                        <div className="flex-1 space-y-2">
-                          <div>
-                            <h3 className="font-semibold text-lg">{season.name}</h3>
-                            <p className="text-sm text-muted-foreground">{season.description}</p>
+      <Tabs defaultValue="seasons" className="space-y-6">
+        <TabsList>
+          <TabsTrigger value="seasons">Seasons</TabsTrigger>
+          <TabsTrigger value="holidays">Holidays</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="seasons" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle>Season Definitions</CardTitle>
+              <CardDescription>
+                Configure seasonal periods used for pricing across all room categories
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {seasons.map((season) => {
+                const isEditing = editingSeasonId === season.id;
+                return (
+                  <Card key={season.id}>
+                    <CardContent className="pt-6">
+                      <div className="space-y-4">
+                        <div className="flex items-start justify-between">
+                          <div className="flex items-start gap-4 flex-1">
+                            <div 
+                              className="w-4 h-4 rounded-full mt-1" 
+                              style={{ backgroundColor: season.color }}
+                            />
+                            <div className="flex-1 space-y-2">
+                              {isEditing ? (
+                                <div className="space-y-2">
+                                  <Input
+                                    value={season.name}
+                                    onChange={(e) => {
+                                      setSeasons(prev => prev.map(s => 
+                                        s.id === season.id ? { ...s, name: e.target.value } : s
+                                      ));
+                                    }}
+                                  />
+                                  <Textarea
+                                    value={season.description || ''}
+                                    onChange={(e) => {
+                                      setSeasons(prev => prev.map(s => 
+                                        s.id === season.id ? { ...s, description: e.target.value } : s
+                                      ));
+                                    }}
+                                    placeholder="Description"
+                                  />
+                                </div>
+                              ) : (
+                                <div>
+                                  <h3 className="font-semibold text-lg">{season.name}</h3>
+                                  <p className="text-sm text-muted-foreground">{season.description}</p>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                          <div className="flex gap-2">
+                            {isEditing ? (
+                              <>
+                                <Button size="sm" variant="ghost" onClick={() => {
+                                  setEditingSeasonId(null);
+                                  loadData();
+                                }}>
+                                  <X className="h-4 w-4 mr-1" />
+                                  Cancel
+                                </Button>
+                                <Button size="sm" onClick={() => handleSaveSeason(season)}>
+                                  <Save className="h-4 w-4 mr-1" />
+                                  Save
+                                </Button>
+                              </>
+                            ) : (
+                              <Button size="sm" variant="outline" onClick={() => setEditingSeasonId(season.id)}>
+                                <Edit className="h-4 w-4 mr-1" />
+                                Edit
+                              </Button>
+                            )}
                           </div>
                         </div>
-                      </div>
-                      <div className="flex gap-2">
-                        {isEditing ? (
-                          <>
-                            <Button size="sm" variant="ghost" onClick={handleCancel}>
-                              <X className="h-4 w-4 mr-1" />
-                              Cancel
-                            </Button>
-                            <Button size="sm" onClick={handleSave}>
-                              <Save className="h-4 w-4 mr-1" />
-                              Save
-                            </Button>
-                          </>
-                        ) : (
-                          <Button size="sm" variant="outline" onClick={() => handleEdit(season.id)}>
-                            <Edit className="h-4 w-4 mr-1" />
-                            Edit
-                          </Button>
-                        )}
-                      </div>
-                    </div>
 
-                    <div className="space-y-3">
-                      {season.periods.map((period, idx) => (
-                        <div key={idx} className="border rounded-lg p-4 space-y-3">
-                          {isEditing ? (
-                            <div className="grid grid-cols-2 gap-4">
-                              <div className="space-y-2">
-                                <Label>Start Date</Label>
-                                <div className="flex gap-2">
-                                  <Select
-                                    value={period.startMonth.toString()}
-                                    onValueChange={(v) => updatePeriod(season.id, idx, 'startMonth', parseInt(v))}
-                                  >
-                                    <SelectTrigger>
-                                      <SelectValue />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                      {monthNames.map((month, i) => (
-                                        <SelectItem key={i} value={(i + 1).toString()}>
-                                          {month}
-                                        </SelectItem>
-                                      ))}
-                                    </SelectContent>
-                                  </Select>
-                                  <Input
-                                    type="number"
-                                    min="1"
-                                    max="31"
-                                    value={period.startDay}
-                                    onChange={(e) => updatePeriod(season.id, idx, 'startDay', parseInt(e.target.value) || 1)}
-                                    className="w-20"
-                                  />
+                        <div className="space-y-3">
+                          {season.season_periods?.map((period: any) => (
+                            <div key={period.id} className="border rounded-lg p-4 space-y-3">
+                              {isEditing ? (
+                                <div className="grid grid-cols-2 gap-4">
+                                  <div className="space-y-2">
+                                    <Label>Start Date</Label>
+                                    <div className="flex gap-2">
+                                      <Select
+                                        value={period.start_month.toString()}
+                                        onValueChange={(v) => handleUpdatePeriod(period.id, 'start_month', parseInt(v))}
+                                      >
+                                        <SelectTrigger>
+                                          <SelectValue />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                          {monthNames.map((month, i) => (
+                                            <SelectItem key={i} value={(i + 1).toString()}>
+                                              {month}
+                                            </SelectItem>
+                                          ))}
+                                        </SelectContent>
+                                      </Select>
+                                      <Input
+                                        type="number"
+                                        min="1"
+                                        max="31"
+                                        value={period.start_day}
+                                        onChange={(e) => handleUpdatePeriod(period.id, 'start_day', parseInt(e.target.value) || 1)}
+                                        className="w-20"
+                                      />
+                                    </div>
+                                  </div>
+                                  <div className="space-y-2">
+                                    <Label>End Date</Label>
+                                    <div className="flex gap-2">
+                                      <Select
+                                        value={period.end_month.toString()}
+                                        onValueChange={(v) => handleUpdatePeriod(period.id, 'end_month', parseInt(v))}
+                                      >
+                                        <SelectTrigger>
+                                          <SelectValue />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                          {monthNames.map((month, i) => (
+                                            <SelectItem key={i} value={(i + 1).toString()}>
+                                              {month}
+                                            </SelectItem>
+                                          ))}
+                                        </SelectContent>
+                                      </Select>
+                                      <Input
+                                        type="number"
+                                        min="1"
+                                        max="31"
+                                        value={period.end_day}
+                                        onChange={(e) => handleUpdatePeriod(period.id, 'end_day', parseInt(e.target.value) || 1)}
+                                        className="w-20"
+                                      />
+                                    </div>
+                                  </div>
                                 </div>
-                              </div>
-                              <div className="space-y-2">
-                                <Label>End Date</Label>
-                                <div className="flex gap-2">
-                                  <Select
-                                    value={period.endMonth.toString()}
-                                    onValueChange={(v) => updatePeriod(season.id, idx, 'endMonth', parseInt(v))}
-                                  >
-                                    <SelectTrigger>
-                                      <SelectValue />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                      {monthNames.map((month, i) => (
-                                        <SelectItem key={i} value={(i + 1).toString()}>
-                                          {month}
-                                        </SelectItem>
-                                      ))}
-                                    </SelectContent>
-                                  </Select>
-                                  <Input
-                                    type="number"
-                                    min="1"
-                                    max="31"
-                                    value={period.endDay}
-                                    onChange={(e) => updatePeriod(season.id, idx, 'endDay', parseInt(e.target.value) || 1)}
-                                    className="w-20"
-                                  />
-                                </div>
-                              </div>
+                              ) : (
+                                <Badge variant="outline" className="text-sm">
+                                  <CalendarRange className="h-3 w-3 mr-1" />
+                                  {formatDateRange(period)}
+                                </Badge>
+                              )}
                             </div>
-                          ) : (
-                            <Badge variant="outline" className="text-sm">
-                              <CalendarRange className="h-3 w-3 mr-1" />
-                              {formatDateRange(period)}
-                            </Badge>
+                          ))}
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                );
+              })}
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Day Types</CardTitle>
+              <CardDescription>
+                Pricing can be configured for different day types: Weekday, Weekend, Holiday, Long Weekend
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <p className="text-sm text-muted-foreground">
+                Configure pricing by day type in <strong>Category Pricing</strong> section. Each season can have different rates for weekdays, weekends, holidays, and long weekends.
+              </p>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="holidays" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle>Add Holiday</CardTitle>
+              <CardDescription>
+                Add public holidays and special dates for dynamic pricing
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>Holiday Name</Label>
+                  <Input
+                    placeholder="e.g., Diwali, Christmas"
+                    value={newHoliday.name}
+                    onChange={(e) => setNewHoliday({ ...newHoliday, name: e.target.value })}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Date</Label>
+                  <Input
+                    type="date"
+                    value={newHoliday.date}
+                    onChange={(e) => setNewHoliday({ ...newHoliday, date: e.target.value })}
+                  />
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Label>Description (Optional)</Label>
+                <Textarea
+                  placeholder="Additional details about this holiday"
+                  value={newHoliday.description}
+                  onChange={(e) => setNewHoliday({ ...newHoliday, description: e.target.value })}
+                />
+              </div>
+              <div className="flex items-center gap-2">
+                <Checkbox
+                  id="long-weekend"
+                  checked={newHoliday.is_long_weekend}
+                  onCheckedChange={(checked) => 
+                    setNewHoliday({ ...newHoliday, is_long_weekend: checked as boolean })
+                  }
+                />
+                <Label htmlFor="long-weekend" className="cursor-pointer">
+                  This is a long weekend (3+ days)
+                </Label>
+              </div>
+              <Button onClick={handleAddHoliday}>
+                <Plus className="h-4 w-4 mr-2" />
+                Add Holiday
+              </Button>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Upcoming Holidays</CardTitle>
+              <CardDescription>
+                Manage holidays for dynamic pricing
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-2">
+                {holidays.length === 0 ? (
+                  <p className="text-sm text-muted-foreground text-center py-8">
+                    No holidays configured yet
+                  </p>
+                ) : (
+                  holidays.map((holiday) => (
+                    <div key={holiday.id} className="flex items-center justify-between p-3 border rounded-lg">
+                      <div className="flex items-center gap-3">
+                        <Calendar className="h-4 w-4 text-muted-foreground" />
+                        <div>
+                          <div className="font-medium">{holiday.name}</div>
+                          <div className="text-sm text-muted-foreground">
+                            {new Date(holiday.date).toLocaleDateString('en-IN', { 
+                              day: 'numeric', 
+                              month: 'long', 
+                              year: 'numeric' 
+                            })}
+                            {holiday.is_long_weekend && (
+                              <Badge variant="secondary" className="ml-2">Long Weekend</Badge>
+                            )}
+                          </div>
+                          {holiday.description && (
+                            <div className="text-xs text-muted-foreground mt-1">
+                              {holiday.description}
+                            </div>
                           )}
                         </div>
-                      ))}
+                      </div>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => handleDeleteHoliday(holiday.id)}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
                     </div>
-                  </div>
-                </CardContent>
-              </Card>
-            );
-          })}
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>About Season Definitions</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="space-y-3 text-sm">
-            <div>
-              <h4 className="font-medium mb-1">🎯 Peak Season</h4>
-              <p className="text-muted-foreground">
-                Highest demand period - festivals, holidays, best weather. Set your premium rates for this period.
-              </p>
-            </div>
-            <div>
-              <h4 className="font-medium mb-1">🌤️ Shoulder Season</h4>
-              <p className="text-muted-foreground">
-                Moderate demand with pleasant weather. Standard rates apply. Can have multiple periods throughout the year.
-              </p>
-            </div>
-            <div>
-              <h4 className="font-medium mb-1">💚 Off-Peak Season</h4>
-              <p className="text-muted-foreground">
-                Lower demand period. Often offered at discounted rates to attract bookings.
-              </p>
-            </div>
-          </div>
-          
-          <div className="border-t pt-4 mt-4">
-            <p className="text-sm text-muted-foreground">
-              <strong>Note:</strong> These season definitions are used throughout the system for pricing. 
-              Update them in Category Pricing and Unit Pricing to set rates for each season.
-            </p>
-          </div>
-        </CardContent>
-      </Card>
+                  ))
+                )}
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }

@@ -28,6 +28,8 @@ const RoomDetail = () => {
   const [availableUnits, setAvailableUnits] = useState<number>(0);
   const [checkingAvailability, setCheckingAvailability] = useState(false);
   const [showSeasonalPricing, setShowSeasonalPricing] = useState(false);
+  const [seasonalPricing, setSeasonalPricing] = useState<any[]>([]);
+  const [seasons, setSeasons] = useState<any[]>([]);
 
   // Fetch room data from database
   useEffect(() => {
@@ -85,12 +87,49 @@ const RoomDetail = () => {
     }
   };
 
-  // Check availability when room data loads
+  // Check availability and load seasonal pricing when room data loads
   useEffect(() => {
     if (roomData) {
       checkCurrentAvailability();
+      loadSeasonalPricing();
     }
   }, [roomData]);
+
+  // Load seasonal pricing from database
+  const loadSeasonalPricing = async () => {
+    if (!roomData?.id) return;
+    
+    try {
+      // Fetch seasons with their periods
+      const { data: seasonsData, error: seasonsError } = await supabase
+        .from('seasons')
+        .select(`
+          *,
+          season_periods(*)
+        `)
+        .eq('is_active', true)
+        .order('display_order');
+
+      if (seasonsError) throw seasonsError;
+      setSeasons(seasonsData || []);
+
+      // Fetch seasonal pricing for this room type
+      const { data: pricingData, error: pricingError } = await supabase
+        .from('seasonal_pricing')
+        .select(`
+          *,
+          season:seasons(*),
+          day_type:day_types(*)
+        `)
+        .eq('room_type_id', roomData.id)
+        .order('season.display_order', { ascending: true });
+
+      if (pricingError) throw pricingError;
+      setSeasonalPricing(pricingData || []);
+    } catch (error) {
+      console.error('Error loading seasonal pricing:', error);
+    }
+  };
 
   if (loading) {
     return (
@@ -365,7 +404,7 @@ const RoomDetail = () => {
                     <span className="text-sm text-muted-foreground font-body">per night (base price)</span>
                     
                     {/* Seasonal Pricing Toggle */}
-                    {roomData.seasonal_pricing && Object.keys(roomData.seasonal_pricing).length > 0 && (
+                    {seasonalPricing.length > 0 && (
                       <div className="mt-3">
                         <button
                           onClick={() => setShowSeasonalPricing(!showSeasonalPricing)}
@@ -382,66 +421,72 @@ const RoomDetail = () => {
                         
                         {showSeasonalPricing && (
                           <div className="mt-3 space-y-3 animate-in fade-in slide-in-from-top-2 duration-200">
-                            <div className="space-y-2">
-                              {Object.entries(roomData.seasonal_pricing)
-                                .filter(([season]) => !season.toLowerCase().includes('shoulder'))
-                                .sort(([, a]: [string, any], [, b]: [string, any]) => b - a)
-                                .map(([season, price]: [string, any], index, array) => {
-                                  const isHighest = index === 0;
-                                  const isLowest = index === array.length - 1;
-                                  return (
+                            {/* Group pricing by season */}
+                            {seasons.map((season) => {
+                              const seasonPrices = seasonalPricing.filter(
+                                (sp) => sp.season?.id === season.id
+                              );
+                              
+                              if (seasonPrices.length === 0) return null;
+                              
+                              return (
+                                <div key={season.id} className="space-y-2">
+                                  <div className="flex items-center gap-2 mb-2">
                                     <div 
-                                      key={season} 
-                                      className="flex items-center justify-between p-2.5 rounded-lg border bg-card/50"
+                                      className="w-2 h-2 rounded-full" 
+                                      style={{ backgroundColor: season.color }}
+                                    />
+                                    <span className="text-xs font-body font-semibold">
+                                      {season.name}
+                                    </span>
+                                  </div>
+                                  
+                                  {seasonPrices.map((sp) => (
+                                    <div 
+                                      key={sp.id} 
+                                      className="flex items-center justify-between p-2 rounded-lg border bg-card/30 ml-4"
                                     >
-                                      <div className="flex items-center gap-2">
-                                        <div className={`w-2 h-2 rounded-full ${
-                                          isHighest 
-                                            ? 'bg-red-500' 
-                                            : isLowest 
-                                              ? 'bg-green-500' 
-                                              : 'bg-amber-500'
-                                        }`} />
-                                        <span className="text-xs font-body font-medium capitalize">
-                                          {season.replace(/_/g, ' ')}
-                                        </span>
-                                        {isHighest && (
-                                          <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-red-100 dark:bg-red-950/30 text-red-700 dark:text-red-400 font-medium">
-                                            Peak
-                                          </span>
-                                        )}
-                                        {isLowest && (
-                                          <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-green-100 dark:bg-green-950/30 text-green-700 dark:text-green-400 font-medium">
-                                            Off-season
-                                          </span>
-                                        )}
-                                      </div>
+                                      <span className="text-xs font-body text-muted-foreground">
+                                        {sp.day_type?.name}
+                                      </span>
                                       <span className="text-sm font-heading font-bold">
-                                        ₹{price?.toLocaleString('en-IN')}
+                                        ₹{sp.price?.toLocaleString('en-IN')}
                                       </span>
                                     </div>
-                                  );
-                                })}
-                            </div>
+                                  ))}
+                                </div>
+                              );
+                            })}
                             
-                            {/* Season Definitions */}
+                            {/* Season Guide */}
                             <div className="pt-2 border-t space-y-1.5">
                               <p className="text-[10px] font-body font-semibold text-muted-foreground uppercase tracking-wide mb-2">
                                 Season Guide
                               </p>
                               <div className="space-y-1">
-                                <div className="flex items-start gap-2">
-                                  <div className="w-1.5 h-1.5 rounded-full bg-red-500 mt-1.5 flex-shrink-0" />
-                                  <p className="text-xs font-body text-muted-foreground leading-relaxed">
-                                    <span className="font-medium">Peak:</span> Oct-May (Pleasant weather, festivals)
-                                  </p>
-                                </div>
-                                <div className="flex items-start gap-2">
-                                  <div className="w-1.5 h-1.5 rounded-full bg-green-500 mt-1.5 flex-shrink-0" />
-                                  <p className="text-xs font-body text-muted-foreground leading-relaxed">
-                                    <span className="font-medium">Off-season:</span> Jun-Sep (Monsoon, lush greenery)
-                                  </p>
-                                </div>
+                                {seasons.map((season) => {
+                                  const periods = season.season_periods || [];
+                                  const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+                                  
+                                  return (
+                                    <div key={season.id} className="flex items-start gap-2">
+                                      <div 
+                                        className="w-1.5 h-1.5 rounded-full mt-1.5 flex-shrink-0" 
+                                        style={{ backgroundColor: season.color }}
+                                      />
+                                      <p className="text-xs font-body text-muted-foreground leading-relaxed">
+                                        <span className="font-medium">{season.name}:</span>{' '}
+                                        {periods.map((p: any, idx: number) => (
+                                          <span key={idx}>
+                                            {monthNames[p.start_month - 1]} {p.start_day} - {monthNames[p.end_month - 1]} {p.end_day}
+                                            {idx < periods.length - 1 && ', '}
+                                          </span>
+                                        ))}
+                                        {season.description && ` (${season.description})`}
+                                      </p>
+                                    </div>
+                                  );
+                                })}
                               </div>
                             </div>
                           </div>
