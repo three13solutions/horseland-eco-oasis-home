@@ -166,7 +166,7 @@ const About = () => {
                   <img 
                     src={founder.image || 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80'}
                     alt={`${founder.name || 'Founder'}`}
-                    className="w-32 h-32 md:w-40 md:h-40 rounded-full object-cover shadow-lg"
+                    className="w-32 h-32 md:w-40 md:h-40 rounded-full object-cover object-top shadow-lg"
                   />
                   <div className="absolute -bottom-2 -right-2 w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center">
                     <Lightbulb className="w-6 h-6 text-primary" />
