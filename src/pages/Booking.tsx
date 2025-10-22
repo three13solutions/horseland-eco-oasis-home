@@ -15,6 +15,7 @@ import DynamicFooter from '@/components/DynamicFooter';
 import { PaymentModal } from '@/components/PaymentModal';
 import { RateVariantSelector } from '@/components/booking/RateVariantSelector';
 import { PriceBreakdown } from '@/components/booking/PriceBreakdown';
+import { AvailableRoomCard } from '@/components/booking/AvailableRoomCard';
 import { useDynamicPricing } from '@/hooks/useDynamicPricing';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -583,8 +584,11 @@ const Booking = () => {
     navigate(`/booking?${newSearchParams.toString()}`);
   };
 
-  const handleSelectRoom = (roomType: RoomType) => {
+  const handleSelectRoom = (roomType: RoomType, variant?: any) => {
     setSelectedRoomType(roomType);
+    if (variant) {
+      setSelectedRateVariant(variant);
+    }
     setShowBookingForm(true);
   };
 
@@ -2351,88 +2355,17 @@ const Booking = () => {
 
               <div className="space-y-6">
                 {availableRooms.map(({ roomType, availableCount }) => (
-                  <Card key={roomType.id}>
-                    <CardContent className="p-6">
-                      <div className="grid md:grid-cols-3 gap-6">
-                        {/* Room Image */}
-                        <div className="md:col-span-1">
-                          <img
-                            src={roomType.hero_image || 'https://images.unsplash.com/photo-1571896349842-33c89424de2d?auto=format&fit=crop&w=800&q=80'}
-                            alt={roomType.name}
-                            className="w-full h-48 object-cover rounded-lg"
-                          />
-                        </div>
-
-                        {/* Room Details */}
-                        <div className="md:col-span-1 space-y-4">
-                          <div>
-                            <h3 className="text-xl font-heading font-bold">{roomType.name}</h3>
-                            {roomType.description && (
-                              <p className="text-sm text-muted-foreground mt-1">
-                                {roomType.description}
-                              </p>
-                            )}
-                          </div>
-
-                          <div className="flex items-center gap-2">
-                            <Users className="h-4 w-4 text-muted-foreground" />
-                            <span className="text-sm">Up to {roomType.max_guests} guests</span>
-                          </div>
-
-                          <div className="flex flex-wrap gap-2">
-                            {Array.isArray(roomType.features) ? 
-                              roomType.features.slice(0, 4).map((feature, index) => (
-                                <Badge key={index} variant="secondary" className="text-xs">
-                                  <span className="mr-1">{getFeatureIcon(feature)}</span>
-                                  {feature}
-                                </Badge>
-                              )) :
-                              typeof roomType.features === 'string' ?
-                                JSON.parse(roomType.features).slice(0, 4).map((feature: string, index: number) => (
-                                  <Badge key={index} variant="secondary" className="text-xs">
-                                    <span className="mr-1">{getFeatureIcon(feature)}</span>
-                                    {feature}
-                                  </Badge>
-                                )) : null
-                            }
-                          </div>
-
-                          <div className="text-sm text-green-600 font-medium">
-                            {availableCount} room{availableCount !== 1 ? 's' : ''} available
-                          </div>
-                        </div>
-
-                        {/* Pricing and Booking */}
-                        <div className="md:col-span-1 space-y-4">
-                          <div className="text-right">
-                            <div className="text-2xl font-bold">
-                              ₹{roomType.base_price.toLocaleString()}
-                            </div>
-                            <div className="text-sm text-muted-foreground">per night</div>
-                            {nights > 0 && (
-                              <div className="text-lg font-semibold mt-1">
-                                Total: ₹{(roomType.base_price * nights).toLocaleString()}
-                              </div>
-                            )}
-                          </div>
-
-                          <Separator />
-
-                          <div className="space-y-2">
-                            <p className="text-sm text-muted-foreground">
-                              Room will be automatically assigned upon booking
-                            </p>
-                            <Button 
-                              onClick={() => handleSelectRoom(roomType)}
-                              className="w-full"
-                            >
-                              Select Room & Add Services
-                            </Button>
-                          </div>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
+                  <AvailableRoomCard
+                    key={roomType.id}
+                    roomType={roomType}
+                    availableCount={availableCount}
+                    checkIn={checkIn}
+                    checkOut={checkOut}
+                    guests={guests}
+                    nights={nights}
+                    onSelectRoom={handleSelectRoom}
+                    getFeatureIcon={getFeatureIcon}
+                  />
                 ))}
               </div>
             </>
