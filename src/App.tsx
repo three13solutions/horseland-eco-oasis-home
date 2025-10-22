@@ -58,6 +58,7 @@ import CategoryPricing from "./pages/admin/CategoryPricing";
 import UnitPricing from "./pages/admin/UnitPricing";
 import SeasonRules from "./pages/admin/SeasonRules";
 import RoundingRule from "./pages/admin/RoundingRule";
+import PricingRules from "./pages/admin/PricingRules";
 
 const queryClient = new QueryClient();
 
@@ -106,6 +107,7 @@ function App() {
                 <Route path="guests" element={<GuestManagement />} />
                 <Route path="payments" element={<PaymentManagement />} />
                 <Route path="invoices" element={<InvoiceManagement />} />
+                <Route path="pricing/rules" element={<PricingRules />} />
                 <Route path="pricing/categories" element={<CategoryPricing />} />
                 <Route path="pricing/units" element={<UnitPricing />} />
                 <Route path="pricing/seasons" element={<SeasonRules />} />

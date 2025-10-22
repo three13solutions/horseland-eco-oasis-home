@@ -82,6 +82,12 @@ const mainMenuItems = [
 
 const pricingMenuItems = [
   { 
+    icon: DollarSign, 
+    label: 'Pricing Rules', 
+    path: '/admin/pricing/rules', 
+    description: 'Dynamic pricing engine' 
+  },
+  { 
     icon: Tag, 
     label: 'Category Pricing', 
     path: '/admin/pricing/categories', 
