@@ -44,8 +44,8 @@ export const AvailableRoomCard: React.FC<AvailableRoomCardProps> = ({
   onSelectRoom,
   getFeatureIcon
 }) => {
-  const [selectedMealPlan, setSelectedMealPlan] = useState<string>('');
-  const [selectedCancellationPolicy, setSelectedCancellationPolicy] = useState<string>('');
+  const [selectedMealPlan, setSelectedMealPlan] = useState<string>('all_meals_inclusive');
+  const [selectedCancellationPolicy, setSelectedCancellationPolicy] = useState<string>('non_refundable');
 
   // Fetch dynamic pricing variants
   const { data: variants, isLoading } = useDynamicPricing({
