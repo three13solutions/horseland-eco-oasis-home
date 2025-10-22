@@ -56,7 +56,7 @@ interface Meal {
   updated_at: string;
 }
 
-const DiningManagement = () => {
+const MealsManagement = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [meals, setMeals] = useState<Meal[]>([]);

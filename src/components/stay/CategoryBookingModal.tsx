@@ -9,6 +9,9 @@ import { cn } from '@/lib/utils';
 import { DateRange } from 'react-day-picker';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { RateVariantSelector } from '@/components/booking/RateVariantSelector';
+import { PriceBreakdown } from '@/components/booking/PriceBreakdown';
+import { useDynamicPricing } from '@/hooks/useDynamicPricing';
 
 import type { Category } from './CategoryCard';
 
@@ -25,6 +28,19 @@ const CategoryBookingModal: React.FC<Props> = ({ open, onOpenChange, category })
   const [notes, setNotes] = React.useState<string>('');
   const [availableUnits, setAvailableUnits] = useState(0);
   const [loading, setLoading] = useState(false);
+  const [selectedVariant, setSelectedVariant] = useState<any>(null);
+  
+  const nights = date?.from && date?.to 
+    ? Math.ceil((date.to.getTime() - date.from.getTime()) / (1000 * 60 * 60 * 24))
+    : 0;
+  
+  const { data: variants = [], isLoading: variantsLoading } = useDynamicPricing({
+    roomTypeId: category?.id,
+    checkIn: date?.from,
+    checkOut: date?.to,
+    guestsCount: guests + extraMattress,
+    enabled: !!date?.from && !!date?.to && availableUnits > 0
+  });
 
   const checkAvailability = async () => {
     if (!category?.id || !date?.from || !date?.to) {
@@ -168,6 +184,31 @@ const CategoryBookingModal: React.FC<Props> = ({ open, onOpenChange, category })
             </div>
           </div>
 
+          {/* Rate Variant Selector */}
+          {date?.from && date?.to && availableUnits > 0 && variants.length > 0 && (
+            <div className="space-y-4">
+              <h3 className="font-semibold text-base">Select Rate Plan</h3>
+              <RateVariantSelector
+                variants={variants}
+                selectedVariant={selectedVariant}
+                onSelect={setSelectedVariant}
+                nights={nights}
+              />
+              
+              {selectedVariant && (
+                <PriceBreakdown
+                  roomRate={selectedVariant.room_rate}
+                  mealCost={selectedVariant.meal_cost}
+                  policyAdjustment={selectedVariant.policy_adjustment}
+                  nights={nights}
+                  guestCount={guests + extraMattress}
+                  mealPlanName={selectedVariant.meal_plan_name}
+                  includedMeals={selectedVariant.included_meals || []}
+                />
+              )}
+            </div>
+          )}
+
           {/* Special Requests */}
           <div className="space-y-3">
             <Label htmlFor="notes" className="text-base font-semibold">Special Requests</Label>
@@ -188,9 +229,11 @@ const CategoryBookingModal: React.FC<Props> = ({ open, onOpenChange, category })
             <Button 
               onClick={() => onOpenChange(false)} 
               className="sm:flex-1"
-              disabled={!date?.from || !date?.to || availableUnits === 0 || loading}
+              disabled={!date?.from || !date?.to || availableUnits === 0 || loading || !selectedVariant}
             >
-              Continue to Booking
+              {!selectedVariant && date?.from && date?.to && availableUnits > 0 
+                ? 'Select a Rate Plan' 
+                : 'Continue to Booking'}
             </Button>
           </div>
         </div>
