@@ -54,11 +54,16 @@ import SiteSettings from "./pages/admin/SiteSettings";
 import BlogManagement from "./pages/admin/BlogManagement";
 import PageManagement from "./pages/admin/PageManagement";
 import DynamicPage from "./pages/DynamicPage";
+import PricingDashboard from "./pages/admin/PricingDashboard";
+import BaseConfiguration from "./pages/admin/BaseConfiguration";
+import BasePricing from "./pages/admin/BasePricing";
+import PricingRules from "./pages/admin/PricingRules";
+import { Navigate } from 'react-router-dom';
+// Old imports kept for backwards compatibility within consolidated pages
 import CategoryPricing from "./pages/admin/CategoryPricing";
 import UnitPricing from "./pages/admin/UnitPricing";
 import SeasonRules from "./pages/admin/SeasonRules";
 import RoundingRule from "./pages/admin/RoundingRule";
-import PricingRules from "./pages/admin/PricingRules";
 
 const queryClient = new QueryClient();
 
@@ -107,11 +112,16 @@ function App() {
                 <Route path="guests" element={<GuestManagement />} />
                 <Route path="payments" element={<PaymentManagement />} />
                 <Route path="invoices" element={<InvoiceManagement />} />
+                <Route path="pricing" element={<PricingDashboard />} />
+                <Route path="pricing/config" element={<BaseConfiguration />} />
+                <Route path="pricing/rates" element={<BasePricing />} />
                 <Route path="pricing/rules" element={<PricingRules />} />
-                <Route path="pricing/categories" element={<CategoryPricing />} />
-                <Route path="pricing/units" element={<UnitPricing />} />
-                <Route path="pricing/seasons" element={<SeasonRules />} />
-                <Route path="pricing/rounding" element={<RoundingRule />} />
+                
+                {/* Redirects for backwards compatibility */}
+                <Route path="pricing/categories" element={<Navigate to="/admin/pricing/rates?tab=categories" replace />} />
+                <Route path="pricing/units" element={<Navigate to="/admin/pricing/rates?tab=units" replace />} />
+                <Route path="pricing/seasons" element={<Navigate to="/admin/pricing/config?section=seasons" replace />} />
+                <Route path="pricing/rounding" element={<Navigate to="/admin/pricing/config?section=rounding" replace />} />
                 <Route path="rooms" element={<RoomManagement />} />
                 <Route path="packages" element={<PackageManagement />} />
                 <Route path="dining" element={<DiningManagement />} />

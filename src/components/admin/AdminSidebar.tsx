@@ -4,7 +4,7 @@ import {
   Users, 
   Calendar, 
   CreditCard, 
-  Settings, 
+  Settings as SettingsIcon, 
   BarChart3, 
   FileText, 
   UserCheck, 
@@ -23,10 +23,7 @@ import {
   Grid3x3,
   Image as ImageIcon,
   DollarSign,
-  Tag,
-  Home as HomeIcon,
-  CalendarRange,
-  Calculator
+  Zap
 } from 'lucide-react';
 import {
   Sidebar,
@@ -82,34 +79,29 @@ const mainMenuItems = [
 
 const pricingMenuItems = [
   { 
+    icon: BarChart3, 
+    label: 'Overview', 
+    path: '/admin/pricing', 
+    description: 'Pricing dashboard',
+    exact: true
+  },
+  { 
+    icon: SettingsIcon, 
+    label: 'Base Configuration', 
+    path: '/admin/pricing/config', 
+    description: 'Seasons, holidays & rounding' 
+  },
+  { 
     icon: DollarSign, 
-    label: 'Pricing Rules', 
+    label: 'Base Pricing', 
+    path: '/admin/pricing/rates', 
+    description: 'Category & unit rates' 
+  },
+  { 
+    icon: Zap, 
+    label: 'Dynamic Rules', 
     path: '/admin/pricing/rules', 
-    description: 'Dynamic pricing engine' 
-  },
-  { 
-    icon: Tag, 
-    label: 'Category Pricing', 
-    path: '/admin/pricing/categories', 
-    description: 'Room category rates' 
-  },
-  { 
-    icon: HomeIcon, 
-    label: 'Unit Pricing', 
-    path: '/admin/pricing/units', 
-    description: 'Individual unit rates' 
-  },
-  { 
-    icon: CalendarRange, 
-    label: 'Season Rules', 
-    path: '/admin/pricing/seasons', 
-    description: 'Seasonal definitions' 
-  },
-  { 
-    icon: Calculator, 
-    label: 'Rounding Rule', 
-    path: '/admin/pricing/rounding', 
-    description: 'Price rounding settings' 
+    description: 'Revenue optimization' 
   }
 ];
 
@@ -199,7 +191,7 @@ const systemMenuItems = [
     description: 'Admin users' 
   },
   { 
-    icon: Settings, 
+    icon: SettingsIcon, 
     label: 'Settings', 
     path: '/admin/settings', 
     description: 'Site configuration' 
