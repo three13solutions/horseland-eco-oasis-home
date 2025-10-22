@@ -351,7 +351,7 @@ const DiningManagement = () => {
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-4">
           <div>
-            <h1 className="text-3xl font-bold">Dining Management</h1>
+            <h1 className="text-3xl font-bold">Meals Management</h1>
             <p className="text-muted-foreground">Manage meals and dining options</p>
           </div>
         </div>
@@ -731,4 +731,4 @@ const DiningManagement = () => {
   );
 };
 
-export default DiningManagement;
+export default MealsManagement;

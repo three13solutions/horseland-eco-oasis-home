@@ -104,6 +104,18 @@ const pricingMenuItems = [
     description: 'Revenue optimization' 
   },
   { 
+    icon: UtensilsCrossed, 
+    label: 'Meal Plans', 
+    path: '/admin/pricing/meal-plans', 
+    description: 'Meal inclusion options' 
+  },
+  { 
+    icon: FileText, 
+    label: 'Cancellation Policies', 
+    path: '/admin/pricing/cancellation-policies', 
+    description: 'Refund policy options' 
+  },
+  { 
     icon: Calendar, 
     label: 'Live Rate Card', 
     path: '/admin/pricing/rate-card', 
@@ -126,8 +138,8 @@ const serviceMenuItems = [
   },
   { 
     icon: UtensilsCrossed, 
-    label: 'Dining', 
-    path: '/admin/dining', 
+    label: 'Meals', 
+    path: '/admin/meals', 
     description: 'Meals & menus' 
   },
   { 

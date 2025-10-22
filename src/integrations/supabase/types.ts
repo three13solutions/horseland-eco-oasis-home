@@ -472,6 +472,7 @@ export type Database = {
       bookings: {
         Row: {
           booking_id: string
+          cancellation_policy_code: string | null
           check_in: string
           check_out: string
           created_at: string
@@ -481,12 +482,16 @@ export type Database = {
           guest_phone: string | null
           guests_count: number
           id: string
+          meal_cost: number | null
+          meal_plan_code: string | null
           notes: string | null
           package_id: string | null
           payment_id: string | null
           payment_method: string | null
           payment_order_id: string | null
           payment_status: string
+          rate_breakdown: Json | null
+          room_cost: number | null
           room_type_id: string | null
           room_unit_id: string | null
           selected_activities: Json | null
@@ -498,6 +503,7 @@ export type Database = {
         }
         Insert: {
           booking_id: string
+          cancellation_policy_code?: string | null
           check_in: string
           check_out: string
           created_at?: string
@@ -507,12 +513,16 @@ export type Database = {
           guest_phone?: string | null
           guests_count?: number
           id?: string
+          meal_cost?: number | null
+          meal_plan_code?: string | null
           notes?: string | null
           package_id?: string | null
           payment_id?: string | null
           payment_method?: string | null
           payment_order_id?: string | null
           payment_status?: string
+          rate_breakdown?: Json | null
+          room_cost?: number | null
           room_type_id?: string | null
           room_unit_id?: string | null
           selected_activities?: Json | null
@@ -524,6 +534,7 @@ export type Database = {
         }
         Update: {
           booking_id?: string
+          cancellation_policy_code?: string | null
           check_in?: string
           check_out?: string
           created_at?: string
@@ -533,12 +544,16 @@ export type Database = {
           guest_phone?: string | null
           guests_count?: number
           id?: string
+          meal_cost?: number | null
+          meal_plan_code?: string | null
           notes?: string | null
           package_id?: string | null
           payment_id?: string | null
           payment_method?: string | null
           payment_order_id?: string | null
           payment_status?: string
+          rate_breakdown?: Json | null
+          room_cost?: number | null
           room_type_id?: string | null
           room_unit_id?: string | null
           selected_activities?: Json | null
@@ -575,6 +590,75 @@ export type Database = {
             columns: ["room_unit_id"]
             isOneToOne: false
             referencedRelation: "room_units"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      cancellation_policy_rules: {
+        Row: {
+          adjustment_type: string
+          adjustment_value: number
+          applies_to: string
+          cancellation_terms: Json
+          created_at: string
+          description: string | null
+          display_order: number
+          id: string
+          is_active: boolean
+          is_featured: boolean | null
+          policy_code: string
+          policy_name: string
+          room_type_id: string | null
+          season_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          adjustment_type: string
+          adjustment_value?: number
+          applies_to?: string
+          cancellation_terms?: Json
+          created_at?: string
+          description?: string | null
+          display_order?: number
+          id?: string
+          is_active?: boolean
+          is_featured?: boolean | null
+          policy_code: string
+          policy_name: string
+          room_type_id?: string | null
+          season_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          adjustment_type?: string
+          adjustment_value?: number
+          applies_to?: string
+          cancellation_terms?: Json
+          created_at?: string
+          description?: string | null
+          display_order?: number
+          id?: string
+          is_active?: boolean
+          is_featured?: boolean | null
+          policy_code?: string
+          policy_name?: string
+          room_type_id?: string | null
+          season_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cancellation_policy_rules_room_type_id_fkey"
+            columns: ["room_type_id"]
+            isOneToOne: false
+            referencedRelation: "room_types"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cancellation_policy_rules_season_id_fkey"
+            columns: ["season_id"]
+            isOneToOne: false
+            referencedRelation: "seasons"
             referencedColumns: ["id"]
           },
         ]
@@ -1387,6 +1471,72 @@ export type Database = {
           },
           {
             foreignKeyName: "lead_time_rules_season_id_fkey"
+            columns: ["season_id"]
+            isOneToOne: false
+            referencedRelation: "seasons"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      meal_plan_rules: {
+        Row: {
+          applies_to: string
+          created_at: string
+          description: string | null
+          display_order: number
+          id: string
+          included_meal_types: Json
+          is_active: boolean
+          is_featured: boolean | null
+          plan_code: string
+          plan_name: string
+          preferred_variant: string | null
+          room_type_id: string | null
+          season_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          applies_to?: string
+          created_at?: string
+          description?: string | null
+          display_order?: number
+          id?: string
+          included_meal_types?: Json
+          is_active?: boolean
+          is_featured?: boolean | null
+          plan_code: string
+          plan_name: string
+          preferred_variant?: string | null
+          room_type_id?: string | null
+          season_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          applies_to?: string
+          created_at?: string
+          description?: string | null
+          display_order?: number
+          id?: string
+          included_meal_types?: Json
+          is_active?: boolean
+          is_featured?: boolean | null
+          plan_code?: string
+          plan_name?: string
+          preferred_variant?: string | null
+          room_type_id?: string | null
+          season_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "meal_plan_rules_room_type_id_fkey"
+            columns: ["room_type_id"]
+            isOneToOne: false
+            referencedRelation: "room_types"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "meal_plan_rules_season_id_fkey"
             columns: ["season_id"]
             isOneToOne: false
             referencedRelation: "seasons"
@@ -2445,6 +2595,30 @@ export type Database = {
           subtotal: number
           total_amount: number
         }[]
+      }
+      calculate_meal_plan_cost: {
+        Args: {
+          p_guests_count: number
+          p_meal_plan_code: string
+          p_nights: number
+          p_preferred_variant?: string
+        }
+        Returns: {
+          included_meals: Json
+          meal_breakdown: Json
+          meal_cost: number
+        }[]
+      }
+      calculate_rate_variants: {
+        Args: {
+          p_booking_channel?: string
+          p_check_in: string
+          p_check_out: string
+          p_guests_count?: number
+          p_room_type_id: string
+          p_room_unit_id?: string
+        }
+        Returns: Json
       }
       check_room_availability: {
         Args: {

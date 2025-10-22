@@ -40,7 +40,9 @@ import PaymentManagement from "./pages/admin/PaymentManagement";
 import InvoiceManagement from "./pages/admin/InvoiceManagement";
 import RoomManagement from "./pages/admin/RoomManagement";
 import PackageManagement from "./pages/admin/PackageManagement";
-import DiningManagement from "./pages/admin/DiningManagement";
+import MealsManagement from "./pages/admin/MealsManagement";
+import MealPlansManagement from "./pages/admin/MealPlansManagement";
+import CancellationPoliciesManagement from "./pages/admin/CancellationPoliciesManagement";
 import ActivitiesManagement from "./pages/admin/ActivitiesManagement";
 import SpaManagement from "./pages/admin/SpaManagement";
 import AddonsManagement from "./pages/admin/AddonsManagement";
@@ -122,11 +124,14 @@ function App() {
                 {/* Redirects for backwards compatibility */}
                 <Route path="pricing/categories" element={<Navigate to="/admin/pricing/rates?tab=categories" replace />} />
                 <Route path="pricing/units" element={<Navigate to="/admin/pricing/rates?tab=units" replace />} />
-                <Route path="pricing/seasons" element={<Navigate to="/admin/pricing/config?section=seasons" replace />} />
-                <Route path="pricing/rounding" element={<Navigate to="/admin/pricing/config?section=rounding" replace />} />
-                <Route path="rooms" element={<RoomManagement />} />
-                <Route path="packages" element={<PackageManagement />} />
-                <Route path="dining" element={<DiningManagement />} />
+            <Route path="pricing/seasons" element={<Navigate to="/admin/pricing/config?section=seasons" replace />} />
+            <Route path="pricing/rounding" element={<Navigate to="/admin/pricing/config?section=rounding" replace />} />
+            <Route path="pricing/meal-plans" element={<MealPlansManagement />} />
+            <Route path="pricing/cancellation-policies" element={<CancellationPoliciesManagement />} />
+            <Route path="rooms" element={<RoomManagement />} />
+            <Route path="packages" element={<PackageManagement />} />
+            <Route path="meals" element={<MealsManagement />} />
+            <Route path="dining" element={<Navigate to="/admin/meals" replace />} />
                 <Route path="activities" element={<ActivitiesManagement />} />
                 <Route path="spa" element={<SpaManagement />} />
                 <Route path="addons" element={<AddonsManagement />} />
