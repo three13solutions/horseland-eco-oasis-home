@@ -13,6 +13,9 @@ import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious
 import Navigation from '@/components/Navigation';
 import DynamicFooter from '@/components/DynamicFooter';
 import { PaymentModal } from '@/components/PaymentModal';
+import { RateVariantSelector } from '@/components/booking/RateVariantSelector';
+import { PriceBreakdown } from '@/components/booking/PriceBreakdown';
+import { useDynamicPricing } from '@/hooks/useDynamicPricing';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 
@@ -136,6 +139,18 @@ const Booking = () => {
   // Additional services common to all guests
   const [serviceInRoomQuantity, setServiceInRoomQuantity] = useState(0);
   const [candleLightDinnerQuantity, setCandleLightDinnerQuantity] = useState(0);
+  
+  // Dynamic pricing state
+  const [selectedRateVariant, setSelectedRateVariant] = useState<any>(null);
+  
+  // Fetch rate variants when room is selected
+  const { data: rateVariants = [], isLoading: variantsLoading } = useDynamicPricing({
+    roomTypeId: selectedRoomType?.id,
+    checkIn: checkIn ? new Date(checkIn) : undefined,
+    checkOut: checkOut ? new Date(checkOut) : undefined,
+    guestsCount: guests,
+    enabled: !!selectedRoomType && !!checkIn && !!checkOut
+  });
 
   // Load package if packageId is present
   useEffect(() => {
@@ -661,11 +676,19 @@ const Booking = () => {
   const calculateTotal = () => {
     if (!selectedRoomType) return 0;
     const nights = calculateNights();
-    const roomTotal = selectedRoomType.base_price * nights;
+    
+    // Use variant pricing if selected, otherwise fall back to base price
+    const roomTotal = selectedRateVariant 
+      ? selectedRateVariant.total_price 
+      : selectedRoomType.base_price * nights;
+    
     const addonsTotal = selectedAddons.reduce((total, addon) => total + (addon.price * addon.quantity), 0);
     const pickupTotal = selectedPickup ? selectedPickup.price : 0;
     const beddingTotal = selectedBedding.reduce((total, bed) => total + bed.price, 0);
-    const mealsTotal = calculateGuestMealsTotal();
+    
+    // Only add guest meals if no rate variant is selected (variants include meals)
+    const mealsTotal = selectedRateVariant ? 0 : calculateGuestMealsTotal();
+    
     return roomTotal + addonsTotal + pickupTotal + beddingTotal + mealsTotal;
   };
 
@@ -1025,6 +1048,16 @@ const Booking = () => {
       return;
     }
     
+    // Check if rate variant is selected when variants are available
+    if (rateVariants.length > 0 && !selectedRateVariant) {
+      toast({
+        title: "Rate Plan Required",
+        description: "Please select a rate plan before proceeding to payment",
+        variant: "destructive",
+      });
+      return;
+    }
+    
     setShowPaymentModal(true);
   };
 
@@ -1045,6 +1078,18 @@ const Booking = () => {
         payment_id: paymentId,
         payment_order_id: orderId,
         payment_method: 'razorpay',
+        // Store variant data if available
+        meal_plan_code: selectedRateVariant?.meal_plan_code || 'room_only',
+        cancellation_policy_code: selectedRateVariant?.cancellation_policy_code || 'flexible',
+        room_cost: selectedRateVariant?.room_rate || (selectedRoomType!.base_price * calculateNights()),
+        meal_cost: selectedRateVariant?.meal_cost || 0,
+        rate_breakdown: selectedRateVariant ? {
+          meal_plan_name: selectedRateVariant.meal_plan_name,
+          cancellation_policy_name: selectedRateVariant.cancellation_policy_name,
+          included_meals: selectedRateVariant.included_meals,
+          policy_adjustment: selectedRateVariant.policy_adjustment,
+          total_nights: calculateNights()
+        } : {},
         selected_meals: selectedAddons.filter(a => a.type === 'meal').map(a => ({
           id: a.id,
           title: a.title,
@@ -1162,14 +1207,63 @@ const Booking = () => {
                       <div className="flex-1">
                         <h3 className="font-semibold">{selectedRoomType.name}</h3>
                         <p className="text-sm text-muted-foreground">Up to {selectedRoomType.max_guests} guests</p>
-                        <p className="text-lg font-semibold">₹{selectedRoomType.base_price.toLocaleString()}/night</p>
+                        {!selectedRateVariant && (
+                          <p className="text-sm text-muted-foreground mt-1">Starting from ₹{selectedRoomType.base_price.toLocaleString()}/night</p>
+                        )}
                       </div>
-                      <Button variant="outline" onClick={() => setShowBookingForm(false)}>
+                      <Button variant="outline" onClick={() => {
+                        setShowBookingForm(false);
+                        setSelectedRateVariant(null);
+                      }}>
                         Change Room
                       </Button>
                     </div>
                   </CardContent>
                 </Card>
+
+                {/* Rate Plan Selection */}
+                {rateVariants.length > 0 && (
+                  <Card>
+                    <CardHeader>
+                      <CardTitle>Select Rate Plan</CardTitle>
+                      <p className="text-sm text-muted-foreground">Choose your meal plan and cancellation policy</p>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      {variantsLoading ? (
+                        <div className="text-center py-8 text-muted-foreground">Loading rate options...</div>
+                      ) : (
+                        <>
+                          <RateVariantSelector
+                            variants={rateVariants}
+                            selectedVariant={selectedRateVariant}
+                            onSelect={setSelectedRateVariant}
+                            nights={calculateNights()}
+                          />
+                          
+                          {selectedRateVariant && (
+                            <PriceBreakdown
+                              roomRate={selectedRateVariant.room_rate}
+                              mealCost={selectedRateVariant.meal_cost}
+                              policyAdjustment={selectedRateVariant.policy_adjustment}
+                              nights={calculateNights()}
+                              guestCount={guests}
+                              mealPlanName={selectedRateVariant.meal_plan_name}
+                              includedMeals={selectedRateVariant.included_meals || []}
+                            />
+                          )}
+                        </>
+                      )}
+                    </CardContent>
+                  </Card>
+                )}
+
+                {!selectedRateVariant && rateVariants.length > 0 && (
+                  <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-4">
+                    <p className="text-sm text-yellow-800 dark:text-yellow-200">
+                      Please select a rate plan above to continue with your booking
+                    </p>
+                  </div>
+                )}
 
                 {/* Addons Selection */}
                 <Card>
@@ -1178,13 +1272,26 @@ const Booking = () => {
                   </CardHeader>
                   <CardContent>
                      <Tabs value={activeTab || (needsExtraBedding ? "bedding" : "pickup")} onValueChange={setActiveTab} className="w-full">
-                      <TabsList className={`grid w-full ${needsExtraBedding ? 'grid-cols-5' : 'grid-cols-4'}`}>
-                        {needsExtraBedding && <TabsTrigger value="bedding">Extra Bed</TabsTrigger>}
+                      <TabsList className={`grid w-full ${needsExtraBedding && !selectedRateVariant ? 'grid-cols-5' : (selectedRateVariant && selectedRateVariant.meal_cost > 0) ? 'grid-cols-3' : 'grid-cols-4'}`}>
+                        {needsExtraBedding && !selectedRateVariant && <TabsTrigger value="bedding">Extra Bed</TabsTrigger>}
                         <TabsTrigger value="pickup">Pickup/Drop</TabsTrigger>
-                        <TabsTrigger value="meals">Meals</TabsTrigger>
+                        {(!selectedRateVariant || selectedRateVariant.meal_cost === 0) && <TabsTrigger value="meals">Meals</TabsTrigger>}
                         <TabsTrigger value="activities">Activities</TabsTrigger>
                         <TabsTrigger value="spa">Spa</TabsTrigger>
                       </TabsList>
+                      
+                      {selectedRateVariant && selectedRateVariant.meal_cost > 0 && (
+                        <div className="mt-4 p-3 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg">
+                          <p className="text-sm text-green-800 dark:text-green-200">
+                            ✓ Your selected rate plan includes: <strong>{selectedRateVariant.meal_plan_name}</strong>
+                            {selectedRateVariant.included_meals.length > 0 && (
+                              <span className="block mt-1 text-xs">
+                                ({selectedRateVariant.included_meals.join(', ')})
+                              </span>
+                            )}
+                          </p>
+                        </div>
+                      )}
                       
                       
                       {needsExtraBedding && (
@@ -1800,10 +1907,33 @@ const Booking = () => {
                     <Separator />
 
                     <div className="space-y-3">
-                      <div className="flex justify-between gap-2 text-sm">
-                        <span className="text-muted-foreground">Room ({nights} nights):</span>
-                        <span className="font-semibold whitespace-nowrap">₹{(selectedRoomType.base_price * nights).toLocaleString()}</span>
-                      </div>
+                      {selectedRateVariant ? (
+                        <>
+                          <div className="flex justify-between gap-2 text-sm">
+                            <span className="text-muted-foreground">Room ({nights} nights):</span>
+                            <span className="font-semibold whitespace-nowrap">₹{selectedRateVariant.room_rate.toLocaleString()}</span>
+                          </div>
+                          {selectedRateVariant.meal_cost > 0 && (
+                            <div className="flex justify-between gap-2 text-sm">
+                              <span className="text-muted-foreground">{selectedRateVariant.meal_plan_name}:</span>
+                              <span className="font-semibold whitespace-nowrap">₹{selectedRateVariant.meal_cost.toLocaleString()}</span>
+                            </div>
+                          )}
+                          {selectedRateVariant.policy_adjustment !== 0 && (
+                            <div className="flex justify-between gap-2 text-sm">
+                              <span className="text-muted-foreground">{selectedRateVariant.cancellation_policy_name} Policy:</span>
+                              <span className={`font-semibold whitespace-nowrap ${selectedRateVariant.policy_adjustment > 0 ? 'text-red-600' : 'text-green-600'}`}>
+                                {selectedRateVariant.policy_adjustment > 0 ? '+' : ''}₹{selectedRateVariant.policy_adjustment.toLocaleString()}
+                              </span>
+                            </div>
+                          )}
+                        </>
+                      ) : (
+                        <div className="flex justify-between gap-2 text-sm">
+                          <span className="text-muted-foreground">Room ({nights} nights):</span>
+                          <span className="font-semibold whitespace-nowrap">₹{(selectedRoomType.base_price * nights).toLocaleString()}</span>
+                        </div>
+                      )}
                       
                           {selectedAddons.length > 0 && (
                             <div className="space-y-2">
@@ -2318,7 +2448,7 @@ const Booking = () => {
           onSuccess={handlePaymentSuccess}
           bookingDetails={{
             roomName: selectedRoomType.name,
-            roomPrice: selectedRoomType.base_price,
+            roomPrice: selectedRateVariant ? selectedRateVariant.price_per_night : selectedRoomType.base_price,
             nights: nights,
             addonTotal: selectedAddons.reduce((total, addon) => total + (addon.price * addon.quantity), 0) + 
                        (selectedPickup ? selectedPickup.price : 0) + 
