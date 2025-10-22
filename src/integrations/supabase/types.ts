@@ -149,7 +149,7 @@ export type Database = {
           admin_user_id: string
           created_at: string
           id: string
-          ip_address: unknown | null
+          ip_address: unknown
           new_values: Json | null
           old_values: Json | null
           target_id: string | null
@@ -161,7 +161,7 @@ export type Database = {
           admin_user_id: string
           created_at?: string
           id?: string
-          ip_address?: unknown | null
+          ip_address?: unknown
           new_values?: Json | null
           old_values?: Json | null
           target_id?: string | null
@@ -173,7 +173,7 @@ export type Database = {
           admin_user_id?: string
           created_at?: string
           id?: string
-          ip_address?: unknown | null
+          ip_address?: unknown
           new_values?: Json | null
           old_values?: Json | null
           target_id?: string | null
@@ -579,6 +579,104 @@ export type Database = {
           },
         ]
       }
+      channel_rules: {
+        Row: {
+          adjustment_type: string
+          adjustment_value: number
+          applies_to: string
+          channel_name: string
+          created_at: string | null
+          id: string
+          is_active: boolean | null
+          room_type_id: string | null
+          season_id: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          adjustment_type: string
+          adjustment_value: number
+          applies_to: string
+          channel_name: string
+          created_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          room_type_id?: string | null
+          season_id?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          adjustment_type?: string
+          adjustment_value?: number
+          applies_to?: string
+          channel_name?: string
+          created_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          room_type_id?: string | null
+          season_id?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "channel_rules_room_type_id_fkey"
+            columns: ["room_type_id"]
+            isOneToOne: false
+            referencedRelation: "room_types"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "channel_rules_season_id_fkey"
+            columns: ["season_id"]
+            isOneToOne: false
+            referencedRelation: "seasons"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      competitor_rates: {
+        Row: {
+          competitor_name: string
+          competitor_price: number
+          created_at: string | null
+          id: string
+          notes: string | null
+          our_room_type_id: string | null
+          rate_date: string
+          room_category_comparable: string | null
+          source: string | null
+        }
+        Insert: {
+          competitor_name: string
+          competitor_price: number
+          created_at?: string | null
+          id?: string
+          notes?: string | null
+          our_room_type_id?: string | null
+          rate_date: string
+          room_category_comparable?: string | null
+          source?: string | null
+        }
+        Update: {
+          competitor_name?: string
+          competitor_price?: number
+          created_at?: string | null
+          id?: string
+          notes?: string | null
+          our_room_type_id?: string | null
+          rate_date?: string
+          room_category_comparable?: string | null
+          source?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "competitor_rates_our_room_type_id_fkey"
+            columns: ["our_room_type_id"]
+            isOneToOne: false
+            referencedRelation: "room_types"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       contact_messages: {
         Row: {
           created_at: string
@@ -841,6 +939,53 @@ export type Database = {
             columns: ["category_id"]
             isOneToOne: false
             referencedRelation: "gallery_categories"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      guest_composition_rules: {
+        Row: {
+          base_guests_count: number
+          created_at: string | null
+          extra_adult_charge: number | null
+          extra_child_charge: number | null
+          extra_infant_charge: number | null
+          id: string
+          is_active: boolean | null
+          max_extra_guests: number | null
+          room_type_id: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          base_guests_count?: number
+          created_at?: string | null
+          extra_adult_charge?: number | null
+          extra_child_charge?: number | null
+          extra_infant_charge?: number | null
+          id?: string
+          is_active?: boolean | null
+          max_extra_guests?: number | null
+          room_type_id?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          base_guests_count?: number
+          created_at?: string | null
+          extra_adult_charge?: number | null
+          extra_child_charge?: number | null
+          extra_infant_charge?: number | null
+          id?: string
+          is_active?: boolean | null
+          max_extra_guests?: number | null
+          room_type_id?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "guest_composition_rules_room_type_id_fkey"
+            columns: ["room_type_id"]
+            isOneToOne: false
+            referencedRelation: "room_types"
             referencedColumns: ["id"]
           },
         ]
@@ -1186,6 +1331,69 @@ export type Database = {
           },
         ]
       }
+      lead_time_rules: {
+        Row: {
+          applies_to: string
+          created_at: string | null
+          days_before_checkin_max: number
+          days_before_checkin_min: number
+          id: string
+          is_active: boolean | null
+          price_adjustment: number
+          price_adjustment_type: string
+          priority: number | null
+          room_type_id: string | null
+          rule_name: string
+          season_id: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          applies_to: string
+          created_at?: string | null
+          days_before_checkin_max: number
+          days_before_checkin_min: number
+          id?: string
+          is_active?: boolean | null
+          price_adjustment: number
+          price_adjustment_type: string
+          priority?: number | null
+          room_type_id?: string | null
+          rule_name: string
+          season_id?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          applies_to?: string
+          created_at?: string | null
+          days_before_checkin_max?: number
+          days_before_checkin_min?: number
+          id?: string
+          is_active?: boolean | null
+          price_adjustment?: number
+          price_adjustment_type?: string
+          priority?: number | null
+          room_type_id?: string | null
+          rule_name?: string
+          season_id?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lead_time_rules_room_type_id_fkey"
+            columns: ["room_type_id"]
+            isOneToOne: false
+            referencedRelation: "room_types"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "lead_time_rules_season_id_fkey"
+            columns: ["season_id"]
+            isOneToOne: false
+            referencedRelation: "seasons"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       meals: {
         Row: {
           availability_end: string
@@ -1277,6 +1485,66 @@ export type Database = {
             columns: ["parent_id"]
             isOneToOne: false
             referencedRelation: "navigation_items"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      occupancy_yield_rules: {
+        Row: {
+          applies_to: string
+          created_at: string | null
+          id: string
+          is_active: boolean | null
+          occupancy_threshold: number
+          price_adjustment: number
+          price_adjustment_type: string
+          priority: number | null
+          room_type_id: string | null
+          rule_name: string
+          season_id: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          applies_to: string
+          created_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          occupancy_threshold: number
+          price_adjustment: number
+          price_adjustment_type: string
+          priority?: number | null
+          room_type_id?: string | null
+          rule_name: string
+          season_id?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          applies_to?: string
+          created_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          occupancy_threshold?: number
+          price_adjustment?: number
+          price_adjustment_type?: string
+          priority?: number | null
+          room_type_id?: string | null
+          rule_name?: string
+          season_id?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "occupancy_yield_rules_room_type_id_fkey"
+            columns: ["room_type_id"]
+            isOneToOne: false
+            referencedRelation: "room_types"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "occupancy_yield_rules_season_id_fkey"
+            columns: ["season_id"]
+            isOneToOne: false
+            referencedRelation: "seasons"
             referencedColumns: ["id"]
           },
         ]
@@ -1549,6 +1817,125 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      pricing_constraints: {
+        Row: {
+          ceiling_price: number | null
+          created_at: string | null
+          floor_price: number
+          id: string
+          is_active: boolean | null
+          room_type_id: string | null
+          room_unit_id: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          ceiling_price?: number | null
+          created_at?: string | null
+          floor_price: number
+          id?: string
+          is_active?: boolean | null
+          room_type_id?: string | null
+          room_unit_id?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          ceiling_price?: number | null
+          created_at?: string | null
+          floor_price?: number
+          id?: string
+          is_active?: boolean | null
+          room_type_id?: string | null
+          room_unit_id?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pricing_constraints_room_type_id_fkey"
+            columns: ["room_type_id"]
+            isOneToOne: false
+            referencedRelation: "room_types"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pricing_constraints_room_unit_id_fkey"
+            columns: ["room_unit_id"]
+            isOneToOne: false
+            referencedRelation: "room_units"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      rate_card_cache: {
+        Row: {
+          base_price: number
+          computed_at: string | null
+          date: string
+          day_type_id: string | null
+          expires_at: string | null
+          final_price: number
+          id: string
+          room_type_id: string
+          room_unit_id: string | null
+          rules_applied: Json | null
+          season_id: string | null
+        }
+        Insert: {
+          base_price: number
+          computed_at?: string | null
+          date: string
+          day_type_id?: string | null
+          expires_at?: string | null
+          final_price: number
+          id?: string
+          room_type_id: string
+          room_unit_id?: string | null
+          rules_applied?: Json | null
+          season_id?: string | null
+        }
+        Update: {
+          base_price?: number
+          computed_at?: string | null
+          date?: string
+          day_type_id?: string | null
+          expires_at?: string | null
+          final_price?: number
+          id?: string
+          room_type_id?: string
+          room_unit_id?: string | null
+          rules_applied?: Json | null
+          season_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "rate_card_cache_day_type_id_fkey"
+            columns: ["day_type_id"]
+            isOneToOne: false
+            referencedRelation: "day_types"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "rate_card_cache_room_type_id_fkey"
+            columns: ["room_type_id"]
+            isOneToOne: false
+            referencedRelation: "room_types"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "rate_card_cache_room_unit_id_fkey"
+            columns: ["room_unit_id"]
+            isOneToOne: false
+            referencedRelation: "room_units"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "rate_card_cache_season_id_fkey"
+            columns: ["season_id"]
+            isOneToOne: false
+            referencedRelation: "seasons"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       room_types: {
         Row: {
@@ -1876,6 +2263,79 @@ export type Database = {
         }
         Relationships: []
       }
+      tactical_overrides: {
+        Row: {
+          adjustment_type: string | null
+          adjustment_value: number | null
+          created_at: string | null
+          created_by: string | null
+          end_date: string
+          id: string
+          is_active: boolean | null
+          override_price: number | null
+          override_type: string
+          reason: string
+          room_type_id: string | null
+          room_unit_id: string | null
+          start_date: string
+          updated_at: string | null
+        }
+        Insert: {
+          adjustment_type?: string | null
+          adjustment_value?: number | null
+          created_at?: string | null
+          created_by?: string | null
+          end_date: string
+          id?: string
+          is_active?: boolean | null
+          override_price?: number | null
+          override_type: string
+          reason: string
+          room_type_id?: string | null
+          room_unit_id?: string | null
+          start_date: string
+          updated_at?: string | null
+        }
+        Update: {
+          adjustment_type?: string | null
+          adjustment_value?: number | null
+          created_at?: string | null
+          created_by?: string | null
+          end_date?: string
+          id?: string
+          is_active?: boolean | null
+          override_price?: number | null
+          override_type?: string
+          reason?: string
+          room_type_id?: string | null
+          room_unit_id?: string | null
+          start_date?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tactical_overrides_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "admin_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tactical_overrides_room_type_id_fkey"
+            columns: ["room_type_id"]
+            isOneToOne: false
+            referencedRelation: "room_types"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tactical_overrides_room_unit_id_fkey"
+            columns: ["room_unit_id"]
+            isOneToOne: false
+            referencedRelation: "room_units"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       translation_sections: {
         Row: {
           created_at: string
@@ -1944,9 +2404,39 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      calculate_booking_total: {
+        Args: {
+          p_booking_channel?: string
+          p_check_in?: string
+          p_check_out?: string
+          p_guests_count?: number
+          p_room_type_id: string
+          p_room_unit_id?: string
+        }
+        Returns: {
+          nightly_breakdown: Json
+          total_amount: number
+          total_nights: number
+        }[]
+      }
       calculate_credit_expiry: {
         Args: { original_booking_date: string }
         Returns: string
+      }
+      calculate_dynamic_price: {
+        Args: {
+          p_booking_channel?: string
+          p_current_occupancy?: number
+          p_date?: string
+          p_guests_count?: number
+          p_room_type_id: string
+          p_room_unit_id?: string
+        }
+        Returns: {
+          adjustments: Json
+          base_price: number
+          final_price: number
+        }[]
       }
       calculate_invoice_totals: {
         Args: { p_subtotal: number }
@@ -1967,26 +2457,22 @@ export type Database = {
           unit_ids: string[]
         }[]
       }
-      generate_invoice_number: {
-        Args: Record<PropertyKey, never>
-        Returns: string
+      generate_invoice_number: { Args: never; Returns: string }
+      get_base_price_for_date: {
+        Args: { p_date: string; p_room_type_id: string }
+        Returns: {
+          day_type_id: string
+          price: number
+          season_id: string
+        }[]
       }
-      get_current_user_role: {
-        Args: Record<PropertyKey, never>
-        Returns: string
-      }
+      get_current_user_role: { Args: never; Returns: string }
       get_guest_available_credit: {
         Args: { p_guest_id: string }
         Returns: number
       }
-      is_admin: {
-        Args: Record<PropertyKey, never>
-        Returns: boolean
-      }
-      is_super_admin: {
-        Args: Record<PropertyKey, never>
-        Returns: boolean
-      }
+      is_admin: { Args: never; Returns: boolean }
+      is_super_admin: { Args: never; Returns: boolean }
       log_admin_action: {
         Args: {
           action_type: string
