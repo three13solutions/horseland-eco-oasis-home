@@ -1,10 +1,12 @@
-import React from 'react';
+import React, { useState, useMemo } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import MediaAsset from '@/components/MediaAsset';
-import { Users, MapPin } from 'lucide-react';
+import { Users, MapPin, Coffee, X } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
+import { useDynamicPricing } from '@/hooks/useDynamicPricing';
 
 export type Category = {
   id: string;
@@ -27,23 +29,72 @@ type Props = {
   onViewDetails: (category: Category) => void;
   onBookNow: (category: Category) => void;
   viewMode?: 'grid' | 'list';
+  checkIn?: Date;
+  checkOut?: Date;
+  guests?: number;
 };
 
-const CategoryCard: React.FC<Props> = ({ category, onViewDetails, onBookNow, viewMode = 'grid' }) => {
+const CategoryCard: React.FC<Props> = ({ category, onViewDetails, onBookNow, viewMode = 'grid', checkIn, checkOut, guests = 2 }) => {
   const navigate = useNavigate();
+  const [selectedMealPlan, setSelectedMealPlan] = useState<string>('');
+  const [selectedCancellationPolicy, setSelectedCancellationPolicy] = useState<string>('');
+
+  // Fetch dynamic pricing variants
+  const { data: variants, isLoading } = useDynamicPricing({
+    roomTypeId: category.id,
+    checkIn,
+    checkOut,
+    guestsCount: guests,
+    enabled: !!(checkIn && checkOut)
+  });
+
+  // Get unique meal plans and cancellation policies
+  const mealPlans = useMemo(() => {
+    if (!variants || variants.length === 0) return [];
+    const unique = Array.from(new Set(variants.map(v => v.meal_plan_code)));
+    return unique.map(code => {
+      const variant = variants.find(v => v.meal_plan_code === code);
+      return { code, name: variant?.meal_plan_name || code };
+    });
+  }, [variants]);
+
+  const cancellationPolicies = useMemo(() => {
+    if (!variants || variants.length === 0) return [];
+    const unique = Array.from(new Set(variants.map(v => v.cancellation_policy_code)));
+    return unique.map(code => {
+      const variant = variants.find(v => v.cancellation_policy_code === code);
+      return { code, name: variant?.cancellation_policy_name || code };
+    });
+  }, [variants]);
+
+  // Find the selected variant
+  const selectedVariant = useMemo(() => {
+    if (!variants || !selectedMealPlan || !selectedCancellationPolicy) return null;
+    return variants.find(v => 
+      v.meal_plan_code === selectedMealPlan && 
+      v.cancellation_policy_code === selectedCancellationPolicy
+    );
+  }, [variants, selectedMealPlan, selectedCancellationPolicy]);
+
+  // Calculate display price
+  const displayPrice = selectedVariant?.price_per_night || category.basePrice;
+  const nights = checkIn && checkOut ? Math.ceil((checkOut.getTime() - checkIn.getTime()) / (1000 * 60 * 60 * 24)) : 1;
 
   const handleBookNow = () => {
-    // Get today's date for default check-in
-    const today = new Date();
-    const tomorrow = new Date(today);
-    tomorrow.setDate(tomorrow.getDate() + 1);
+    const useCheckIn = checkIn || new Date();
+    const useCheckOut = checkOut || new Date(Date.now() + 24 * 60 * 60 * 1000);
     
     const searchParams = new URLSearchParams({
-      checkIn: today.toISOString().split('T')[0],
-      checkOut: tomorrow.toISOString().split('T')[0],
-      guests: '2',
+      checkIn: useCheckIn.toISOString().split('T')[0],
+      checkOut: useCheckOut.toISOString().split('T')[0],
+      guests: guests.toString(),
       roomTypeId: category.id
     });
+
+    if (selectedVariant) {
+      searchParams.set('mealPlan', selectedMealPlan);
+      searchParams.set('cancellationPolicy', selectedCancellationPolicy);
+    }
     
     navigate(`/booking?${searchParams.toString()}`);
   };
@@ -97,11 +148,62 @@ const CategoryCard: React.FC<Props> = ({ category, onViewDetails, onBookNow, vie
               </div>
             </div>
 
+            {checkIn && checkOut && variants && variants.length > 0 && (
+              <div className="space-y-3 mb-4 p-3 bg-muted/30 rounded-lg">
+                <div className="grid grid-cols-2 gap-2">
+                  <div>
+                    <label className="text-xs text-muted-foreground mb-1 block">Meal Plan</label>
+                    <Select value={selectedMealPlan} onValueChange={setSelectedMealPlan}>
+                      <SelectTrigger className="h-9 text-xs">
+                        <SelectValue placeholder="Select" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {mealPlans.map(mp => (
+                          <SelectItem key={mp.code} value={mp.code} className="text-xs">
+                            {mp.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <label className="text-xs text-muted-foreground mb-1 block">Cancellation</label>
+                    <Select value={selectedCancellationPolicy} onValueChange={setSelectedCancellationPolicy}>
+                      <SelectTrigger className="h-9 text-xs">
+                        <SelectValue placeholder="Select" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {cancellationPolicies.map(cp => (
+                          <SelectItem key={cp.code} value={cp.code} className="text-xs">
+                            {cp.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+                {selectedVariant && (
+                  <div className="flex items-baseline gap-1 pt-1">
+                    <Coffee className="w-3 h-3 text-muted-foreground" />
+                    <span className="text-xs text-muted-foreground">
+                      Includes: {selectedVariant.included_meals.join(', ')}
+                    </span>
+                  </div>
+                )}
+              </div>
+            )}
+
             <div className="flex items-end justify-between gap-4 mt-4">
               <div>
-                <div className="text-xs text-muted-foreground mb-1">Starting from</div>
-                <span className="text-2xl font-heading font-bold text-primary">₹{category.basePrice?.toLocaleString()}</span>
-                <span className="text-sm text-muted-foreground ml-1">/night</span>
+                <div className="text-xs text-muted-foreground mb-1">
+                  {selectedVariant ? 'Total Price' : 'Starting from'}
+                </div>
+                <span className="text-2xl font-heading font-bold text-primary">
+                  ₹{selectedVariant ? selectedVariant.total_price.toLocaleString() : displayPrice.toLocaleString()}
+                </span>
+                <span className="text-sm text-muted-foreground ml-1">
+                  {selectedVariant ? `for ${nights} night${nights > 1 ? 's' : ''}` : '/night'}
+                </span>
               </div>
               <div className="flex gap-2">
                 <Link to={`/stay/${category.id}`}>
@@ -165,11 +267,62 @@ const CategoryCard: React.FC<Props> = ({ category, onViewDetails, onBookNow, vie
           </div>
         </div>
 
+        {checkIn && checkOut && variants && variants.length > 0 && (
+          <div className="space-y-2 mb-3 p-3 bg-muted/30 rounded-lg">
+            <div className="grid grid-cols-2 gap-2">
+              <div>
+                <label className="text-xs text-muted-foreground mb-1 block">Meal Plan</label>
+                <Select value={selectedMealPlan} onValueChange={setSelectedMealPlan}>
+                  <SelectTrigger className="h-8 text-xs">
+                    <SelectValue placeholder="Select" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {mealPlans.map(mp => (
+                      <SelectItem key={mp.code} value={mp.code} className="text-xs">
+                        {mp.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <label className="text-xs text-muted-foreground mb-1 block">Cancellation</label>
+                <Select value={selectedCancellationPolicy} onValueChange={setSelectedCancellationPolicy}>
+                  <SelectTrigger className="h-8 text-xs">
+                    <SelectValue placeholder="Select" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {cancellationPolicies.map(cp => (
+                      <SelectItem key={cp.code} value={cp.code} className="text-xs">
+                        {cp.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            {selectedVariant && (
+              <div className="flex items-baseline gap-1">
+                <Coffee className="w-3 h-3 text-muted-foreground" />
+                <span className="text-xs text-muted-foreground">
+                  Includes: {selectedVariant.included_meals.join(', ')}
+                </span>
+              </div>
+            )}
+          </div>
+        )}
+
         <div className="space-y-3">
           <div>
-            <div className="text-xs text-muted-foreground mb-1">Starting from</div>
-            <span className="text-2xl font-heading font-bold text-primary">₹{category.basePrice?.toLocaleString()}</span>
-            <span className="text-sm text-muted-foreground ml-1">/night</span>
+            <div className="text-xs text-muted-foreground mb-1">
+              {selectedVariant ? 'Total Price' : 'Starting from'}
+            </div>
+            <span className="text-2xl font-heading font-bold text-primary">
+              ₹{selectedVariant ? selectedVariant.total_price.toLocaleString() : displayPrice.toLocaleString()}
+            </span>
+            <span className="text-sm text-muted-foreground ml-1">
+              {selectedVariant ? `for ${nights} night${nights > 1 ? 's' : ''}` : '/night'}
+            </span>
           </div>
           <div className="flex gap-2 w-full">
             <Link to={`/stay/${category.id}`} className="flex-1">

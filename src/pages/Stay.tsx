@@ -6,8 +6,12 @@ import { Filters } from '@/components/stay/CategoryFilters';
 import CategoryCard, { Category } from '@/components/stay/CategoryCard';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
-import { LayoutGrid, List, Filter } from 'lucide-react';
+import { Calendar } from '@/components/ui/calendar';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { LayoutGrid, List, Filter, CalendarIcon, Users } from 'lucide-react';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
+import { format } from 'date-fns';
 
 // Helper function to map room features to category attributes
 const mapRoomToCategory = (room: any): Category => {
@@ -74,6 +78,11 @@ const Stay = () => {
   const [heroSubtitle, setHeroSubtitle] = useState('Choose from our thoughtfully designed rooms and suites');
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  
+  // Date and guest selection for dynamic pricing
+  const [checkIn, setCheckIn] = useState<Date | undefined>(new Date());
+  const [checkOut, setCheckOut] = useState<Date | undefined>(new Date(Date.now() + 24 * 60 * 60 * 1000));
+  const [guests, setGuests] = useState<number>(2);
 
   const [filters, setFilters] = useState<Filters>({
     guests: null,
@@ -186,6 +195,56 @@ const Stay = () => {
           <p className="text-lg md:text-xl font-body opacity-90">
             {heroSubtitle}
           </p>
+        </div>
+      </section>
+
+      {/* Quick Search Section */}
+      <section className="py-6 bg-muted/30 border-b">
+        <div className="max-w-7xl mx-auto px-4">
+          <div className="flex flex-wrap items-end gap-3">
+            <div className="flex-1 min-w-[200px]">
+              <label className="text-sm font-medium mb-2 block">Check-in</label>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button variant="outline" className="w-full justify-start text-left">
+                    <CalendarIcon className="mr-2 h-4 w-4" />
+                    {checkIn ? format(checkIn, 'PPP') : 'Select date'}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0">
+                  <Calendar mode="single" selected={checkIn} onSelect={setCheckIn} initialFocus />
+                </PopoverContent>
+              </Popover>
+            </div>
+            <div className="flex-1 min-w-[200px]">
+              <label className="text-sm font-medium mb-2 block">Check-out</label>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button variant="outline" className="w-full justify-start text-left">
+                    <CalendarIcon className="mr-2 h-4 w-4" />
+                    {checkOut ? format(checkOut, 'PPP') : 'Select date'}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0">
+                  <Calendar mode="single" selected={checkOut} onSelect={setCheckOut} initialFocus />
+                </PopoverContent>
+              </Popover>
+            </div>
+            <div className="w-32">
+              <label className="text-sm font-medium mb-2 block">Guests</label>
+              <Select value={guests.toString()} onValueChange={(val) => setGuests(parseInt(val))}>
+                <SelectTrigger>
+                  <Users className="mr-2 h-4 w-4" />
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {[1, 2, 3, 4, 5, 6, 7, 8].map(num => (
+                    <SelectItem key={num} value={num.toString()}>{num}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
         </div>
       </section>
 
@@ -711,6 +770,9 @@ const Stay = () => {
                     key={cat.id}
                     category={cat}
                     viewMode={viewMode}
+                    checkIn={checkIn}
+                    checkOut={checkOut}
+                    guests={guests}
                     onViewDetails={() => {}}
                     onBookNow={() => {}}
                   />
