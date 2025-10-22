@@ -10,8 +10,9 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
-import { Plus, Pencil, Trash2, Users } from 'lucide-react';
+import { Plus, Pencil, Trash2, Users, ArrowUp } from 'lucide-react';
 import { toast } from 'sonner';
+import { EmptyRuleState } from './EmptyRuleState';
 
 export function GuestCompositionTab() {
   const queryClient = useQueryClient();
@@ -82,6 +83,17 @@ export function GuestCompositionTab() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['guest-composition-rules'] });
       toast.success('Rule deleted');
+    }
+  });
+
+  const toggleActiveMutation = useMutation({
+    mutationFn: async ({ id, is_active }: { id: string; is_active: boolean }) => {
+      const { error } = await supabase.from('guest_composition_rules').update({ is_active }).eq('id', id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['guest-composition-rules'] });
+      toast.success('Status updated');
     }
   });
 
@@ -217,16 +229,47 @@ export function GuestCompositionTab() {
             {isLoading ? (
               <TableRow><TableCell colSpan={7} className="text-center">Loading...</TableCell></TableRow>
             ) : rules?.length === 0 ? (
-              <TableRow><TableCell colSpan={7} className="text-center text-muted-foreground">No guest composition rules defined</TableCell></TableRow>
+              <TableRow>
+                <TableCell colSpan={7} className="p-0">
+                  <EmptyRuleState
+                    icon={Users}
+                    title="No Guest Composition Rules Defined"
+                    description="Define charges for extra guests beyond the base occupancy. Set different rates for adults, children, and infants."
+                    examples={[
+                      "Charge ₹1500 per additional adult",
+                      "Offer discounted rates for children",
+                      "Allow infants to stay free"
+                    ]}
+                    onAddClick={() => setIsDialogOpen(true)}
+                  />
+                </TableCell>
+              </TableRow>
             ) : (
               rules?.map((rule) => (
                 <TableRow key={rule.id}>
                   <TableCell className="font-medium">{rule.room_types?.name || 'All'}</TableCell>
                   <TableCell>{rule.base_guests_count}</TableCell>
                   <TableCell>{rule.max_extra_guests}</TableCell>
-                  <TableCell>₹{rule.extra_adult_charge}</TableCell>
+                  <TableCell>
+                    <Badge variant="destructive" className="gap-1">
+                      <ArrowUp className="h-3 w-3" />
+                      ₹{rule.extra_adult_charge}
+                    </Badge>
+                  </TableCell>
                   <TableCell>{rule.extra_child_charge ? `₹${rule.extra_child_charge}` : '-'}</TableCell>
-                  <TableCell><Badge variant={rule.is_active ? 'default' : 'secondary'}>{rule.is_active ? 'Active' : 'Inactive'}</Badge></TableCell>
+                  <TableCell>
+                    <div className="flex items-center gap-2">
+                      <Switch
+                        checked={rule.is_active}
+                        onCheckedChange={(checked) => 
+                          toggleActiveMutation.mutate({ id: rule.id, is_active: checked })
+                        }
+                      />
+                      <span className="text-sm text-muted-foreground">
+                        {rule.is_active ? 'Active' : 'Inactive'}
+                      </span>
+                    </div>
+                  </TableCell>
                   <TableCell className="text-right">
                     <Button variant="ghost" size="icon" onClick={() => handleEdit(rule)}><Pencil className="h-4 w-4" /></Button>
                     <Button variant="ghost" size="icon" onClick={() => deleteMutation.mutate(rule.id)}><Trash2 className="h-4 w-4" /></Button>

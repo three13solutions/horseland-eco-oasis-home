@@ -10,8 +10,9 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
-import { Plus, Pencil, Trash2, Radio } from 'lucide-react';
+import { Plus, Pencil, Trash2, Radio, ArrowUp, ArrowDown } from 'lucide-react';
 import { toast } from 'sonner';
+import { EmptyRuleState } from './EmptyRuleState';
 
 export function ChannelRulesTab() {
   const queryClient = useQueryClient();
@@ -91,6 +92,17 @@ export function ChannelRulesTab() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['channel-rules'] });
       toast.success('Rule deleted');
+    }
+  });
+
+  const toggleActiveMutation = useMutation({
+    mutationFn: async ({ id, is_active }: { id: string; is_active: boolean }) => {
+      const { error } = await supabase.from('channel_rules').update({ is_active }).eq('id', id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['channel-rules'] });
+      toast.success('Status updated');
     }
   });
 
@@ -253,14 +265,50 @@ export function ChannelRulesTab() {
             {isLoading ? (
               <TableRow><TableCell colSpan={5} className="text-center">Loading...</TableCell></TableRow>
             ) : rules?.length === 0 ? (
-              <TableRow><TableCell colSpan={5} className="text-center text-muted-foreground">No channel rules defined</TableCell></TableRow>
+              <TableRow>
+                <TableCell colSpan={5} className="p-0">
+                  <EmptyRuleState
+                    icon={Radio}
+                    title="No Channel Rules Defined"
+                    description="Set different pricing for various booking channels to account for commissions and maintain parity across platforms."
+                    examples={[
+                      "Add 15% for OTA bookings to cover commissions",
+                      "Offer 5% discount for direct bookings",
+                      "Set corporate rates for business partners"
+                    ]}
+                    onAddClick={() => setIsDialogOpen(true)}
+                  />
+                </TableCell>
+              </TableRow>
             ) : (
               rules?.map((rule) => (
                 <TableRow key={rule.id}>
                   <TableCell className="font-medium capitalize">{rule.channel_name.replace('_', ' ')}</TableCell>
-                  <TableCell>{rule.adjustment_type === 'percentage' ? `+${rule.adjustment_value}%` : `₹${rule.adjustment_value}`}</TableCell>
+                  <TableCell>
+                    <Badge 
+                      variant={rule.adjustment_value > 0 ? 'destructive' : 'default'}
+                      className="gap-1"
+                    >
+                      {rule.adjustment_value > 0 ? <ArrowUp className="h-3 w-3" /> : <ArrowDown className="h-3 w-3" />}
+                      {rule.adjustment_type === 'percentage' 
+                        ? `${rule.adjustment_value > 0 ? '+' : ''}${rule.adjustment_value}%` 
+                        : `₹${rule.adjustment_value}`}
+                    </Badge>
+                  </TableCell>
                   <TableCell>{rule.applies_to === 'category' ? rule.room_types?.name : rule.applies_to === 'season' ? rule.seasons?.name : 'All'}</TableCell>
-                  <TableCell><Badge variant={rule.is_active ? 'default' : 'secondary'}>{rule.is_active ? 'Active' : 'Inactive'}</Badge></TableCell>
+                  <TableCell>
+                    <div className="flex items-center gap-2">
+                      <Switch
+                        checked={rule.is_active}
+                        onCheckedChange={(checked) => 
+                          toggleActiveMutation.mutate({ id: rule.id, is_active: checked })
+                        }
+                      />
+                      <span className="text-sm text-muted-foreground">
+                        {rule.is_active ? 'Active' : 'Inactive'}
+                      </span>
+                    </div>
+                  </TableCell>
                   <TableCell className="text-right">
                     <Button variant="ghost" size="icon" onClick={() => handleEdit(rule)}><Pencil className="h-4 w-4" /></Button>
                     <Button variant="ghost" size="icon" onClick={() => deleteMutation.mutate(rule.id)}><Trash2 className="h-4 w-4" /></Button>

@@ -10,8 +10,9 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
-import { Plus, Pencil, Trash2 } from 'lucide-react';
+import { Plus, Pencil, Trash2, Shield } from 'lucide-react';
 import { toast } from 'sonner';
+import { EmptyRuleState } from './EmptyRuleState';
 
 export function PricingConstraintsTab() {
   const queryClient = useQueryClient();
@@ -122,6 +123,24 @@ export function PricingConstraintsTab() {
     },
     onError: (error) => {
       toast.error('Failed to delete constraint: ' + error.message);
+    }
+  });
+
+  const toggleActiveMutation = useMutation({
+    mutationFn: async ({ id, is_active }: { id: string; is_active: boolean }) => {
+      const { error } = await supabase
+        .from('pricing_constraints')
+        .update({ is_active })
+        .eq('id', id);
+      
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['pricing-constraints'] });
+      toast.success('Status updated');
+    },
+    onError: (error) => {
+      toast.error('Failed to update status: ' + error.message);
     }
   });
 
@@ -303,8 +322,18 @@ export function PricingConstraintsTab() {
               </TableRow>
             ) : constraints?.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={5} className="text-center text-muted-foreground">
-                  No pricing constraints defined yet
+                <TableCell colSpan={5} className="p-0">
+                  <EmptyRuleState
+                    icon={Shield}
+                    title="No Price Constraints Defined"
+                    description="Set minimum and maximum price limits to protect your revenue and maintain competitive positioning"
+                    examples={[
+                      "Prevent prices from dropping below cost",
+                      "Cap maximum rates during peak periods",
+                      "Apply constraints to specific room types or units"
+                    ]}
+                    onAddClick={() => setIsDialogOpen(true)}
+                  />
                 </TableCell>
               </TableRow>
             ) : (
@@ -327,9 +356,17 @@ export function PricingConstraintsTab() {
                     {constraint.ceiling_price ? `₹${constraint.ceiling_price}` : '-'}
                   </TableCell>
                   <TableCell>
-                    <Badge variant={constraint.is_active ? 'default' : 'secondary'}>
-                      {constraint.is_active ? 'Active' : 'Inactive'}
-                    </Badge>
+                    <div className="flex items-center gap-2">
+                      <Switch
+                        checked={constraint.is_active}
+                        onCheckedChange={(checked) => 
+                          toggleActiveMutation.mutate({ id: constraint.id, is_active: checked })
+                        }
+                      />
+                      <span className="text-sm text-muted-foreground">
+                        {constraint.is_active ? 'Active' : 'Inactive'}
+                      </span>
+                    </div>
                   </TableCell>
                   <TableCell className="text-right">
                     <Button

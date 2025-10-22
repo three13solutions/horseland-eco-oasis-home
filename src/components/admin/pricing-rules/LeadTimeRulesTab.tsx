@@ -10,8 +10,9 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
-import { Plus, Pencil, Trash2, Clock } from 'lucide-react';
+import { Plus, Pencil, Trash2, Clock, ArrowUp, ArrowDown } from 'lucide-react';
 import { toast } from 'sonner';
+import { EmptyRuleState } from './EmptyRuleState';
 
 export function LeadTimeRulesTab() {
   const queryClient = useQueryClient();
@@ -94,6 +95,17 @@ export function LeadTimeRulesTab() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['lead-time-rules'] });
       toast.success('Rule deleted');
+    }
+  });
+
+  const toggleActiveMutation = useMutation({
+    mutationFn: async ({ id, is_active }: { id: string; is_active: boolean }) => {
+      const { error } = await supabase.from('lead_time_rules').update({ is_active }).eq('id', id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['lead-time-rules'] });
+      toast.success('Status updated');
     }
   });
 
@@ -270,16 +282,60 @@ export function LeadTimeRulesTab() {
             {isLoading ? (
               <TableRow><TableCell colSpan={7} className="text-center">Loading...</TableCell></TableRow>
             ) : rules?.length === 0 ? (
-              <TableRow><TableCell colSpan={7} className="text-center text-muted-foreground">No lead time rules defined</TableCell></TableRow>
+              <TableRow>
+                <TableCell colSpan={7} className="p-0">
+                  <EmptyRuleState
+                    icon={Clock}
+                    title="No Lead Time Rules Defined"
+                    description="Reward early bookers with discounts or charge premiums for last-minute reservations to optimize your booking pace."
+                    examples={[
+                      "Offer 15% discount for bookings 60+ days in advance",
+                      "Add premium for last-minute bookings (0-7 days)",
+                      "Create tiered pricing based on booking window"
+                    ]}
+                    onAddClick={() => setIsDialogOpen(true)}
+                  />
+                </TableCell>
+              </TableRow>
             ) : (
               rules?.map((rule) => (
                 <TableRow key={rule.id}>
                   <TableCell className="font-medium">{rule.rule_name}</TableCell>
                   <TableCell>{rule.days_before_checkin_min}-{rule.days_before_checkin_max} days</TableCell>
-                  <TableCell>{rule.price_adjustment_type === 'percentage' ? `${rule.price_adjustment > 0 ? '+' : ''}${rule.price_adjustment}%` : `₹${rule.price_adjustment}`}</TableCell>
+                  <TableCell>
+                    <Badge 
+                      variant={rule.price_adjustment > 0 ? 'destructive' : 'default'}
+                      className="gap-1"
+                    >
+                      {rule.price_adjustment > 0 ? <ArrowUp className="h-3 w-3" /> : <ArrowDown className="h-3 w-3" />}
+                      {rule.price_adjustment_type === 'percentage' 
+                        ? `${rule.price_adjustment > 0 ? '+' : ''}${rule.price_adjustment}%` 
+                        : `₹${rule.price_adjustment}`}
+                    </Badge>
+                  </TableCell>
                   <TableCell>{rule.applies_to === 'category' ? rule.room_types?.name : rule.applies_to === 'season' ? rule.seasons?.name : 'All'}</TableCell>
-                  <TableCell>{rule.priority}</TableCell>
-                  <TableCell><Badge variant={rule.is_active ? 'default' : 'secondary'}>{rule.is_active ? 'Active' : 'Inactive'}</Badge></TableCell>
+                  <TableCell>
+                    <Badge 
+                      variant={rule.priority >= 20 ? 'destructive' : rule.priority >= 10 ? 'default' : 'secondary'}
+                      className="gap-1"
+                    >
+                      {rule.priority >= 20 && <ArrowUp className="h-3 w-3" />}
+                      {rule.priority}
+                    </Badge>
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex items-center gap-2">
+                      <Switch
+                        checked={rule.is_active}
+                        onCheckedChange={(checked) => 
+                          toggleActiveMutation.mutate({ id: rule.id, is_active: checked })
+                        }
+                      />
+                      <span className="text-sm text-muted-foreground">
+                        {rule.is_active ? 'Active' : 'Inactive'}
+                      </span>
+                    </div>
+                  </TableCell>
                   <TableCell className="text-right">
                     <Button variant="ghost" size="icon" onClick={() => handleEdit(rule)}><Pencil className="h-4 w-4" /></Button>
                     <Button variant="ghost" size="icon" onClick={() => deleteMutation.mutate(rule.id)}><Trash2 className="h-4 w-4" /></Button>

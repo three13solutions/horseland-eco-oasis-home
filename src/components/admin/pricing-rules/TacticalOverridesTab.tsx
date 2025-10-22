@@ -13,6 +13,7 @@ import { Switch } from '@/components/ui/switch';
 import { Plus, Pencil, Trash2, Zap } from 'lucide-react';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
+import { EmptyRuleState } from './EmptyRuleState';
 
 export function TacticalOverridesTab() {
   const queryClient = useQueryClient();
@@ -95,6 +96,17 @@ export function TacticalOverridesTab() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['tactical-overrides'] });
       toast.success('Override deleted');
+    }
+  });
+
+  const toggleActiveMutation = useMutation({
+    mutationFn: async ({ id, is_active }: { id: string; is_active: boolean }) => {
+      const { error } = await supabase.from('tactical_overrides').update({ is_active }).eq('id', id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['tactical-overrides'] });
+      toast.success('Status updated');
     }
   });
 
@@ -272,15 +284,45 @@ export function TacticalOverridesTab() {
             {isLoading ? (
               <TableRow><TableCell colSpan={6} className="text-center">Loading...</TableCell></TableRow>
             ) : rules?.length === 0 ? (
-              <TableRow><TableCell colSpan={6} className="text-center text-muted-foreground">No tactical overrides defined</TableCell></TableRow>
+              <TableRow>
+                <TableCell colSpan={6} className="p-0">
+                  <EmptyRuleState
+                    icon={Zap}
+                    title="No Tactical Overrides Defined"
+                    description="Create manual price overrides for special situations like events, maintenance, or flash sales. These take highest priority and override all other rules."
+                    examples={[
+                      "Premium pricing for festival weekends",
+                      "Discounts during renovation periods",
+                      "Special event packages with fixed rates"
+                    ]}
+                    onAddClick={() => setIsDialogOpen(true)}
+                  />
+                </TableCell>
+              </TableRow>
             ) : (
               rules?.map((rule) => (
                 <TableRow key={rule.id}>
                   <TableCell className="font-medium">{rule.reason}</TableCell>
                   <TableCell className="text-sm">{format(new Date(rule.start_date), 'MMM dd')} - {format(new Date(rule.end_date), 'MMM dd, yyyy')}</TableCell>
                   <TableCell>{rule.room_units?.unit_number || rule.room_types?.name || 'All'}</TableCell>
-                  <TableCell>{rule.override_price ? `₹${rule.override_price}` : `${rule.adjustment_value > 0 ? '+' : ''}${rule.adjustment_type === 'percentage' ? `${rule.adjustment_value}%` : `₹${rule.adjustment_value}`}`}</TableCell>
-                  <TableCell><Badge variant={rule.is_active ? 'default' : 'secondary'}>{rule.is_active ? 'Active' : 'Inactive'}</Badge></TableCell>
+                  <TableCell>
+                    <Badge variant="outline" className="font-mono">
+                      {rule.override_price ? `₹${rule.override_price}` : `${rule.adjustment_value > 0 ? '+' : ''}${rule.adjustment_type === 'percentage' ? `${rule.adjustment_value}%` : `₹${rule.adjustment_value}`}`}
+                    </Badge>
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex items-center gap-2">
+                      <Switch
+                        checked={rule.is_active}
+                        onCheckedChange={(checked) => 
+                          toggleActiveMutation.mutate({ id: rule.id, is_active: checked })
+                        }
+                      />
+                      <span className="text-sm text-muted-foreground">
+                        {rule.is_active ? 'Active' : 'Inactive'}
+                      </span>
+                    </div>
+                  </TableCell>
                   <TableCell className="text-right">
                     <Button variant="ghost" size="icon" onClick={() => handleEdit(rule)}><Pencil className="h-4 w-4" /></Button>
                     <Button variant="ghost" size="icon" onClick={() => deleteMutation.mutate(rule.id)}><Trash2 className="h-4 w-4" /></Button>

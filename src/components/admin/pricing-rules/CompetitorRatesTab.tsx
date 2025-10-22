@@ -9,8 +9,9 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { toast } from '@/components/ui/use-toast';
-import { Plus, Pencil, Trash2 } from 'lucide-react';
+import { Plus, Pencil, Trash2, BarChart3 } from 'lucide-react';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { EmptyRuleState } from './EmptyRuleState';
 
 interface CompetitorRate {
   id: string;
@@ -136,9 +137,19 @@ export function CompetitorRatesTab() {
       </CardHeader>
       <CardContent>
         {isLoading ? (
-          <p className="text-muted-foreground">Loading...</p>
+          <p className="text-muted-foreground text-center py-8">Loading...</p>
         ) : rates.length === 0 ? (
-          <p className="text-muted-foreground">No competitor rates tracked yet.</p>
+          <EmptyRuleState
+            icon={BarChart3}
+            title="No Competitor Rates Tracked"
+            description="Monitor competitor pricing to stay competitive and make informed pricing decisions. Track rates across different date ranges and room categories."
+            examples={[
+              "Compare your rates against local competitors",
+              "Identify pricing gaps and opportunities",
+              "Track seasonal pricing trends"
+            ]}
+            onAddClick={() => { setEditingRate(null); setIsDialogOpen(true); }}
+          />
         ) : (
           <Table>
             <TableHeader>
