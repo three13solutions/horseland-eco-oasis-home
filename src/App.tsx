@@ -58,6 +58,7 @@ import PricingDashboard from "./pages/admin/PricingDashboard";
 import BaseConfiguration from "./pages/admin/BaseConfiguration";
 import BasePricing from "./pages/admin/BasePricing";
 import PricingRules from "./pages/admin/PricingRules";
+import LiveRateCard from "./pages/admin/LiveRateCard";
 import { Navigate } from 'react-router-dom';
 // Old imports kept for backwards compatibility within consolidated pages
 import CategoryPricing from "./pages/admin/CategoryPricing";
@@ -116,6 +117,7 @@ function App() {
                 <Route path="pricing/config" element={<BaseConfiguration />} />
                 <Route path="pricing/rates" element={<BasePricing />} />
                 <Route path="pricing/rules" element={<PricingRules />} />
+                <Route path="pricing/rate-card" element={<LiveRateCard />} />
                 
                 {/* Redirects for backwards compatibility */}
                 <Route path="pricing/categories" element={<Navigate to="/admin/pricing/rates?tab=categories" replace />} />

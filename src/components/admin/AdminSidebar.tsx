@@ -102,6 +102,12 @@ const pricingMenuItems = [
     label: 'Dynamic Rules', 
     path: '/admin/pricing/rules', 
     description: 'Revenue optimization' 
+  },
+  { 
+    icon: Calendar, 
+    label: 'Live Rate Card', 
+    path: '/admin/pricing/rate-card', 
+    description: 'View computed pricing' 
   }
 ];
 
