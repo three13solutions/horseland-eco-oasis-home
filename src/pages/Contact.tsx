@@ -54,7 +54,7 @@ const Contact = () => {
         .eq("is_enabled", true)
         .maybeSingle();
 
-      if (data?.public_config && typeof data.public_config === 'object') {
+      if (data?.public_config && typeof data.public_config === "object") {
         const config = data.public_config as { GOOGLE_MAPS_API_KEY?: string };
         if (config.GOOGLE_MAPS_API_KEY) {
           setGoogleMapsApiKey(config.GOOGLE_MAPS_API_KEY);
@@ -188,6 +188,8 @@ const Contact = () => {
                           Mahesh: +91 9404224600
                           <br />
                           Sachin: +91 9004424567
+                          <br />
+                          Percy: +91 7977538460
                           <br />
                         </p>
                       </div>
