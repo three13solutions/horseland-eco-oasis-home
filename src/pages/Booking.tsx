@@ -1275,13 +1275,11 @@ const Booking = () => {
                     <CardTitle>Add Services & Experiences</CardTitle>
                   </CardHeader>
                   <CardContent>
-                     <Tabs value={activeTab || (needsExtraBedding ? "bedding" : "pickup")} onValueChange={setActiveTab} className="w-full">
-                      <TabsList className={`grid w-full ${needsExtraBedding && !selectedRateVariant ? 'grid-cols-5' : (selectedRateVariant && selectedRateVariant.meal_cost > 0) ? 'grid-cols-3' : 'grid-cols-4'}`}>
+                     <Tabs value={activeTab || (needsExtraBedding ? "bedding" : "meals")} onValueChange={setActiveTab} className="w-full">
+                      <TabsList className={`grid w-full ${needsExtraBedding && !selectedRateVariant ? 'grid-cols-3' : (selectedRateVariant && selectedRateVariant.meal_cost > 0) ? 'grid-cols-2' : 'grid-cols-2'}`}>
                         {needsExtraBedding && !selectedRateVariant && <TabsTrigger value="bedding">Extra Bed</TabsTrigger>}
-                        <TabsTrigger value="pickup">Pickup/Drop</TabsTrigger>
                         {(!selectedRateVariant || selectedRateVariant.meal_cost === 0) && <TabsTrigger value="meals">Meals</TabsTrigger>}
-                        <TabsTrigger value="activities">Activities</TabsTrigger>
-                        <TabsTrigger value="spa">Spa</TabsTrigger>
+                        <TabsTrigger value="pickup">Pickup/Drop</TabsTrigger>
                       </TabsList>
                       
                       {selectedRateVariant && selectedRateVariant.meal_cost > 0 && (
@@ -1718,164 +1716,6 @@ const Booking = () => {
                             </Card>
                           )}
                         </div>
-                      </TabsContent>
-                      
-                      <TabsContent value="activities" className="space-y-8">
-                        {activitiesByCategory.length === 0 ? (
-                          <div className="text-center text-muted-foreground py-8">
-                            No activities available
-                          </div>
-                        ) : (
-                          activitiesByCategory.map(([categoryId, categoryData]) => (
-                            <div key={categoryId} className="space-y-3">
-                              <h4 className="text-lg font-semibold">{categoryData.label}</h4>
-                              <Carousel
-                                opts={{
-                                  align: "start",
-                                  loop: false,
-                                }}
-                                className="w-full"
-                              >
-                                <CarouselContent className="-ml-2">
-                                  {categoryData.activities.map((activity) => {
-                                    const quantity = selectedAddons.find(a => a.id === activity.id)?.quantity || 0;
-                                    return (
-                                      <CarouselItem key={activity.id} className="pl-2 basis-1/2 sm:basis-1/3 md:basis-1/4 lg:basis-1/5">
-                                        <div className="flex flex-col items-center p-2 border rounded-lg hover:border-primary transition-colors">
-                                          <div className="relative w-full aspect-square rounded-lg overflow-hidden mb-3">
-                                            {activity.image ? (
-                                              <img 
-                                                src={activity.image}
-                                                alt={activity.title}
-                                                className="w-full h-full object-cover"
-                                              />
-                                            ) : (
-                                              <div className="w-full h-full bg-muted flex items-center justify-center">
-                                                <Sparkles className="h-8 w-8 text-muted-foreground" />
-                                              </div>
-                                            )}
-                                            <Button
-                                              variant="secondary"
-                                              size="sm"
-                                              className="absolute bottom-2 right-2 text-xs h-7 px-2"
-                                            >
-                                              View
-                                            </Button>
-                                          </div>
-                                          <div className="flex items-center gap-2 mb-2">
-                                            <Button
-                                              variant="outline"
-                                              size="icon"
-                                              className="h-8 w-8 rounded-full"
-                                              onClick={() => removeAddon(activity.id)}
-                                              disabled={quantity === 0}
-                                            >
-                                              <Minus className="h-4 w-4" />
-                                            </Button>
-                                            <span className="w-8 text-center text-sm font-medium">
-                                              {quantity}
-                                            </span>
-                                            <Button
-                                              variant="outline"
-                                              size="icon"
-                                              className="h-8 w-8 rounded-full"
-                                              onClick={() => addAddon(activity)}
-                                            >
-                                              <Plus className="h-4 w-4" />
-                                            </Button>
-                                          </div>
-                                          <p className="text-sm font-medium text-center mb-1 line-clamp-2">{activity.title}</p>
-                                          <p className="text-sm font-semibold text-primary">₹{activity.price}</p>
-                                        </div>
-                                      </CarouselItem>
-                                    );
-                                  })}
-                                </CarouselContent>
-                                <CarouselPrevious className="-left-4" />
-                                <CarouselNext className="-right-4" />
-                              </Carousel>
-                            </div>
-                          ))
-                        )}
-                      </TabsContent>
-                      
-                      <TabsContent value="spa" className="space-y-8">
-                        {spaServicesByCategory.length === 0 ? (
-                          <div className="text-center text-muted-foreground py-8">
-                            No spa services available
-                          </div>
-                        ) : (
-                          spaServicesByCategory.map(([categoryId, categoryData]) => (
-                            <div key={categoryId} className="space-y-3">
-                              <h4 className="text-lg font-semibold">{categoryData.label}</h4>
-                              <Carousel
-                                opts={{
-                                  align: "start",
-                                  loop: false,
-                                }}
-                                className="w-full"
-                              >
-                                <CarouselContent className="-ml-2">
-                                  {categoryData.services.map((spa) => {
-                                    const quantity = selectedAddons.find(a => a.id === spa.id)?.quantity || 0;
-                                    return (
-                                      <CarouselItem key={spa.id} className="pl-2 basis-1/2 sm:basis-1/3 md:basis-1/4 lg:basis-1/5">
-                                        <div className="flex flex-col items-center p-2 border rounded-lg hover:border-primary transition-colors">
-                                          <div className="relative w-full aspect-square rounded-lg overflow-hidden mb-3">
-                                            {spa.image ? (
-                                              <img 
-                                                src={spa.image}
-                                                alt={spa.title}
-                                                className="w-full h-full object-cover"
-                                              />
-                                            ) : (
-                                              <div className="w-full h-full bg-muted flex items-center justify-center">
-                                                <Sparkles className="h-8 w-8 text-muted-foreground" />
-                                              </div>
-                                            )}
-                                            <Button
-                                              variant="secondary"
-                                              size="sm"
-                                              className="absolute bottom-2 right-2 text-xs h-7 px-2"
-                                            >
-                                              View
-                                            </Button>
-                                          </div>
-                                          <div className="flex items-center gap-2 mb-2">
-                                            <Button
-                                              variant="outline"
-                                              size="icon"
-                                              className="h-8 w-8 rounded-full"
-                                              onClick={() => removeAddon(spa.id)}
-                                              disabled={quantity === 0}
-                                            >
-                                              <Minus className="h-4 w-4" />
-                                            </Button>
-                                            <span className="w-8 text-center text-sm font-medium">
-                                              {quantity}
-                                            </span>
-                                            <Button
-                                              variant="outline"
-                                              size="icon"
-                                              className="h-8 w-8 rounded-full"
-                                              onClick={() => addAddon(spa)}
-                                            >
-                                              <Plus className="h-4 w-4" />
-                                            </Button>
-                                          </div>
-                                          <p className="text-sm font-medium text-center mb-1 line-clamp-2">{spa.title}</p>
-                                          <p className="text-sm font-semibold text-primary">₹{spa.price}</p>
-                                        </div>
-                                      </CarouselItem>
-                                    );
-                                  })}
-                                </CarouselContent>
-                                <CarouselPrevious className="-left-4" />
-                                <CarouselNext className="-right-4" />
-                              </Carousel>
-                            </div>
-                          ))
-                        )}
                       </TabsContent>
                     </Tabs>
                   </CardContent>
