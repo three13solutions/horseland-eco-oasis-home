@@ -99,7 +99,7 @@ const DiningGalleryCollage = () => {
     if (!isDragging) return;
     e.preventDefault();
     const x = e.pageX;
-    const walk = (startX - x) / 280; // Adjust sensitivity
+    const walk = (startX - x) / 360; // Adjust sensitivity
     const newIndex = Math.round(scrollLeft + walk);
     setCurrentIndex(newIndex);
   };
@@ -121,7 +121,7 @@ const DiningGalleryCollage = () => {
   const handleTouchMove = (e: React.TouchEvent) => {
     if (!isDragging) return;
     const x = e.touches[0].pageX;
-    const walk = (startX - x) / 280;
+    const walk = (startX - x) / 360;
     const newIndex = Math.round(scrollLeft + walk);
     setCurrentIndex(newIndex);
   };
@@ -131,9 +131,9 @@ const DiningGalleryCollage = () => {
   };
 
   return (
-    <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+    <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-4">
       <div 
-        className="relative group h-[200px] max-w-[1260px] mx-auto overflow-hidden cursor-grab active:cursor-grabbing"
+        className="relative group h-[280px] max-w-[1400px] mx-auto overflow-hidden cursor-grab active:cursor-grabbing rounded-lg"
         onMouseDown={handleMouseDown}
         onMouseMove={handleMouseMove}
         onMouseUp={handleMouseUp}
@@ -143,16 +143,16 @@ const DiningGalleryCollage = () => {
         onTouchEnd={handleTouchEnd}
       >
         <div 
-          className="flex gap-2 transition-transform duration-300 ease-out"
+          className="flex gap-3 transition-transform duration-300 ease-out"
           style={{ 
-            transform: `translateX(-${currentIndex * 282}px)`,
+            transform: `translateX(-${currentIndex * 363}px)`,
             transitionDuration: isDragging ? '0ms' : '300ms'
           }}
         >
           {displayImages.map((image, index) => (
             <div
               key={`${image.id}-${index}`}
-              className="flex-shrink-0 w-[280px] h-[200px] relative group/item pointer-events-none"
+              className="flex-shrink-0 w-[360px] h-[280px] relative group/item pointer-events-none rounded-lg overflow-hidden shadow-md hover:shadow-xl transition-shadow duration-300"
             >
               <img
                 src={image.image_url}
@@ -160,11 +160,11 @@ const DiningGalleryCollage = () => {
                 className="w-full h-full object-cover select-none"
                 draggable="false"
               />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover/item:opacity-100 transition-opacity duration-300">
-                <div className="absolute bottom-0 left-0 right-0 p-3">
-                  <p className="text-white font-body font-semibold text-xs">{image.title}</p>
+              <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent opacity-0 group-hover/item:opacity-100 transition-opacity duration-300">
+                <div className="absolute bottom-0 left-0 right-0 p-4">
+                  <p className="text-white font-body font-semibold text-sm">{image.title}</p>
                   {image.caption && (
-                    <p className="text-white/80 font-body text-[10px] mt-1">{image.caption}</p>
+                    <p className="text-white/90 font-body text-xs mt-1">{image.caption}</p>
                   )}
                 </div>
               </div>
@@ -176,19 +176,19 @@ const DiningGalleryCollage = () => {
         <Button
           variant="outline"
           size="icon"
-          className="absolute left-2 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity bg-background/80 backdrop-blur-sm z-10"
+          className="absolute left-4 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity bg-background/90 backdrop-blur-sm z-10 shadow-lg hover:scale-110"
           onClick={handlePrev}
         >
-          <ChevronLeft className="h-4 w-4" />
+          <ChevronLeft className="h-5 w-5" />
         </Button>
         
         <Button
           variant="outline"
           size="icon"
-          className="absolute right-2 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity bg-background/80 backdrop-blur-sm z-10"
+          className="absolute right-4 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity bg-background/90 backdrop-blur-sm z-10 shadow-lg hover:scale-110"
           onClick={handleNext}
         >
-          <ChevronRight className="h-4 w-4" />
+          <ChevronRight className="h-5 w-5" />
         </Button>
       </div>
     </div>
