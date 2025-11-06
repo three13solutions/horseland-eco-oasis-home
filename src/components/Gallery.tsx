@@ -179,12 +179,12 @@ const GalleryV5 = () => {
 
         {/* Lightbox */}
         <Dialog open={lightboxOpen} onOpenChange={setLightboxOpen}>
-          <DialogContent className="max-w-4xl w-full h-[90vh] p-0 bg-black/95">
+          <DialogContent className="max-w-7xl w-full h-[95vh] p-0 bg-transparent backdrop-blur-2xl border-none shadow-none">
             <div className="relative w-full h-full flex items-center justify-center">
               {/* Close button */}
               <button
                 onClick={() => setLightboxOpen(false)}
-                className="absolute top-4 right-4 z-50 p-2 rounded-full bg-black/50 text-white hover:bg-black/70 transition-colors"
+                className="absolute top-4 right-4 z-50 p-3 rounded-full bg-black/40 backdrop-blur-sm text-white hover:bg-black/60 transition-colors"
               >
                 <X className="w-6 h-6" />
               </button>
@@ -192,7 +192,7 @@ const GalleryV5 = () => {
               {/* Previous button */}
               <button
                 onClick={() => navigateImage('prev')}
-                className="absolute left-4 z-50 p-2 rounded-full bg-black/50 text-white hover:bg-black/70 transition-colors"
+                className="absolute left-4 z-50 p-3 rounded-full bg-black/40 backdrop-blur-sm text-white hover:bg-black/60 transition-colors"
               >
                 <ChevronLeft className="w-6 h-6" />
               </button>
@@ -200,45 +200,19 @@ const GalleryV5 = () => {
               {/* Next button */}
               <button
                 onClick={() => navigateImage('next')}
-                className="absolute right-4 z-50 p-2 rounded-full bg-black/50 text-white hover:bg-black/70 transition-colors"
+                className="absolute right-4 z-50 p-3 rounded-full bg-black/40 backdrop-blur-sm text-white hover:bg-black/60 transition-colors"
               >
                 <ChevronRight className="w-6 h-6" />
               </button>
 
               {/* Image */}
               {currentImages[selectedImageIndex] && (
-                <div className="relative w-full h-full flex flex-col">
-                  <div className="flex-1 flex items-center justify-center p-8">
-                    <img
-                      src={currentImages[selectedImageIndex].image_url}
-                      alt={currentImages[selectedImageIndex].caption}
-                      className="max-w-full max-h-full object-contain"
-                    />
-                  </div>
-                  
-                  {/* Image info */}
-                  <div className="p-6 bg-gradient-to-t from-black/80 to-transparent text-white">
-                    {activeTab === 'hotel' ? (
-                      <div className="space-y-2">
-                        <div className="flex items-center space-x-2">
-                          <MapPin className="w-5 h-5" />
-                          <span className="text-lg font-medium">{currentImages[selectedImageIndex].caption}</span>
-                        </div>
-                        <span className="text-white/80">{currentImages[selectedImageIndex].location}</span>
-                      </div>
-                    ) : (
-                      <div className="space-y-2">
-                        <p className="text-lg font-medium">{currentImages[selectedImageIndex].caption}</p>
-                        <div className="flex items-center justify-between">
-                          <span className="text-white/80">{currentImages[selectedImageIndex].guest_handle}</span>
-                          <div className="flex items-center space-x-2">
-                            <Heart className="w-5 h-5 text-red-400 fill-current" />
-                            <span className="text-lg">{currentImages[selectedImageIndex].likes_count}</span>
-                          </div>
-                        </div>
-                      </div>
-                    )}
-                  </div>
+                <div className="relative w-full h-full flex items-center justify-center p-8">
+                  <img
+                    src={currentImages[selectedImageIndex].image_url}
+                    alt={currentImages[selectedImageIndex].caption}
+                    className="max-w-full max-h-full object-contain rounded-lg shadow-2xl"
+                  />
                 </div>
               )}
             </div>
