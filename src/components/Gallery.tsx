@@ -179,7 +179,7 @@ const GalleryV5 = () => {
 
         {/* Lightbox */}
         <Dialog open={lightboxOpen} onOpenChange={setLightboxOpen}>
-          <DialogContent className="max-w-7xl w-full h-[95vh] p-0 bg-transparent backdrop-blur-2xl border-none shadow-none">
+          <DialogContent className="max-w-none w-screen h-screen p-0 bg-transparent border-none shadow-none fixed inset-0 backdrop-blur-3xl">
             <div className="relative w-full h-full flex items-center justify-center">
               {/* Close button */}
               <button
@@ -205,14 +205,16 @@ const GalleryV5 = () => {
                 <ChevronRight className="w-6 h-6" />
               </button>
 
-              {/* Image */}
+              {/* Image with fixed aspect ratio */}
               {currentImages[selectedImageIndex] && (
-                <div className="relative w-full h-full flex items-center justify-center p-8">
-                  <img
-                    src={currentImages[selectedImageIndex].image_url}
-                    alt={currentImages[selectedImageIndex].caption}
-                    className="max-w-full max-h-full object-contain rounded-lg shadow-2xl"
-                  />
+                <div className="relative w-full max-w-5xl px-20">
+                  <div className="aspect-video w-full">
+                    <img
+                      src={currentImages[selectedImageIndex].image_url}
+                      alt={currentImages[selectedImageIndex].caption}
+                      className="w-full h-full object-cover rounded-lg shadow-2xl"
+                    />
+                  </div>
                 </div>
               )}
             </div>
