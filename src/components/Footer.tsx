@@ -90,6 +90,14 @@ const FooterV5 = () => {
                 </div>
                 
                 <div className="flex items-start space-x-3">
+                  <Phone className="w-4 h-4 text-accent mt-1 flex-shrink-0" />
+                  <div>
+                    <p className="text-primary-foreground/80 text-xs">Percy</p>
+                    <p className="font-medium text-sm">7977538460</p>
+                  </div>
+                </div>
+                
+                <div className="flex items-start space-x-3">
                   <Mail className="w-4 h-4 text-accent mt-1 flex-shrink-0" />
                   <div>
                     <p className="text-primary-foreground/80 text-xs">{t('footer.contact.emailLabel')}</p>

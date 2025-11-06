@@ -227,7 +227,7 @@ const NavigationV5 = () => {
             <Button 
               size="sm" 
               className="hidden md:flex bg-primary hover:bg-primary/90 text-primary-foreground"
-              onClick={() => navigate('/booking')}
+              onClick={() => navigate('/stay')}
             >
               <Calendar className="w-4 h-4 mr-2" />
               {getTranslation('navigation.bookNow', 'Book Now')}
@@ -281,7 +281,7 @@ const NavigationV5 = () => {
                 </div>
                 <Button 
                   className="mt-2 w-full bg-primary hover:bg-primary/90 text-primary-foreground"
-                  onClick={() => navigate('/booking')}
+                  onClick={() => navigate('/stay')}
                 >
                   <Calendar className="w-4 h-4 mr-2" />
                   {getTranslation('navigation.bookNow', 'Book Now')}
