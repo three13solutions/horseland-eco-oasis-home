@@ -179,7 +179,7 @@ const GalleryV5 = () => {
 
         {/* Lightbox */}
         <Dialog open={lightboxOpen} onOpenChange={setLightboxOpen}>
-          <DialogContent className="max-w-none w-screen h-screen p-0 m-0 bg-background/20 backdrop-blur-xl border-none shadow-none [&>button]:hidden" style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, transform: 'none' }}>
+          <DialogContent className="max-w-none w-screen h-screen p-0 m-0 bg-transparent backdrop-blur-xl border-none shadow-none [&>button]:hidden" style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, transform: 'none' }}>
             <div className="relative w-full h-full flex items-center justify-center">
               {/* Close button */}
               <button
