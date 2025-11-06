@@ -265,15 +265,21 @@ const DynamicFooter = () => {
                     </div>
                   </div>
                 )}
-                {contactSection.content.phone && (
-                  <div className="flex items-start space-x-3">
-                    <Phone className="w-4 h-4 text-primary mt-1 flex-shrink-0" />
-                    <div>
-                      <p className="text-background/80 text-xs">Reservations Team</p>
-                      <p className="font-medium text-background text-sm">{contactSection.content.phone}</p>
-                    </div>
+                <div className="flex items-start space-x-3">
+                  <Phone className="w-4 h-4 text-primary mt-1 flex-shrink-0" />
+                  <div>
+                    <p className="text-background/80 text-xs">Percy</p>
+                    <p className="font-medium text-background text-sm">+91 7977538460</p>
                   </div>
-                )}
+                </div>
+                
+                <div className="flex items-start space-x-3">
+                  <Phone className="w-4 h-4 text-primary mt-1 flex-shrink-0" />
+                  <div>
+                    <p className="text-background/80 text-xs">Mahesh</p>
+                    <p className="font-medium text-background text-sm">+91 94042 24600</p>
+                  </div>
+                </div>
                 {contactSection.content.address && (
                   <div className="flex items-start space-x-3">
                     <MapPin className="w-4 h-4 text-primary mt-1 flex-shrink-0" />
