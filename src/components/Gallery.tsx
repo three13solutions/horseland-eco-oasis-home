@@ -68,7 +68,7 @@ const GalleryV5 = () => {
     ];
   };
 
-  const currentImages = galleryImages.filter(img => img.gallery_categories?.slug === activeTab).slice(0, 9);
+  const currentImages = galleryImages.filter(img => img.gallery_categories?.slug === activeTab).slice(0, 16);
 
   const handleImageClick = (index) => {
     setSelectedImageIndex(index);
@@ -125,8 +125,8 @@ const GalleryV5 = () => {
           </div>
         </div>
 
-        {/* 3x3 Gallery Grid */}
-        <div className="grid grid-cols-3 gap-3 md:gap-4 mb-8">
+        {/* 4x4 Gallery Grid */}
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 md:gap-4 mb-8">
           {currentImages.map((image, index) => (
             <div
               key={image.id || index}
