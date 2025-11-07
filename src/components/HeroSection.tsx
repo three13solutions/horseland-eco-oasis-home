@@ -3,16 +3,20 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Calendar, Users, ArrowRight, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Calendar } from '@/components/ui/calendar';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Calendar as CalendarIcon, Users, ArrowRight, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useTranslationContext } from '@/components/admin/TranslationProvider';
 import { supabase } from '@/integrations/supabase/client';
+import { format } from 'date-fns';
+import { cn } from '@/lib/utils';
 
 const HeroSection = () => {
   const navigate = useNavigate();
   const { getTranslation } = useTranslationContext();
   const [currentSlide, setCurrentSlide] = useState(0);
-  const [checkIn, setCheckIn] = useState('');
-  const [checkOut, setCheckOut] = useState('');
+  const [checkIn, setCheckIn] = useState<Date>();
+  const [checkOut, setCheckOut] = useState<Date>();
   const [guests, setGuests] = useState('2');
   const [heroTitle, setHeroTitle] = useState('Escape to Nature\'s Embrace');
   const [heroSubtitle, setHeroSubtitle] = useState('A mindful retreat in Matheran\'s no-car eco zone');
@@ -94,22 +98,56 @@ const HeroSection = () => {
               <div className="grid grid-cols-1 md:grid-cols-4 gap-4 md:gap-6 items-end">
                 <div className="space-y-2">
                   <label className="text-white/80 text-sm font-medium block text-left">{getTranslation('hero.checkIn', 'Check-in')}</label>
-                  <Input
-                    type="date"
-                    value={checkIn}
-                    onChange={(e) => setCheckIn(e.target.value)}
-                    className="bg-white/20 border-white/30 text-white placeholder:text-white/60 rounded-xl h-12"
-                  />
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="outline"
+                        className={cn(
+                          "w-full h-12 bg-white/20 border-white/30 text-white hover:bg-white/30 hover:text-white rounded-xl justify-start text-left font-normal",
+                          !checkIn && "text-white/60"
+                        )}
+                      >
+                        <CalendarIcon className="mr-2 h-5 w-5" />
+                        {checkIn ? format(checkIn, "PPP") : <span>Pick a date</span>}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0 bg-background/95 backdrop-blur-xl border-2 shadow-2xl" align="start">
+                      <Calendar
+                        mode="single"
+                        selected={checkIn}
+                        onSelect={setCheckIn}
+                        disabled={(date) => date < new Date(new Date().setHours(0, 0, 0, 0))}
+                        initialFocus
+                      />
+                    </PopoverContent>
+                  </Popover>
                 </div>
                 
                 <div className="space-y-2">
                   <label className="text-white/80 text-sm font-medium block text-left">{getTranslation('hero.checkOut', 'Check-out')}</label>
-                  <Input
-                    type="date"
-                    value={checkOut}
-                    onChange={(e) => setCheckOut(e.target.value)}
-                    className="bg-white/20 border-white/30 text-white placeholder:text-white/60 rounded-xl h-12"
-                  />
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="outline"
+                        className={cn(
+                          "w-full h-12 bg-white/20 border-white/30 text-white hover:bg-white/30 hover:text-white rounded-xl justify-start text-left font-normal",
+                          !checkOut && "text-white/60"
+                        )}
+                      >
+                        <CalendarIcon className="mr-2 h-5 w-5" />
+                        {checkOut ? format(checkOut, "PPP") : <span>Pick a date</span>}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0 bg-background/95 backdrop-blur-xl border-2 shadow-2xl" align="start">
+                      <Calendar
+                        mode="single"
+                        selected={checkOut}
+                        onSelect={setCheckOut}
+                        disabled={(date) => !checkIn || date <= checkIn}
+                        initialFocus
+                      />
+                    </PopoverContent>
+                  </Popover>
                 </div>
                 
                 <div className="space-y-2">
@@ -131,8 +169,8 @@ const HeroSection = () => {
                   onClick={() => {
                     if (checkIn && checkOut) {
                       const searchParams = new URLSearchParams({
-                        checkIn,
-                        checkOut,
+                        checkIn: format(checkIn, 'yyyy-MM-dd'),
+                        checkOut: format(checkOut, 'yyyy-MM-dd'),
                         guests
                       });
                       navigate(`/booking?${searchParams.toString()}`);
