@@ -108,7 +108,7 @@ const HeroSection = () => {
                         )}
                       >
                         <CalendarIcon className="mr-2 h-5 w-5" />
-                        {checkIn ? format(checkIn, "PPP") : <span>Pick a date</span>}
+                        {checkIn ? format(checkIn, "dd/MM/yyyy") : <span>Pick a date</span>}
                       </Button>
                     </PopoverTrigger>
                     <PopoverContent className="w-auto p-0 bg-background/95 backdrop-blur-xl border-2 shadow-2xl" align="start">
@@ -135,7 +135,7 @@ const HeroSection = () => {
                         )}
                       >
                         <CalendarIcon className="mr-2 h-5 w-5" />
-                        {checkOut ? format(checkOut, "PPP") : <span>Pick a date</span>}
+                        {checkOut ? format(checkOut, "dd/MM/yyyy") : <span>Pick a date</span>}
                       </Button>
                     </PopoverTrigger>
                     <PopoverContent className="w-auto p-0 bg-background/95 backdrop-blur-xl border-2 shadow-2xl" align="start">
