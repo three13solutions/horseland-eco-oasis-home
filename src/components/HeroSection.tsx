@@ -94,28 +94,22 @@ const HeroSection = () => {
               <div className="grid grid-cols-1 md:grid-cols-4 gap-4 md:gap-6 items-end">
                 <div className="space-y-2">
                   <label className="text-white/80 text-sm font-medium block text-left">{getTranslation('hero.checkIn', 'Check-in')}</label>
-                  <div className="relative">
-                    <Input
-                      type="date"
-                      value={checkIn}
-                      onChange={(e) => setCheckIn(e.target.value)}
-                      className="bg-white/20 border-white/30 text-white placeholder:text-white/60 rounded-xl h-12"
-                    />
-                    <Calendar className="absolute right-3 top-3 h-6 w-6 text-white/60 pointer-events-none" />
-                  </div>
+                  <Input
+                    type="date"
+                    value={checkIn}
+                    onChange={(e) => setCheckIn(e.target.value)}
+                    className="bg-white/20 border-white/30 text-white placeholder:text-white/60 rounded-xl h-12"
+                  />
                 </div>
                 
                 <div className="space-y-2">
                   <label className="text-white/80 text-sm font-medium block text-left">{getTranslation('hero.checkOut', 'Check-out')}</label>
-                  <div className="relative">
-                    <Input
-                      type="date"
-                      value={checkOut}
-                      onChange={(e) => setCheckOut(e.target.value)}
-                      className="bg-white/20 border-white/30 text-white placeholder:text-white/60 rounded-xl h-12"
-                    />
-                    <Calendar className="absolute right-3 top-3 h-6 w-6 text-white/60 pointer-events-none" />
-                  </div>
+                  <Input
+                    type="date"
+                    value={checkOut}
+                    onChange={(e) => setCheckOut(e.target.value)}
+                    className="bg-white/20 border-white/30 text-white placeholder:text-white/60 rounded-xl h-12"
+                  />
                 </div>
                 
                 <div className="space-y-2">
