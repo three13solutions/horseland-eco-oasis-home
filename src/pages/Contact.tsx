@@ -189,8 +189,6 @@ const Contact = () => {
                           <br />
                           Sachin: +91 9004424567
                           <br />
-                          Percy: +91 7977538460
-                          <br />
                         </p>
                       </div>
                     </div>
