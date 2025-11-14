@@ -427,6 +427,15 @@ const Booking = () => {
       }
 
       setAvailableRooms(availableRoomsData);
+      
+      // Auto-select room if roomTypeId is in URL and room is available
+      if (roomTypeId && availableRoomsData.length > 0 && !selectedRoomType) {
+        const roomToSelect = availableRoomsData.find(r => r.roomType.id === roomTypeId);
+        if (roomToSelect) {
+          setSelectedRoomType(roomToSelect.roomType);
+          setShowBookingForm(true);
+        }
+      }
     } catch (error) {
       console.error('Error loading available rooms:', error);
       toast({
