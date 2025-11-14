@@ -149,6 +149,7 @@ const HeroSection = () => {
                         mode="single"
                         selected={checkOut}
                         onSelect={setCheckOut}
+                        defaultMonth={checkIn}
                         disabled={(date) => {
                           const today = new Date(new Date().setHours(0, 0, 0, 0));
                           // Disable if no check-in selected, or date is before/equal to check-in, or date is before today
