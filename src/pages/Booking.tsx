@@ -1052,6 +1052,17 @@ const Booking = () => {
   }, [needsExtraBedding]);
 
   const handleProceedToPayment = () => {
+    console.log('Proceed to Payment clicked', { selectedRoomType, showPaymentModal });
+    
+    if (!selectedRoomType) {
+      toast({
+        title: "Room Not Selected",
+        description: "Please select a room to continue with payment",
+        variant: "destructive",
+      });
+      return;
+    }
+    
     if (!guestDetails.name || !guestDetails.email || !guestDetails.phone) {
       toast({
         title: "Missing Information",
@@ -1061,6 +1072,7 @@ const Booking = () => {
       return;
     }
     
+    console.log('Opening payment modal...');
     setShowPaymentModal(true);
   };
 
@@ -2213,7 +2225,7 @@ const Booking = () => {
       </section>
 
       {/* Payment Modal */}
-      {showPaymentModal && selectedRoomType && (
+      {selectedRoomType && (
         <PaymentModal
           isOpen={showPaymentModal}
           onClose={() => setShowPaymentModal(false)}
