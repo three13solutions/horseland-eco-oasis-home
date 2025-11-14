@@ -1061,16 +1061,6 @@ const Booking = () => {
       return;
     }
     
-    // Check if rate variant is selected when variants are available
-    if (rateVariants.length > 0 && !selectedRateVariant) {
-      toast({
-        title: "Rate Plan Required",
-        description: "Please select a rate plan before proceeding to payment",
-        variant: "destructive",
-      });
-      return;
-    }
-    
     setShowPaymentModal(true);
   };
 
