@@ -82,7 +82,8 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
         }
       });
 
-      if (orderError || !orderData?.order) {
+      if (orderError || !orderData) {
+        console.error('Order creation error:', orderError);
         throw new Error('Failed to create payment order');
       }
 
@@ -98,17 +99,17 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
       // Step 3: Open Razorpay checkout with server-generated order
       const options = {
         key: config.KEY_ID,
-        amount: orderData.order.amount,
-        currency: orderData.order.currency,
+        amount: orderData.amount,
+        currency: orderData.currency,
         name: 'Hotel Booking',
         description: `${bookingDetails.roomName} - ${bookingDetails.nights} night(s)`,
-        order_id: orderData.order.id,
+        order_id: orderData.id,
         handler: async function (response: any) {
           try {
             // Step 4: Verify payment through secure edge function
             const { data: verifyData, error: verifyError } = await supabase.functions.invoke('verify-razorpay-payment', {
               body: {
-                order_id: orderData.order.id,
+                order_id: orderData.id,
                 payment_id: response.razorpay_payment_id,
                 signature: response.razorpay_signature
               }
