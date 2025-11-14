@@ -115,7 +115,13 @@ const HeroSection = () => {
                       <Calendar
                         mode="single"
                         selected={checkIn}
-                        onSelect={setCheckIn}
+                        onSelect={(date) => {
+                          setCheckIn(date);
+                          // Clear checkout if new check-in is after current checkout
+                          if (date && checkOut && date >= checkOut) {
+                            setCheckOut(undefined);
+                          }
+                        }}
                         disabled={(date) => date < new Date(new Date().setHours(0, 0, 0, 0))}
                         initialFocus
                       />
@@ -143,7 +149,11 @@ const HeroSection = () => {
                         mode="single"
                         selected={checkOut}
                         onSelect={setCheckOut}
-                        disabled={(date) => !checkIn || date <= checkIn}
+                        disabled={(date) => {
+                          const today = new Date(new Date().setHours(0, 0, 0, 0));
+                          // Disable if no check-in selected, or date is before/equal to check-in, or date is before today
+                          return !checkIn || date <= checkIn || date < today;
+                        }}
                         initialFocus
                       />
                     </PopoverContent>
