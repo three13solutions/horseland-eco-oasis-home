@@ -141,6 +141,13 @@ const MealPlansManagement = () => {
         <div>
           <h1 className="text-3xl font-bold">Meal Plans Management</h1>
           <p className="text-muted-foreground">Configure meal plan options for bookings</p>
+          <div className="mt-2 p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
+            <p className="text-sm text-blue-800 dark:text-blue-200">
+              <strong>How It Works:</strong> Meal plans are now independent from cancellation policies in the booking flow. 
+              Users select a meal plan separately, and the cost is calculated based on the included meal types, guest count, 
+              and number of nights. The meal cost is then combined with the room rate before applying any cancellation policy adjustments.
+            </p>
+          </div>
         </div>
         <Dialog open={isOpen} onOpenChange={(open) => {
           setIsOpen(open);

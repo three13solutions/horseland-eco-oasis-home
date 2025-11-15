@@ -14,13 +14,12 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/component
 import Navigation from '@/components/Navigation';
 import DynamicFooter from '@/components/DynamicFooter';
 import { PaymentModal } from '@/components/PaymentModal';
-import { RateVariantSelector } from '@/components/booking/RateVariantSelector';
 import { PriceBreakdown } from '@/components/booking/PriceBreakdown';
 import { AvailableRoomCard } from '@/components/booking/AvailableRoomCard';
-import { useDynamicPricing } from '@/hooks/useDynamicPricing';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { calculateBookingAmount } from '@/lib/razorpay';
+import { useQuery } from '@tanstack/react-query';
 
 interface RoomType {
   id: string;
@@ -150,17 +149,34 @@ const Booking = () => {
   const [serviceInRoomQuantity, setServiceInRoomQuantity] = useState(0);
   const [candleLightDinnerQuantity, setCandleLightDinnerQuantity] = useState(0);
   
-  // Dynamic pricing state
-  const [selectedRateVariant, setSelectedRateVariant] = useState<any>(null);
-  
-  // Fetch rate variants when room is selected (temporarily disabled)
-  const { data: rateVariants = [], isLoading: variantsLoading } = useDynamicPricing({
-    roomTypeId: selectedRoomType?.id,
-    checkIn: checkIn ? new Date(checkIn) : undefined,
-    checkOut: checkOut ? new Date(checkOut) : undefined,
-    guestsCount: guests,
-    enabled: false // Disabled until database function is set up
+  // Fetch meal plans
+  const { data: mealPlans = [] } = useQuery({
+    queryKey: ['meal-plans'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('meal_plan_rules')
+        .select('*')
+        .eq('is_active', true)
+        .order('display_order');
+      if (error) throw error;
+      return data || [];
+    }
   });
+
+  // Fetch cancellation policies
+  const { data: cancellationPolicies = [] } = useQuery({
+    queryKey: ['cancellation-policies-booking'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('cancellation_policy_rules')
+        .select('*')
+        .eq('is_active', true)
+        .order('display_order');
+      if (error) throw error;
+      return data || [];
+    }
+  });
+
 
   // Load package if packageId is present
   useEffect(() => {
@@ -616,9 +632,6 @@ const Booking = () => {
 
   const handleSelectRoom = (roomType: RoomType, variant?: any) => {
     setSelectedRoomType(roomType);
-    if (variant) {
-      setSelectedRateVariant(variant);
-    }
     setShowBookingForm(true);
   };
 
@@ -710,21 +723,32 @@ const Booking = () => {
 
   const calculateTotal = () => {
     if (!selectedRoomType) return 0;
+    
     const nights = calculateNights();
     
-    // Use variant pricing if selected, otherwise fall back to base price
-    const roomTotal = selectedRateVariant 
-      ? selectedRateVariant.total_price 
-      : selectedRoomType.base_price * nights;
+    // Calculate base room total
+    const roomTotal = selectedRoomType.base_price * nights;
+    
+    // Get selected meal plan and its cost
+    const selectedMealPlanData = mealPlans.find(mp => mp.plan_code === selectedMealPlan);
+    const mealPlanTotal = calculateMealPlanTotal();
+    
+    // Get selected cancellation policy and its adjustment
+    const selectedPolicyData = cancellationPolicies.find(cp => cp.policy_code === selectedCancellationPolicy);
+    let policyAdjustment = 0;
+    if (selectedPolicyData) {
+      if (selectedPolicyData.adjustment_type === 'percentage') {
+        policyAdjustment = (roomTotal + mealPlanTotal) * (selectedPolicyData.adjustment_value / 100);
+      } else if (selectedPolicyData.adjustment_type === 'fixed') {
+        policyAdjustment = selectedPolicyData.adjustment_value;
+      }
+    }
     
     const addonsTotal = selectedAddons.reduce((total, addon) => total + (addon.price * addon.quantity), 0);
     const pickupTotal = selectedPickup ? selectedPickup.price : 0;
     const beddingTotal = selectedBedding.reduce((total, bed) => total + bed.price, 0);
     
-    // Only add meal plan total if no rate variant is selected (variants include meals)
-    const mealsTotal = selectedRateVariant ? 0 : calculateMealPlanTotal();
-    
-    return roomTotal + addonsTotal + pickupTotal + beddingTotal + mealsTotal;
+    return roomTotal + mealPlanTotal + policyAdjustment + addonsTotal + pickupTotal + beddingTotal;
   };
 
   const formatDate = (dateString: string) => {
@@ -1189,19 +1213,13 @@ const Booking = () => {
         payment_order_id: orderId,
         payment_method: 'razorpay',
         // Store meal plan information
-        meal_plan_code: selectedMealPlan === 'none' ? 'room_only' : selectedMealPlan === 'half-board' ? 'half_board' : 'full_board',
+        meal_plan_code: selectedMealPlan || 'room_only',
         meal_cost: calculateMealPlanTotal(),
-        // Store variant data if available
-        cancellation_policy_code: selectedRateVariant?.cancellation_policy_code || 'flexible',
-        room_cost: selectedRateVariant?.room_rate || (selectedRoomType!.base_price * calculateNights()),
-        rate_breakdown: selectedRateVariant ? {
-          meal_plan_name: selectedRateVariant.meal_plan_name,
-          cancellation_policy_name: selectedRateVariant.cancellation_policy_name,
-          included_meals: selectedRateVariant.included_meals,
-          policy_adjustment: selectedRateVariant.policy_adjustment,
-          total_nights: calculateNights()
-        } : {
+        cancellation_policy_code: selectedCancellationPolicy || 'refundable',
+        room_cost: selectedRoomType!.base_price * calculateNights(),
+        rate_breakdown: {
           meal_plan: selectedMealPlan,
+          cancellation_policy: selectedCancellationPolicy,
           meal_cost: calculateMealPlanTotal(),
           total_nights: calculateNights()
         },
@@ -1238,7 +1256,7 @@ const Booking = () => {
       }
 
       // Create payment record
-      const roomPrice = selectedRateVariant ? selectedRateVariant.price_per_night : (selectedRoomType!.base_price);
+      const roomPrice = selectedRoomType!.base_price;
       const addonTotal = selectedAddons.reduce((total, addon) => total + (addon.price * addon.quantity), 0) + 
                         (selectedPickup ? selectedPickup.price : 0) + 
                         selectedBedding.reduce((total, bed) => total + bed.price, 0);
@@ -1350,15 +1368,12 @@ const Booking = () => {
                       <div className="flex-1">
                         <h3 className="font-semibold">{selectedRoomType.name}</h3>
                         <p className="text-sm text-muted-foreground">Up to {selectedRoomType.max_guests} guests</p>
-                        {!selectedRateVariant && (
-                          <p className="text-sm text-muted-foreground mt-1">Starting from ₹{selectedRoomType.base_price.toLocaleString()}/night</p>
-                        )}
+                        <p className="text-sm text-muted-foreground mt-1">₹{selectedRoomType.base_price.toLocaleString()}/night</p>
                       </div>
                       <Button variant="outline" onClick={() => {
                         // Clear only room selection, keep everything else
                         setShowBookingForm(false);
                         setSelectedRoomType(null);
-                        setSelectedRateVariant(null);
                         
                         // Scroll to available rooms section
                         setTimeout(() => {
@@ -1502,57 +1517,42 @@ const Booking = () => {
                     <CollapsibleContent>
                       <CardContent className="space-y-4">
                         <div className="space-y-3">
-                          <div 
-                            className={`p-4 border rounded-lg cursor-pointer transition-colors ${
-                              selectedCancellationPolicy === 'non-refundable' ? 'border-primary bg-primary/5' : 'border-border hover:border-primary/50'
-                            }`}
-                            onClick={() => setSelectedCancellationPolicy('non-refundable')}
-                          >
-                            <div className="flex items-start gap-3">
-                              <div className={`w-5 h-5 rounded-full border-2 mt-0.5 flex items-center justify-center ${
-                                selectedCancellationPolicy === 'non-refundable' ? 'border-primary bg-primary' : 'border-border'
-                              }`}>
-                                {selectedCancellationPolicy === 'non-refundable' && (
-                                  <div className="w-2 h-2 rounded-full bg-white" />
-                                )}
-                              </div>
-                              <div className="flex-1">
-                                <div className="font-semibold mb-1">Non-Refundable Rate</div>
-                                <p className="text-sm text-muted-foreground">
-                                  Best price, but no refund on cancellation. Save 10% on your booking.
-                                </p>
-                                <div className="mt-2 text-sm font-medium text-green-600">
-                                  Save 10% • No cancellation charges
+                          {cancellationPolicies.map((policy) => {
+                            const isSelected = selectedCancellationPolicy === policy.policy_code;
+                            return (
+                              <div 
+                                key={policy.id}
+                                className={`p-4 border rounded-lg cursor-pointer transition-colors ${
+                                  isSelected ? 'border-primary bg-primary/5' : 'border-border hover:border-primary/50'
+                                }`}
+                                onClick={() => setSelectedCancellationPolicy(policy.policy_code)}
+                              >
+                                <div className="flex items-start gap-3">
+                                  <div className={`w-5 h-5 rounded-full border-2 mt-0.5 flex items-center justify-center ${
+                                    isSelected ? 'border-primary bg-primary' : 'border-border'
+                                  }`}>
+                                    {isSelected && (
+                                      <div className="w-2 h-2 rounded-full bg-white" />
+                                    )}
+                                  </div>
+                                  <div className="flex-1">
+                                    <div className="font-semibold mb-1">{policy.policy_name}</div>
+                                    <p className="text-sm text-muted-foreground">
+                                      {policy.description || (typeof policy.cancellation_terms === 'object' && policy.cancellation_terms !== null ? (policy.cancellation_terms as any).terms : '')}
+                                    </p>
+                                    {policy.adjustment_value !== 0 && (
+                                      <div className={`mt-2 text-sm font-medium ${policy.adjustment_value < 0 ? 'text-green-600' : 'text-red-600'}`}>
+                                        {policy.adjustment_type === 'percentage' 
+                                          ? `${policy.adjustment_value > 0 ? '+' : ''}${policy.adjustment_value}%`
+                                          : `${policy.adjustment_value > 0 ? '+' : ''}₹${Math.abs(policy.adjustment_value)}`
+                                        }
+                                      </div>
+                                    )}
+                                  </div>
                                 </div>
                               </div>
-                            </div>
-                          </div>
-
-                          <div 
-                            className={`p-4 border rounded-lg cursor-pointer transition-colors ${
-                              selectedCancellationPolicy === 'refundable' ? 'border-primary bg-primary/5' : 'border-border hover:border-primary/50'
-                            }`}
-                            onClick={() => setSelectedCancellationPolicy('refundable')}
-                          >
-                            <div className="flex items-start gap-3">
-                              <div className={`w-5 h-5 rounded-full border-2 mt-0.5 flex items-center justify-center ${
-                                selectedCancellationPolicy === 'refundable' ? 'border-primary bg-primary' : 'border-border'
-                              }`}>
-                                {selectedCancellationPolicy === 'refundable' && (
-                                  <div className="w-2 h-2 rounded-full bg-white" />
-                                )}
-                              </div>
-                              <div className="flex-1">
-                                <div className="font-semibold mb-1">Refundable as Credit Voucher</div>
-                                <p className="text-sm text-muted-foreground">
-                                  Full refund as credit voucher valid for 6 months. Cancel up to 48 hours before check-in.
-                                </p>
-                                <div className="mt-2 text-sm font-medium text-blue-600">
-                                  Flexible • Credit voucher refund
-                                </div>
-                              </div>
-                            </div>
-                          </div>
+                            );
+                          })}
                         </div>
                       </CardContent>
                     </CollapsibleContent>
@@ -2020,35 +2020,41 @@ const Booking = () => {
                     <Separator />
 
                     <div className="space-y-3">
-                      {selectedRateVariant ? (
-                        <>
-                          <div className="flex justify-between gap-2 text-sm">
-                            <span className="text-muted-foreground">Room ({nights} nights):</span>
-                            <span className="font-semibold whitespace-nowrap">₹{selectedRateVariant.room_rate.toLocaleString()}</span>
-                          </div>
-                          {selectedRateVariant.meal_cost > 0 && (
-                            <div className="flex justify-between gap-2 text-sm">
-                              <span className="text-muted-foreground">{selectedRateVariant.meal_plan_name}:</span>
-                              <span className="font-semibold whitespace-nowrap">₹{selectedRateVariant.meal_cost.toLocaleString()}</span>
-                            </div>
-                          )}
-                          {selectedRateVariant.policy_adjustment !== 0 && (
-                            <div className="flex justify-between gap-2 text-sm">
-                              <span className="text-muted-foreground">{selectedRateVariant.cancellation_policy_name} Policy:</span>
-                              <span className={`font-semibold whitespace-nowrap ${selectedRateVariant.policy_adjustment > 0 ? 'text-red-600' : 'text-green-600'}`}>
-                                {selectedRateVariant.policy_adjustment > 0 ? '+' : ''}₹{selectedRateVariant.policy_adjustment.toLocaleString()}
-                              </span>
-                            </div>
-                          )}
-                        </>
-                      ) : (
+                      <div className="flex justify-between gap-2 text-sm">
+                        <span className="text-muted-foreground">Room ({nights} nights):</span>
+                        <span className="font-semibold whitespace-nowrap">₹{(selectedRoomType.base_price * nights).toLocaleString()}</span>
+                      </div>
+                      
+                      {calculateMealPlanTotal() > 0 && (
                         <div className="flex justify-between gap-2 text-sm">
-                          <span className="text-muted-foreground">Room ({nights} nights):</span>
-                          <span className="font-semibold whitespace-nowrap">₹{(selectedRoomType.base_price * nights).toLocaleString()}</span>
+                          <span className="text-muted-foreground">Meal Plan:</span>
+                          <span className="font-semibold whitespace-nowrap">₹{calculateMealPlanTotal().toLocaleString()}</span>
                         </div>
                       )}
                       
-                          {selectedAddons.length > 0 && (
+                      {(() => {
+                        const selectedPolicyData = cancellationPolicies.find(cp => cp.policy_code === selectedCancellationPolicy);
+                        if (!selectedPolicyData || selectedPolicyData.adjustment_value === 0) return null;
+                        
+                        let adjustment = 0;
+                        if (selectedPolicyData.adjustment_type === 'percentage') {
+                          const baseTotal = (selectedRoomType.base_price * nights) + calculateMealPlanTotal();
+                          adjustment = baseTotal * (selectedPolicyData.adjustment_value / 100);
+                        } else {
+                          adjustment = selectedPolicyData.adjustment_value;
+                        }
+                        
+                        return (
+                          <div className="flex justify-between gap-2 text-sm">
+                            <span className="text-muted-foreground">{selectedPolicyData.policy_name}:</span>
+                            <span className={`font-semibold whitespace-nowrap ${adjustment > 0 ? 'text-red-600' : 'text-green-600'}`}>
+                              {adjustment > 0 ? '+' : ''}₹{Math.abs(adjustment).toLocaleString()}
+                            </span>
+                          </div>
+                        );
+                      })()}
+
+                      {selectedAddons.length > 0 && (
                             <div className="space-y-2">
                               <Separator />
                               <div className="font-medium text-sm">Add-ons:</div>
@@ -2333,7 +2339,7 @@ const Booking = () => {
           onSuccess={handlePaymentSuccess}
           bookingDetails={{
             roomName: selectedRoomType.name,
-            roomPrice: selectedRateVariant ? selectedRateVariant.price_per_night : selectedRoomType.base_price,
+            roomPrice: selectedRoomType.base_price,
             nights: nights,
             addonTotal: selectedAddons.reduce((total, addon) => total + (addon.price * addon.quantity), 0) + 
                        (selectedPickup ? selectedPickup.price : 0) + 
