@@ -800,9 +800,9 @@ const Stay = () => {
                     key={cat.id}
                     category={cat}
                     viewMode={viewMode}
-                    checkIn={checkIn}
-                    checkOut={checkOut}
-                    guests={guests}
+                    checkIn={undefined}
+                    checkOut={undefined}
+                    guests={searchGuests}
                     onViewDetails={() => {}}
                     onBookNow={() => {}}
                   />
