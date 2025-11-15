@@ -19,6 +19,7 @@ import { AvailableRoomCard } from '@/components/booking/AvailableRoomCard';
 import { useDynamicPricing } from '@/hooks/useDynamicPricing';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { calculateBookingAmount } from '@/lib/razorpay';
 
 interface RoomType {
   id: string;
@@ -1126,9 +1127,11 @@ const Booking = () => {
         notes: guestDetails.specialRequests
       };
 
-      const { error } = await supabase
+      const { data: bookingResult, error } = await supabase
         .from('bookings')
-        .insert([bookingData]);
+        .insert([bookingData])
+        .select()
+        .single();
 
       if (error) {
         console.error('Error saving booking:', error);
@@ -1138,6 +1141,37 @@ const Booking = () => {
           variant: "destructive",
         });
         return;
+      }
+
+      // Create payment record
+      const roomPrice = selectedRateVariant ? selectedRateVariant.price_per_night : (selectedRoomType!.base_price);
+      const addonTotal = selectedAddons.reduce((total, addon) => total + (addon.price * addon.quantity), 0) + 
+                        (selectedPickup ? selectedPickup.price : 0) + 
+                        selectedBedding.reduce((total, bed) => total + bed.price, 0);
+      
+      const paymentBreakdown = calculateBookingAmount(
+        roomPrice,
+        calculateNights(),
+        addonTotal
+      );
+
+      const { error: paymentError } = await supabase
+        .from('payments')
+        .insert({
+          booking_id: bookingResult.id,
+          invoice_id: null,
+          amount: paymentBreakdown.totalAmount,
+          payment_method: 'razorpay',
+          razorpay_payment_id: paymentId,
+          razorpay_order_id: orderId,
+          status: 'completed',
+          payment_date: new Date().toISOString(),
+          transaction_reference: paymentId
+        });
+
+      if (paymentError) {
+        console.error('Error creating payment record:', paymentError);
+        // Continue anyway - booking was successful
       }
 
       toast({
@@ -2225,26 +2259,24 @@ const Booking = () => {
       </section>
 
       {/* Payment Modal */}
-      {selectedRoomType && (
-        <PaymentModal
-          isOpen={showPaymentModal}
-          onClose={() => setShowPaymentModal(false)}
-          onSuccess={handlePaymentSuccess}
-          bookingDetails={{
-            roomName: selectedRoomType.name,
-            roomPrice: selectedRateVariant ? selectedRateVariant.price_per_night : selectedRoomType.base_price,
-            nights: nights,
-            addonTotal: selectedAddons.reduce((total, addon) => total + (addon.price * addon.quantity), 0) + 
-                       (selectedPickup ? selectedPickup.price : 0) + 
-                       selectedBedding.reduce((total, bed) => total + bed.price, 0),
-            guestName: guestDetails.name,
-            guestEmail: guestDetails.email,
-            guestPhone: guestDetails.phone,
-            checkIn: formatDate(checkIn),
-            checkOut: formatDate(checkOut),
-          }}
-        />
-      )}
+      <PaymentModal
+        isOpen={showPaymentModal && !!selectedRoomType}
+        onClose={() => setShowPaymentModal(false)}
+        onSuccess={handlePaymentSuccess}
+        bookingDetails={{
+          roomName: selectedRoomType?.name || '',
+          roomPrice: selectedRateVariant ? selectedRateVariant.price_per_night : (selectedRoomType?.base_price || 0),
+          nights: nights,
+          addonTotal: selectedAddons.reduce((total, addon) => total + (addon.price * addon.quantity), 0) + 
+                     (selectedPickup ? selectedPickup.price : 0) + 
+                     selectedBedding.reduce((total, bed) => total + bed.price, 0),
+          guestName: guestDetails.name,
+          guestEmail: guestDetails.email,
+          guestPhone: guestDetails.phone,
+          checkIn: formatDate(checkIn),
+          checkOut: formatDate(checkOut),
+        }}
+      />
 
       <DynamicFooter />
     </div>
