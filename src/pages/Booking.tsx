@@ -1331,7 +1331,7 @@ const Booking = () => {
         {/* Booking Form */}
         <section className="py-8">
           <div className="max-w-6xl mx-auto px-4">
-            <div className="grid lg:grid-cols-3 gap-8">
+            <div className="grid lg:grid-cols-3 gap-8 lg:items-start">
               {/* Room & Addons Selection */}
               <div className="lg:col-span-2 space-y-6">
                 {/* Selected Room */}
@@ -1975,8 +1975,9 @@ const Booking = () => {
               </div>
 
               {/* Booking Summary */}
-              <div className="space-y-6 lg:self-start">
-                <Card data-booking-summary className="lg:sticky lg:top-24 lg:max-h-[calc(100vh-6rem)] lg:overflow-y-auto">
+              <div className="space-y-6">
+                <div className="lg:sticky lg:top-24 lg:z-10">
+                  <Card data-booking-summary className="lg:max-h-[calc(100vh-7rem)] lg:overflow-y-auto">
                   <CardHeader>
                     <CardTitle className="text-lg md:text-xl">Booking Summary</CardTitle>
                   </CardHeader>
@@ -2143,7 +2144,8 @@ const Booking = () => {
                   </div>
                 </div>
               </div>
-            </section>
+            </div>
+          </section>
 
             <DynamicFooter />
           </div>
