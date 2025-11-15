@@ -117,6 +117,7 @@ const Booking = () => {
   const [meals, setMeals] = useState<Addon[]>([]);
   const [activities, setActivities] = useState<Addon[]>([]);
   const [selectedMealPlan, setSelectedMealPlan] = useState<'none' | 'half-board' | 'full-board'>('none');
+  const [selectedCancellationPolicy, setSelectedCancellationPolicy] = useState<string>('refundable');
   const [spaServices, setSpaServices] = useState<Addon[]>([]);
   const [showSpaInBooking, setShowSpaInBooking] = useState(false);
   const [showActivitiesInBooking, setShowActivitiesInBooking] = useState(false);
@@ -1370,54 +1371,11 @@ const Booking = () => {
                   </CardContent>
                 </Card>
 
-                {/* Rate Plan Selection */}
-                {rateVariants.length > 0 && (
-                  <Card>
-                    <CardHeader>
-                      <CardTitle>Select Rate Plan</CardTitle>
-                      <p className="text-sm text-muted-foreground">Choose your meal plan and cancellation policy</p>
-                    </CardHeader>
-                    <CardContent className="space-y-4">
-                      {variantsLoading ? (
-                        <div className="text-center py-8 text-muted-foreground">Loading rate options...</div>
-                      ) : (
-                        <>
-                          <RateVariantSelector
-                            variants={rateVariants}
-                            selectedVariant={selectedRateVariant}
-                            onSelect={setSelectedRateVariant}
-                            nights={calculateNights()}
-                          />
-                          
-                          {selectedRateVariant && (
-                            <PriceBreakdown
-                              roomRate={selectedRateVariant.room_rate}
-                              mealCost={selectedRateVariant.meal_cost}
-                              policyAdjustment={selectedRateVariant.policy_adjustment}
-                              nights={calculateNights()}
-                              guestCount={guests}
-                              mealPlanName={selectedRateVariant.meal_plan_name}
-                              includedMeals={selectedRateVariant.included_meals || []}
-                            />
-                          )}
-                        </>
-                      )}
-                    </CardContent>
-                  </Card>
-                )}
-
-                {!selectedRateVariant && rateVariants.length > 0 && (
-                  <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-4">
-                    <p className="text-sm text-yellow-800 dark:text-yellow-200">
-                      Please select a rate plan above to continue with your booking
-                    </p>
-                  </div>
-                )}
 
                 {/* Addons Selection - Removed wrapper, sections are now direct and collapsible */}
                 
                 {/* Select Meal Plans - Direct, No Tab */}
-                {(!selectedRateVariant || selectedRateVariant.meal_cost === 0) && (
+                {(
                   <Collapsible defaultOpen={true}>
                     <Card>
                       <CollapsibleTrigger className="w-full">
@@ -1527,18 +1485,79 @@ const Booking = () => {
                   </Collapsible>
                 )}
 
-                {selectedRateVariant && selectedRateVariant.meal_cost > 0 && (
-                  <div className="p-3 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg">
-                    <p className="text-sm text-green-800 dark:text-green-200">
-                      ✓ Your selected rate plan includes: <strong>{selectedRateVariant.meal_plan_name}</strong>
-                      {selectedRateVariant.included_meals.length > 0 && (
-                        <span className="block mt-1 text-xs">
-                          ({selectedRateVariant.included_meals.join(', ')})
-                        </span>
-                      )}
-                    </p>
-                  </div>
-                )}
+                {/* Cancellation Policy */}
+                <Collapsible defaultOpen={true}>
+                  <Card>
+                    <CollapsibleTrigger className="w-full">
+                      <CardHeader className="flex flex-row items-center justify-between">
+                        <div className="text-left">
+                          <CardTitle>Cancellation Policy</CardTitle>
+                          <p className="text-sm text-muted-foreground">
+                            Choose your cancellation terms
+                          </p>
+                        </div>
+                        <ChevronDown className="h-5 w-5 transition-transform duration-200 data-[state=open]:rotate-180" />
+                      </CardHeader>
+                    </CollapsibleTrigger>
+                    <CollapsibleContent>
+                      <CardContent className="space-y-4">
+                        <div className="space-y-3">
+                          <div 
+                            className={`p-4 border rounded-lg cursor-pointer transition-colors ${
+                              selectedCancellationPolicy === 'non-refundable' ? 'border-primary bg-primary/5' : 'border-border hover:border-primary/50'
+                            }`}
+                            onClick={() => setSelectedCancellationPolicy('non-refundable')}
+                          >
+                            <div className="flex items-start gap-3">
+                              <div className={`w-5 h-5 rounded-full border-2 mt-0.5 flex items-center justify-center ${
+                                selectedCancellationPolicy === 'non-refundable' ? 'border-primary bg-primary' : 'border-border'
+                              }`}>
+                                {selectedCancellationPolicy === 'non-refundable' && (
+                                  <div className="w-2 h-2 rounded-full bg-white" />
+                                )}
+                              </div>
+                              <div className="flex-1">
+                                <div className="font-semibold mb-1">Non-Refundable Rate</div>
+                                <p className="text-sm text-muted-foreground">
+                                  Best price, but no refund on cancellation. Save 10% on your booking.
+                                </p>
+                                <div className="mt-2 text-sm font-medium text-green-600">
+                                  Save 10% • No cancellation charges
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+
+                          <div 
+                            className={`p-4 border rounded-lg cursor-pointer transition-colors ${
+                              selectedCancellationPolicy === 'refundable' ? 'border-primary bg-primary/5' : 'border-border hover:border-primary/50'
+                            }`}
+                            onClick={() => setSelectedCancellationPolicy('refundable')}
+                          >
+                            <div className="flex items-start gap-3">
+                              <div className={`w-5 h-5 rounded-full border-2 mt-0.5 flex items-center justify-center ${
+                                selectedCancellationPolicy === 'refundable' ? 'border-primary bg-primary' : 'border-border'
+                              }`}>
+                                {selectedCancellationPolicy === 'refundable' && (
+                                  <div className="w-2 h-2 rounded-full bg-white" />
+                                )}
+                              </div>
+                              <div className="flex-1">
+                                <div className="font-semibold mb-1">Refundable as Credit Voucher</div>
+                                <p className="text-sm text-muted-foreground">
+                                  Full refund as credit voucher valid for 12 months. Cancel up to 48 hours before check-in.
+                                </p>
+                                <div className="mt-2 text-sm font-medium text-blue-600">
+                                  Flexible • Credit voucher refund
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </CollapsibleContent>
+                  </Card>
+                </Collapsible>
 
                 {/* Spa Services - Collapsible */}
                 {showSpaInBooking && (
