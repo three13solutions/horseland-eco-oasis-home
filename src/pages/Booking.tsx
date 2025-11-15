@@ -1072,17 +1072,6 @@ const Booking = () => {
   }, [needsExtraBedding]);
 
   const handleProceedToPayment = () => {
-    console.log('Proceed to Payment clicked', { 
-      selectedRoomType: selectedRoomType?.name, 
-      showPaymentModal,
-      hasGuestName: !!guestDetails.name,
-      hasGuestEmail: !!guestDetails.email,
-      hasGuestPhone: !!guestDetails.phone
-    });
-    
-    // Reset modal state first to ensure clean render
-    setShowPaymentModal(false);
-    
     if (!selectedRoomType) {
       toast({
         title: "Room Not Selected",
@@ -1114,21 +1103,7 @@ const Booking = () => {
       return;
     }
     
-    console.log('All validations passed, opening payment modal...');
-    console.log('Payment details:', {
-      roomName: selectedRoomType?.name,
-      roomPrice: selectedRoomType?.base_price,
-      nights,
-      guestName: guestDetails.name,
-      guestEmail: guestDetails.email,
-      guestPhone: guestDetails.phone
-    });
-    
-    // Open modal after a brief delay to ensure state reset
-    setTimeout(() => {
-      setShowPaymentModal(true);
-      console.log('setShowPaymentModal(true) called');
-    }, 100);
+    setShowPaymentModal(true);
   };
 
   const handlePaymentSuccess = async (paymentId: string, orderId: string) => {
@@ -1379,8 +1354,18 @@ const Booking = () => {
                         )}
                       </div>
                       <Button variant="outline" onClick={() => {
+                        // Clear selection and scroll to available rooms
                         setShowBookingForm(false);
+                        setSelectedRoomType(null);
                         setSelectedRateVariant(null);
+                        setSelectedAddons([]);
+                        setSelectedPickup(null);
+                        setSelectedBedding([]);
+                        
+                        // Scroll to available rooms section
+                        setTimeout(() => {
+                          window.scrollTo({ top: 0, behavior: 'smooth' });
+                        }, 100);
                       }}>
                         Change Room
                       </Button>
@@ -2321,11 +2306,10 @@ const Booking = () => {
       </section>
 
       {/* Payment Modal - Only render when in booking form */}
-      {showBookingForm && selectedRoomType && (
+      {showBookingForm && selectedRoomType && showPaymentModal && (
         <PaymentModal
-          isOpen={showPaymentModal}
+          isOpen={true}
           onClose={() => {
-            console.log('PaymentModal onClose called');
             setShowPaymentModal(false);
           }}
           onSuccess={handlePaymentSuccess}
