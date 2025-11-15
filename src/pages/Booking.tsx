@@ -1939,6 +1939,80 @@ const Booking = () => {
                     </Tabs>
                   </CardContent>
                 </Card>
+                
+                {/* Guest Details Form */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Guest Details</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                          <Label htmlFor="name">Full Name *</Label>
+                          <Input
+                            id="name"
+                            value={guestDetails.name}
+                            onChange={(e) => setGuestDetails(prev => ({ ...prev, name: e.target.value }))}
+                            placeholder="Enter full name"
+                          />
+                        </div>
+                        <div>
+                          <Label htmlFor="email">Email *</Label>
+                          <Input
+                            id="email"
+                            type="email"
+                            value={guestDetails.email}
+                            onChange={(e) => setGuestDetails(prev => ({ ...prev, email: e.target.value }))}
+                            placeholder="Enter email address"
+                          />
+                        </div>
+                        <div>
+                          <Label htmlFor="phone">Phone Number *</Label>
+                          <Input
+                            id="phone"
+                            value={guestDetails.phone}
+                            onChange={(e) => setGuestDetails(prev => ({ ...prev, phone: e.target.value }))}
+                            placeholder="Enter phone number"
+                          />
+                        </div>
+                        <div>
+                          <Label htmlFor="dietary">Dietary Preference</Label>
+                          <select
+                            id="dietary"
+                            className="w-full p-2 border rounded-md"
+                            value={guestDetails.dietaryPreference}
+                            onChange={(e) => setGuestDetails(prev => ({ 
+                              ...prev, 
+                              dietaryPreference: e.target.value as GuestDetails['dietaryPreference']
+                            }))}
+                          >
+                            <option value="no-preference">No Preference</option>
+                            <option value="vegetarian">Vegetarian</option>
+                            <option value="non-vegetarian">Non-Vegetarian</option>
+                            <option value="jain">Jain</option>
+                          </select>
+                        </div>
+                      </div>
+                      <div>
+                        <Label htmlFor="address">Address</Label>
+                        <Input
+                          id="address"
+                          value={guestDetails.address}
+                          onChange={(e) => setGuestDetails(prev => ({ ...prev, address: e.target.value }))}
+                          placeholder="Enter address"
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="special">Special Requests</Label>
+                        <Input
+                          id="special"
+                          value={guestDetails.specialRequests}
+                          onChange={(e) => setGuestDetails(prev => ({ ...prev, specialRequests: e.target.value }))}
+                          placeholder="Any special requirements or requests"
+                        />
+                      </div>
+                    </CardContent>
+                  </Card>
               </div>
 
               {/* Booking Summary */}
@@ -2131,80 +2205,6 @@ const Booking = () => {
                       </div>
                   </CardContent>
                 </Card>
-                
-                {/* Guest Details Form */}
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Guest Details</CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div>
-                          <Label htmlFor="name">Full Name *</Label>
-                          <Input
-                            id="name"
-                            value={guestDetails.name}
-                            onChange={(e) => setGuestDetails(prev => ({ ...prev, name: e.target.value }))}
-                            placeholder="Enter full name"
-                          />
-                        </div>
-                        <div>
-                          <Label htmlFor="email">Email *</Label>
-                          <Input
-                            id="email"
-                            type="email"
-                            value={guestDetails.email}
-                            onChange={(e) => setGuestDetails(prev => ({ ...prev, email: e.target.value }))}
-                            placeholder="Enter email address"
-                          />
-                        </div>
-                        <div>
-                          <Label htmlFor="phone">Phone Number *</Label>
-                          <Input
-                            id="phone"
-                            value={guestDetails.phone}
-                            onChange={(e) => setGuestDetails(prev => ({ ...prev, phone: e.target.value }))}
-                            placeholder="Enter phone number"
-                          />
-                        </div>
-                        <div>
-                          <Label htmlFor="dietary">Dietary Preference</Label>
-                          <select
-                            id="dietary"
-                            className="w-full p-2 border rounded-md"
-                            value={guestDetails.dietaryPreference}
-                            onChange={(e) => setGuestDetails(prev => ({ 
-                              ...prev, 
-                              dietaryPreference: e.target.value as GuestDetails['dietaryPreference']
-                            }))}
-                          >
-                            <option value="no-preference">No Preference</option>
-                            <option value="vegetarian">Vegetarian</option>
-                            <option value="non-vegetarian">Non-Vegetarian</option>
-                            <option value="jain">Jain</option>
-                          </select>
-                        </div>
-                      </div>
-                      <div>
-                        <Label htmlFor="address">Address</Label>
-                        <Input
-                          id="address"
-                          value={guestDetails.address}
-                          onChange={(e) => setGuestDetails(prev => ({ ...prev, address: e.target.value }))}
-                          placeholder="Enter address"
-                        />
-                      </div>
-                      <div>
-                        <Label htmlFor="special">Special Requests</Label>
-                        <Input
-                          id="special"
-                          value={guestDetails.specialRequests}
-                          onChange={(e) => setGuestDetails(prev => ({ ...prev, specialRequests: e.target.value }))}
-                          placeholder="Any special requirements or requests"
-                        />
-                      </div>
-                    </CardContent>
-                  </Card>
               </div>
             </div>
           </div>
