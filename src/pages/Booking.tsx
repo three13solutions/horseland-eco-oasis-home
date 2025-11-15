@@ -1371,14 +1371,13 @@ const Booking = () => {
                         <p className="text-sm text-muted-foreground mt-1">₹{selectedRoomType.base_price.toLocaleString()}/night</p>
                       </div>
                       <Button variant="outline" onClick={() => {
-                        // Clear only room selection, keep everything else
-                        setShowBookingForm(false);
-                        setSelectedRoomType(null);
-                        
-                        // Scroll to available rooms section
-                        setTimeout(() => {
-                          window.scrollTo({ top: 0, behavior: 'smooth' });
-                        }, 100);
+                        // Navigate to search availability with current dates and guests
+                        const params = new URLSearchParams({
+                          checkIn,
+                          checkOut,
+                          guests: guests.toString()
+                        });
+                        navigate(`/search-availability?${params.toString()}`);
                       }}>
                         Change Room
                       </Button>
