@@ -1245,6 +1245,7 @@ export type Database = {
           emergency_contact_name: string | null
           emergency_contact_phone: string | null
           first_name: string
+          gender: string | null
           id: string
           is_blacklisted: boolean
           last_name: string
@@ -1264,6 +1265,7 @@ export type Database = {
           emergency_contact_name?: string | null
           emergency_contact_phone?: string | null
           first_name: string
+          gender?: string | null
           id?: string
           is_blacklisted?: boolean
           last_name: string
@@ -1283,6 +1285,7 @@ export type Database = {
           emergency_contact_name?: string | null
           emergency_contact_phone?: string | null
           first_name?: string
+          gender?: string | null
           id?: string
           is_blacklisted?: boolean
           last_name?: string

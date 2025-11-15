@@ -60,8 +60,10 @@ interface GuestDetails {
   name: string;
   email: string;
   phone: string;
-  address: string;
-  dietaryPreference: 'vegetarian' | 'non-vegetarian' | 'jain' | 'no-preference';
+  dateOfBirth: string;
+  gender: 'male' | 'female' | 'other' | 'prefer_not_to_say' | '';
+  idType: 'passport' | 'aadhar' | 'driving_license' | 'voter_id' | '';
+  idNumber: string;
   specialRequests: string;
 }
 
@@ -126,8 +128,10 @@ const Booking = () => {
     name: '',
     email: '',
     phone: '',
-    address: '',
-    dietaryPreference: 'no-preference',
+    dateOfBirth: '',
+    gender: '',
+    idType: '',
+    idNumber: '',
     specialRequests: ''
   });
   const [selectedPickup, setSelectedPickup] = useState<PickupService | null>(null);
@@ -631,8 +635,10 @@ const Booking = () => {
         name: '',
         email: '',
         phone: '',
-        address: '',
-        dietaryPreference: 'no-preference',
+        dateOfBirth: '',
+        gender: '',
+        idType: '',
+        idNumber: '',
         specialRequests: ''
       });
       
@@ -742,25 +748,8 @@ const Booking = () => {
   };
 
   const getFilteredMeals = () => {
-    if (guestDetails.dietaryPreference === 'no-preference') return meals;
-    
-    return meals.filter(meal => {
-      const mealTitle = meal.title.toLowerCase();
-      const mealDesc = meal.description?.toLowerCase() || '';
-      
-      switch (guestDetails.dietaryPreference) {
-        case 'vegetarian':
-          return mealTitle.includes('veg') || mealDesc.includes('vegetarian');
-        case 'non-vegetarian':
-          return mealTitle.includes('non-veg') || mealTitle.includes('chicken') || 
-                 mealTitle.includes('mutton') || mealTitle.includes('fish') || 
-                 mealDesc.includes('non-vegetarian');
-        case 'jain':
-          return mealTitle.includes('jain') || mealDesc.includes('jain');
-        default:
-          return true;
-      }
-    });
+    // Return all meals since dietary preference is no longer collected in guest details
+    return meals;
   };
 
   const getFilteredMealsByPreference = (preference: 'vegetarian' | 'non-vegetarian' | 'jain') => {
@@ -794,10 +783,9 @@ const Booking = () => {
   };
 
   // Helper function to get meal price from database
-  const getMealPrice = (mealType: string, variant: 'vegetarian' | 'non-vegetarian' | 'jain' | 'no-preference'): number => {
-    // Default to vegetarian pricing if no preference
-    const effectiveVariant = variant === 'no-preference' ? 'vegetarian' : variant;
-    const dbVariant = mapDietaryPreferenceToVariant(effectiveVariant);
+  const getMealPrice = (mealType: string, variant: 'vegetarian' | 'non-vegetarian' | 'jain'): number => {
+    // Default to vegetarian pricing
+    const dbVariant = mapDietaryPreferenceToVariant(variant);
     const meal = meals.find(m => {
       const mealData = m as any;
       return mealData.meal_type === mealType && mealData.variant === dbVariant;
@@ -966,10 +954,11 @@ const Booking = () => {
     if (selectedMealPlan === 'none') return 0;
     
     const nights = calculateNights();
-    const breakfastPrice = getMealPrice('breakfast', guestDetails.dietaryPreference) || 0;
-    const lunchPrice = getMealPrice('lunch', guestDetails.dietaryPreference) || 0;
-    const highTeaPrice = getMealPrice('high_tea', guestDetails.dietaryPreference) || 0;
-    const dinnerPrice = getMealPrice('dinner', guestDetails.dietaryPreference) || 0;
+    // Default to vegetarian pricing for meal plan calculation
+    const breakfastPrice = getMealPrice('breakfast', 'vegetarian') || 0;
+    const lunchPrice = getMealPrice('lunch', 'vegetarian') || 0;
+    const highTeaPrice = getMealPrice('high_tea', 'vegetarian') || 0;
+    const dinnerPrice = getMealPrice('dinner', 'vegetarian') || 0;
     
     if (selectedMealPlan === 'half-board') {
       return (breakfastPrice + dinnerPrice) * guests * nights;
@@ -1111,9 +1100,75 @@ const Booking = () => {
 
   const handlePaymentSuccess = async (paymentId: string, orderId: string) => {
     try {
-      // Save booking to database
+      // Split name into first and last name
+      const nameParts = guestDetails.name.trim().split(' ');
+      const firstName = nameParts[0];
+      const lastName = nameParts.slice(1).join(' ') || '';
+
+      // First, create or find the guest
+      let guestId: string | null = null;
+      
+      // Try to find existing guest by email or phone
+      const { data: existingGuests } = await supabase
+        .from('guests')
+        .select('id')
+        .or(`email.eq.${guestDetails.email},phone.eq.${guestDetails.phone}`)
+        .limit(1);
+
+      if (existingGuests && existingGuests.length > 0) {
+        guestId = existingGuests[0].id;
+        
+        // Update existing guest with new information
+        await supabase
+          .from('guests')
+          .update({
+            first_name: firstName,
+            last_name: lastName,
+            email: guestDetails.email,
+            phone: guestDetails.phone,
+            date_of_birth: guestDetails.dateOfBirth || null,
+            gender: guestDetails.gender || null,
+          })
+          .eq('id', guestId);
+      } else {
+        // Create new guest
+        const { data: newGuest, error: guestError } = await supabase
+          .from('guests')
+          .insert([{
+            first_name: firstName,
+            last_name: lastName,
+            email: guestDetails.email,
+            phone: guestDetails.phone,
+            date_of_birth: guestDetails.dateOfBirth || null,
+            gender: guestDetails.gender || null,
+          }])
+          .select()
+          .single();
+
+        if (guestError) {
+          console.error('Error creating guest:', guestError);
+          throw guestError;
+        }
+        
+        guestId = newGuest.id;
+      }
+
+      // If ID details are provided, save identity document
+      if (guestId && guestDetails.idType && guestDetails.idNumber) {
+        await supabase
+          .from('guest_identity_documents')
+          .insert([{
+            guest_id: guestId,
+            document_type: guestDetails.idType,
+            document_number: guestDetails.idNumber,
+            is_verified: false
+          }]);
+      }
+
+      // Save booking to database with meal plan information
       const bookingData = {
         booking_id: `BOOK_${Date.now()}`,
+        guest_id: guestId,
         guest_name: guestDetails.name,
         guest_email: guestDetails.email,
         guest_phone: guestDetails.phone,
@@ -1126,24 +1181,24 @@ const Booking = () => {
         payment_id: paymentId,
         payment_order_id: orderId,
         payment_method: 'razorpay',
+        // Store meal plan information
+        meal_plan_code: selectedMealPlan === 'none' ? 'room_only' : selectedMealPlan === 'half-board' ? 'half_board' : 'full_board',
+        meal_cost: calculateMealPlanTotal(),
         // Store variant data if available
-        meal_plan_code: selectedRateVariant?.meal_plan_code || 'room_only',
         cancellation_policy_code: selectedRateVariant?.cancellation_policy_code || 'flexible',
         room_cost: selectedRateVariant?.room_rate || (selectedRoomType!.base_price * calculateNights()),
-        meal_cost: selectedRateVariant?.meal_cost || 0,
         rate_breakdown: selectedRateVariant ? {
           meal_plan_name: selectedRateVariant.meal_plan_name,
           cancellation_policy_name: selectedRateVariant.cancellation_policy_name,
           included_meals: selectedRateVariant.included_meals,
           policy_adjustment: selectedRateVariant.policy_adjustment,
           total_nights: calculateNights()
-        } : {},
-        selected_meals: selectedAddons.filter(a => a.type === 'meal').map(a => ({
-          id: a.id,
-          title: a.title,
-          price: a.price,
-          quantity: a.quantity
-        })),
+        } : {
+          meal_plan: selectedMealPlan,
+          meal_cost: calculateMealPlanTotal(),
+          total_nights: calculateNights()
+        },
+        selected_meals: [],
         selected_activities: selectedAddons.filter(a => a.type === 'activity').map(a => ({
           id: a.id,
           title: a.title,
@@ -1599,8 +1654,8 @@ const Booking = () => {
                                     <div className="mt-2 text-sm">
                                       <span className="font-medium text-primary">
                                         {(() => {
-                                          const breakfastPrice = getMealPrice('breakfast', guestDetails.dietaryPreference) || 0;
-                                          const dinnerPrice = getMealPrice('dinner', guestDetails.dietaryPreference) || 0;
+                                          const breakfastPrice = getMealPrice('breakfast', 'vegetarian') || 0;
+                                          const dinnerPrice = getMealPrice('dinner', 'vegetarian') || 0;
                                           const totalPerDay = (breakfastPrice + dinnerPrice) * guests;
                                           const totalCost = totalPerDay * calculateNights();
                                           return `₹${totalCost.toLocaleString()}`;
@@ -1632,10 +1687,10 @@ const Booking = () => {
                                     <div className="mt-2 text-sm">
                                       <span className="font-medium text-primary">
                                         {(() => {
-                                          const breakfastPrice = getMealPrice('breakfast', guestDetails.dietaryPreference) || 0;
-                                          const lunchPrice = getMealPrice('lunch', guestDetails.dietaryPreference) || 0;
-                                          const highTeaPrice = getMealPrice('high_tea', guestDetails.dietaryPreference) || 0;
-                                          const dinnerPrice = getMealPrice('dinner', guestDetails.dietaryPreference) || 0;
+                                          const breakfastPrice = getMealPrice('breakfast', 'vegetarian') || 0;
+                                          const lunchPrice = getMealPrice('lunch', 'vegetarian') || 0;
+                                          const highTeaPrice = getMealPrice('high_tea', 'vegetarian') || 0;
+                                          const dinnerPrice = getMealPrice('dinner', 'vegetarian') || 0;
                                           const totalPerDay = (breakfastPrice + lunchPrice + highTeaPrice + dinnerPrice) * guests;
                                           const totalCost = totalPerDay * calculateNights();
                                           return `₹${totalCost.toLocaleString()}`;
@@ -1782,12 +1837,12 @@ const Booking = () => {
                   </CardContent>
                 </Card>
                 
-                {/* Guest Details Form */}
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Guest Details</CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
+                  {/* Guest Details Form */}
+                  <Card>
+                    <CardHeader>
+                      <CardTitle>Guest Details</CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
                           <Label htmlFor="name">Full Name *</Label>
@@ -1796,6 +1851,7 @@ const Booking = () => {
                             value={guestDetails.name}
                             onChange={(e) => setGuestDetails(prev => ({ ...prev, name: e.target.value }))}
                             placeholder="Enter full name"
+                            required
                           />
                         </div>
                         <div>
@@ -1806,6 +1862,7 @@ const Booking = () => {
                             value={guestDetails.email}
                             onChange={(e) => setGuestDetails(prev => ({ ...prev, email: e.target.value }))}
                             placeholder="Enter email address"
+                            required
                           />
                         </div>
                         <div>
@@ -1815,34 +1872,64 @@ const Booking = () => {
                             value={guestDetails.phone}
                             onChange={(e) => setGuestDetails(prev => ({ ...prev, phone: e.target.value }))}
                             placeholder="Enter phone number"
+                            required
                           />
                         </div>
                         <div>
-                          <Label htmlFor="dietary">Dietary Preference</Label>
+                          <Label htmlFor="dateOfBirth">Date of Birth</Label>
+                          <Input
+                            id="dateOfBirth"
+                            type="date"
+                            value={guestDetails.dateOfBirth}
+                            onChange={(e) => setGuestDetails(prev => ({ ...prev, dateOfBirth: e.target.value }))}
+                            max={new Date().toISOString().split('T')[0]}
+                          />
+                        </div>
+                        <div>
+                          <Label htmlFor="gender">Gender</Label>
                           <select
-                            id="dietary"
+                            id="gender"
                             className="w-full p-2 border rounded-md"
-                            value={guestDetails.dietaryPreference}
+                            value={guestDetails.gender}
                             onChange={(e) => setGuestDetails(prev => ({ 
                               ...prev, 
-                              dietaryPreference: e.target.value as GuestDetails['dietaryPreference']
+                              gender: e.target.value as GuestDetails['gender']
                             }))}
                           >
-                            <option value="no-preference">No Preference</option>
-                            <option value="vegetarian">Vegetarian</option>
-                            <option value="non-vegetarian">Non-Vegetarian</option>
-                            <option value="jain">Jain</option>
+                            <option value="">Select Gender</option>
+                            <option value="male">Male</option>
+                            <option value="female">Female</option>
+                            <option value="other">Other</option>
+                            <option value="prefer_not_to_say">Prefer not to say</option>
                           </select>
                         </div>
-                      </div>
-                      <div>
-                        <Label htmlFor="address">Address</Label>
-                        <Input
-                          id="address"
-                          value={guestDetails.address}
-                          onChange={(e) => setGuestDetails(prev => ({ ...prev, address: e.target.value }))}
-                          placeholder="Enter address"
-                        />
+                        <div>
+                          <Label htmlFor="idType">ID Type</Label>
+                          <select
+                            id="idType"
+                            className="w-full p-2 border rounded-md"
+                            value={guestDetails.idType}
+                            onChange={(e) => setGuestDetails(prev => ({ 
+                              ...prev, 
+                              idType: e.target.value as GuestDetails['idType']
+                            }))}
+                          >
+                            <option value="">Select ID Type</option>
+                            <option value="passport">Passport</option>
+                            <option value="aadhar">Aadhar Card</option>
+                            <option value="driving_license">Driving License</option>
+                            <option value="voter_id">Voter ID</option>
+                          </select>
+                        </div>
+                        <div>
+                          <Label htmlFor="idNumber">ID Number</Label>
+                          <Input
+                            id="idNumber"
+                            value={guestDetails.idNumber}
+                            onChange={(e) => setGuestDetails(prev => ({ ...prev, idNumber: e.target.value }))}
+                            placeholder="Enter ID number"
+                          />
+                        </div>
                       </div>
                     </CardContent>
                   </Card>
@@ -1982,15 +2069,15 @@ const Booking = () => {
                           {calculateMealPlanTotal() > 0 && (
                             <div className="space-y-2">
                               <Separator />
-                              <div className="flex justify-between gap-2 text-sm">
-                                <span className="text-muted-foreground">
-                                  {selectedMealPlan === 'half-board' ? 'Half Board (Breakfast & Dinner)' : 'Full Board (All Meals)'}
-                                </span>
-                                <span className="font-medium whitespace-nowrap">₹{calculateMealPlanTotal().toLocaleString()}</span>
-                              </div>
-                              <div className="text-xs text-muted-foreground pl-4">
-                                {guests} guest(s) × {calculateNights()} night(s)
-                              </div>
+                                <div className="flex justify-between gap-2 text-sm">
+                                  <span className="text-muted-foreground">
+                                    {selectedMealPlan === 'half-board' ? 'Half Board (Breakfast & Dinner)' : 'Full Board (All Meals)'}
+                                  </span>
+                                  <span className="font-medium whitespace-nowrap">₹{calculateMealPlanTotal().toLocaleString()}</span>
+                                </div>
+                                <div className="text-xs text-muted-foreground pl-4">
+                                  {guests} guest(s) × {calculateNights()} night(s)
+                                </div>
                             </div>
                           )}
                       
