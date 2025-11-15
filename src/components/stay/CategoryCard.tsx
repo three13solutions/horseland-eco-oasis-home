@@ -5,7 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import MediaAsset from '@/components/MediaAsset';
 import { Users, MapPin, Coffee, UtensilsCrossed, Home, CreditCard, XCircle, Check } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
-import { useDynamicPricing } from '@/hooks/useDynamicPricing';
+import { useDynamicPricing, applyMealPlanAdjustment } from '@/hooks/useDynamicPricing';
 
 export type Category = {
   id: string;
@@ -121,7 +121,7 @@ const CategoryCard: React.FC<Props> = ({ category, onViewDetails, onBookNow, vie
     });
   }, [variants]);
 
-  // Find the selected variant
+  // Find the selected variant (for metadata like included meals, features, etc.)
   const selectedVariant = useMemo(() => {
     if (!variants || !selectedMealPlan || !selectedCancellationPolicy) return null;
     return variants.find(v => 
@@ -130,9 +130,28 @@ const CategoryCard: React.FC<Props> = ({ category, onViewDetails, onBookNow, vie
     );
   }, [variants, selectedMealPlan, selectedCancellationPolicy]);
 
-  // Calculate display price
-  const displayPrice = selectedVariant?.price_per_night || category.basePrice;
   const nights = checkIn && checkOut ? Math.ceil((checkOut.getTime() - checkIn.getTime()) / (1000 * 60 * 60 * 24)) : 1;
+
+  // Calculate display price using meal plan adjustment (same logic as booking page)
+  const { displayPrice, totalPrice } = useMemo(() => {
+    if (!checkIn || !checkOut || !selectedMealPlan) {
+      return { displayPrice: category.basePrice, totalPrice: category.basePrice };
+    }
+
+    const baseRate = category.basePrice;
+    const { adjustedPerNight, adjustedTotal } = applyMealPlanAdjustment(
+      baseRate * nights,
+      selectedMealPlan,
+      adults,
+      children,
+      nights
+    );
+    
+    return { 
+      displayPrice: adjustedPerNight,
+      totalPrice: adjustedTotal
+    };
+  }, [selectedMealPlan, adults, children, nights, category.basePrice, checkIn, checkOut]);
 
   const handleBookNow = () => {
     if (checkIn && checkOut) {
@@ -270,13 +289,13 @@ const CategoryCard: React.FC<Props> = ({ category, onViewDetails, onBookNow, vie
             <div className="flex items-end justify-between gap-4 mt-4">
               <div>
                 <div className="text-xs text-muted-foreground mb-1">
-                  {selectedVariant ? 'Total Price' : 'Starting from'}
+                  {checkIn && checkOut && selectedMealPlan ? 'Total Price' : 'Starting from'}
                 </div>
                 <span className="text-2xl font-heading font-bold text-primary">
-                  ₹{selectedVariant ? selectedVariant.total_price.toLocaleString() : Math.round(displayPrice / guests).toLocaleString()}
+                  ₹{checkIn && checkOut && selectedMealPlan ? totalPrice.toLocaleString() : Math.round(displayPrice / guests).toLocaleString()}
                 </span>
                 <span className="text-sm text-muted-foreground ml-1">
-                  {selectedVariant ? `/night for ${nights} night${nights > 1 ? 's' : ''}` : '/guest/night'}
+                  {checkIn && checkOut && selectedMealPlan ? `total for ${nights} night${nights > 1 ? 's' : ''}` : '/guest/night'}
                 </span>
               </div>
               <div className="flex gap-2">
@@ -409,10 +428,10 @@ const CategoryCard: React.FC<Props> = ({ category, onViewDetails, onBookNow, vie
               {selectedVariant ? 'Total Price' : 'Starting from'}
             </div>
             <span className="text-2xl font-heading font-bold text-primary">
-              ₹{selectedVariant ? selectedVariant.total_price.toLocaleString() : Math.round(displayPrice / guests).toLocaleString()}
+              ₹{checkIn && checkOut && selectedMealPlan ? totalPrice.toLocaleString() : Math.round(displayPrice / guests).toLocaleString()}
             </span>
             <span className="text-sm text-muted-foreground ml-1">
-              {selectedVariant ? `/night for ${nights} night${nights > 1 ? 's' : ''}` : '/guest/night'}
+              {checkIn && checkOut && selectedMealPlan ? `total for ${nights} night${nights > 1 ? 's' : ''}` : '/guest/night'}
             </span>
           </div>
           <div className="flex gap-2 w-full">
