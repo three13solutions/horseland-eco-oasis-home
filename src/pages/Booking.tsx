@@ -113,6 +113,11 @@ const Booking = () => {
   const [packageLoading, setPackageLoading] = useState(false);
   const [heroImage, setHeroImage] = useState<string>('');
   
+  // Guest breakdown state
+  const [adultsCount, setAdultsCount] = useState(Math.max(1, guests));
+  const [childrenCount, setChildrenCount] = useState(0);
+  const [infantsCount, setInfantsCount] = useState(0);
+  
   // Addon states
   const [meals, setMeals] = useState<Addon[]>([]);
   const [activities, setActivities] = useState<Addon[]>([]);
@@ -727,8 +732,7 @@ const Booking = () => {
     
     const nights = calculateNights();
     
-    // Base room price assumes full board (all meals included)
-    // Apply meal plan adjustment based on selection
+    // Base room price assumes full board (all meals included) for base occupancy (2 adults)
     const baseRoomTotal = selectedRoomType.base_price * nights;
     
     // Map meal plan selection to codes for adjustment
@@ -740,12 +744,12 @@ const Booking = () => {
     
     const mealPlanCode = mealPlanCodeMap[selectedMealPlan] || 'AP';
     
-    // Apply meal plan adjustment (negative for half-board and room-only)
+    // Apply meal plan adjustment for all adults and children (infants are free)
     const { adjustedTotal: roomTotalWithMealAdjustment } = applyMealPlanAdjustment(
       baseRoomTotal,
       mealPlanCode,
-      guests, // adults
-      0, // children (not tracked separately in booking page yet)
+      adultsCount,
+      childrenCount,
       nights
     );
     
@@ -1222,7 +1226,7 @@ const Booking = () => {
         room_type_id: selectedRoomType?.id,
         check_in: checkIn,
         check_out: checkOut,
-        guests_count: guests,
+        guests_count: adultsCount + childrenCount, // Total paying guests (infants free)
         total_amount: calculateTotal(),
         payment_status: 'completed',
         payment_id: paymentId,
@@ -1243,8 +1247,8 @@ const Booking = () => {
           const { adjustedTotal } = applyMealPlanAdjustment(
             baseRoomTotal,
             mealPlanCode,
-            guests,
-            0,
+            adultsCount,
+            childrenCount,
             calculateNights()
           );
           return adjustedTotal;
@@ -1252,6 +1256,9 @@ const Booking = () => {
         rate_breakdown: {
           meal_plan: selectedMealPlan,
           cancellation_policy: selectedCancellationPolicy,
+          adults_count: adultsCount,
+          children_count: childrenCount,
+          infants_count: infantsCount,
           meal_adjustment: (() => {
             const baseRoomTotal = selectedRoomType!.base_price * calculateNights();
             const mealPlanCodeMap: { [key: string]: string } = {
@@ -1263,8 +1270,8 @@ const Booking = () => {
             const { adjustment } = applyMealPlanAdjustment(
               baseRoomTotal,
               mealPlanCode,
-              guests,
-              0,
+              adultsCount,
+              childrenCount,
               calculateNights()
             );
             return adjustment;
@@ -2055,7 +2062,9 @@ const Booking = () => {
 
                     <div className="space-y-3">
                       <div className="flex justify-between gap-2 text-sm">
-                        <span className="text-muted-foreground">Room ({nights} nights):</span>
+                        <span className="text-muted-foreground">
+                          Room for {adultsCount} {adultsCount === 1 ? 'Adult' : 'Adults'} ({nights} {nights === 1 ? 'night' : 'nights'}):
+                        </span>
                         <span className="font-semibold whitespace-nowrap">
                           ₹{(() => {
                             const baseRoomTotal = selectedRoomType.base_price * nights;
@@ -2065,10 +2074,11 @@ const Booking = () => {
                               'none': 'EP'
                             };
                             const mealPlanCode = mealPlanCodeMap[selectedMealPlan] || 'AP';
+                            // Calculate just for adults first (base 2 adults included)
                             const { adjustedTotal } = applyMealPlanAdjustment(
                               baseRoomTotal,
                               mealPlanCode,
-                              guests,
+                              adultsCount,
                               0,
                               nights
                             );
@@ -2076,6 +2086,51 @@ const Booking = () => {
                           })()}
                         </span>
                       </div>
+                      
+                      {childrenCount > 0 && (() => {
+                        const basePerNight = selectedRoomType.base_price;
+                        const perGuestRate = basePerNight / 2; // Base price is for 2 adults
+                        const childRate = (perGuestRate / 2) + 100; // Children: half adult rate + 100
+                        
+                        const mealPlanCodeMap: { [key: string]: string } = {
+                          'full-board': 'AP',
+                          'half-board': 'CP',
+                          'none': 'EP'
+                        };
+                        const mealPlanCode = mealPlanCodeMap[selectedMealPlan] || 'AP';
+                        
+                        // Calculate meal adjustment for children only
+                        const baseChildTotal = childRate * childrenCount * nights;
+                        const { adjustedTotal: childAdjusted } = applyMealPlanAdjustment(
+                          baseChildTotal,
+                          mealPlanCode,
+                          0, // no adults
+                          childrenCount,
+                          nights
+                        );
+                        
+                        return (
+                          <div className="flex justify-between gap-2 text-sm">
+                            <span className="text-muted-foreground">
+                              {childrenCount} {childrenCount === 1 ? 'Child' : 'Children'} ({nights} {nights === 1 ? 'night' : 'nights'}):
+                            </span>
+                            <span className="font-semibold whitespace-nowrap">
+                              ₹{childAdjusted.toLocaleString()}
+                            </span>
+                          </div>
+                        );
+                      })()}
+                      
+                      {infantsCount > 0 && (
+                        <div className="flex justify-between gap-2 text-sm">
+                          <span className="text-muted-foreground">
+                            {infantsCount} {infantsCount === 1 ? 'Infant' : 'Infants'} (Free):
+                          </span>
+                          <span className="font-semibold whitespace-nowrap text-green-600">
+                            ₹0
+                          </span>
+                        </div>
+                      )}
                       
                       {(() => {
                         const selectedPolicyData = cancellationPolicies.find(cp => cp.policy_code === selectedCancellationPolicy);
@@ -2093,8 +2148,8 @@ const Booking = () => {
                           const { adjustedTotal: roomTotalWithMealAdjustment } = applyMealPlanAdjustment(
                             baseRoomTotal,
                             mealPlanCode,
-                            guests,
-                            0,
+                            adultsCount,
+                            childrenCount,
                             nights
                           );
                           adjustment = roomTotalWithMealAdjustment * (selectedPolicyData.adjustment_value / 100);
