@@ -2,9 +2,8 @@ import React, { useState, useMemo } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import MediaAsset from '@/components/MediaAsset';
-import { Users, MapPin, Coffee, X } from 'lucide-react';
+import { Users, MapPin, Coffee, UtensilsCrossed, Home, CreditCard, XCircle, Check } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useDynamicPricing } from '@/hooks/useDynamicPricing';
 
@@ -55,20 +54,58 @@ const CategoryCard: React.FC<Props> = ({ category, onViewDetails, onBookNow, vie
 
   // Get unique meal plans and cancellation policies
   const mealPlans = useMemo(() => {
-    if (!variants || variants.length === 0) return [];
+    if (!variants || variants.length === 0) {
+      return [
+        { code: 'all_meals_inclusive', name: 'Full Board', description: 'All Meals', icon: UtensilsCrossed },
+        { code: 'half_board', name: 'Half Board', description: 'Breakfast & Dinner', icon: Coffee },
+        { code: 'room_only', name: 'Room Only', description: 'No Meals', icon: Home }
+      ];
+    }
     const unique = Array.from(new Set(variants.map(v => v.meal_plan_code)));
     return unique.map(code => {
       const variant = variants.find(v => v.meal_plan_code === code);
-      return { code, name: variant?.meal_plan_name || code };
+      const name = variant?.meal_plan_name || code;
+      let description = '';
+      let icon = UtensilsCrossed;
+      
+      if (code.includes('room_only') || code === 'EP') {
+        description = 'No Meals';
+        icon = Home;
+      } else if (code.includes('half') || code === 'CP') {
+        description = 'Breakfast & Dinner';
+        icon = Coffee;
+      } else {
+        description = 'All Meals';
+        icon = UtensilsCrossed;
+      }
+      
+      return { code, name, description, icon };
     });
   }, [variants]);
 
   const cancellationPolicies = useMemo(() => {
-    if (!variants || variants.length === 0) return [];
+    if (!variants || variants.length === 0) {
+      return [
+        { code: 'refundable_credit', name: 'Credit Voucher', description: 'Refundable as credit', icon: CreditCard },
+        { code: 'non_refundable', name: 'Non-Refundable', description: 'Best price', icon: XCircle }
+      ];
+    }
     const unique = Array.from(new Set(variants.map(v => v.cancellation_policy_code)));
     return unique.map(code => {
       const variant = variants.find(v => v.cancellation_policy_code === code);
-      return { code, name: variant?.cancellation_policy_name || code };
+      const name = variant?.cancellation_policy_name || code;
+      let description = '';
+      let icon = CreditCard;
+      
+      if (code.includes('non_refundable')) {
+        description = 'Best price';
+        icon = XCircle;
+      } else {
+        description = 'Refundable';
+        icon = CreditCard;
+      }
+      
+      return { code, name, description, icon };
     });
   }, [variants]);
 
@@ -157,41 +194,67 @@ const CategoryCard: React.FC<Props> = ({ category, onViewDetails, onBookNow, vie
             </div>
 
             {checkIn && checkOut && variants && variants.length > 0 && (
-              <div className="space-y-3 mb-4 p-3 bg-muted/30 rounded-lg">
-                <div className="grid grid-cols-2 gap-2">
-                  <div>
-                    <label className="text-xs text-muted-foreground mb-1 block">Meal Plan</label>
-                    <Select value={selectedMealPlan} onValueChange={setSelectedMealPlan}>
-                      <SelectTrigger className="h-9 text-xs">
-                        <SelectValue placeholder="Select" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {mealPlans.map(mp => (
-                          <SelectItem key={mp.code} value={mp.code} className="text-xs">
-                            {mp.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div>
-                    <label className="text-xs text-muted-foreground mb-1 block">Cancellation</label>
-                    <Select value={selectedCancellationPolicy} onValueChange={setSelectedCancellationPolicy}>
-                      <SelectTrigger className="h-9 text-xs">
-                        <SelectValue placeholder="Select" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {cancellationPolicies.map(cp => (
-                          <SelectItem key={cp.code} value={cp.code} className="text-xs">
-                            {cp.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+              <div className="space-y-3 mb-4">
+                {/* Meal Plan Selection */}
+                <div>
+                  <label className="text-xs font-medium text-muted-foreground block mb-2">Meal Plan</label>
+                  <div className="grid grid-cols-3 gap-2">
+                    {mealPlans.map(mp => {
+                      const Icon = mp.icon;
+                      const isSelected = selectedMealPlan === mp.code;
+                      return (
+                        <button
+                          key={mp.code}
+                          onClick={() => setSelectedMealPlan(mp.code)}
+                          className={`relative p-2 rounded-lg border-2 transition-all text-left ${
+                            isSelected 
+                              ? 'border-primary bg-primary/5' 
+                              : 'border-border hover:border-primary/50 bg-background'
+                          }`}
+                        >
+                          {isSelected && (
+                            <Check className="absolute top-1 right-1 h-3 w-3 text-primary" />
+                          )}
+                          <Icon className={`h-4 w-4 mb-1 ${isSelected ? 'text-primary' : 'text-muted-foreground'}`} />
+                          <div className="text-[10px] font-medium">{mp.name}</div>
+                          <div className="text-[9px] text-muted-foreground">{mp.description}</div>
+                        </button>
+                      );
+                    })}
                   </div>
                 </div>
+                
+                {/* Cancellation Policy Selection */}
+                <div>
+                  <label className="text-xs font-medium text-muted-foreground block mb-2">Cancellation</label>
+                  <div className="grid grid-cols-2 gap-2">
+                    {cancellationPolicies.map(cp => {
+                      const Icon = cp.icon;
+                      const isSelected = selectedCancellationPolicy === cp.code;
+                      return (
+                        <button
+                          key={cp.code}
+                          onClick={() => setSelectedCancellationPolicy(cp.code)}
+                          className={`relative p-2 rounded-lg border-2 transition-all text-left ${
+                            isSelected 
+                              ? 'border-primary bg-primary/5' 
+                              : 'border-border hover:border-primary/50 bg-background'
+                          }`}
+                        >
+                          {isSelected && (
+                            <Check className="absolute top-1 right-1 h-3 w-3 text-primary" />
+                          )}
+                          <Icon className={`h-4 w-4 mb-1 ${isSelected ? 'text-primary' : 'text-muted-foreground'}`} />
+                          <div className="text-[10px] font-medium">{cp.name}</div>
+                          <div className="text-[9px] text-muted-foreground">{cp.description}</div>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+                
                 {selectedVariant && (
-                  <div className="flex items-baseline gap-1 pt-1">
+                  <div className="flex items-baseline gap-1 pt-1 px-1">
                     <Coffee className="w-3 h-3 text-muted-foreground" />
                     <span className="text-xs text-muted-foreground">
                       Includes: {selectedVariant.included_meals.join(', ')}
@@ -276,41 +339,67 @@ const CategoryCard: React.FC<Props> = ({ category, onViewDetails, onBookNow, vie
         </div>
 
         {checkIn && checkOut && variants && variants.length > 0 && (
-          <div className="space-y-2 mb-3 p-3 bg-muted/30 rounded-lg">
-            <div className="grid grid-cols-2 gap-2">
-              <div>
-                <label className="text-xs text-muted-foreground mb-1 block">Meal Plan</label>
-                <Select value={selectedMealPlan} onValueChange={setSelectedMealPlan}>
-                  <SelectTrigger className="h-8 text-xs">
-                    <SelectValue placeholder="Select" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {mealPlans.map(mp => (
-                      <SelectItem key={mp.code} value={mp.code} className="text-xs">
-                        {mp.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div>
-                <label className="text-xs text-muted-foreground mb-1 block">Cancellation</label>
-                <Select value={selectedCancellationPolicy} onValueChange={setSelectedCancellationPolicy}>
-                  <SelectTrigger className="h-8 text-xs">
-                    <SelectValue placeholder="Select" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {cancellationPolicies.map(cp => (
-                      <SelectItem key={cp.code} value={cp.code} className="text-xs">
-                        {cp.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+          <div className="space-y-3 mb-3">
+            {/* Meal Plan Selection */}
+            <div>
+              <label className="text-xs font-medium text-muted-foreground block mb-2">Meal Plan</label>
+              <div className="grid grid-cols-3 gap-2">
+                {mealPlans.map(mp => {
+                  const Icon = mp.icon;
+                  const isSelected = selectedMealPlan === mp.code;
+                  return (
+                    <button
+                      key={mp.code}
+                      onClick={() => setSelectedMealPlan(mp.code)}
+                      className={`relative p-2 rounded-lg border-2 transition-all text-left ${
+                        isSelected 
+                          ? 'border-primary bg-primary/5' 
+                          : 'border-border hover:border-primary/50 bg-background'
+                      }`}
+                    >
+                      {isSelected && (
+                        <Check className="absolute top-1 right-1 h-3 w-3 text-primary" />
+                      )}
+                      <Icon className={`h-4 w-4 mb-1 ${isSelected ? 'text-primary' : 'text-muted-foreground'}`} />
+                      <div className="text-[10px] font-medium">{mp.name}</div>
+                      <div className="text-[9px] text-muted-foreground">{mp.description}</div>
+                    </button>
+                  );
+                })}
               </div>
             </div>
+            
+            {/* Cancellation Policy Selection */}
+            <div>
+              <label className="text-xs font-medium text-muted-foreground block mb-2">Cancellation</label>
+              <div className="grid grid-cols-2 gap-2">
+                {cancellationPolicies.map(cp => {
+                  const Icon = cp.icon;
+                  const isSelected = selectedCancellationPolicy === cp.code;
+                  return (
+                    <button
+                      key={cp.code}
+                      onClick={() => setSelectedCancellationPolicy(cp.code)}
+                      className={`relative p-2 rounded-lg border-2 transition-all text-left ${
+                        isSelected 
+                          ? 'border-primary bg-primary/5' 
+                          : 'border-border hover:border-primary/50 bg-background'
+                      }`}
+                    >
+                      {isSelected && (
+                        <Check className="absolute top-1 right-1 h-3 w-3 text-primary" />
+                      )}
+                      <Icon className={`h-4 w-4 mb-1 ${isSelected ? 'text-primary' : 'text-muted-foreground'}`} />
+                      <div className="text-[10px] font-medium">{cp.name}</div>
+                      <div className="text-[9px] text-muted-foreground">{cp.description}</div>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+            
             {selectedVariant && (
-              <div className="flex items-baseline gap-1">
+              <div className="flex items-baseline gap-1 px-1">
                 <Coffee className="w-3 h-3 text-muted-foreground" />
                 <span className="text-xs text-muted-foreground">
                   Includes: {selectedVariant.included_meals.join(', ')}
