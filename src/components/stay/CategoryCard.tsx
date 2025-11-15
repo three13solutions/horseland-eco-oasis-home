@@ -40,7 +40,7 @@ type Props = {
 const CategoryCard: React.FC<Props> = ({ category, onViewDetails, onBookNow, viewMode = 'grid', checkIn, checkOut, guests = 2, adults = 2, children = 0, hideBookNow = false }) => {
   const navigate = useNavigate();
   const [selectedMealPlan, setSelectedMealPlan] = useState<string>('all_meals_inclusive');
-  const [selectedCancellationPolicy, setSelectedCancellationPolicy] = useState<string>('non_refundable');
+  const [selectedCancellationPolicy, setSelectedCancellationPolicy] = useState<string>('refundable_credit');
 
   // Fetch dynamic pricing variants
   const { data: variants, isLoading } = useDynamicPricing({

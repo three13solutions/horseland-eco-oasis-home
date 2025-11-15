@@ -47,7 +47,7 @@ export const AvailableRoomCard: React.FC<AvailableRoomCardProps> = ({
   getFeatureIcon
 }) => {
   const [selectedMealPlan, setSelectedMealPlan] = useState<string>('AP');
-  const [selectedCancellationPolicy, setSelectedCancellationPolicy] = useState<string>('non_refundable');
+  const [selectedCancellationPolicy, setSelectedCancellationPolicy] = useState<string>('refundable_credit');
 
   const minGuests = 2; // Default minimum guests for room types
   const guestsForPricing = Math.max(guests, minGuests);
@@ -60,8 +60,8 @@ export const AvailableRoomCard: React.FC<AvailableRoomCardProps> = ({
   ];
 
   const cancellationPolicies = [
-    { code: 'non_refundable', name: 'Non-Refundable' },
-    { code: 'flexible', name: 'Flexible' }
+    { code: 'refundable_credit', name: 'Refundable as Credit Voucher' },
+    { code: 'non_refundable', name: 'Non-Refundable' }
   ];
 
   // Calculate display price using meal plan adjustment from the base rate
@@ -200,10 +200,12 @@ export const AvailableRoomCard: React.FC<AvailableRoomCardProps> = ({
             </div>
 
             <div className="text-right space-y-2">
-              <div className="text-2xl font-bold">
-                ₹{Math.round(displayPrice / guestsForPricing).toLocaleString()}
+              <div className="flex flex-col items-end">
+                <div className="text-2xl font-bold">
+                  ₹{Math.round(displayPrice / guestsForPricing).toLocaleString()}
+                </div>
+                <div className="text-sm text-muted-foreground">/guest/night</div>
               </div>
-              <div className="text-sm text-muted-foreground">/guest/night</div>
               
               {guests < minGuests && (
                 <div className="text-xs text-muted-foreground bg-muted/30 rounded px-2 py-1 inline-block">
@@ -216,6 +218,10 @@ export const AvailableRoomCard: React.FC<AvailableRoomCardProps> = ({
                   Total: ₹{totalPrice.toLocaleString()} <span className="text-sm text-muted-foreground font-normal">/night</span>
                 </div>
               )}
+              
+              <div className="text-xs text-muted-foreground">
+                Base price adjusts with meal plan
+              </div>
             </div>
 
             <Separator />
