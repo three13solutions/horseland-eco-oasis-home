@@ -1975,8 +1975,8 @@ const Booking = () => {
               </div>
 
               {/* Booking Summary */}
-              <div className="space-y-6">
-                <Card data-booking-summary className="lg:sticky lg:top-4">
+              <div className="space-y-6 lg:self-start">
+                <Card data-booking-summary className="lg:sticky lg:top-24 lg:max-h-[calc(100vh-6rem)] lg:overflow-y-auto">
                   <CardHeader>
                     <CardTitle className="text-lg md:text-xl">Booking Summary</CardTitle>
                   </CardHeader>
