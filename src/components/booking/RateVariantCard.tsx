@@ -3,13 +3,15 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Check, X, Coffee, UtensilsCrossed, Soup } from 'lucide-react';
-import type { RateVariant } from '@/hooks/useDynamicPricing';
+import { RateVariant, applyMealPlanAdjustment } from '@/hooks/useDynamicPricing';
 
 interface RateVariantCardProps {
   variant: RateVariant;
   isSelected: boolean;
   onSelect: () => void;
   nights: number;
+  adultsCount?: number;
+  childrenCount?: number;
 }
 
 const getMealIcon = (mealType: string) => {
@@ -21,12 +23,22 @@ const getMealIcon = (mealType: string) => {
   }
 };
 
-export const RateVariantCard: React.FC<RateVariantCardProps> = ({
-  variant,
-  isSelected,
+export const RateVariantCard: React.FC<RateVariantCardProps> = ({ 
+  variant, 
+  isSelected, 
   onSelect,
-  nights
+  nights,
+  adultsCount = 2,
+  childrenCount = 0
 }) => {
+  // Apply meal plan adjustment to get the actual price
+  const { adjustedTotal, adjustedPerNight, adjustment } = applyMealPlanAdjustment(
+    variant.total_price,
+    variant.meal_plan_code,
+    adultsCount,
+    childrenCount,
+    nights
+  );
   return (
     <Card 
       className={`relative ${isSelected ? 'ring-2 ring-primary' : ''} hover:shadow-lg transition-all cursor-pointer`}
@@ -46,13 +58,13 @@ export const RateVariantCard: React.FC<RateVariantCardProps> = ({
         <p className="text-sm text-muted-foreground mb-3">{variant.cancellation_policy_name}</p>
 
         <div className="mb-4">
-          <div className="text-3xl font-bold">₹{variant.total_price.toLocaleString()}</div>
+          <div className="text-3xl font-bold">₹{adjustedTotal.toLocaleString()}</div>
           <div className="text-sm text-muted-foreground">
-            ₹{Math.round(variant.price_per_night).toLocaleString()} per night × {nights} nights
+            ₹{Math.round(adjustedPerNight).toLocaleString()} per night × {nights} nights
           </div>
-          {variant.savings > 0 && (
-            <div className="text-sm text-green-600 font-medium mt-1">
-              You save ₹{variant.savings.toLocaleString()}
+          {adjustment !== 0 && (
+            <div className="text-sm text-primary font-medium mt-1">
+              {adjustment < 0 ? `Save ₹${Math.abs(adjustment).toLocaleString()}` : `+₹${adjustment.toLocaleString()}`}
             </div>
           )}
         </div>

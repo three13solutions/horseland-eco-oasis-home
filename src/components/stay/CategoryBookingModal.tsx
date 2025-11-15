@@ -11,7 +11,9 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { RateVariantSelector } from '@/components/booking/RateVariantSelector';
 import { PriceBreakdown } from '@/components/booking/PriceBreakdown';
-import { useDynamicPricing } from '@/hooks/useDynamicPricing';
+import { useDynamicPricing, applyMealPlanAdjustment } from '@/hooks/useDynamicPricing';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Info } from 'lucide-react';
 
 import type { Category } from './CategoryCard';
 
@@ -33,6 +35,10 @@ const CategoryBookingModal: React.FC<Props> = ({ open, onOpenChange, category })
   const nights = date?.from && date?.to 
     ? Math.ceil((date.to.getTime() - date.from.getTime()) / (1000 * 60 * 60 * 24))
     : 0;
+  
+  const minGuests = 2; // Default minimum guests
+  const totalGuests = guests + extraMattress;
+  const guestsForPricing = Math.max(totalGuests, minGuests);
   
   const { data: variants = [], isLoading: variantsLoading } = useDynamicPricing({
     roomTypeId: category?.id,
@@ -190,24 +196,45 @@ const CategoryBookingModal: React.FC<Props> = ({ open, onOpenChange, category })
           {date?.from && date?.to && availableUnits > 0 && variants.length > 0 && (
             <div className="space-y-4">
               <h3 className="font-semibold text-base">Select Rate Plan</h3>
+              
+              {totalGuests < minGuests && (
+                <Alert>
+                  <Info className="h-4 w-4" />
+                  <AlertDescription>
+                    This room accommodates a minimum of {minGuests} guests. Pricing is calculated for {minGuests} guests.
+                  </AlertDescription>
+                </Alert>
+              )}
+              
               <RateVariantSelector
                 variants={variants}
                 selectedVariant={selectedVariant}
                 onSelect={setSelectedVariant}
                 nights={nights}
+                adultsCount={guestsForPricing}
+                childrenCount={0}
               />
               
-              {selectedVariant && (
-                <PriceBreakdown
-                  roomRate={selectedVariant.room_rate}
-                  mealCost={selectedVariant.meal_cost}
-                  policyAdjustment={selectedVariant.policy_adjustment}
-                  nights={nights}
-                  guestCount={guests + extraMattress}
-                  mealPlanName={selectedVariant.meal_plan_name}
-                  includedMeals={selectedVariant.included_meals || []}
-                />
-              )}
+              {selectedVariant && (() => {
+                const { adjustedTotal } = applyMealPlanAdjustment(
+                  selectedVariant.total_price,
+                  selectedVariant.meal_plan_code,
+                  guestsForPricing,
+                  0,
+                  nights
+                );
+                return (
+                  <PriceBreakdown
+                    roomRate={adjustedTotal}
+                    mealCost={0}
+                    policyAdjustment={0}
+                    nights={nights}
+                    guestCount={totalGuests}
+                    mealPlanName={selectedVariant.meal_plan_name}
+                    includedMeals={selectedVariant.included_meals || []}
+                  />
+                );
+              })()}
             </div>
           )}
 

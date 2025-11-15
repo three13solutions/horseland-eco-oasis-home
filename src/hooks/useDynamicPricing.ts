@@ -20,6 +20,37 @@ interface RateVariant {
   discount_percentage: number;
 }
 
+// Helper function to apply meal plan adjustments
+export const applyMealPlanAdjustment = (
+  basePrice: number,
+  mealPlanCode: string,
+  adultsCount: number,
+  childrenCount: number,
+  nights: number
+): { adjustedTotal: number; adjustedPerNight: number; adjustment: number } => {
+  const totalGuests = adultsCount + childrenCount;
+  let adjustmentPerPersonPerNight = 0;
+  
+  // Full board (AP/MAP with all meals) is the base price - no adjustment
+  // Half board: -200 per person per night
+  // Room only: -500 per person per night
+  if (mealPlanCode === 'CP' || mealPlanCode === 'half_board') {
+    adjustmentPerPersonPerNight = -200;
+  } else if (mealPlanCode === 'EP' || mealPlanCode === 'room_only') {
+    adjustmentPerPersonPerNight = -500;
+  }
+  
+  const totalAdjustment = adjustmentPerPersonPerNight * totalGuests * nights;
+  const adjustedTotal = basePrice + totalAdjustment;
+  const adjustedPerNight = adjustedTotal / nights;
+  
+  return {
+    adjustedTotal,
+    adjustedPerNight,
+    adjustment: totalAdjustment
+  };
+};
+
 interface UseDynamicPricingParams {
   roomTypeId?: string;
   roomUnitId?: string;

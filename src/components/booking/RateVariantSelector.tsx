@@ -8,13 +8,17 @@ interface RateVariantSelectorProps {
   selectedVariant?: RateVariant;
   onSelect: (variant: RateVariant) => void;
   nights: number;
+  adultsCount?: number;
+  childrenCount?: number;
 }
 
-export const RateVariantSelector: React.FC<RateVariantSelectorProps> = ({
-  variants,
-  selectedVariant,
+export const RateVariantSelector: React.FC<RateVariantSelectorProps> = ({ 
+  variants, 
+  selectedVariant, 
   onSelect,
-  nights
+  nights,
+  adultsCount = 2,
+  childrenCount = 0
 }) => {
   const [sortBy, setSortBy] = useState<'price' | 'savings' | 'popular'>('popular');
   const [filterMealPlan, setFilterMealPlan] = useState<string>('all');
@@ -75,6 +79,8 @@ export const RateVariantSelector: React.FC<RateVariantSelectorProps> = ({
             }
             onSelect={() => onSelect(variant)}
             nights={nights}
+            adultsCount={adultsCount}
+            childrenCount={childrenCount}
           />
         ))}
       </div>

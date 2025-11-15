@@ -5,7 +5,9 @@ import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Separator } from '@/components/ui/separator';
 import { Users, Coffee } from 'lucide-react';
-import { useDynamicPricing } from '@/hooks/useDynamicPricing';
+import { useDynamicPricing, applyMealPlanAdjustment } from '@/hooks/useDynamicPricing';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Info } from 'lucide-react';
 
 interface RoomType {
   id: string;
@@ -47,12 +49,15 @@ export const AvailableRoomCard: React.FC<AvailableRoomCardProps> = ({
   const [selectedMealPlan, setSelectedMealPlan] = useState<string>('all_meals_inclusive');
   const [selectedCancellationPolicy, setSelectedCancellationPolicy] = useState<string>('non_refundable');
 
+  const minGuests = 2; // Default minimum guests for room types
+  const guestsForPricing = Math.max(guests, minGuests);
+
   // Fetch dynamic pricing variants
   const { data: variants, isLoading } = useDynamicPricing({
     roomTypeId: roomType.id,
     checkIn: checkIn ? new Date(checkIn) : undefined,
     checkOut: checkOut ? new Date(checkOut) : undefined,
-    adultsCount: guests, // Using total guests as adults for backwards compatibility
+    adultsCount: guestsForPricing,
     childrenCount: 0,
     infantsCount: 0,
     enabled: !!(checkIn && checkOut)
@@ -77,7 +82,7 @@ export const AvailableRoomCard: React.FC<AvailableRoomCardProps> = ({
     });
   }, [variants]);
 
-  // Find the selected variant
+  // Calculate display price based on selected meal plan and cancellation policy
   const selectedVariant = useMemo(() => {
     if (!variants || !selectedMealPlan || !selectedCancellationPolicy) return null;
     return variants.find(v => 
@@ -85,10 +90,21 @@ export const AvailableRoomCard: React.FC<AvailableRoomCardProps> = ({
       v.cancellation_policy_code === selectedCancellationPolicy
     );
   }, [variants, selectedMealPlan, selectedCancellationPolicy]);
-
-  // Calculate display price
-  const displayPrice = selectedVariant?.price_per_night || roomType.base_price;
-  const totalPrice = selectedVariant?.total_price || (roomType.base_price * nights);
+  
+  let displayPrice = roomType.base_price;
+  let totalPrice = displayPrice * nights;
+  
+  if (selectedVariant) {
+    const { adjustedTotal, adjustedPerNight } = applyMealPlanAdjustment(
+      selectedVariant.total_price,
+      selectedVariant.meal_plan_code,
+      guestsForPricing,
+      0,
+      nights
+    );
+    displayPrice = adjustedPerNight;
+    totalPrice = adjustedTotal;
+  }
 
   const handleSelectRoom = () => {
     onSelectRoom(roomType, selectedVariant);
@@ -148,6 +164,15 @@ export const AvailableRoomCard: React.FC<AvailableRoomCardProps> = ({
 
           {/* Pricing and Booking */}
           <div className="md:col-span-1 space-y-4">
+            {guests < minGuests && (
+              <Alert>
+                <Info className="h-4 w-4" />
+                <AlertDescription>
+                  This room accommodates a minimum of {minGuests} guests. Pricing is calculated for {minGuests} guests.
+                </AlertDescription>
+              </Alert>
+            )}
+            
             {variants && variants.length > 0 && (
               <div className="space-y-3 p-3 bg-muted/30 rounded-lg">
                 <div className="space-y-2">
