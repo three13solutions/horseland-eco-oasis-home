@@ -2103,7 +2103,7 @@ const Booking = () => {
                         <div className="text-left">
                           <CardTitle className="flex items-center gap-2">
                             <Edit2 className="h-5 w-5" />
-                            Modify Dates/No of Guest
+                            Change Dates/Guests
                           </CardTitle>
                           <p className="text-sm text-muted-foreground">
                             Update your dates or guest count
