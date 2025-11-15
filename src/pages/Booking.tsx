@@ -1712,11 +1712,11 @@ const Booking = () => {
                 <Collapsible defaultOpen={false}>
                   <Card>
                     <CollapsibleTrigger className="w-full">
-                      <CardHeader className="flex flex-row items-center justify-between">
+                       <CardHeader className="flex flex-row items-center justify-between">
                         <div className="text-left">
                           <CardTitle>Request Transfers</CardTitle>
                           <p className="text-sm text-muted-foreground">
-                            Select pickup or drop service for your stay
+                            Select pickup or drop service to Matheran Car Park
                           </p>
                         </div>
                         <ChevronDown className="h-5 w-5 transition-transform duration-200 data-[state=open]:rotate-180" />
@@ -1725,6 +1725,17 @@ const Booking = () => {
                     <CollapsibleContent>
                       <CardContent>
                     <div className="space-y-6">
+                      {/* Car-free disclaimer */}
+                      <div className="bg-primary/10 border border-primary/20 rounded-lg p-4">
+                        <p className="text-sm text-foreground">
+                          <span className="font-semibold">Note:</span> Matheran is a car-free hill station. 
+                          Transfers are available to/from Matheran Car Park (Dasturi Naka). From the car park, 
+                          various eco-friendly transport options are available to reach the property.{' '}
+                          <a href="/faq" className="text-primary hover:underline font-medium">
+                            Learn more about transport options
+                          </a>
+                        </p>
+                      </div>
                       <div className="grid md:grid-cols-3 gap-4">
                         {/* Transfer Type Dropdown */}
                         <div className="space-y-2">
@@ -1792,9 +1803,9 @@ const Booking = () => {
                                   {transferType === 'drop' && <CarFront className="h-5 w-5 text-primary rotate-180" />}
                                   {transferType === 'two-way' && <Car className="h-5 w-5 text-primary" />}
                                   <h4 className="font-semibold text-lg capitalize">
-                                    {transferType === 'pickup' && `${transferLocation} → Property`}
-                                    {transferType === 'drop' && `Property → ${transferLocation}`}
-                                    {transferType === 'two-way' && `${transferLocation} ↔ Property`}
+                                    {transferType === 'pickup' && `${transferLocation} → Matheran Car Park`}
+                                    {transferType === 'drop' && `Matheran Car Park → ${transferLocation}`}
+                                    {transferType === 'two-way' && `${transferLocation} ↔ Matheran Car Park`}
                                   </h4>
                                 </div>
                                 <div className="space-y-1 text-sm text-muted-foreground">
