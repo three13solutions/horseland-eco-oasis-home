@@ -2486,6 +2486,29 @@ const Booking = () => {
             </div>
           </section>
 
+          {/* Payment Modal */}
+          <PaymentModal
+            key={paymentModalKey}
+            isOpen={showPaymentModal}
+            onClose={() => {
+              setShowPaymentModal(false);
+            }}
+            onSuccess={handlePaymentSuccess}
+            bookingDetails={{
+              roomName: selectedRoomType.name,
+              roomPrice: selectedRoomType.base_price,
+              nights: nights,
+              addonTotal: selectedAddons.reduce((total, addon) => total + (addon.price * addon.quantity), 0) + 
+                         (selectedPickup ? selectedPickup.price : 0) + 
+                         selectedBedding.reduce((total, bed) => total + bed.price, 0),
+              guestName: guestDetails.name,
+              guestEmail: guestDetails.email,
+              guestPhone: guestDetails.phone,
+              checkIn: formatDate(checkIn),
+              checkOut: formatDate(checkOut),
+            }}
+          />
+
           <DynamicFooter />
         </div>
       );
@@ -2645,31 +2668,6 @@ const Booking = () => {
           )}
         </div>
       </section>
-
-      {/* Payment Modal */}
-      {showBookingForm && selectedRoomType && (
-        <PaymentModal
-          key={paymentModalKey}
-          isOpen={showPaymentModal}
-          onClose={() => {
-            setShowPaymentModal(false);
-          }}
-          onSuccess={handlePaymentSuccess}
-          bookingDetails={{
-            roomName: selectedRoomType.name,
-            roomPrice: selectedRoomType.base_price,
-            nights: nights,
-            addonTotal: selectedAddons.reduce((total, addon) => total + (addon.price * addon.quantity), 0) + 
-                       (selectedPickup ? selectedPickup.price : 0) + 
-                       selectedBedding.reduce((total, bed) => total + bed.price, 0),
-            guestName: guestDetails.name,
-            guestEmail: guestDetails.email,
-            guestPhone: guestDetails.phone,
-            checkIn: formatDate(checkIn),
-            checkOut: formatDate(checkOut),
-          }}
-        />
-      )}
 
       <DynamicFooter />
     </div>
