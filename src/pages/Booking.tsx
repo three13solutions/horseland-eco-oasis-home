@@ -20,6 +20,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { calculateBookingAmount } from '@/lib/razorpay';
 import { useQuery } from '@tanstack/react-query';
+import { applyMealPlanAdjustment } from '@/hooks/useDynamicPricing';
 
 interface RoomType {
   id: string;
@@ -115,7 +116,7 @@ const Booking = () => {
   // Addon states
   const [meals, setMeals] = useState<Addon[]>([]);
   const [activities, setActivities] = useState<Addon[]>([]);
-  const [selectedMealPlan, setSelectedMealPlan] = useState<'none' | 'half-board' | 'full-board'>('none');
+  const [selectedMealPlan, setSelectedMealPlan] = useState<'none' | 'half-board' | 'full-board'>('full-board');
   const [selectedCancellationPolicy, setSelectedCancellationPolicy] = useState<string>('refundable_credit');
   const [spaServices, setSpaServices] = useState<Addon[]>([]);
   const [showSpaInBooking, setShowSpaInBooking] = useState(false);
@@ -726,19 +727,34 @@ const Booking = () => {
     
     const nights = calculateNights();
     
-    // Calculate base room total
-    const roomTotal = selectedRoomType.base_price * nights;
+    // Base room price assumes full board (all meals included)
+    // Apply meal plan adjustment based on selection
+    const baseRoomTotal = selectedRoomType.base_price * nights;
     
-    // Get selected meal plan and its cost
-    const selectedMealPlanData = mealPlans.find(mp => mp.plan_code === selectedMealPlan);
-    const mealPlanTotal = calculateMealPlanTotal();
+    // Map meal plan selection to codes for adjustment
+    const mealPlanCodeMap: { [key: string]: string } = {
+      'full-board': 'AP', // All meals - no adjustment
+      'half-board': 'CP', // Half board - deduct 200 per person per night
+      'none': 'EP' // Room only - deduct 500 per person per night
+    };
+    
+    const mealPlanCode = mealPlanCodeMap[selectedMealPlan] || 'AP';
+    
+    // Apply meal plan adjustment (negative for half-board and room-only)
+    const { adjustedTotal: roomTotalWithMealAdjustment } = applyMealPlanAdjustment(
+      baseRoomTotal,
+      mealPlanCode,
+      guests, // adults
+      0, // children (not tracked separately in booking page yet)
+      nights
+    );
     
     // Get selected cancellation policy and its adjustment
     const selectedPolicyData = cancellationPolicies.find(cp => cp.policy_code === selectedCancellationPolicy);
     let policyAdjustment = 0;
     if (selectedPolicyData) {
       if (selectedPolicyData.adjustment_type === 'percentage') {
-        policyAdjustment = (roomTotal + mealPlanTotal) * (selectedPolicyData.adjustment_value / 100);
+        policyAdjustment = roomTotalWithMealAdjustment * (selectedPolicyData.adjustment_value / 100);
       } else if (selectedPolicyData.adjustment_type === 'fixed') {
         policyAdjustment = selectedPolicyData.adjustment_value;
       }
@@ -748,7 +764,7 @@ const Booking = () => {
     const pickupTotal = selectedPickup ? selectedPickup.price : 0;
     const beddingTotal = selectedBedding.reduce((total, bed) => total + bed.price, 0);
     
-    return roomTotal + mealPlanTotal + policyAdjustment + addonsTotal + pickupTotal + beddingTotal;
+    return roomTotalWithMealAdjustment + policyAdjustment + addonsTotal + pickupTotal + beddingTotal;
   };
 
   const formatDate = (dateString: string) => {
@@ -1214,13 +1230,45 @@ const Booking = () => {
         payment_method: 'razorpay',
         // Store meal plan information
         meal_plan_code: selectedMealPlan || 'room_only',
-        meal_cost: calculateMealPlanTotal(),
+        meal_cost: 0, // Meal cost is now included in room rate adjustment
         cancellation_policy_code: selectedCancellationPolicy || 'refundable',
-        room_cost: selectedRoomType!.base_price * calculateNights(),
+        room_cost: (() => {
+          const baseRoomTotal = selectedRoomType!.base_price * calculateNights();
+          const mealPlanCodeMap: { [key: string]: string } = {
+            'full-board': 'AP',
+            'half-board': 'CP',
+            'none': 'EP'
+          };
+          const mealPlanCode = mealPlanCodeMap[selectedMealPlan] || 'AP';
+          const { adjustedTotal } = applyMealPlanAdjustment(
+            baseRoomTotal,
+            mealPlanCode,
+            guests,
+            0,
+            calculateNights()
+          );
+          return adjustedTotal;
+        })(),
         rate_breakdown: {
           meal_plan: selectedMealPlan,
           cancellation_policy: selectedCancellationPolicy,
-          meal_cost: calculateMealPlanTotal(),
+          meal_adjustment: (() => {
+            const baseRoomTotal = selectedRoomType!.base_price * calculateNights();
+            const mealPlanCodeMap: { [key: string]: string } = {
+              'full-board': 'AP',
+              'half-board': 'CP',
+              'none': 'EP'
+            };
+            const mealPlanCode = mealPlanCodeMap[selectedMealPlan] || 'AP';
+            const { adjustment } = applyMealPlanAdjustment(
+              baseRoomTotal,
+              mealPlanCode,
+              guests,
+              0,
+              calculateNights()
+            );
+            return adjustment;
+          })(),
           total_nights: calculateNights()
         },
         selected_meals: [],
@@ -1421,8 +1469,16 @@ const Booking = () => {
                                   )}
                                 </div>
                                 <div className="flex-1">
-                                  <h4 className="font-semibold">No Meals</h4>
-                                  <p className="text-sm text-muted-foreground">Room only - no meals included</p>
+                                  <h4 className="font-semibold">Room Only</h4>
+                                  <p className="text-sm text-muted-foreground">No meals included</p>
+                                  <div className="mt-2 text-sm">
+                                    <span className="font-medium text-green-600">
+                                      Save ₹{(500 * guests * calculateNights()).toLocaleString()} 
+                                      <span className="text-xs text-muted-foreground ml-1">
+                                        (₹500/person/night)
+                                      </span>
+                                    </span>
+                                  </div>
                                 </div>
                               </div>
                             </div>
@@ -1445,14 +1501,11 @@ const Booking = () => {
                                   <h4 className="font-semibold">Half Board</h4>
                                   <p className="text-sm text-muted-foreground">Breakfast & Dinner included for all guests</p>
                                   <div className="mt-2 text-sm">
-                                    <span className="font-medium text-primary">
-                                      {(() => {
-                                        const breakfastPrice = getMealPrice('breakfast', 'vegetarian') || 0;
-                                        const dinnerPrice = getMealPrice('dinner', 'vegetarian') || 0;
-                                        const totalPerNight = (breakfastPrice + dinnerPrice) * guests;
-                                        const totalAllNights = totalPerNight * calculateNights();
-                                        return `₹${totalAllNights.toLocaleString()} total`;
-                                      })()}
+                                    <span className="font-medium text-green-600">
+                                      Save ₹{(200 * guests * calculateNights()).toLocaleString()}
+                                      <span className="text-xs text-muted-foreground ml-1">
+                                        (₹200/person/night)
+                                      </span>
                                     </span>
                                   </div>
                                 </div>
@@ -1474,20 +1527,12 @@ const Booking = () => {
                                   )}
                                 </div>
                                 <div className="flex-1">
-                                  <h4 className="font-semibold">Full Board</h4>
+                                  <h4 className="font-semibold">Full Board (All Meals)</h4>
                                   <p className="text-sm text-muted-foreground">Breakfast, Lunch, Hi Tea & Dinner included for all guests</p>
-                                  <div className="mt-2 text-sm">
-                                    <span className="font-medium text-primary">
-                                      {(() => {
-                                        const breakfastPrice = getMealPrice('breakfast', 'vegetarian') || 0;
-                                        const lunchPrice = getMealPrice('lunch', 'vegetarian') || 0;
-                                        const hiTeaPrice = getMealPrice('hi-tea', 'vegetarian') || 0;
-                                        const dinnerPrice = getMealPrice('dinner', 'vegetarian') || 0;
-                                        const totalPerNight = (breakfastPrice + lunchPrice + hiTeaPrice + dinnerPrice) * guests;
-                                        const totalAllNights = totalPerNight * calculateNights();
-                                        return `₹${totalAllNights.toLocaleString()} total`;
-                                      })()}
-                                    </span>
+                                  <div className="mt-2">
+                                    <Badge variant="secondary" className="text-xs">
+                                      Default - Included in base rate
+                                    </Badge>
                                   </div>
                                 </div>
                               </div>
@@ -2032,13 +2077,52 @@ const Booking = () => {
                     <div className="space-y-3">
                       <div className="flex justify-between gap-2 text-sm">
                         <span className="text-muted-foreground">Room ({nights} nights):</span>
-                        <span className="font-semibold whitespace-nowrap">₹{(selectedRoomType.base_price * nights).toLocaleString()}</span>
+                        <span className="font-semibold whitespace-nowrap">
+                          ₹{(() => {
+                            const baseRoomTotal = selectedRoomType.base_price * nights;
+                            const mealPlanCodeMap: { [key: string]: string } = {
+                              'full-board': 'AP',
+                              'half-board': 'CP',
+                              'none': 'EP'
+                            };
+                            const mealPlanCode = mealPlanCodeMap[selectedMealPlan] || 'AP';
+                            const { adjustedTotal } = applyMealPlanAdjustment(
+                              baseRoomTotal,
+                              mealPlanCode,
+                              guests,
+                              0,
+                              nights
+                            );
+                            return adjustedTotal.toLocaleString();
+                          })()}
+                        </span>
                       </div>
                       
-                      {calculateMealPlanTotal() > 0 && (
-                        <div className="flex justify-between gap-2 text-sm">
-                          <span className="text-muted-foreground">Meal Plan:</span>
-                          <span className="font-semibold whitespace-nowrap">₹{calculateMealPlanTotal().toLocaleString()}</span>
+                      {selectedMealPlan !== 'full-board' && (
+                        <div className="flex justify-between gap-2 text-xs text-muted-foreground">
+                          <span>
+                            {selectedMealPlan === 'half-board' && 'Half Board: Save ₹200/person/night'}
+                            {selectedMealPlan === 'none' && 'Room Only: Save ₹500/person/night'}
+                          </span>
+                          <span className="text-green-600 font-medium">
+                            {(() => {
+                              const baseRoomTotal = selectedRoomType.base_price * nights;
+                              const mealPlanCodeMap: { [key: string]: string } = {
+                                'full-board': 'AP',
+                                'half-board': 'CP',
+                                'none': 'EP'
+                              };
+                              const mealPlanCode = mealPlanCodeMap[selectedMealPlan] || 'AP';
+                              const { adjustment } = applyMealPlanAdjustment(
+                                baseRoomTotal,
+                                mealPlanCode,
+                                guests,
+                                0,
+                                nights
+                              );
+                              return adjustment < 0 ? `-₹${Math.abs(adjustment).toLocaleString()}` : '';
+                            })()}
+                          </span>
                         </div>
                       )}
                       
@@ -2048,8 +2132,21 @@ const Booking = () => {
                         
                         let adjustment = 0;
                         if (selectedPolicyData.adjustment_type === 'percentage') {
-                          const baseTotal = (selectedRoomType.base_price * nights) + calculateMealPlanTotal();
-                          adjustment = baseTotal * (selectedPolicyData.adjustment_value / 100);
+                          const baseRoomTotal = selectedRoomType.base_price * nights;
+                          const mealPlanCodeMap: { [key: string]: string } = {
+                            'full-board': 'AP',
+                            'half-board': 'CP',
+                            'none': 'EP'
+                          };
+                          const mealPlanCode = mealPlanCodeMap[selectedMealPlan] || 'AP';
+                          const { adjustedTotal: roomTotalWithMealAdjustment } = applyMealPlanAdjustment(
+                            baseRoomTotal,
+                            mealPlanCode,
+                            guests,
+                            0,
+                            nights
+                          );
+                          adjustment = roomTotalWithMealAdjustment * (selectedPolicyData.adjustment_value / 100);
                         } else {
                           adjustment = selectedPolicyData.adjustment_value;
                         }
