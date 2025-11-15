@@ -46,6 +46,11 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
   const [isProcessing, setIsProcessing] = useState(false);
   const { toast } = useToast();
 
+  console.log('💳 PaymentModal rendered', {
+    isOpen,
+    bookingDetails: bookingDetails.roomName,
+  });
+
   const paymentBreakdown: BookingPaymentDetails = calculateBookingAmount(
     bookingDetails.roomPrice,
     bookingDetails.nights,
