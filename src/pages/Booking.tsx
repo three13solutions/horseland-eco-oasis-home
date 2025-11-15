@@ -1083,12 +1083,25 @@ const Booking = () => {
       return;
     }
     
-    if (!guestDetails.name || !guestDetails.email || !guestDetails.phone) {
+    // Validate required guest details
+    const missingFields = [];
+    if (!guestDetails.name?.trim()) missingFields.push("Full Name");
+    if (!guestDetails.email?.trim()) missingFields.push("Email");
+    if (!guestDetails.phone?.trim()) missingFields.push("Phone Number");
+    
+    if (missingFields.length > 0) {
       toast({
-        title: "Missing Information",
-        description: "Please fill in all guest details",
+        title: "Missing Required Information",
+        description: `Please fill in: ${missingFields.join(", ")}`,
         variant: "destructive",
+        duration: 5000,
       });
+      
+      // Scroll to guest details section
+      const guestDetailsElement = document.querySelector('[data-guest-details]');
+      if (guestDetailsElement) {
+        guestDetailsElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
       return;
     }
     
@@ -1818,7 +1831,7 @@ const Booking = () => {
                 
                   {/* Guest Details Form - Collapsible */}
                   <Collapsible defaultOpen={true}>
-                    <Card>
+                    <Card data-guest-details>
                       <CollapsibleTrigger className="w-full">
                         <CardHeader className="flex flex-row items-center justify-between">
                           <div className="text-left">
@@ -1834,13 +1847,16 @@ const Booking = () => {
                     <CardContent className="space-y-4">
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
-                          <Label htmlFor="name">Full Name *</Label>
+                          <Label htmlFor="name" className="flex items-center gap-1">
+                            Full Name <span className="text-destructive">*</span>
+                          </Label>
                           <Input
                             id="name"
                             value={guestDetails.name}
                             onChange={(e) => setGuestDetails(prev => ({ ...prev, name: e.target.value }))}
                             placeholder="Enter full name"
                             required
+                            className={!guestDetails.name?.trim() ? 'border-destructive/50' : ''}
                           />
                         </div>
                         <div>
@@ -1862,17 +1878,22 @@ const Booking = () => {
                           </select>
                         </div>
                         <div>
-                          <Label htmlFor="phone">Phone Number *</Label>
+                          <Label htmlFor="phone" className="flex items-center gap-1">
+                            Phone Number <span className="text-destructive">*</span>
+                          </Label>
                           <Input
                             id="phone"
                             value={guestDetails.phone}
                             onChange={(e) => setGuestDetails(prev => ({ ...prev, phone: e.target.value }))}
                             placeholder="Enter phone number"
                             required
+                            className={!guestDetails.phone?.trim() ? 'border-destructive/50' : ''}
                           />
                         </div>
                         <div>
-                          <Label htmlFor="email">Email *</Label>
+                          <Label htmlFor="email" className="flex items-center gap-1">
+                            Email <span className="text-destructive">*</span>
+                          </Label>
                           <Input
                             id="email"
                             type="email"
@@ -1880,6 +1901,7 @@ const Booking = () => {
                             onChange={(e) => setGuestDetails(prev => ({ ...prev, email: e.target.value }))}
                             placeholder="Enter email address"
                             required
+                            className={!guestDetails.email?.trim() ? 'border-destructive/50' : ''}
                           />
                         </div>
                         <div>
