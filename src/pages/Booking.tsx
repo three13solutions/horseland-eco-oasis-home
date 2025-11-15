@@ -152,13 +152,13 @@ const Booking = () => {
   // Dynamic pricing state
   const [selectedRateVariant, setSelectedRateVariant] = useState<any>(null);
   
-  // Fetch rate variants when room is selected
+  // Fetch rate variants when room is selected (temporarily disabled)
   const { data: rateVariants = [], isLoading: variantsLoading } = useDynamicPricing({
     roomTypeId: selectedRoomType?.id,
     checkIn: checkIn ? new Date(checkIn) : undefined,
     checkOut: checkOut ? new Date(checkOut) : undefined,
     guestsCount: guests,
-    enabled: !!selectedRoomType && !!checkIn && !!checkOut
+    enabled: false // Disabled until database function is set up
   });
 
   // Load package if packageId is present
