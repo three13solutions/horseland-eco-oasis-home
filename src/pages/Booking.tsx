@@ -21,7 +21,7 @@ import { AvailableRoomCard } from '@/components/booking/AvailableRoomCard';
 import GuestSelector from '@/components/GuestSelector';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { calculateBookingAmount } from '@/lib/razorpay';
+import { calculateBookingAmount, RAZORPAY_CONFIG } from '@/lib/razorpay';
 import { useQuery } from '@tanstack/react-query';
 import { applyMealPlanAdjustment } from '@/hooks/useDynamicPricing';
 import { format } from 'date-fns';
@@ -765,7 +765,7 @@ const Booking = () => {
     return Math.max(0, nights); // Ensure non-negative
   };
 
-  const calculateTotal = () => {
+  const calculateSubtotal = () => {
     if (!selectedRoomType) return 0;
     
     const nights = calculateNights();
@@ -801,6 +801,12 @@ const Booking = () => {
     const beddingTotal = selectedBedding.reduce((total, bed) => total + bed.price, 0);
     
     return roomTotalWithMealAdjustment + policyAdjustment + addonsTotal + pickupTotal + beddingTotal;
+  };
+
+  const calculateTotal = () => {
+    const subtotal = calculateSubtotal();
+    const gst = subtotal * RAZORPAY_CONFIG.GST_RATE;
+    return subtotal + gst;
   };
 
   const formatDate = (dateString: string) => {
@@ -2446,6 +2452,18 @@ const Booking = () => {
                               </div>
                             </div>
                           )}
+                          
+                          <Separator />
+                          
+                          <div className="flex justify-between gap-2 text-sm">
+                            <span className="text-muted-foreground">Subtotal:</span>
+                            <span className="font-medium whitespace-nowrap">₹{calculateSubtotal().toLocaleString()}</span>
+                          </div>
+                          
+                          <div className="flex justify-between gap-2 text-sm">
+                            <span className="text-muted-foreground">GST (18%):</span>
+                            <span className="font-medium whitespace-nowrap">₹{(calculateSubtotal() * RAZORPAY_CONFIG.GST_RATE).toLocaleString()}</span>
+                          </div>
                           
                           <Separator />
                           
