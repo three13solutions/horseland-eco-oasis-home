@@ -1269,7 +1269,7 @@ const Booking = () => {
         check_out: checkOut,
         guests_count: adultsCount + childrenCount, // Total paying guests (infants free)
         total_amount: calculateTotal(),
-        payment_status: 'completed',
+        payment_status: 'confirmed',
         payment_id: paymentId,
         payment_order_id: orderId,
         payment_method: 'razorpay',
