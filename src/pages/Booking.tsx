@@ -59,10 +59,9 @@ interface SelectedAddon extends Addon {
 
 interface GuestDetails {
   name: string;
+  gender: 'male' | 'female' | 'other' | 'prefer_not_to_say' | '';
   email: string;
   phone: string;
-  dateOfBirth: string;
-  gender: 'male' | 'female' | 'other' | 'prefer_not_to_say' | '';
   idType: 'passport' | 'aadhar' | 'driving_license' | 'voter_id' | '';
   idNumber: string;
   specialRequests: string;
@@ -127,10 +126,9 @@ const Booking = () => {
   const [showGuestDetails, setShowGuestDetails] = useState(false);
   const [guestDetails, setGuestDetails] = useState<GuestDetails>({
     name: '',
+    gender: '',
     email: '',
     phone: '',
-    dateOfBirth: '',
-    gender: '',
     idType: '',
     idNumber: '',
     specialRequests: ''
@@ -634,10 +632,9 @@ const Booking = () => {
       setShowGuestDetails(false);
       setGuestDetails({
         name: '',
+        gender: '',
         email: '',
         phone: '',
-        dateOfBirth: '',
-        gender: '',
         idType: '',
         idNumber: '',
         specialRequests: ''
@@ -1127,7 +1124,6 @@ const Booking = () => {
             last_name: lastName,
             email: guestDetails.email,
             phone: guestDetails.phone,
-            date_of_birth: guestDetails.dateOfBirth || null,
             gender: guestDetails.gender || null,
           })
           .eq('id', guestId);
@@ -1140,7 +1136,6 @@ const Booking = () => {
             last_name: lastName,
             email: guestDetails.email,
             phone: guestDetails.phone,
-            date_of_birth: guestDetails.dateOfBirth || null,
             gender: guestDetails.gender || null,
           }])
           .select()
@@ -1826,7 +1821,12 @@ const Booking = () => {
                     <Card>
                       <CollapsibleTrigger className="w-full">
                         <CardHeader className="flex flex-row items-center justify-between">
-                          <CardTitle className="text-left">Guest Details</CardTitle>
+                          <div className="text-left">
+                            <CardTitle>Guest Details</CardTitle>
+                            <p className="text-sm text-muted-foreground">
+                              Provide details of the primary guest making this reservation
+                            </p>
+                          </div>
                           <ChevronDown className="h-5 w-5 transition-transform duration-200 data-[state=open]:rotate-180" />
                         </CardHeader>
                       </CollapsibleTrigger>
@@ -1844,41 +1844,10 @@ const Booking = () => {
                           />
                         </div>
                         <div>
-                          <Label htmlFor="email">Email *</Label>
-                          <Input
-                            id="email"
-                            type="email"
-                            value={guestDetails.email}
-                            onChange={(e) => setGuestDetails(prev => ({ ...prev, email: e.target.value }))}
-                            placeholder="Enter email address"
-                            required
-                          />
-                        </div>
-                        <div>
-                          <Label htmlFor="phone">Phone Number *</Label>
-                          <Input
-                            id="phone"
-                            value={guestDetails.phone}
-                            onChange={(e) => setGuestDetails(prev => ({ ...prev, phone: e.target.value }))}
-                            placeholder="Enter phone number"
-                            required
-                          />
-                        </div>
-                        <div>
-                          <Label htmlFor="dateOfBirth">Date of Birth</Label>
-                          <Input
-                            id="dateOfBirth"
-                            type="date"
-                            value={guestDetails.dateOfBirth}
-                            onChange={(e) => setGuestDetails(prev => ({ ...prev, dateOfBirth: e.target.value }))}
-                            max={new Date().toISOString().split('T')[0]}
-                          />
-                        </div>
-                        <div>
                           <Label htmlFor="gender">Gender</Label>
                           <select
                             id="gender"
-                            className="w-full p-2 border rounded-md"
+                            className="w-full p-2 border rounded-md bg-background text-foreground"
                             value={guestDetails.gender}
                             onChange={(e) => setGuestDetails(prev => ({ 
                               ...prev, 
@@ -1893,10 +1862,31 @@ const Booking = () => {
                           </select>
                         </div>
                         <div>
+                          <Label htmlFor="phone">Phone Number *</Label>
+                          <Input
+                            id="phone"
+                            value={guestDetails.phone}
+                            onChange={(e) => setGuestDetails(prev => ({ ...prev, phone: e.target.value }))}
+                            placeholder="Enter phone number"
+                            required
+                          />
+                        </div>
+                        <div>
+                          <Label htmlFor="email">Email *</Label>
+                          <Input
+                            id="email"
+                            type="email"
+                            value={guestDetails.email}
+                            onChange={(e) => setGuestDetails(prev => ({ ...prev, email: e.target.value }))}
+                            placeholder="Enter email address"
+                            required
+                          />
+                        </div>
+                        <div>
                           <Label htmlFor="idType">ID Type</Label>
                           <select
                             id="idType"
-                            className="w-full p-2 border rounded-md"
+                            className="w-full p-2 border rounded-md bg-background text-foreground"
                             value={guestDetails.idType}
                             onChange={(e) => setGuestDetails(prev => ({ 
                               ...prev, 
@@ -1930,7 +1920,12 @@ const Booking = () => {
                      <Card>
                        <CollapsibleTrigger className="w-full">
                          <CardHeader className="flex flex-row items-center justify-between">
-                           <CardTitle className="text-left">Special Requests</CardTitle>
+                           <div className="text-left">
+                             <CardTitle>Special Requests</CardTitle>
+                             <p className="text-sm text-muted-foreground">
+                               Let us know about any special requirements or preferences for your stay
+                             </p>
+                           </div>
                            <ChevronDown className="h-5 w-5 transition-transform duration-200 data-[state=open]:rotate-180" />
                          </CardHeader>
                        </CollapsibleTrigger>
