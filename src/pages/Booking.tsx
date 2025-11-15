@@ -1545,7 +1545,7 @@ const Booking = () => {
                               <div className="flex-1">
                                 <div className="font-semibold mb-1">Refundable as Credit Voucher</div>
                                 <p className="text-sm text-muted-foreground">
-                                  Full refund as credit voucher valid for 12 months. Cancel up to 48 hours before check-in.
+                                  Full refund as credit voucher valid for 6 months. Cancel up to 48 hours before check-in.
                                 </p>
                                 <div className="mt-2 text-sm font-medium text-blue-600">
                                   Flexible • Credit voucher refund
