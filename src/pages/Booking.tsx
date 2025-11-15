@@ -2320,28 +2320,30 @@ const Booking = () => {
         </div>
       </section>
 
-      {/* Payment Modal */}
-      <PaymentModal
-        isOpen={showPaymentModal && !!selectedRoomType}
-        onClose={() => {
-          console.log('PaymentModal onClose called');
-          setShowPaymentModal(false);
-        }}
-        onSuccess={handlePaymentSuccess}
-        bookingDetails={{
-          roomName: selectedRoomType?.name || '',
-          roomPrice: selectedRateVariant ? selectedRateVariant.price_per_night : (selectedRoomType?.base_price || 0),
-          nights: nights,
-          addonTotal: selectedAddons.reduce((total, addon) => total + (addon.price * addon.quantity), 0) + 
-                     (selectedPickup ? selectedPickup.price : 0) + 
-                     selectedBedding.reduce((total, bed) => total + bed.price, 0),
-          guestName: guestDetails.name,
-          guestEmail: guestDetails.email,
-          guestPhone: guestDetails.phone,
-          checkIn: formatDate(checkIn),
-          checkOut: formatDate(checkOut),
-        }}
-      />
+      {/* Payment Modal - Only render when in booking form */}
+      {showBookingForm && selectedRoomType && (
+        <PaymentModal
+          isOpen={showPaymentModal}
+          onClose={() => {
+            console.log('PaymentModal onClose called');
+            setShowPaymentModal(false);
+          }}
+          onSuccess={handlePaymentSuccess}
+          bookingDetails={{
+            roomName: selectedRoomType.name,
+            roomPrice: selectedRateVariant ? selectedRateVariant.price_per_night : selectedRoomType.base_price,
+            nights: nights,
+            addonTotal: selectedAddons.reduce((total, addon) => total + (addon.price * addon.quantity), 0) + 
+                       (selectedPickup ? selectedPickup.price : 0) + 
+                       selectedBedding.reduce((total, bed) => total + bed.price, 0),
+            guestName: guestDetails.name,
+            guestEmail: guestDetails.email,
+            guestPhone: guestDetails.phone,
+            checkIn: formatDate(checkIn),
+            checkOut: formatDate(checkOut),
+          }}
+        />
+      )}
 
       <DynamicFooter />
     </div>
