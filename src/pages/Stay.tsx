@@ -79,10 +79,10 @@ const Stay = () => {
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [sidebarOpen, setSidebarOpen] = useState(false);
   
-  // Date and guest selection for dynamic pricing
-  const [checkIn, setCheckIn] = useState<Date | undefined>(new Date());
-  const [checkOut, setCheckOut] = useState<Date | undefined>(new Date(Date.now() + 24 * 60 * 60 * 1000));
-  const [guests, setGuests] = useState<number>(2);
+  // Date and guest selection for search
+  const [searchCheckIn, setSearchCheckIn] = useState<Date | undefined>();
+  const [searchCheckOut, setSearchCheckOut] = useState<Date | undefined>();
+  const [searchGuests, setSearchGuests] = useState<number>(2);
 
   const [filters, setFilters] = useState<Filters>({
     guests: null,
@@ -201,6 +201,10 @@ const Stay = () => {
       {/* Quick Search Section */}
       <section className="py-6 bg-muted/30 border-b">
         <div className="max-w-7xl mx-auto px-4">
+          <div className="mb-4">
+            <h2 className="text-2xl font-heading font-bold">Search Availability</h2>
+            <p className="text-sm text-muted-foreground mt-1">Find available rooms for your dates</p>
+          </div>
           <div className="flex flex-wrap items-end gap-3">
             <div className="flex-1 min-w-[200px]">
               <label className="text-sm font-medium mb-2 block">Check-in</label>
@@ -208,11 +212,17 @@ const Stay = () => {
                 <PopoverTrigger asChild>
                   <Button variant="outline" className="w-full justify-start text-left">
                     <CalendarIcon className="mr-2 h-4 w-4" />
-                    {checkIn ? format(checkIn, 'PPP') : 'Select date'}
+                    {searchCheckIn ? format(searchCheckIn, 'PPP') : 'Select date'}
                   </Button>
                 </PopoverTrigger>
                 <PopoverContent className="w-auto p-0">
-                  <Calendar mode="single" selected={checkIn} onSelect={setCheckIn} initialFocus />
+                  <Calendar 
+                    mode="single" 
+                    selected={searchCheckIn} 
+                    onSelect={setSearchCheckIn}
+                    disabled={(date) => date < new Date()}
+                    initialFocus 
+                  />
                 </PopoverContent>
               </Popover>
             </div>
@@ -222,17 +232,23 @@ const Stay = () => {
                 <PopoverTrigger asChild>
                   <Button variant="outline" className="w-full justify-start text-left">
                     <CalendarIcon className="mr-2 h-4 w-4" />
-                    {checkOut ? format(checkOut, 'PPP') : 'Select date'}
+                    {searchCheckOut ? format(searchCheckOut, 'PPP') : 'Select date'}
                   </Button>
                 </PopoverTrigger>
                 <PopoverContent className="w-auto p-0">
-                  <Calendar mode="single" selected={checkOut} onSelect={setCheckOut} initialFocus />
+                  <Calendar 
+                    mode="single" 
+                    selected={searchCheckOut} 
+                    onSelect={setSearchCheckOut}
+                    disabled={(date) => date <= (searchCheckIn || new Date())}
+                    initialFocus 
+                  />
                 </PopoverContent>
               </Popover>
             </div>
             <div className="w-32">
               <label className="text-sm font-medium mb-2 block">Guests</label>
-              <Select value={guests.toString()} onValueChange={(val) => setGuests(parseInt(val))}>
+              <Select value={searchGuests.toString()} onValueChange={(val) => setSearchGuests(parseInt(val))}>
                 <SelectTrigger>
                   <Users className="mr-2 h-4 w-4" />
                   <SelectValue />
@@ -244,6 +260,20 @@ const Stay = () => {
                 </SelectContent>
               </Select>
             </div>
+            <Button 
+              onClick={() => {
+                if (!searchCheckIn || !searchCheckOut) return;
+                const params = new URLSearchParams({
+                  checkIn: searchCheckIn.toISOString().split('T')[0],
+                  checkOut: searchCheckOut.toISOString().split('T')[0],
+                  guests: searchGuests.toString()
+                });
+                window.location.href = `/search-availability?${params.toString()}`;
+              }}
+              disabled={!searchCheckIn || !searchCheckOut}
+            >
+              Search Availability
+            </Button>
           </div>
         </div>
       </section>
