@@ -2496,7 +2496,30 @@ const Booking = () => {
             onSuccess={handlePaymentSuccess}
             bookingDetails={{
               roomName: selectedRoomType.name,
-              roomPrice: selectedRoomType.base_price,
+              roomPrice: (() => {
+                // Calculate room price with meal plan adjustment
+                const baseRoomTotal = selectedRoomType.base_price * nights;
+                const { adjustedTotal: roomWithMealAdjustment } = applyMealPlanAdjustment(
+                  baseRoomTotal,
+                  selectedMealPlan,
+                  adultsCount,
+                  childrenCount,
+                  nights
+                );
+                
+                // Add cancellation policy adjustment
+                const selectedPolicyData = cancellationPolicies.find(cp => cp.policy_code === selectedCancellationPolicy);
+                let policyAdjustment = 0;
+                if (selectedPolicyData) {
+                  if (selectedPolicyData.adjustment_type === 'percentage') {
+                    policyAdjustment = roomWithMealAdjustment * (selectedPolicyData.adjustment_value / 100);
+                  } else if (selectedPolicyData.adjustment_type === 'fixed') {
+                    policyAdjustment = selectedPolicyData.adjustment_value;
+                  }
+                }
+                
+                return roomWithMealAdjustment + policyAdjustment;
+              })(),
               nights: nights,
               addonTotal: selectedAddons.reduce((total, addon) => total + (addon.price * addon.quantity), 0) + 
                          (selectedPickup ? selectedPickup.price : 0) + 
