@@ -30,6 +30,7 @@ import FAQ from "./pages/FAQ";
 import Packages from "./pages/Packages";
 import PackageDetail from "./pages/PackageDetail";
 import Policies from "./pages/Policies";
+import BookingConfirmation from "./pages/BookingConfirmation";
 
 // Admin imports
 import AdminLogin from "./pages/AdminLogin";
@@ -101,6 +102,7 @@ function App() {
               <Route path="/journal" element={<Journal />} />
               <Route path="/journal/:slug" element={<BlogPost />} />
               <Route path="/booking" element={<Booking />} />
+              <Route path="/booking/confirmation" element={<BookingConfirmation />} />
               <Route path="/packages" element={<Packages />} />
               <Route path="/packages/:packageId" element={<PackageDetail />} />
               <Route path="/faq" element={<FAQ />} />

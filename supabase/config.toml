@@ -70,3 +70,6 @@ verify_jwt = true
 
 [functions.auto-assign-room]
 verify_jwt = true
+
+[functions.send-booking-confirmation]
+verify_jwt = false
