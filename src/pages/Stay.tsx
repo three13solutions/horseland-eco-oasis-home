@@ -683,7 +683,7 @@ const Stay = () => {
               {/* Header with View Toggle */}
               <div className="flex justify-between items-center mb-6">
                 <h2 className="text-2xl font-heading font-bold">
-                  {filteredCategories.length} {filteredCategories.length === 1 ? 'Room' : 'Rooms'} Available
+                  {filteredCategories.length} {filteredCategories.length === 1 ? 'Room Type' : 'Room Types'}
                 </h2>
                 <div className="inline-flex rounded-lg border border-border bg-background p-1">
                   <Button
