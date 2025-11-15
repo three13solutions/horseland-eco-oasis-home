@@ -2095,89 +2095,98 @@ const Booking = () => {
 
               {/* Booking Summary */}
               <div className="space-y-6">
-                {/* Modify Search Card */}
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                      <Edit2 className="h-5 w-5" />
-                      Modify Search
-                    </CardTitle>
-                    <p className="text-sm text-muted-foreground">
-                      Update your dates or guest count
-                    </p>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="grid gap-4">
-                      {/* Check-in Date */}
-                      <div className="space-y-2">
-                        <label className="text-sm font-medium">Check-in</label>
-                        <Popover>
-                          <PopoverTrigger asChild>
-                            <Button variant="outline" className="w-full justify-start text-left">
-                              <CalendarIcon className="mr-2 h-4 w-4" />
-                              {tempCheckIn ? format(tempCheckIn, 'PPP') : 'Select date'}
-                            </Button>
-                          </PopoverTrigger>
-                          <PopoverContent className="w-auto p-0 bg-popover z-50" align="start">
-                            <CalendarComponent
-                              mode="single"
-                              selected={tempCheckIn}
-                              onSelect={setTempCheckIn}
-                              disabled={(date) => date < new Date()}
-                              initialFocus
-                              className="pointer-events-auto"
+                {/* Modify Dates/Guests Card */}
+                <Collapsible defaultOpen={false}>
+                  <Card>
+                    <CollapsibleTrigger className="w-full">
+                      <CardHeader className="flex flex-row items-center justify-between">
+                        <div className="text-left">
+                          <CardTitle className="flex items-center gap-2">
+                            <Edit2 className="h-5 w-5" />
+                            Modify Dates/No of Guest
+                          </CardTitle>
+                          <p className="text-sm text-muted-foreground">
+                            Update your dates or guest count
+                          </p>
+                        </div>
+                        <ChevronDown className="h-5 w-5 transition-transform duration-200 data-[state=open]:rotate-180" />
+                      </CardHeader>
+                    </CollapsibleTrigger>
+                    <CollapsibleContent>
+                      <CardContent>
+                        <div className="grid gap-4">
+                          {/* Check-in Date */}
+                          <div className="space-y-2">
+                            <label className="text-sm font-medium">Check-in</label>
+                            <Popover>
+                              <PopoverTrigger asChild>
+                                <Button variant="outline" className="w-full justify-start text-left">
+                                  <CalendarIcon className="mr-2 h-4 w-4" />
+                                  {tempCheckIn ? format(tempCheckIn, 'PPP') : 'Select date'}
+                                </Button>
+                              </PopoverTrigger>
+                              <PopoverContent className="w-auto p-0 bg-popover z-50" align="start">
+                                <CalendarComponent
+                                  mode="single"
+                                  selected={tempCheckIn}
+                                  onSelect={setTempCheckIn}
+                                  disabled={(date) => date < new Date()}
+                                  initialFocus
+                                  className="pointer-events-auto"
+                                />
+                              </PopoverContent>
+                            </Popover>
+                          </div>
+
+                          {/* Check-out Date */}
+                          <div className="space-y-2">
+                            <label className="text-sm font-medium">Check-out</label>
+                            <Popover>
+                              <PopoverTrigger asChild>
+                                <Button variant="outline" className="w-full justify-start text-left">
+                                  <CalendarIcon className="mr-2 h-4 w-4" />
+                                  {tempCheckOut ? format(tempCheckOut, 'PPP') : 'Select date'}
+                                </Button>
+                              </PopoverTrigger>
+                              <PopoverContent className="w-auto p-0 bg-popover z-50" align="start">
+                                <CalendarComponent
+                                  mode="single"
+                                  selected={tempCheckOut}
+                                  onSelect={setTempCheckOut}
+                                  disabled={(date) => date <= (tempCheckIn || new Date())}
+                                  initialFocus
+                                  className="pointer-events-auto"
+                                />
+                              </PopoverContent>
+                            </Popover>
+                          </div>
+
+                          {/* Guests Selector */}
+                          <div className="space-y-2">
+                            <label className="text-sm font-medium">Guests</label>
+                            <GuestSelector
+                              totalGuests={tempGuests}
+                              onGuestsChange={(total, adults, children, infants) => {
+                                setTempGuests(total);
+                                setTempAdults(adults);
+                                setTempChildren(children);
+                                setTempInfants(infants || 0);
+                              }}
                             />
-                          </PopoverContent>
-                        </Popover>
-                      </div>
+                          </div>
 
-                      {/* Check-out Date */}
-                      <div className="space-y-2">
-                        <label className="text-sm font-medium">Check-out</label>
-                        <Popover>
-                          <PopoverTrigger asChild>
-                            <Button variant="outline" className="w-full justify-start text-left">
-                              <CalendarIcon className="mr-2 h-4 w-4" />
-                              {tempCheckOut ? format(tempCheckOut, 'PPP') : 'Select date'}
-                            </Button>
-                          </PopoverTrigger>
-                          <PopoverContent className="w-auto p-0 bg-popover z-50" align="start">
-                            <CalendarComponent
-                              mode="single"
-                              selected={tempCheckOut}
-                              onSelect={setTempCheckOut}
-                              disabled={(date) => date <= (tempCheckIn || new Date())}
-                              initialFocus
-                              className="pointer-events-auto"
-                            />
-                          </PopoverContent>
-                        </Popover>
-                      </div>
-
-                      {/* Guests Selector */}
-                      <div className="space-y-2">
-                        <label className="text-sm font-medium">Guests</label>
-                        <GuestSelector
-                          totalGuests={tempGuests}
-                          onGuestsChange={(total, adults, children, infants) => {
-                            setTempGuests(total);
-                            setTempAdults(adults);
-                            setTempChildren(children);
-                            setTempInfants(infants || 0);
-                          }}
-                        />
-                      </div>
-
-                      {/* Update Button */}
-                      <Button 
-                        onClick={handleSearchCriteriaUpdate}
-                        className="w-full"
-                      >
-                        Update Search
-                      </Button>
-                    </div>
-                  </CardContent>
-                </Card>
+                          {/* Update Button */}
+                          <Button 
+                            onClick={handleSearchCriteriaUpdate}
+                            className="w-full"
+                          >
+                            Update Search
+                          </Button>
+                        </div>
+                      </CardContent>
+                    </CollapsibleContent>
+                  </Card>
+                </Collapsible>
 
                 {/* Booking Summary Sticky Container */}
                 <div className="lg:sticky lg:top-24 lg:z-10">
