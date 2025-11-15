@@ -2372,7 +2372,7 @@ const Booking = () => {
                         
                         return (
                           <div className="flex justify-between gap-2 text-sm">
-                            <span className="text-muted-foreground">{selectedPolicyData.policy_name}:</span>
+                            <span className="text-muted-foreground">{selectedPolicyData.policy_name === 'Non Refundable' ? 'Non Refundable Discount' : selectedPolicyData.policy_name}:</span>
                             <span className={`font-semibold whitespace-nowrap ${adjustment > 0 ? 'text-red-600' : 'text-green-600'}`}>
                               {adjustment > 0 ? '+' : ''}₹{Math.abs(adjustment).toLocaleString()}
                             </span>
@@ -2400,7 +2400,7 @@ const Booking = () => {
                               <div className="flex justify-between gap-2 text-sm">
                                 <span className="text-muted-foreground break-words flex-1">
                                   {selectedPickup.direction === 'two-way' 
-                                    ? `${selectedPickup.from} ↔ Property (${selectedPickup.carType})`
+                                    ? `${selectedPickup.from} ↔ ${selectedPickup.to} (${selectedPickup.carType})`
                                     : selectedPickup.direction === 'pickup'
                                     ? `Pickup from ${selectedPickup.from} (${selectedPickup.carType})`
                                     : `Drop to ${selectedPickup.to} (${selectedPickup.carType})`
