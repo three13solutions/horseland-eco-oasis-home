@@ -1372,16 +1372,26 @@ const Booking = () => {
         // Continue anyway - booking was successful
       }
 
+      // Send confirmation email
+      try {
+        await supabase.functions.invoke('send-booking-confirmation', {
+          body: { booking_id: bookingResult.booking_id }
+        });
+      } catch (emailError) {
+        console.error('Error sending confirmation email:', emailError);
+        // Don't fail the booking if email fails
+      }
+
       toast({
         title: "Booking Confirmed!",
-        description: `Your booking has been confirmed. Payment ID: ${paymentId}`,
+        description: `Your booking has been confirmed. Redirecting to confirmation page...`,
       });
 
       // Clear booking data from localStorage after successful booking
       localStorage.removeItem('currentBooking');
 
-      // Redirect to confirmation page or home
-      navigate('/');
+      // Redirect to confirmation page
+      navigate(`/booking/confirmation?booking_id=${bookingResult.booking_id}`);
     } catch (error) {
       console.error('Error processing booking:', error);
       toast({
