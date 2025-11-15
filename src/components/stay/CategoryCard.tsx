@@ -38,7 +38,7 @@ type Props = {
 
 const CategoryCard: React.FC<Props> = ({ category, onViewDetails, onBookNow, viewMode = 'grid', checkIn, checkOut, guests = 2, adults = 2, children = 0, hideBookNow = false }) => {
   const navigate = useNavigate();
-  const [selectedMealPlan, setSelectedMealPlan] = useState<string>('all_meals_inclusive');
+  const [selectedMealPlan, setSelectedMealPlan] = useState<string>('');
   const [selectedCancellationPolicy, setSelectedCancellationPolicy] = useState<string>('refundable_credit');
 
   // Fetch dynamic pricing variants
@@ -51,6 +51,16 @@ const CategoryCard: React.FC<Props> = ({ category, onViewDetails, onBookNow, vie
     infantsCount: 0,
     enabled: !!(checkIn && checkOut)
   });
+
+  // Initialize selected meal plan when variants load
+  React.useEffect(() => {
+    if (variants && variants.length > 0 && !selectedMealPlan) {
+      // Find the featured variant or default to first one
+      const defaultVariant = variants.find(v => v.is_featured) || variants[0];
+      setSelectedMealPlan(defaultVariant.meal_plan_code);
+      setSelectedCancellationPolicy(defaultVariant.cancellation_policy_code);
+    }
+  }, [variants, selectedMealPlan]);
 
   // Get unique meal plans and cancellation policies
   const mealPlans = useMemo(() => {
@@ -222,6 +232,14 @@ const CategoryCard: React.FC<Props> = ({ category, onViewDetails, onBookNow, vie
                       );
                     })}
                   </div>
+                  {selectedVariant && selectedVariant.included_meals && selectedVariant.included_meals.length > 0 && (
+                    <div className="flex items-baseline gap-1 pt-2 px-1">
+                      <Coffee className="w-3 h-3 text-muted-foreground" />
+                      <span className="text-xs text-muted-foreground">
+                        Includes: {selectedVariant.included_meals.join(', ')}
+                      </span>
+                    </div>
+                  )}
                 </div>
                 
                 {/* Cancellation Policy Selection */}
@@ -252,15 +270,6 @@ const CategoryCard: React.FC<Props> = ({ category, onViewDetails, onBookNow, vie
                     })}
                   </div>
                 </div>
-                
-                {selectedVariant && (
-                  <div className="flex items-baseline gap-1 pt-1 px-1">
-                    <Coffee className="w-3 h-3 text-muted-foreground" />
-                    <span className="text-xs text-muted-foreground">
-                      Includes: {selectedVariant.included_meals.join(', ')}
-                    </span>
-                  </div>
-                )}
               </div>
             )}
 
@@ -367,6 +376,14 @@ const CategoryCard: React.FC<Props> = ({ category, onViewDetails, onBookNow, vie
                   );
                 })}
               </div>
+              {selectedVariant && selectedVariant.included_meals && selectedVariant.included_meals.length > 0 && (
+                <div className="flex items-baseline gap-1 pt-2 px-1">
+                  <Coffee className="w-3 h-3 text-muted-foreground" />
+                  <span className="text-xs text-muted-foreground">
+                    Includes: {selectedVariant.included_meals.join(', ')}
+                  </span>
+                </div>
+              )}
             </div>
             
             {/* Cancellation Policy Selection */}
@@ -397,15 +414,6 @@ const CategoryCard: React.FC<Props> = ({ category, onViewDetails, onBookNow, vie
                 })}
               </div>
             </div>
-            
-            {selectedVariant && (
-              <div className="flex items-baseline gap-1 px-1">
-                <Coffee className="w-3 h-3 text-muted-foreground" />
-                <span className="text-xs text-muted-foreground">
-                  Includes: {selectedVariant.included_meals.join(', ')}
-                </span>
-              </div>
-            )}
           </div>
         )}
 
