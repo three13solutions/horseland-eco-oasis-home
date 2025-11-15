@@ -1,44 +1,39 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
-import { Calendar as CalendarIcon, Users, Search, LayoutGrid, List, Filter } from 'lucide-react';
+import { CalendarIcon, Users, LayoutGrid, List, Filter } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import Navigation from '@/components/Navigation';
 import DynamicFooter from '@/components/DynamicFooter';
-import { AvailableRoomCard } from '@/components/booking/AvailableRoomCard';
+import CombinedFloating from '@/components/CombinedFloating';
+import CategoryCard, { Category } from '@/components/stay/CategoryCard';
+import CategoryFilters from '@/components/stay/CategoryFilters';
+import { Filters } from '@/components/stay/CategoryFilters';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
-import { Filters } from '@/components/stay/CategoryFilters';
-import CategoryFilters from '@/components/stay/CategoryFilters';
 import SEO from '@/components/SEO';
 
 // Helper function to map room features to category attributes
 const mapRoomToCategory = (room: any): Category => {
   const features = room.features || [];
   
-  // Extract bed configurations from features
   const bedConfigurations = features.filter((f: string) => 
     f.includes('double') || f.includes('bed') || f.includes('loft')
   );
   
-  // Determine audiences based on max guests and features
   const audiences = [];
   if (room.max_guests >= 2) audiences.push('Couple');
   if (room.max_guests >= 3 || features.some((f: string) => f.includes('family') || f.includes('playground'))) audiences.push('Family with kids');
   if (room.max_guests >= 4) audiences.push('Friends / Group');
   
-  // Determine budget category based on price
   let budget: 'Budget' | 'Mid-range' | 'Premium' = 'Budget';
   if (room.base_price >= 4000) budget = 'Premium';
   else if (room.base_price >= 3000) budget = 'Mid-range';
   
-  // Extract view locations from features and name
   const viewLocations = [];
   if (features.some((f: string) => f.toLowerCase().includes('pool'))) viewLocations.push('Pool view (window)', 'Near pool');
   if (features.some((f: string) => f.toLowerCase().includes('balcony'))) viewLocations.push('Balcony');
@@ -48,12 +43,10 @@ const mapRoomToCategory = (room: any): Category => {
   if (features.some((f: string) => f.toLowerCase().includes('entrance'))) viewLocations.push('Near entrance');
   if (features.some((f: string) => f.toLowerCase().includes('private') || f.toLowerCase().includes('windowless'))) viewLocations.push('No view / private and snug');
   
-  // Determine noise level
   let noise: 'Lively zone' | 'Moderate' | 'Quiet' = 'Moderate';
   if (features.some((f: string) => f.toLowerCase().includes('pool') || f.toLowerCase().includes('sports') || f.toLowerCase().includes('active'))) noise = 'Lively zone';
   else if (features.some((f: string) => f.toLowerCase().includes('private') || f.toLowerCase().includes('quiet') || f.toLowerCase().includes('cave'))) noise = 'Quiet';
   
-  // Create tagline from description or generate one
   const tagline = room.description ? 
     room.description.split('.')[0] : 
     `Comfortable accommodation for up to ${room.max_guests} guests`;
@@ -75,24 +68,11 @@ const mapRoomToCategory = (room: any): Category => {
   };
 };
 
-interface RoomType {
-  id: string;
-  name: string;
-  description?: string;
-  hero_image?: string;
-  hero_image_key?: string;
-  gallery: any;
-  max_guests: number;
-  features: any;
-  base_price: number;
-}
-
 const SearchAvailability = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const navigate = useNavigate();
   const { toast } = useToast();
   
-  // Search parameters
   const [checkIn, setCheckIn] = useState<Date | undefined>(
     searchParams.get('checkIn') ? new Date(searchParams.get('checkIn')!) : undefined
   );
@@ -101,13 +81,12 @@ const SearchAvailability = () => {
   );
   const [guests, setGuests] = useState<number>(parseInt(searchParams.get('guests') || '2'));
   
-  // Results
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(false);
   const [searched, setSearched] = useState(false);
-  const [heroImage, setHeroImage] = useState('https://images.unsplash.com/photo-1571896349842-33c89424de2d?ixlib=rb-4.0.3&auto=format&fit=crop&w=2000&q=80');
+  const [heroImage] = useState('https://images.unsplash.com/photo-1571896349842-33c89424de2d?ixlib=rb-4.0.3&auto=format&fit=crop&w=2000&q=80');
+  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
 
-  // Filters
   const [filters, setFilters] = useState<Filters>({
     guests: null,
     bed: null,
@@ -117,9 +96,7 @@ const SearchAvailability = () => {
     features: [],
     noise: null,
   });
-  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
 
-  // Load initial search if params present
   useEffect(() => {
     if (checkIn && checkOut) {
       handleSearch();
@@ -149,7 +126,6 @@ const SearchAvailability = () => {
     setSearched(true);
 
     try {
-      // Fetch all room types
       const { data: allRooms, error: roomsError } = await supabase
         .from('room_types')
         .select('*')
@@ -158,12 +134,9 @@ const SearchAvailability = () => {
 
       if (roomsError) throw roomsError;
 
-      // Map to categories
       const mappedCategories = allRooms?.map(mapRoomToCategory) || [];
       setCategories(mappedCategories);
-      setAvailableRooms(available);
 
-      // Update URL
       const params = new URLSearchParams({
         checkIn: checkIn.toISOString().split('T')[0],
         checkOut: checkOut.toISOString().split('T')[0],
@@ -189,20 +162,8 @@ const SearchAvailability = () => {
     }
   };
 
-  const handleBookNow = (roomTypeId: string) => {
-    const params = new URLSearchParams({
-      checkIn: checkIn!.toISOString().split('T')[0],
-      checkOut: checkOut!.toISOString().split('T')[0],
-      guests: guests.toString(),
-      roomTypeId
-    });
-    navigate(`/booking?${params.toString()}`);
-  };
-
-  // Apply filters - same logic as Stay page
   const filteredCategories = useMemo(() => {
     return categories.filter((category) => {
-      // Parse guest filter
       if (filters.guests) {
         const guestFilter = filters.guests;
         let minGuests = 0;
@@ -250,107 +211,115 @@ const SearchAvailability = () => {
   return (
     <>
       <SEO 
-        title="Search Availability"
+        title="Search Availability - Find Your Perfect Stay"
         description="Search for available accommodations for your dates"
       />
       <div className="min-h-screen flex flex-col bg-background">
         <Navigation />
 
-        {/* Search Section */}
-        <section className="py-8 bg-muted/30 border-b">
-          <div className="max-w-7xl mx-auto px-4">
-            <h1 className="text-3xl font-heading font-bold mb-6">Search Availability</h1>
-            
-            <Card>
-              <CardContent className="pt-6">
-                <div className="flex flex-wrap items-end gap-4">
-                  <div className="flex-1 min-w-[200px]">
-                    <label className="text-sm font-medium mb-2 block">Check-in</label>
-                    <Popover>
-                      <PopoverTrigger asChild>
-                        <Button variant="outline" className="w-full justify-start text-left">
-                          <CalendarIcon className="mr-2 h-4 w-4" />
-                          {checkIn ? format(checkIn, 'PPP') : 'Select date'}
-                        </Button>
-                      </PopoverTrigger>
-                      <PopoverContent className="w-auto p-0">
-                        <Calendar 
-                          mode="single" 
-                          selected={checkIn} 
-                          onSelect={setCheckIn}
-                          disabled={(date) => date < new Date()}
-                          initialFocus 
-                        />
-                      </PopoverContent>
-                    </Popover>
-                  </div>
-
-                  <div className="flex-1 min-w-[200px]">
-                    <label className="text-sm font-medium mb-2 block">Check-out</label>
-                    <Popover>
-                      <PopoverTrigger asChild>
-                        <Button variant="outline" className="w-full justify-start text-left">
-                          <CalendarIcon className="mr-2 h-4 w-4" />
-                          {checkOut ? format(checkOut, 'PPP') : 'Select date'}
-                        </Button>
-                      </PopoverTrigger>
-                      <PopoverContent className="w-auto p-0">
-                        <Calendar 
-                          mode="single" 
-                          selected={checkOut} 
-                          onSelect={setCheckOut}
-                          disabled={(date) => date <= (checkIn || new Date())}
-                          initialFocus 
-                        />
-                      </PopoverContent>
-                    </Popover>
-                  </div>
-
-                  <div className="w-32">
-                    <label className="text-sm font-medium mb-2 block">Guests</label>
-                    <Select value={guests.toString()} onValueChange={(val) => setGuests(parseInt(val))}>
-                      <SelectTrigger>
-                        <Users className="mr-2 h-4 w-4" />
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {[1, 2, 3, 4, 5, 6, 7, 8].map(num => (
-                          <SelectItem key={num} value={num.toString()}>{num}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  <Button 
-                    onClick={handleSearch} 
-                    disabled={loading}
-                    className="h-10"
-                  >
-                    <Search className="mr-2 h-4 w-4" />
-                    {loading ? 'Searching...' : 'Search'}
-                    </Button>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
+        <section className="relative h-[40vh] min-h-[300px] flex items-center justify-center">
+          <div 
+            className="absolute inset-0 bg-cover bg-center bg-no-repeat"
+            style={{
+              backgroundImage: `url('${heroImage}')`
+            }}
+          >
+            <div className="absolute inset-0 bg-black/40"></div>
+          </div>
+          
+          <div className="relative z-10 text-center text-white max-w-4xl mx-auto px-4">
+            <h1 className="text-4xl md:text-6xl font-heading font-bold mb-6 leading-tight">
+              Available Accommodations
+            </h1>
+            <p className="text-lg md:text-xl font-body opacity-90">
+              Perfect rooms for your mountain retreat
+            </p>
           </div>
         </section>
 
-        {/* Results Section */}
+        <section className="py-6 bg-muted/30 border-b">
+          <div className="max-w-7xl mx-auto px-4">
+            <div className="mb-4">
+              <h2 className="text-2xl font-heading font-bold">Search Availability</h2>
+              <p className="text-sm text-muted-foreground mt-1">Find available rooms for your dates</p>
+            </div>
+            <div className="flex flex-wrap items-end gap-3">
+              <div className="flex-1 min-w-[200px]">
+                <label className="text-sm font-medium mb-2 block">Check-in</label>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button variant="outline" className="w-full justify-start text-left">
+                      <CalendarIcon className="mr-2 h-4 w-4" />
+                      {checkIn ? format(checkIn, 'PPP') : 'Select date'}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0">
+                    <Calendar 
+                      mode="single" 
+                      selected={checkIn} 
+                      onSelect={setCheckIn}
+                      disabled={(date) => date < new Date()}
+                      initialFocus 
+                    />
+                  </PopoverContent>
+                </Popover>
+              </div>
+              <div className="flex-1 min-w-[200px]">
+                <label className="text-sm font-medium mb-2 block">Check-out</label>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button variant="outline" className="w-full justify-start text-left">
+                      <CalendarIcon className="mr-2 h-4 w-4" />
+                      {checkOut ? format(checkOut, 'PPP') : 'Select date'}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0">
+                    <Calendar 
+                      mode="single" 
+                      selected={checkOut} 
+                      onSelect={setCheckOut}
+                      disabled={(date) => date <= (checkIn || new Date())}
+                      initialFocus 
+                    />
+                  </PopoverContent>
+                </Popover>
+              </div>
+              <div className="w-32">
+                <label className="text-sm font-medium mb-2 block">Guests</label>
+                <Select value={guests.toString()} onValueChange={(val) => setGuests(parseInt(val))}>
+                  <SelectTrigger>
+                    <Users className="mr-2 h-4 w-4" />
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {[1, 2, 3, 4, 5, 6, 7, 8].map(num => (
+                      <SelectItem key={num} value={num.toString()}>{num}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <Button 
+                onClick={handleSearch} 
+                disabled={loading || !checkIn || !checkOut}
+                className="h-10"
+              >
+                {loading ? 'Searching...' : 'Search Availability'}
+              </Button>
+            </div>
+          </div>
+        </section>
+
         {searched && (
-          <section className="py-8 flex-1">
+          <section className="py-8">
             <div className="max-w-7xl mx-auto px-4">
               <div className="flex gap-6">
-                {/* Desktop Sidebar */}
                 <aside className="hidden lg:block w-64 flex-shrink-0">
-                <div className="sticky top-20 bg-card border rounded-lg p-4">
+                  <div className="sticky top-20 bg-card border rounded-lg p-4">
                     <CategoryFilters filters={filters} setFilters={setFilters} />
                   </div>
                 </aside>
 
-                {/* Main Content */}
                 <div className="flex-1">
-                  {/* Header */}
                   <div className="flex items-center justify-between mb-6">
                     <div>
                       <h2 className="text-2xl font-heading font-bold">
@@ -364,7 +333,6 @@ const SearchAvailability = () => {
                     </div>
 
                     <div className="flex items-center gap-2">
-                      {/* Mobile Filter */}
                       <Sheet>
                         <SheetTrigger asChild>
                           <Button variant="outline" size="icon" className="lg:hidden">
@@ -381,7 +349,6 @@ const SearchAvailability = () => {
                         </SheetContent>
                       </Sheet>
 
-                      {/* View Toggle */}
                       <div className="hidden md:flex border rounded-lg p-1">
                         <Button
                           variant={viewMode === 'grid' ? 'default' : 'ghost'}
@@ -403,7 +370,6 @@ const SearchAvailability = () => {
                     </div>
                   </div>
 
-                  {/* Room Cards */}
                   {loading ? (
                     <div className="text-center py-12">
                       <p className="text-muted-foreground">Searching for available rooms...</p>
@@ -411,24 +377,22 @@ const SearchAvailability = () => {
                   ) : filteredCategories.length === 0 ? (
                     <div className="text-center py-12 bg-card border rounded-lg">
                       <p className="text-muted-foreground mb-4">
-                        {searched ? 'No rooms available for the selected criteria' : 'Use the search above to find available rooms'}
+                        No rooms available for the selected criteria
                       </p>
-                      {searched && (
-                        <Button
-                          variant="outline"
-                          onClick={() => setFilters({
-                            guests: null,
-                            bed: null,
-                            audience: null,
-                            budget: null,
-                            view: null,
-                            features: [],
-                            noise: null,
-                          })}
-                        >
-                          Clear All Filters
-                        </Button>
-                      )}
+                      <Button
+                        variant="outline"
+                        onClick={() => setFilters({
+                          guests: null,
+                          bed: null,
+                          audience: null,
+                          budget: null,
+                          view: null,
+                          features: [],
+                          noise: null,
+                        })}
+                      >
+                        Clear All Filters
+                      </Button>
                     </div>
                   ) : (
                     <div className={viewMode === 'grid' 
