@@ -114,6 +114,7 @@ const Booking = () => {
   // Addon states
   const [meals, setMeals] = useState<Addon[]>([]);
   const [activities, setActivities] = useState<Addon[]>([]);
+  const [selectedMealPlan, setSelectedMealPlan] = useState<'none' | 'half-board' | 'full-board'>('none');
   const [spaServices, setSpaServices] = useState<Addon[]>([]);
   const [showSpaInBooking, setShowSpaInBooking] = useState(false);
   const [showActivitiesInBooking, setShowActivitiesInBooking] = useState(false);
@@ -715,8 +716,8 @@ const Booking = () => {
     const pickupTotal = selectedPickup ? selectedPickup.price : 0;
     const beddingTotal = selectedBedding.reduce((total, bed) => total + bed.price, 0);
     
-    // Only add guest meals if no rate variant is selected (variants include meals)
-    const mealsTotal = selectedRateVariant ? 0 : calculateGuestMealsTotal();
+    // Only add meal plan total if no rate variant is selected (variants include meals)
+    const mealsTotal = selectedRateVariant ? 0 : calculateMealPlanTotal();
     
     return roomTotal + addonsTotal + pickupTotal + beddingTotal + mealsTotal;
   };
@@ -793,8 +794,10 @@ const Booking = () => {
   };
 
   // Helper function to get meal price from database
-  const getMealPrice = (mealType: string, variant: 'vegetarian' | 'non-vegetarian' | 'jain'): number => {
-    const dbVariant = mapDietaryPreferenceToVariant(variant);
+  const getMealPrice = (mealType: string, variant: 'vegetarian' | 'non-vegetarian' | 'jain' | 'no-preference'): number => {
+    // Default to vegetarian pricing if no preference
+    const effectiveVariant = variant === 'no-preference' ? 'vegetarian' : variant;
+    const dbVariant = mapDietaryPreferenceToVariant(effectiveVariant);
     const meal = meals.find(m => {
       const mealData = m as any;
       return mealData.meal_type === mealType && mealData.variant === dbVariant;
@@ -959,33 +962,24 @@ const Booking = () => {
     });
   };
 
-  const calculateGuestMealsTotal = () => {
-    let total = 0;
+  const calculateMealPlanTotal = () => {
+    if (selectedMealPlan === 'none') return 0;
     
-    // Calculate regular meals
-    guestMeals.forEach(guest => {
-      Object.entries(guest.mealTypeQuantities).forEach(([mealType, quantity]) => {
-        const dbVariant = mapDietaryPreferenceToVariant(guest.dietaryPreference);
-        const meal = meals.find(m => {
-          const mealData = m as any;
-          return mealData.meal_type === mealType && mealData.variant === dbVariant;
-        });
-        
-        if (meal) {
-          total += meal.price * quantity;
-        }
-      });
-    });
+    const nights = calculateNights();
+    const breakfastPrice = getMealPrice('breakfast', guestDetails.dietaryPreference) || 0;
+    const lunchPrice = getMealPrice('lunch', guestDetails.dietaryPreference) || 0;
+    const highTeaPrice = getMealPrice('high_tea', guestDetails.dietaryPreference) || 0;
+    const dinnerPrice = getMealPrice('dinner', guestDetails.dietaryPreference) || 0;
     
-    // Add common additional services
-    if (serviceInRoomQuantity > 0) {
-      total += 300 * serviceInRoomQuantity; // Meal service to the room price
-    }
-    if (candleLightDinnerQuantity > 0) {
-      total += 1500 * candleLightDinnerQuantity; // Candle light dinner price
+    if (selectedMealPlan === 'half-board') {
+      return (breakfastPrice + dinnerPrice) * guests * nights;
     }
     
-    return total;
+    if (selectedMealPlan === 'full-board') {
+      return (breakfastPrice + lunchPrice + highTeaPrice + dinnerPrice) * guests * nights;
+    }
+    
+    return 0;
   };
 
   // Default/fallback pickup services
@@ -1555,258 +1549,106 @@ const Booking = () => {
                       </TabsContent>
 
                       <TabsContent value="meals" className="space-y-6">
-                        <div className="space-y-6">
-                          {guestMeals.map((guest, index) => {
-                            const maxDays = calculateNights();
-                            
-                            // Check if selected room is a pool deck room
-                            const isPoolDeckRoom = selectedRoomType?.name?.toLowerCase().includes('pool deck') || false;
-                            
-                            const mealOptions = [
-                              { 
-                                mealType: 'breakfast', 
-                                label: 'Breakfast',
-                                services: [
-                                  { 
-                                    key: 'breakfast', 
-                                    label: 'Buffet', 
-                                    quantityKey: 'mealTypeQuantities',
-                                    getPrice: () => getMealPrice('breakfast', guest.dietaryPreference)
-                                  }
-                                ]
-                              },
-                              { 
-                                mealType: 'lunch', 
-                                label: 'Lunch',
-                                services: [
-                                  { 
-                                    key: 'lunch', 
-                                    label: 'Buffet', 
-                                    quantityKey: 'mealTypeQuantities',
-                                    getPrice: () => getMealPrice('lunch', guest.dietaryPreference)
-                                  }
-                                ]
-                              },
-                              { 
-                                mealType: 'high_tea', 
-                                label: 'High Tea',
-                                services: [
-                                  { 
-                                    key: 'high_tea', 
-                                    label: 'Buffet', 
-                                    quantityKey: 'mealTypeQuantities',
-                                    getPrice: () => getMealPrice('high_tea', guest.dietaryPreference)
-                                  }
-                                ]
-                              },
-                              { 
-                                mealType: 'dinner', 
-                                label: 'Dinner',
-                                services: [
-                                  { 
-                                    key: 'dinner', 
-                                    label: 'Buffet', 
-                                    quantityKey: 'mealTypeQuantities',
-                                    getPrice: () => getMealPrice('dinner', guest.dietaryPreference)
-                                  }
-                                ]
-                              }
-                            ];
-                            
-                            return (
-                              <Card key={index}>
-                                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
-                                  <CardTitle className="text-lg">Guest {guest.guestNumber}</CardTitle>
-                                  <div className="flex items-center gap-2">
-                                    <Label htmlFor={`dietary-${index}`} className="text-sm font-medium whitespace-nowrap">
-                                      Dietary Preference:
-                                    </Label>
-                                    <select
-                                      id={`dietary-${index}`}
-                                      className="p-2 border rounded-md text-sm"
-                                      value={guest.dietaryPreference}
-                                      onChange={(e) => handleGuestDietaryChange(index, e.target.value as any)}
-                                    >
-                                      <option value="vegetarian">Vegetarian</option>
-                                      <option value="non-vegetarian">Non-Vegetarian</option>
-                                      <option value="jain">Jain</option>
-                                    </select>
+                        <Card>
+                          <CardHeader>
+                            <CardTitle>Meal Plan</CardTitle>
+                            <p className="text-sm text-muted-foreground">
+                              Select a meal plan that will apply to all guests for the entire stay ({calculateNights()} nights)
+                            </p>
+                          </CardHeader>
+                          <CardContent className="space-y-4">
+                            <div className="space-y-3">
+                              <div 
+                                className={`p-4 border rounded-lg cursor-pointer transition-colors ${
+                                  selectedMealPlan === 'none' ? 'border-primary bg-primary/5' : 'border-border hover:border-primary/50'
+                                }`}
+                                onClick={() => setSelectedMealPlan('none')}
+                              >
+                                <div className="flex items-start gap-3">
+                                  <div className={`w-5 h-5 rounded-full border-2 mt-0.5 flex items-center justify-center ${
+                                    selectedMealPlan === 'none' ? 'border-primary' : 'border-muted-foreground'
+                                  }`}>
+                                    {selectedMealPlan === 'none' && (
+                                      <div className="w-3 h-3 rounded-full bg-primary" />
+                                    )}
                                   </div>
-                                </CardHeader>
-                                <CardContent>
-                                  <div className="space-y-4">
-                                    {/* Quick Meal Plan Selector */}
-                                    <div className="flex items-center gap-2 pb-3 border-b">
-                                      <Label className="text-sm font-medium whitespace-nowrap">Quick Select:</Label>
-                                      <div className="flex gap-2">
-                                        <Button
-                                          type="button"
-                                          variant="outline"
-                                          size="sm"
-                                          onClick={() => handleMealPlanSelect(index, 'breakfast-only')}
-                                          className="text-xs"
-                                        >
-                                          Breakfast Only
-                                        </Button>
-                                        <Button
-                                          type="button"
-                                          variant="outline"
-                                          size="sm"
-                                          onClick={() => handleMealPlanSelect(index, 'all-meals')}
-                                          className="text-xs"
-                                        >
-                                          All Meals
-                                        </Button>
-                                        <Button
-                                          type="button"
-                                          variant="ghost"
-                                          size="sm"
-                                          onClick={() => handleMealPlanSelect(index, 'none')}
-                                          className="text-xs"
-                                        >
-                                          Clear
-                                        </Button>
-                                      </div>
-                                    </div>
-                                    
-                                    <div className="text-sm text-muted-foreground">
-                                      {maxDays} {maxDays === 1 ? 'day' : 'days'} stay
-                                    </div>
+                                  <div className="flex-1">
+                                    <h4 className="font-semibold">No Meals</h4>
+                                    <p className="text-sm text-muted-foreground">Room only - no meals included</p>
                                   </div>
-                                  
-                                  {/* Meal Types in columns with services stacked vertically */}
-                                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                                    {mealOptions.map((meal) => (
-                                      <div key={meal.mealType} className="border rounded-lg p-3 space-y-3">
-                                        <div className="font-semibold text-sm text-center pb-2 border-b">
-                                          {meal.label}
-                                        </div>
-                                        <div className="space-y-3">
-                                          {meal.services.map((service: any) => {
-                                            const quantity = guest.mealTypeQuantities[service.key] || 0;
-                                            const displayPrice = service.getPrice ? service.getPrice() : service.price;
-                                            
-                                            return (
-                                              <div key={service.key} className="space-y-2">
-                                                <div className="text-xs text-center">
-                                                  {service.label}
-                                                  <div className="text-muted-foreground font-semibold">
-                                                    ₹{displayPrice}
-                                                  </div>
-                                                </div>
-                                                <div className="flex items-center justify-center gap-1">
-                                                  <Button
-                                                    type="button"
-                                                    variant="outline"
-                                                    size="icon"
-                                                    className="h-7 w-7"
-                                                    onClick={() => handleMealQuantityChange(index, service.key, -1)}
-                                                    disabled={quantity === 0}
-                                                  >
-                                                    <Minus className="h-3 w-3" />
-                                                  </Button>
-                                                  <span className="w-6 text-center text-sm font-semibold">{quantity}</span>
-                                                  <Button
-                                                    type="button"
-                                                    variant="outline"
-                                                    size="icon"
-                                                    className="h-7 w-7"
-                                                    onClick={() => handleMealQuantityChange(index, service.key, 1)}
-                                                    disabled={quantity >= maxDays}
-                                                  >
-                                                    <Plus className="h-3 w-3" />
-                                                  </Button>
-                                                </div>
-                                              </div>
-                                            );
-                                          })}
-                                        </div>
-                                      </div>
-                                    ))}
+                                </div>
+                              </div>
+
+                              <div 
+                                className={`p-4 border rounded-lg cursor-pointer transition-colors ${
+                                  selectedMealPlan === 'half-board' ? 'border-primary bg-primary/5' : 'border-border hover:border-primary/50'
+                                }`}
+                                onClick={() => setSelectedMealPlan('half-board')}
+                              >
+                                <div className="flex items-start gap-3">
+                                  <div className={`w-5 h-5 rounded-full border-2 mt-0.5 flex items-center justify-center ${
+                                    selectedMealPlan === 'half-board' ? 'border-primary' : 'border-muted-foreground'
+                                  }`}>
+                                    {selectedMealPlan === 'half-board' && (
+                                      <div className="w-3 h-3 rounded-full bg-primary" />
+                                    )}
                                   </div>
-                                </CardContent>
-                              </Card>
-                            );
-                          })}
-                          
-                          {/* Additional Services Section (common to all guests) */}
-                          {selectedRoomType?.name?.toLowerCase().includes('pool deck') && (
-                            <Card>
-                              <CardHeader>
-                                <CardTitle className="text-lg">Additional Services</CardTitle>
-                              </CardHeader>
-                              <CardContent>
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                  {/* Meal Service to the Room */}
-                                  <div className="border rounded-lg p-4 space-y-3">
-                                    <div className="text-center">
-                                      <div className="font-medium text-sm">Meal Service to the Room</div>
-                                      <div className="text-xs text-muted-foreground">₹300 per meal</div>
-                                      <div className="text-xs text-muted-foreground mt-1">
-                                        Limited to {getTotalMealsAcrossAllGuests()} total meals selected
-                                      </div>
-                                    </div>
-                                    <div className="flex items-center justify-center gap-2">
-                                      <Button
-                                        type="button"
-                                        variant="outline"
-                                        size="icon"
-                                        className="h-8 w-8"
-                                        onClick={() => handleServiceInRoomChange(-1)}
-                                        disabled={serviceInRoomQuantity === 0}
-                                      >
-                                        <Minus className="h-4 w-4" />
-                                      </Button>
-                                      <span className="w-10 text-center font-semibold">{serviceInRoomQuantity}</span>
-                                      <Button
-                                        type="button"
-                                        variant="outline"
-                                        size="icon"
-                                        className="h-8 w-8"
-                                        onClick={() => handleServiceInRoomChange(1)}
-                                      >
-                                        <Plus className="h-4 w-4" />
-                                      </Button>
-                                    </div>
-                                  </div>
-                                  
-                                  {/* Candle Light Dinner */}
-                                  <div className="border rounded-lg p-4 space-y-3">
-                                    <div className="text-center">
-                                      <div className="font-medium text-sm">Candle Light Dinner</div>
-                                      <div className="text-xs text-muted-foreground">₹1,500 per night</div>
-                                      <div className="text-xs text-muted-foreground mt-1">
-                                        Limited to {calculateNights()} {calculateNights() === 1 ? 'night' : 'nights'}
-                                      </div>
-                                    </div>
-                                    <div className="flex items-center justify-center gap-2">
-                                      <Button
-                                        type="button"
-                                        variant="outline"
-                                        size="icon"
-                                        className="h-8 w-8"
-                                        onClick={() => handleCandleLightDinnerChange(-1)}
-                                        disabled={candleLightDinnerQuantity === 0}
-                                      >
-                                        <Minus className="h-4 w-4" />
-                                      </Button>
-                                      <span className="w-10 text-center font-semibold">{candleLightDinnerQuantity}</span>
-                                      <Button
-                                        type="button"
-                                        variant="outline"
-                                        size="icon"
-                                        className="h-8 w-8"
-                                        onClick={() => handleCandleLightDinnerChange(1)}
-                                      >
-                                        <Plus className="h-4 w-4" />
-                                      </Button>
+                                  <div className="flex-1">
+                                    <h4 className="font-semibold">Half Board</h4>
+                                    <p className="text-sm text-muted-foreground">Breakfast & Dinner included for all guests</p>
+                                    <div className="mt-2 text-sm">
+                                      <span className="font-medium text-primary">
+                                        {(() => {
+                                          const breakfastPrice = getMealPrice('breakfast', guestDetails.dietaryPreference) || 0;
+                                          const dinnerPrice = getMealPrice('dinner', guestDetails.dietaryPreference) || 0;
+                                          const totalPerDay = (breakfastPrice + dinnerPrice) * guests;
+                                          const totalCost = totalPerDay * calculateNights();
+                                          return `₹${totalCost.toLocaleString()}`;
+                                        })()}
+                                      </span>
+                                      <span className="text-muted-foreground"> for {guests} guest(s) × {calculateNights()} night(s)</span>
                                     </div>
                                   </div>
                                 </div>
-                              </CardContent>
-                            </Card>
-                          )}
-                        </div>
+                              </div>
+
+                              <div 
+                                className={`p-4 border rounded-lg cursor-pointer transition-colors ${
+                                  selectedMealPlan === 'full-board' ? 'border-primary bg-primary/5' : 'border-border hover:border-primary/50'
+                                }`}
+                                onClick={() => setSelectedMealPlan('full-board')}
+                              >
+                                <div className="flex items-start gap-3">
+                                  <div className={`w-5 h-5 rounded-full border-2 mt-0.5 flex items-center justify-center ${
+                                    selectedMealPlan === 'full-board' ? 'border-primary' : 'border-muted-foreground'
+                                  }`}>
+                                    {selectedMealPlan === 'full-board' && (
+                                      <div className="w-3 h-3 rounded-full bg-primary" />
+                                    )}
+                                  </div>
+                                  <div className="flex-1">
+                                    <h4 className="font-semibold">Full Board</h4>
+                                    <p className="text-sm text-muted-foreground">Breakfast, Lunch, High Tea & Dinner included for all guests</p>
+                                    <div className="mt-2 text-sm">
+                                      <span className="font-medium text-primary">
+                                        {(() => {
+                                          const breakfastPrice = getMealPrice('breakfast', guestDetails.dietaryPreference) || 0;
+                                          const lunchPrice = getMealPrice('lunch', guestDetails.dietaryPreference) || 0;
+                                          const highTeaPrice = getMealPrice('high_tea', guestDetails.dietaryPreference) || 0;
+                                          const dinnerPrice = getMealPrice('dinner', guestDetails.dietaryPreference) || 0;
+                                          const totalPerDay = (breakfastPrice + lunchPrice + highTeaPrice + dinnerPrice) * guests;
+                                          const totalCost = totalPerDay * calculateNights();
+                                          return `₹${totalCost.toLocaleString()}`;
+                                        })()}
+                                      </span>
+                                      <span className="text-muted-foreground"> for {guests} guest(s) × {calculateNights()} night(s)</span>
+                                    </div>
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                          </CardContent>
+                        </Card>
                       </TabsContent>
 
                       {/* Spa Services Tab */}
@@ -2002,15 +1844,23 @@ const Booking = () => {
                           placeholder="Enter address"
                         />
                       </div>
-                      <div>
-                        <Label htmlFor="special">Special Requests</Label>
-                        <Input
-                          id="special"
-                          value={guestDetails.specialRequests}
-                          onChange={(e) => setGuestDetails(prev => ({ ...prev, specialRequests: e.target.value }))}
-                          placeholder="Any special requirements or requests"
-                        />
-                      </div>
+                    </CardContent>
+                  </Card>
+                  
+                  {/* Special Requests */}
+                  <Card>
+                    <CardHeader>
+                      <CardTitle>Special Requests</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <Label htmlFor="special">Any special requirements or requests?</Label>
+                      <textarea
+                        id="special"
+                        value={guestDetails.specialRequests}
+                        onChange={(e) => setGuestDetails(prev => ({ ...prev, specialRequests: e.target.value }))}
+                        placeholder="Please let us know if you have any special requirements, preferences, or requests for your stay..."
+                        className="w-full mt-2 p-3 border rounded-md min-h-[100px] resize-y"
+                      />
                     </CardContent>
                   </Card>
               </div>
@@ -2116,149 +1966,84 @@ const Booking = () => {
                             </div>
                           )}
                           
-                          {calculateGuestMealsTotal() > 0 && (
+                          {selectedAddons.length > 0 && (
                             <div className="space-y-2">
                               <Separator />
-                              <div className="font-medium text-sm">Meals:</div>
-                              {guestMeals.map((guest, idx) => {
-                                const hasRegularMeals = Object.keys(guest.mealTypeQuantities).length > 0;
-                                
-                                if (!hasRegularMeals) return null;
-                                
-                                return (
-                                  <div key={idx} className="space-y-1 pl-2">
-                                    <div className="text-xs font-medium text-muted-foreground">
-                                      Guest {guest.guestNumber} ({guest.dietaryPreference})
-                                    </div>
-                                    
-                                    {/* Regular meals (buffet) */}
-                                    {Object.entries(guest.mealTypeQuantities).map(([mealType, quantity]) => {
-                                      const dbVariant = mapDietaryPreferenceToVariant(guest.dietaryPreference);
-                                      const meal = meals.find(m => {
-                                        const mealData = m as any;
-                                        return mealData.meal_type === mealType && mealData.variant === dbVariant;
-                                      });
-                                      if (!meal) return null;
-                                      const mealTypeLabel = mealType === 'breakfast' ? 'Breakfast' : 
-                                                          mealType === 'lunch' ? 'Lunch' : 
-                                                          mealType === 'high_tea' ? 'High Tea' : 'Dinner';
-                                      return (
-                                        <div key={mealType} className="flex justify-between gap-2 text-sm">
-                                          <span className="text-muted-foreground break-words">• {mealTypeLabel} Buffet × {quantity}</span>
-                                          <span className="font-medium whitespace-nowrap">₹{(meal.price * quantity).toLocaleString()}</span>
-                                        </div>
-                                      );
-                                    })}
-                                  </div>
-                                );
-                              })}
-                              
-                              {/* Additional Services (common to all guests) */}
-                              {(serviceInRoomQuantity > 0 || candleLightDinnerQuantity > 0) && (
-                                <div className="space-y-1 pl-2 mt-2 pt-2 border-t">
-                                  <div className="text-xs font-medium text-muted-foreground">
-                                    Additional Services
-                                  </div>
-                                  
-                                  {serviceInRoomQuantity > 0 && (
-                                    <div className="flex justify-between gap-2 text-sm">
-                                      <span className="text-muted-foreground break-words">• Meal Service to the Room × {serviceInRoomQuantity}</span>
-                                      <span className="font-medium whitespace-nowrap">₹{(300 * serviceInRoomQuantity).toLocaleString()}</span>
-                                    </div>
-                                  )}
-                                  
-                                  {candleLightDinnerQuantity > 0 && (
-                                    <div className="flex justify-between gap-2 text-sm">
-                                      <span className="text-muted-foreground break-words">• Candle Light Dinner × {candleLightDinnerQuantity}</span>
-                                      <span className="font-medium whitespace-nowrap">₹{(1500 * candleLightDinnerQuantity).toLocaleString()}</span>
-                                    </div>
-                                  )}
+                              <div className="font-medium text-sm">Add-ons:</div>
+                              {selectedAddons.map((addon) => (
+                                <div key={addon.id} className="flex justify-between gap-2 text-sm">
+                                  <span className="text-muted-foreground">{addon.title} × {addon.quantity}</span>
+                                  <span className="font-medium whitespace-nowrap">₹{(addon.price * addon.quantity).toLocaleString()}</span>
                                 </div>
-                              )}
+                              ))}
                             </div>
                           )}
-                     </div>
+                          
+                          {calculateMealPlanTotal() > 0 && (
+                            <div className="space-y-2">
+                              <Separator />
+                              <div className="flex justify-between gap-2 text-sm">
+                                <span className="text-muted-foreground">
+                                  {selectedMealPlan === 'half-board' ? 'Half Board (Breakfast & Dinner)' : 'Full Board (All Meals)'}
+                                </span>
+                                <span className="font-medium whitespace-nowrap">₹{calculateMealPlanTotal().toLocaleString()}</span>
+                              </div>
+                              <div className="text-xs text-muted-foreground pl-4">
+                                {guests} guest(s) × {calculateNights()} night(s)
+                              </div>
+                            </div>
+                          )}
+                      
+                          {selectedPickup && (
+                            <div className="space-y-2">
+                              <Separator />
+                              <div className="flex justify-between gap-2 text-sm">
+                                <span className="text-muted-foreground">Transfer Service:</span>
+                                <span className="font-medium whitespace-nowrap">₹{selectedPickup.price.toLocaleString()}</span>
+                              </div>
+                            </div>
+                          )}
+                          
+                          <Separator />
+                          
+                          <div className="flex justify-between font-semibold text-base md:text-lg">
+                            <span>Total:</span>
+                            <span>₹{calculateTotal().toLocaleString()}</span>
+                          </div>
 
-                     <Separator />
-
-                     <div className="flex justify-between font-semibold text-base md:text-lg">
-                       <span>Total:</span>
-                       <span>₹{calculateTotal().toLocaleString()}</span>
-                     </div>
-
-                      <div className="space-y-2 pt-2">
-                        <div className="grid grid-cols-2 gap-2">
-                          <Button 
-                          variant="destructive"
-                            className="w-full text-xs md:text-sm h-10 md:h-11" 
-                            onClick={handleClearBooking}
-                          >
-                            Clear Booking
-                          </Button>
-                          <Button 
-                            className="w-full text-xs md:text-sm h-10 md:h-11" 
-                            onClick={handleProceedToPayment}
-                          >
-                            Proceed to Payment
-                          </Button>
+                          <div className="space-y-2 pt-2">
+                            <div className="grid grid-cols-2 gap-2">
+                              <Button 
+                                variant="destructive"
+                                className="w-full text-xs md:text-sm h-10 md:h-11" 
+                                onClick={handleClearBooking}
+                              >
+                                Clear Booking
+                              </Button>
+                              <Button 
+                                className="w-full text-xs md:text-sm h-10 md:h-11" 
+                                onClick={handleProceedToPayment}
+                              >
+                                Proceed to Payment
+                              </Button>
+                            </div>
+                          </div>
                         </div>
-                      </div>
-                  </CardContent>
-                </Card>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        <DynamicFooter />
-      </div>
-    );
-  }
-
-  return (
-    <div className="min-h-screen bg-background">
-      <Navigation />
-      
-      {/* Package Banner */}
-      {selectedPackage && (
-        <div className="bg-primary/10 border-b border-primary/20">
-          <div className="max-w-6xl mx-auto px-4 py-6">
-            <div className="flex items-center justify-between flex-wrap gap-4">
-              <div className="flex-1">
-                <div className="flex items-center gap-2 mb-2">
-                  <Package className="h-5 w-5 text-primary" />
-                  <Badge className="bg-primary text-primary-foreground">Package Booking</Badge>
-                </div>
-                <h2 className="text-2xl font-bold mb-1">{selectedPackage.title}</h2>
-                <p className="text-muted-foreground">{selectedPackage.subtitle || selectedPackage.description}</p>
-                <div className="flex items-center gap-4 mt-3 text-sm">
-                  <span className="flex items-center gap-1">
-                    <Clock className="h-4 w-4" />
-                    {selectedPackage.duration_days} Days
-                  </span>
-                  <span className="flex items-center gap-1">
-                    <Users className="h-4 w-4" />
-                    Max {selectedPackage.max_guests} Guests
-                  </span>
-                </div>
-              </div>
-              <div className="text-right">
-                <div className="text-sm text-muted-foreground mb-1">Starting from</div>
-                <div className="text-3xl font-bold text-primary">
-                  ₹{selectedPackage.weekday_price?.toLocaleString()}
-                </div>
-                {selectedPackage.weekend_price && selectedPackage.weekend_price !== selectedPackage.weekday_price && (
-                  <div className="text-sm text-muted-foreground">
-                    Weekend: ₹{selectedPackage.weekend_price?.toLocaleString()}
+                      </CardContent>
+                    </Card>
                   </div>
-                )}
+                </div>
               </div>
-            </div>
+            </section>
+
+            <DynamicFooter />
           </div>
-        </div>
-      )}
-      
-      {/* Banner */}
+        );
+      }
+    
+      return (
+        <div className="min-h-screen bg-background">
+          <Navigation />
       <section className="relative h-[60vh] min-h-[500px] w-full overflow-hidden">
         <div 
           className="absolute inset-0 bg-cover bg-center"
