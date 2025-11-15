@@ -46,68 +46,61 @@ export const AvailableRoomCard: React.FC<AvailableRoomCardProps> = ({
   onSelectRoom,
   getFeatureIcon
 }) => {
-  const [selectedMealPlan, setSelectedMealPlan] = useState<string>('all_meals_inclusive');
+  const [selectedMealPlan, setSelectedMealPlan] = useState<string>('AP');
   const [selectedCancellationPolicy, setSelectedCancellationPolicy] = useState<string>('non_refundable');
 
   const minGuests = 2; // Default minimum guests for room types
   const guestsForPricing = Math.max(guests, minGuests);
 
-  // Fetch dynamic pricing variants
-  const { data: variants, isLoading } = useDynamicPricing({
-    roomTypeId: roomType.id,
-    checkIn: checkIn ? new Date(checkIn) : undefined,
-    checkOut: checkOut ? new Date(checkOut) : undefined,
-    adultsCount: guestsForPricing,
-    childrenCount: 0,
-    infantsCount: 0,
-    enabled: !!(checkIn && checkOut)
-  });
+  // Get unique meal plans and cancellation policies from static config
+  const mealPlans = [
+    { code: 'AP', name: 'Full Board (All Meals)' },
+    { code: 'CP', name: 'Half Board' },
+    { code: 'EP', name: 'Room Only' }
+  ];
 
-  // Get unique meal plans and cancellation policies
-  const mealPlans = useMemo(() => {
-    if (!variants || variants.length === 0) return [];
-    const unique = Array.from(new Set(variants.map(v => v.meal_plan_code)));
-    return unique.map(code => {
-      const variant = variants.find(v => v.meal_plan_code === code);
-      return { code, name: variant?.meal_plan_name || code };
-    });
-  }, [variants]);
+  const cancellationPolicies = [
+    { code: 'non_refundable', name: 'Non-Refundable' },
+    { code: 'flexible', name: 'Flexible' }
+  ];
 
-  const cancellationPolicies = useMemo(() => {
-    if (!variants || variants.length === 0) return [];
-    const unique = Array.from(new Set(variants.map(v => v.cancellation_policy_code)));
-    return unique.map(code => {
-      const variant = variants.find(v => v.cancellation_policy_code === code);
-      return { code, name: variant?.cancellation_policy_name || code };
-    });
-  }, [variants]);
-
-  // Calculate display price based on selected meal plan and cancellation policy
-  const selectedVariant = useMemo(() => {
-    if (!variants || !selectedMealPlan || !selectedCancellationPolicy) return null;
-    return variants.find(v => 
-      v.meal_plan_code === selectedMealPlan && 
-      v.cancellation_policy_code === selectedCancellationPolicy
-    );
-  }, [variants, selectedMealPlan, selectedCancellationPolicy]);
-  
-  let displayPrice = roomType.base_price;
-  let totalPrice = displayPrice * nights;
-  
-  if (selectedVariant) {
-    const { adjustedTotal, adjustedPerNight } = applyMealPlanAdjustment(
-      selectedVariant.total_price,
-      selectedVariant.meal_plan_code,
+  // Calculate display price using meal plan adjustment from the base rate
+  const displayPrice = useMemo(() => {
+    const baseRate = roomType.base_price;
+    
+    const { adjustedPerNight } = applyMealPlanAdjustment(
+      baseRate,
+      selectedMealPlan,
       guestsForPricing,
-      0,
+      0, // No separate children count in this component
+      1 // per night calculation
+    );
+    
+    return adjustedPerNight;
+  }, [selectedMealPlan, guestsForPricing, roomType.base_price]);
+
+  const totalPrice = useMemo(() => {
+    const baseRate = roomType.base_price * nights;
+    
+    const { adjustedTotal } = applyMealPlanAdjustment(
+      baseRate,
+      selectedMealPlan,
+      guestsForPricing,
+      0, // No separate children count in this component
       nights
     );
-    displayPrice = adjustedPerNight;
-    totalPrice = adjustedTotal;
-  }
+    
+    return adjustedTotal;
+  }, [selectedMealPlan, guestsForPricing, nights, roomType.base_price]);
 
   const handleSelectRoom = () => {
-    onSelectRoom(roomType, selectedVariant);
+    const variant = {
+      meal_plan_code: selectedMealPlan,
+      cancellation_policy_code: selectedCancellationPolicy,
+      total_price: totalPrice,
+      price_per_night: displayPrice
+    };
+    onSelectRoom(roomType, variant);
   };
 
   return (
@@ -173,48 +166,38 @@ export const AvailableRoomCard: React.FC<AvailableRoomCardProps> = ({
               </Alert>
             )}
             
-            {variants && variants.length > 0 && (
-              <div className="space-y-3 p-3 bg-muted/30 rounded-lg">
-                <div className="space-y-2">
-                  <label className="text-xs text-muted-foreground block">Meal Plan</label>
-                  <Select value={selectedMealPlan} onValueChange={setSelectedMealPlan}>
-                    <SelectTrigger className="h-9 text-xs">
-                      <SelectValue placeholder="Select meal plan" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {mealPlans.map(mp => (
-                        <SelectItem key={mp.code} value={mp.code} className="text-xs">
-                          {mp.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-2">
-                  <label className="text-xs text-muted-foreground block">Cancellation Policy</label>
-                  <Select value={selectedCancellationPolicy} onValueChange={setSelectedCancellationPolicy}>
-                    <SelectTrigger className="h-9 text-xs">
-                      <SelectValue placeholder="Refundable / Non-refundable" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {cancellationPolicies.map(cp => (
-                        <SelectItem key={cp.code} value={cp.code} className="text-xs">
-                          {cp.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                {selectedVariant && (
-                  <div className="flex items-baseline gap-1 pt-1">
-                    <Coffee className="w-3 h-3 text-muted-foreground" />
-                    <span className="text-xs text-muted-foreground">
-                      Includes: {selectedVariant.included_meals.join(', ')}
-                    </span>
-                  </div>
-                )}
+            <div className="space-y-3 p-3 bg-muted/30 rounded-lg">
+              <div className="space-y-2">
+                <label className="text-xs text-muted-foreground block">Meal Plan</label>
+                <Select value={selectedMealPlan} onValueChange={setSelectedMealPlan}>
+                  <SelectTrigger className="h-9 text-xs">
+                    <SelectValue placeholder="Select meal plan" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {mealPlans.map(mp => (
+                      <SelectItem key={mp.code} value={mp.code} className="text-xs">
+                        {mp.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
-            )}
+              <div className="space-y-2">
+                <label className="text-xs text-muted-foreground block">Cancellation Policy</label>
+                <Select value={selectedCancellationPolicy} onValueChange={setSelectedCancellationPolicy}>
+                  <SelectTrigger className="h-9 text-xs">
+                    <SelectValue placeholder="Refundable / Non-refundable" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {cancellationPolicies.map(cp => (
+                      <SelectItem key={cp.code} value={cp.code} className="text-xs">
+                        {cp.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
 
             <div className="text-right space-y-2">
               <div className="text-2xl font-bold">
@@ -248,12 +231,8 @@ export const AvailableRoomCard: React.FC<AvailableRoomCardProps> = ({
               <Button 
                 onClick={handleSelectRoom}
                 className="w-full"
-                disabled={variants && variants.length > 0 && (!selectedMealPlan || !selectedCancellationPolicy)}
               >
-                {variants && variants.length > 0 && (!selectedMealPlan || !selectedCancellationPolicy) 
-                  ? 'Select meal plan & policy'
-                  : 'Select Room & Add Services'
-                }
+                Select Room & Add Services
               </Button>
             </div>
           </div>

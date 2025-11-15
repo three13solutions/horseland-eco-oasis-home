@@ -1456,29 +1456,21 @@ const Booking = () => {
                           <div className="space-y-3">
                             <div 
                               className={`p-4 border rounded-lg cursor-pointer transition-colors ${
-                                selectedMealPlan === 'none' ? 'border-primary bg-primary/5' : 'border-border hover:border-primary/50'
+                                selectedMealPlan === 'full-board' ? 'border-primary bg-primary/5' : 'border-border hover:border-primary/50'
                               }`}
-                              onClick={() => setSelectedMealPlan('none')}
+                              onClick={() => setSelectedMealPlan('full-board')}
                             >
                               <div className="flex items-start gap-3">
                                 <div className={`w-5 h-5 rounded-full border-2 mt-0.5 flex items-center justify-center ${
-                                  selectedMealPlan === 'none' ? 'border-primary' : 'border-muted-foreground'
+                                  selectedMealPlan === 'full-board' ? 'border-primary' : 'border-muted-foreground'
                                 }`}>
-                                  {selectedMealPlan === 'none' && (
+                                  {selectedMealPlan === 'full-board' && (
                                     <div className="w-3 h-3 rounded-full bg-primary" />
                                   )}
                                 </div>
                                 <div className="flex-1">
-                                  <h4 className="font-semibold">Room Only</h4>
-                                  <p className="text-sm text-muted-foreground">No meals included</p>
-                                  <div className="mt-2 text-sm">
-                                    <span className="font-medium text-green-600">
-                                      Save ₹{(500 * guests * calculateNights()).toLocaleString()} 
-                                      <span className="text-xs text-muted-foreground ml-1">
-                                        (₹500/person/night)
-                                      </span>
-                                    </span>
-                                  </div>
+                                  <h4 className="font-semibold">Full Board (All Meals)</h4>
+                                  <p className="text-sm text-muted-foreground">Breakfast, Lunch, Hi Tea & Dinner included for all guests</p>
                                 </div>
                               </div>
                             </div>
@@ -1500,40 +1492,27 @@ const Booking = () => {
                                 <div className="flex-1">
                                   <h4 className="font-semibold">Half Board</h4>
                                   <p className="text-sm text-muted-foreground">Breakfast & Dinner included for all guests</p>
-                                  <div className="mt-2 text-sm">
-                                    <span className="font-medium text-green-600">
-                                      Save ₹{(200 * guests * calculateNights()).toLocaleString()}
-                                      <span className="text-xs text-muted-foreground ml-1">
-                                        (₹200/person/night)
-                                      </span>
-                                    </span>
-                                  </div>
                                 </div>
                               </div>
                             </div>
 
                             <div 
                               className={`p-4 border rounded-lg cursor-pointer transition-colors ${
-                                selectedMealPlan === 'full-board' ? 'border-primary bg-primary/5' : 'border-border hover:border-primary/50'
+                                selectedMealPlan === 'none' ? 'border-primary bg-primary/5' : 'border-border hover:border-primary/50'
                               }`}
-                              onClick={() => setSelectedMealPlan('full-board')}
+                              onClick={() => setSelectedMealPlan('none')}
                             >
                               <div className="flex items-start gap-3">
                                 <div className={`w-5 h-5 rounded-full border-2 mt-0.5 flex items-center justify-center ${
-                                  selectedMealPlan === 'full-board' ? 'border-primary' : 'border-muted-foreground'
+                                  selectedMealPlan === 'none' ? 'border-primary' : 'border-muted-foreground'
                                 }`}>
-                                  {selectedMealPlan === 'full-board' && (
+                                  {selectedMealPlan === 'none' && (
                                     <div className="w-3 h-3 rounded-full bg-primary" />
                                   )}
                                 </div>
                                 <div className="flex-1">
-                                  <h4 className="font-semibold">Full Board (All Meals)</h4>
-                                  <p className="text-sm text-muted-foreground">Breakfast, Lunch, Hi Tea & Dinner included for all guests</p>
-                                  <div className="mt-2">
-                                    <Badge variant="secondary" className="text-xs">
-                                      Default - Included in base rate
-                                    </Badge>
-                                  </div>
+                                  <h4 className="font-semibold">Room Only</h4>
+                                  <p className="text-sm text-muted-foreground">No meals included</p>
                                 </div>
                               </div>
                             </div>
@@ -2097,34 +2076,6 @@ const Booking = () => {
                           })()}
                         </span>
                       </div>
-                      
-                      {selectedMealPlan !== 'full-board' && (
-                        <div className="flex justify-between gap-2 text-xs text-muted-foreground">
-                          <span>
-                            {selectedMealPlan === 'half-board' && 'Half Board: Save ₹200/person/night'}
-                            {selectedMealPlan === 'none' && 'Room Only: Save ₹500/person/night'}
-                          </span>
-                          <span className="text-green-600 font-medium">
-                            {(() => {
-                              const baseRoomTotal = selectedRoomType.base_price * nights;
-                              const mealPlanCodeMap: { [key: string]: string } = {
-                                'full-board': 'AP',
-                                'half-board': 'CP',
-                                'none': 'EP'
-                              };
-                              const mealPlanCode = mealPlanCodeMap[selectedMealPlan] || 'AP';
-                              const { adjustment } = applyMealPlanAdjustment(
-                                baseRoomTotal,
-                                mealPlanCode,
-                                guests,
-                                0,
-                                nights
-                              );
-                              return adjustment < 0 ? `-₹${Math.abs(adjustment).toLocaleString()}` : '';
-                            })()}
-                          </span>
-                        </div>
-                      )}
                       
                       {(() => {
                         const selectedPolicyData = cancellationPolicies.find(cp => cp.policy_code === selectedCancellationPolicy);
