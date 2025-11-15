@@ -109,6 +109,8 @@ const Booking = () => {
   const roomTypeId = searchParams.get('roomTypeId');
   const packageId = searchParams.get('packageId');
   const tabParam = searchParams.get('tab');
+  const urlMealPlan = searchParams.get('mealPlan');
+  const urlCancellationPolicy = searchParams.get('cancellationPolicy');
   
   // State
   const [availableRooms, setAvailableRooms] = useState<AvailableRoom[]>([]);
@@ -136,8 +138,12 @@ const Booking = () => {
   // Addon states
   const [meals, setMeals] = useState<Addon[]>([]);
   const [activities, setActivities] = useState<Addon[]>([]);
-  const [selectedMealPlan, setSelectedMealPlan] = useState<'room_only' | 'breakfast_and_dinner' | 'all_meals_inclusive'>('all_meals_inclusive');
-  const [selectedCancellationPolicy, setSelectedCancellationPolicy] = useState<string>('refundable_credit');
+  const [selectedMealPlan, setSelectedMealPlan] = useState<'room_only' | 'breakfast_and_dinner' | 'all_meals_inclusive'>(
+    (urlMealPlan as any) || 'all_meals_inclusive'
+  );
+  const [selectedCancellationPolicy, setSelectedCancellationPolicy] = useState<string>(
+    urlCancellationPolicy || 'refundable_credit'
+  );
   const [spaServices, setSpaServices] = useState<Addon[]>([]);
   const [showSpaInBooking, setShowSpaInBooking] = useState(false);
   const [showActivitiesInBooking, setShowActivitiesInBooking] = useState(false);
@@ -264,6 +270,16 @@ const Booking = () => {
     loadAddons();
     loadHeroImage();
   }, [checkIn, checkOut, guests, roomTypeId]);
+
+  // Update meal plan and cancellation policy when URL params change
+  useEffect(() => {
+    if (urlMealPlan && urlMealPlan !== selectedMealPlan) {
+      setSelectedMealPlan(urlMealPlan as any);
+    }
+    if (urlCancellationPolicy && urlCancellationPolicy !== selectedCancellationPolicy) {
+      setSelectedCancellationPolicy(urlCancellationPolicy);
+    }
+  }, [urlMealPlan, urlCancellationPolicy]);
 
   // Load booking state from localStorage on mount
   useEffect(() => {
@@ -475,9 +491,12 @@ const Booking = () => {
       setAvailableRooms(availableRoomsData);
       
       // Auto-select room if roomTypeId is in URL and room is available
-      if (roomTypeId && availableRoomsData.length > 0 && !selectedRoomType) {
+      // Always update selection when roomTypeId changes
+      if (roomTypeId && availableRoomsData.length > 0) {
         const roomToSelect = availableRoomsData.find(r => r.roomType.id === roomTypeId);
         if (roomToSelect) {
+          // Update selected room even if one was previously selected
+          // This allows switching rooms when clicking "Book Now" on different rooms
           setSelectedRoomType(roomToSelect.roomType);
           setShowBookingForm(true);
         }
@@ -1413,7 +1432,7 @@ const Booking = () => {
         }
       }
 
-      // Room is available, update URL and reload current page
+      // Room is available, update URL and navigate using React Router
       const params = new URLSearchParams({
         checkIn: tempCheckIn.toISOString().split('T')[0],
         checkOut: tempCheckOut.toISOString().split('T')[0],
@@ -1427,8 +1446,22 @@ const Booking = () => {
         params.set('roomTypeId', roomTypeId);
       }
 
-      // Reload the page with new parameters
-      window.location.href = `/booking?${params.toString()}`;
+      if (selectedMealPlan) {
+        params.set('mealPlan', selectedMealPlan);
+      }
+
+      if (selectedCancellationPolicy) {
+        params.set('cancellationPolicy', selectedCancellationPolicy);
+      }
+
+      // Use navigate instead of window.location.href for smooth updates
+      navigate(`/booking?${params.toString()}`, { replace: true });
+      
+      // Update local state to reflect the new values
+      setAdultsCount(tempAdults);
+      setChildrenCount(tempChildren);
+      setInfantsCount(tempInfants);
+      setLoading(false);
       
     } catch (error) {
       console.error('Error checking room availability:', error);

@@ -176,11 +176,16 @@ const CategoryCard: React.FC<Props> = ({ category, onViewDetails, onBookNow, vie
         checkIn: checkIn.toISOString().split('T')[0],
         checkOut: checkOut.toISOString().split('T')[0],
         guests: guests.toString(),
+        adults: adults.toString(),
+        children: children.toString(),
         roomTypeId: category.id
       });
 
-      if (selectedVariant) {
+      if (selectedMealPlan) {
         searchParams.set('mealPlan', selectedMealPlan);
+      }
+      
+      if (selectedCancellationPolicy) {
         searchParams.set('cancellationPolicy', selectedCancellationPolicy);
       }
       
