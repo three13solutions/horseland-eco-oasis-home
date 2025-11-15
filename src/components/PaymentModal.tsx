@@ -126,9 +126,9 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
             // Step 4: Verify payment through secure edge function
             const { data: verifyData, error: verifyError } = await supabase.functions.invoke('verify-razorpay-payment', {
               body: {
-                order_id: orderData.id,
-                payment_id: response.razorpay_payment_id,
-                signature: response.razorpay_signature
+                razorpay_order_id: orderData.id,
+                razorpay_payment_id: response.razorpay_payment_id,
+                razorpay_signature: response.razorpay_signature
               }
             });
 
