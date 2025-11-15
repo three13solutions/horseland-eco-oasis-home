@@ -82,22 +82,8 @@ const CategoryCard: React.FC<Props> = ({ category, onViewDetails, onBookNow, vie
   const nights = checkIn && checkOut ? Math.ceil((checkOut.getTime() - checkIn.getTime()) / (1000 * 60 * 60 * 24)) : 1;
 
   const handleBookNow = () => {
-    const useCheckIn = checkIn || new Date();
-    const useCheckOut = checkOut || new Date(Date.now() + 24 * 60 * 60 * 1000);
-    
-    const searchParams = new URLSearchParams({
-      checkIn: useCheckIn.toISOString().split('T')[0],
-      checkOut: useCheckOut.toISOString().split('T')[0],
-      guests: guests.toString(),
-      roomTypeId: category.id
-    });
-
-    if (selectedVariant) {
-      searchParams.set('mealPlan', selectedMealPlan);
-      searchParams.set('cancellationPolicy', selectedCancellationPolicy);
-    }
-    
-    navigate(`/booking?${searchParams.toString()}`);
+    // Navigate to search availability page
+    navigate('/search-availability');
   };
 
   // List view
@@ -213,7 +199,7 @@ const CategoryCard: React.FC<Props> = ({ category, onViewDetails, onBookNow, vie
                   </Button>
                 </Link>
                 <Button className="font-body" onClick={handleBookNow}>
-                  Book Now
+                  Search Availability
                 </Button>
               </div>
             </div>
@@ -332,7 +318,7 @@ const CategoryCard: React.FC<Props> = ({ category, onViewDetails, onBookNow, vie
               </Button>
             </Link>
             <Button size="sm" className="font-body flex-1" onClick={handleBookNow}>
-              Book Now
+              Search Availability
             </Button>
           </div>
         </div>
