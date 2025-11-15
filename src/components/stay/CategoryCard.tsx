@@ -121,7 +121,7 @@ const CategoryCard: React.FC<Props> = ({ category, onViewDetails, onBookNow, vie
     });
   }, [variants]);
 
-  // Find the selected variant (for metadata like included meals, features, etc.)
+  // Find the selected variant (includes BOTH meal plan and cancellation policy pricing from DB)
   const selectedVariant = useMemo(() => {
     if (!variants || !selectedMealPlan || !selectedCancellationPolicy) return null;
     return variants.find(v => 
@@ -132,10 +132,25 @@ const CategoryCard: React.FC<Props> = ({ category, onViewDetails, onBookNow, vie
 
   const nights = checkIn && checkOut ? Math.ceil((checkOut.getTime() - checkIn.getTime()) / (1000 * 60 * 60 * 24)) : 1;
 
-  // Calculate display price using meal plan adjustment (same logic as booking page)
-  const { displayPrice, totalPrice } = useMemo(() => {
+  // Use database variant prices (which include both meal plan AND cancellation policy adjustments)
+  // Only fallback to manual calculation if variants aren't loaded yet
+  const { displayPrice, totalPrice, pricePerPerson } = useMemo(() => {
+    if (selectedVariant) {
+      // Use prices from database variants (includes meal plan + cancellation policy)
+      return { 
+        displayPrice: selectedVariant.price_per_night,
+        totalPrice: selectedVariant.total_price,
+        pricePerPerson: Math.round(selectedVariant.price_per_night / guests)
+      };
+    }
+    
+    // Fallback for when variants aren't loaded
     if (!checkIn || !checkOut || !selectedMealPlan) {
-      return { displayPrice: category.basePrice, totalPrice: category.basePrice };
+      return { 
+        displayPrice: category.basePrice, 
+        totalPrice: category.basePrice,
+        pricePerPerson: Math.round(category.basePrice / guests)
+      };
     }
 
     const baseRate = category.basePrice;
@@ -149,9 +164,10 @@ const CategoryCard: React.FC<Props> = ({ category, onViewDetails, onBookNow, vie
     
     return { 
       displayPrice: adjustedPerNight,
-      totalPrice: adjustedTotal
+      totalPrice: adjustedTotal,
+      pricePerPerson: Math.round(adjustedPerNight / guests)
     };
-  }, [selectedMealPlan, adults, children, nights, category.basePrice, checkIn, checkOut]);
+  }, [selectedVariant, selectedMealPlan, adults, children, guests, nights, category.basePrice, checkIn, checkOut]);
 
   const handleBookNow = () => {
     if (checkIn && checkOut) {
@@ -289,14 +305,19 @@ const CategoryCard: React.FC<Props> = ({ category, onViewDetails, onBookNow, vie
             <div className="flex items-end justify-between gap-4 mt-4">
               <div>
                 <div className="text-xs text-muted-foreground mb-1">
-                  {checkIn && checkOut && selectedMealPlan ? 'Total Price' : 'Starting from'}
+                  {selectedVariant ? 'Price per person' : 'Starting from'}
                 </div>
                 <span className="text-2xl font-heading font-bold text-primary">
-                  ₹{checkIn && checkOut && selectedMealPlan ? totalPrice.toLocaleString() : Math.round(displayPrice / guests).toLocaleString()}
+                  ₹{pricePerPerson.toLocaleString()}
                 </span>
                 <span className="text-sm text-muted-foreground ml-1">
-                  {checkIn && checkOut && selectedMealPlan ? `total for ${nights} night${nights > 1 ? 's' : ''}` : '/guest/night'}
+                  /person/night
                 </span>
+                {selectedVariant && (
+                  <div className="text-xs text-muted-foreground mt-1">
+                    Total: ₹{totalPrice.toLocaleString()} for {nights} night{nights > 1 ? 's' : ''}
+                  </div>
+                )}
               </div>
               <div className="flex gap-2">
                 <Link to={`/stay/${category.id}`}>
@@ -428,11 +449,16 @@ const CategoryCard: React.FC<Props> = ({ category, onViewDetails, onBookNow, vie
               {selectedVariant ? 'Total Price' : 'Starting from'}
             </div>
             <span className="text-2xl font-heading font-bold text-primary">
-              ₹{checkIn && checkOut && selectedMealPlan ? totalPrice.toLocaleString() : Math.round(displayPrice / guests).toLocaleString()}
+              ₹{pricePerPerson.toLocaleString()}
             </span>
             <span className="text-sm text-muted-foreground ml-1">
-              {checkIn && checkOut && selectedMealPlan ? `total for ${nights} night${nights > 1 ? 's' : ''}` : '/guest/night'}
+              /person/night
             </span>
+            {selectedVariant && (
+              <div className="text-xs text-muted-foreground mt-1">
+                Total: ₹{totalPrice.toLocaleString()} for {nights} night{nights > 1 ? 's' : ''}
+              </div>
+            )}
           </div>
           <div className="flex gap-2 w-full">
             <Link to={`/stay/${category.id}`} className="flex-1">
