@@ -74,17 +74,20 @@ const CategoryCard: React.FC<Props> = ({ category, onViewDetails, onBookNow, vie
     const unique = Array.from(new Set(variants.map(v => v.meal_plan_code)));
     return unique.map(code => {
       const variant = variants.find(v => v.meal_plan_code === code);
-      const name = variant?.meal_plan_name || code;
+      let name = variant?.meal_plan_name || code;
       let description = '';
       let icon = UtensilsCrossed;
       
       if (code.includes('room_only') || code === 'EP') {
+        name = 'Room Only';
         description = 'No Meals';
         icon = Home;
       } else if (code.includes('half') || code === 'CP') {
+        name = 'Half Board';
         description = 'Breakfast & Dinner';
         icon = Coffee;
       } else {
+        name = 'Full Board';
         description = 'All Meals';
         icon = UtensilsCrossed;
       }
