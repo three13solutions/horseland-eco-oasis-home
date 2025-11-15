@@ -1470,92 +1470,6 @@ const Booking = () => {
             <div className="grid lg:grid-cols-3 gap-8 lg:items-start">
               {/* Room & Addons Selection */}
               <div className="lg:col-span-2 space-y-6">
-                {/* Search Criteria Card */}
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                      <Edit2 className="h-5 w-5" />
-                      Modify Search
-                    </CardTitle>
-                    <p className="text-sm text-muted-foreground">
-                      Update your dates or guest count
-                    </p>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="grid gap-4 md:grid-cols-2">
-                      {/* Check-in Date */}
-                      <div className="space-y-2">
-                        <label className="text-sm font-medium">Check-in</label>
-                        <Popover>
-                          <PopoverTrigger asChild>
-                            <Button variant="outline" className="w-full justify-start text-left">
-                              <CalendarIcon className="mr-2 h-4 w-4" />
-                              {tempCheckIn ? format(tempCheckIn, 'PPP') : 'Select date'}
-                            </Button>
-                          </PopoverTrigger>
-                          <PopoverContent className="w-auto p-0 bg-popover z-50" align="start">
-                            <CalendarComponent
-                              mode="single"
-                              selected={tempCheckIn}
-                              onSelect={setTempCheckIn}
-                              disabled={(date) => date < new Date()}
-                              initialFocus
-                              className="pointer-events-auto"
-                            />
-                          </PopoverContent>
-                        </Popover>
-                      </div>
-
-                      {/* Check-out Date */}
-                      <div className="space-y-2">
-                        <label className="text-sm font-medium">Check-out</label>
-                        <Popover>
-                          <PopoverTrigger asChild>
-                            <Button variant="outline" className="w-full justify-start text-left">
-                              <CalendarIcon className="mr-2 h-4 w-4" />
-                              {tempCheckOut ? format(tempCheckOut, 'PPP') : 'Select date'}
-                            </Button>
-                          </PopoverTrigger>
-                          <PopoverContent className="w-auto p-0 bg-popover z-50" align="start">
-                            <CalendarComponent
-                              mode="single"
-                              selected={tempCheckOut}
-                              onSelect={setTempCheckOut}
-                              disabled={(date) => date <= (tempCheckIn || new Date())}
-                              initialFocus
-                              className="pointer-events-auto"
-                            />
-                          </PopoverContent>
-                        </Popover>
-                      </div>
-
-                      {/* Guests Selector */}
-                      <div className="space-y-2">
-                        <label className="text-sm font-medium">Guests</label>
-                        <GuestSelector
-                          totalGuests={tempGuests}
-                          onGuestsChange={(total, adults, children, infants) => {
-                            setTempGuests(total);
-                            setTempAdults(adults);
-                            setTempChildren(children);
-                            setTempInfants(infants || 0);
-                          }}
-                        />
-                      </div>
-
-                      {/* Update Button */}
-                      <div className="flex items-end">
-                        <Button 
-                          onClick={handleSearchCriteriaUpdate}
-                          className="w-full"
-                        >
-                          Update Search
-                        </Button>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-
                 {/* Selected Room */}
                 <Card>
                   <CardHeader>
@@ -2181,6 +2095,91 @@ const Booking = () => {
 
               {/* Booking Summary */}
               <div className="space-y-6">
+                {/* Modify Search Card */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Edit2 className="h-5 w-5" />
+                      Modify Search
+                    </CardTitle>
+                    <p className="text-sm text-muted-foreground">
+                      Update your dates or guest count
+                    </p>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="grid gap-4">
+                      {/* Check-in Date */}
+                      <div className="space-y-2">
+                        <label className="text-sm font-medium">Check-in</label>
+                        <Popover>
+                          <PopoverTrigger asChild>
+                            <Button variant="outline" className="w-full justify-start text-left">
+                              <CalendarIcon className="mr-2 h-4 w-4" />
+                              {tempCheckIn ? format(tempCheckIn, 'PPP') : 'Select date'}
+                            </Button>
+                          </PopoverTrigger>
+                          <PopoverContent className="w-auto p-0 bg-popover z-50" align="start">
+                            <CalendarComponent
+                              mode="single"
+                              selected={tempCheckIn}
+                              onSelect={setTempCheckIn}
+                              disabled={(date) => date < new Date()}
+                              initialFocus
+                              className="pointer-events-auto"
+                            />
+                          </PopoverContent>
+                        </Popover>
+                      </div>
+
+                      {/* Check-out Date */}
+                      <div className="space-y-2">
+                        <label className="text-sm font-medium">Check-out</label>
+                        <Popover>
+                          <PopoverTrigger asChild>
+                            <Button variant="outline" className="w-full justify-start text-left">
+                              <CalendarIcon className="mr-2 h-4 w-4" />
+                              {tempCheckOut ? format(tempCheckOut, 'PPP') : 'Select date'}
+                            </Button>
+                          </PopoverTrigger>
+                          <PopoverContent className="w-auto p-0 bg-popover z-50" align="start">
+                            <CalendarComponent
+                              mode="single"
+                              selected={tempCheckOut}
+                              onSelect={setTempCheckOut}
+                              disabled={(date) => date <= (tempCheckIn || new Date())}
+                              initialFocus
+                              className="pointer-events-auto"
+                            />
+                          </PopoverContent>
+                        </Popover>
+                      </div>
+
+                      {/* Guests Selector */}
+                      <div className="space-y-2">
+                        <label className="text-sm font-medium">Guests</label>
+                        <GuestSelector
+                          totalGuests={tempGuests}
+                          onGuestsChange={(total, adults, children, infants) => {
+                            setTempGuests(total);
+                            setTempAdults(adults);
+                            setTempChildren(children);
+                            setTempInfants(infants || 0);
+                          }}
+                        />
+                      </div>
+
+                      {/* Update Button */}
+                      <Button 
+                        onClick={handleSearchCriteriaUpdate}
+                        className="w-full"
+                      >
+                        Update Search
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* Booking Summary Sticky Container */}
                 <div className="lg:sticky lg:top-24 lg:z-10">
                   <Card data-booking-summary className="lg:max-h-[calc(100vh-7rem)] lg:overflow-y-auto">
                   <CardHeader>
@@ -2415,10 +2414,10 @@ const Booking = () => {
             </div>
           </section>
 
-            <DynamicFooter />
-          </div>
-        );
-      }
+          <DynamicFooter />
+        </div>
+      );
+    }
     
       return (
         <div className="min-h-screen bg-background">
