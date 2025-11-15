@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
-import { Calendar, Users, Clock, MapPin, Wifi, Coffee, Car, Utensils, Plus, Minus, Bed, CarFront, Sparkles, Package, ChevronDown } from 'lucide-react';
+import { Calendar, Users, Clock, MapPin, Wifi, Coffee, Car, Utensils, Plus, Minus, Bed, CarFront, Sparkles, Package, ChevronDown, CalendarIcon, Edit2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -11,16 +11,20 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from '@/components/ui/carousel';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Calendar as CalendarComponent } from '@/components/ui/calendar';
 import Navigation from '@/components/Navigation';
 import DynamicFooter from '@/components/DynamicFooter';
 import { PaymentModal } from '@/components/PaymentModal';
 import { PriceBreakdown } from '@/components/booking/PriceBreakdown';
 import { AvailableRoomCard } from '@/components/booking/AvailableRoomCard';
+import GuestSelector from '@/components/GuestSelector';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { calculateBookingAmount } from '@/lib/razorpay';
 import { useQuery } from '@tanstack/react-query';
 import { applyMealPlanAdjustment } from '@/hooks/useDynamicPricing';
+import { format } from 'date-fns';
 
 interface RoomType {
   id: string;
@@ -121,6 +125,14 @@ const Booking = () => {
   const [childrenCount, setChildrenCount] = useState(urlChildren);
   const [infantsCount, setInfantsCount] = useState(urlInfants);
   
+  // State for search modification
+  const [tempCheckIn, setTempCheckIn] = useState<Date | undefined>(checkIn ? new Date(checkIn) : undefined);
+  const [tempCheckOut, setTempCheckOut] = useState<Date | undefined>(checkOut ? new Date(checkOut) : undefined);
+  const [tempGuests, setTempGuests] = useState(guests);
+  const [tempAdults, setTempAdults] = useState(adultsCount);
+  const [tempChildren, setTempChildren] = useState(childrenCount);
+  const [tempInfants, setTempInfants] = useState(infantsCount);
+
   // Addon states
   const [meals, setMeals] = useState<Addon[]>([]);
   const [activities, setActivities] = useState<Addon[]>([]);
@@ -1364,6 +1376,53 @@ const Booking = () => {
     }
   };
 
+  const handleSearchCriteriaUpdate = () => {
+    if (!tempCheckIn || !tempCheckOut) {
+      toast({
+        title: "Missing dates",
+        description: "Please select check-in and check-out dates",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    if (tempCheckIn >= tempCheckOut) {
+      toast({
+        title: "Invalid dates",
+        description: "Check-out must be after check-in",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    // Update URL with new parameters
+    const params = new URLSearchParams({
+      checkIn: tempCheckIn.toISOString().split('T')[0],
+      checkOut: tempCheckOut.toISOString().split('T')[0],
+      guests: tempGuests.toString(),
+      adults: tempAdults.toString(),
+      children: tempChildren.toString(),
+      infants: tempInfants.toString()
+    });
+
+    if (roomTypeId) {
+      params.set('roomTypeId', roomTypeId);
+    }
+
+    // Update URL and trigger reload
+    navigate(`/booking?${params.toString()}`, { replace: true });
+    
+    // Clear selected room and reload
+    setSelectedRoomType(null);
+    setShowBookingForm(false);
+    setLoading(true);
+    
+    toast({
+      title: "Search Updated",
+      description: "Loading available rooms..."
+    });
+  };
+
   const handleProceedToGuestDetails = () => {
     // Validate that dates and room are selected
     if (!checkIn || !checkOut) {
@@ -1411,6 +1470,92 @@ const Booking = () => {
             <div className="grid lg:grid-cols-3 gap-8 lg:items-start">
               {/* Room & Addons Selection */}
               <div className="lg:col-span-2 space-y-6">
+                {/* Search Criteria Card */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Edit2 className="h-5 w-5" />
+                      Modify Search
+                    </CardTitle>
+                    <p className="text-sm text-muted-foreground">
+                      Update your dates or guest count
+                    </p>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="grid gap-4 md:grid-cols-2">
+                      {/* Check-in Date */}
+                      <div className="space-y-2">
+                        <label className="text-sm font-medium">Check-in</label>
+                        <Popover>
+                          <PopoverTrigger asChild>
+                            <Button variant="outline" className="w-full justify-start text-left">
+                              <CalendarIcon className="mr-2 h-4 w-4" />
+                              {tempCheckIn ? format(tempCheckIn, 'PPP') : 'Select date'}
+                            </Button>
+                          </PopoverTrigger>
+                          <PopoverContent className="w-auto p-0 bg-popover z-50" align="start">
+                            <CalendarComponent
+                              mode="single"
+                              selected={tempCheckIn}
+                              onSelect={setTempCheckIn}
+                              disabled={(date) => date < new Date()}
+                              initialFocus
+                              className="pointer-events-auto"
+                            />
+                          </PopoverContent>
+                        </Popover>
+                      </div>
+
+                      {/* Check-out Date */}
+                      <div className="space-y-2">
+                        <label className="text-sm font-medium">Check-out</label>
+                        <Popover>
+                          <PopoverTrigger asChild>
+                            <Button variant="outline" className="w-full justify-start text-left">
+                              <CalendarIcon className="mr-2 h-4 w-4" />
+                              {tempCheckOut ? format(tempCheckOut, 'PPP') : 'Select date'}
+                            </Button>
+                          </PopoverTrigger>
+                          <PopoverContent className="w-auto p-0 bg-popover z-50" align="start">
+                            <CalendarComponent
+                              mode="single"
+                              selected={tempCheckOut}
+                              onSelect={setTempCheckOut}
+                              disabled={(date) => date <= (tempCheckIn || new Date())}
+                              initialFocus
+                              className="pointer-events-auto"
+                            />
+                          </PopoverContent>
+                        </Popover>
+                      </div>
+
+                      {/* Guests Selector */}
+                      <div className="space-y-2">
+                        <label className="text-sm font-medium">Guests</label>
+                        <GuestSelector
+                          totalGuests={tempGuests}
+                          onGuestsChange={(total, adults, children, infants) => {
+                            setTempGuests(total);
+                            setTempAdults(adults);
+                            setTempChildren(children);
+                            setTempInfants(infants || 0);
+                          }}
+                        />
+                      </div>
+
+                      {/* Update Button */}
+                      <div className="flex items-end">
+                        <Button 
+                          onClick={handleSearchCriteriaUpdate}
+                          className="w-full"
+                        >
+                          Update Search
+                        </Button>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+
                 {/* Selected Room */}
                 <Card>
                   <CardHeader>
