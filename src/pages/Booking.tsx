@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
-import { Calendar, Users, Clock, MapPin, Wifi, Coffee, Car, Utensils, Plus, Minus, Bed, CarFront, Sparkles, Package } from 'lucide-react';
+import { Calendar, Users, Clock, MapPin, Wifi, Coffee, Car, Utensils, Plus, Minus, Bed, CarFront, Sparkles, Package, ChevronDown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -10,6 +10,7 @@ import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from '@/components/ui/carousel';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import Navigation from '@/components/Navigation';
 import DynamicFooter from '@/components/DynamicFooter';
 import { PaymentModal } from '@/components/PaymentModal';
@@ -1401,237 +1402,190 @@ const Booking = () => {
                   </div>
                 )}
 
-                {/* Addons Selection */}
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Add Services & Experiences</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                      <Tabs value={activeTab || (needsExtraBedding ? "bedding" : "meals")} onValueChange={setActiveTab} className="w-full">
-                       <TabsList className={`grid w-full grid-cols-${[
-                         needsExtraBedding && !selectedRateVariant ? 1 : 0,
-                         (!selectedRateVariant || selectedRateVariant.meal_cost === 0) ? 1 : 0,
-                         showSpaInBooking ? 1 : 0,
-                         showActivitiesInBooking ? 1 : 0
-                       ].reduce((a, b) => a + b, 0)}`}>
-                         {needsExtraBedding && !selectedRateVariant && <TabsTrigger value="bedding">Extra Bed</TabsTrigger>}
-                         {(!selectedRateVariant || selectedRateVariant.meal_cost === 0) && <TabsTrigger value="meals">Meals</TabsTrigger>}
-                         {showSpaInBooking && <TabsTrigger value="spa">Spa Services</TabsTrigger>}
-                         {showActivitiesInBooking && <TabsTrigger value="activities">Activities</TabsTrigger>}
-                       </TabsList>
-                      
-                      {selectedRateVariant && selectedRateVariant.meal_cost > 0 && (
-                        <div className="mt-4 p-3 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg">
-                          <p className="text-sm text-green-800 dark:text-green-200">
-                            ✓ Your selected rate plan includes: <strong>{selectedRateVariant.meal_plan_name}</strong>
-                            {selectedRateVariant.included_meals.length > 0 && (
-                              <span className="block mt-1 text-xs">
-                                ({selectedRateVariant.included_meals.join(', ')})
-                              </span>
-                            )}
-                          </p>
-                        </div>
-                      )}
-                      
-                      
-                      {needsExtraBedding && (
-                        <TabsContent value="bedding" className="space-y-4">
-                          <div className="text-sm text-yellow-600 bg-yellow-50 p-3 rounded-lg mb-4">
-                            You have {guests} guests but this room accommodates only {selectedRoomType?.max_guests}. 
-                            Please select additional bedding options.
-                          </div>
-                          <div className="space-y-4">
-                            {beddingOptions.map((bedding) => {
-                              const isSelected = selectedBedding.find(b => b.id === bedding.id);
-                              return (
-                                <div key={bedding.id} className="p-4 border rounded-lg">
-                                  <div className="flex items-center justify-between">
-                                    <div className="flex items-center gap-3">
-                                      <Bed className="h-5 w-5 text-primary" />
-                                      <div className="flex-1">
-                                        <h4 className="font-medium">{bedding.title}</h4>
-                                        <p className="text-lg font-semibold">₹{bedding.price}</p>
-                                      </div>
-                                    </div>
-                                    <div className="flex items-center gap-2">
-                                      <input
-                                        type="checkbox"
-                                        className="h-4 w-4"
-                                        checked={!!isSelected}
-                                        onChange={(e) => {
-                                          if (e.target.checked) {
-                                            setSelectedBedding(prev => [...prev, bedding]);
-                                          } else {
-                                            setSelectedBedding(prev => prev.filter(b => b.id !== bedding.id));
-                                          }
-                                        }}
-                                      />
-                                      <label className="text-sm">Select</label>
-                                    </div>
-                                  </div>
-                                </div>
-                              );
-                            })}
-                          </div>
-                        </TabsContent>
-                      )}
-
-                      <TabsContent value="meals" className="space-y-6">
-                        <Card>
-                          <CardHeader>
+                {/* Addons Selection - Removed wrapper, sections are now direct and collapsible */}
+                
+                {/* Select Meal Plans - Direct, No Tab */}
+                {(!selectedRateVariant || selectedRateVariant.meal_cost === 0) && (
+                  <Collapsible defaultOpen={true}>
+                    <Card>
+                      <CollapsibleTrigger className="w-full">
+                        <CardHeader className="flex flex-row items-center justify-between">
+                          <div className="text-left">
                             <CardTitle>Select Meal Plans</CardTitle>
                             <p className="text-sm text-muted-foreground">
                               Select a meal plan that will apply to all guests for the entire stay ({calculateNights()} nights)
                             </p>
-                          </CardHeader>
-                          <CardContent className="space-y-4">
-                            <div className="space-y-3">
-                              <div 
-                                className={`p-4 border rounded-lg cursor-pointer transition-colors ${
-                                  selectedMealPlan === 'none' ? 'border-primary bg-primary/5' : 'border-border hover:border-primary/50'
-                                }`}
-                                onClick={() => setSelectedMealPlan('none')}
-                              >
-                                <div className="flex items-start gap-3">
-                                  <div className={`w-5 h-5 rounded-full border-2 mt-0.5 flex items-center justify-center ${
-                                    selectedMealPlan === 'none' ? 'border-primary' : 'border-muted-foreground'
-                                  }`}>
-                                    {selectedMealPlan === 'none' && (
-                                      <div className="w-3 h-3 rounded-full bg-primary" />
-                                    )}
-                                  </div>
-                                  <div className="flex-1">
-                                    <h4 className="font-semibold">No Meals</h4>
-                                    <p className="text-sm text-muted-foreground">Room only - no meals included</p>
-                                  </div>
+                          </div>
+                          <ChevronDown className="h-5 w-5 transition-transform duration-200 data-[state=open]:rotate-180" />
+                        </CardHeader>
+                      </CollapsibleTrigger>
+                      <CollapsibleContent>
+                        <CardContent className="space-y-4">
+                          <div className="space-y-3">
+                            <div 
+                              className={`p-4 border rounded-lg cursor-pointer transition-colors ${
+                                selectedMealPlan === 'none' ? 'border-primary bg-primary/5' : 'border-border hover:border-primary/50'
+                              }`}
+                              onClick={() => setSelectedMealPlan('none')}
+                            >
+                              <div className="flex items-start gap-3">
+                                <div className={`w-5 h-5 rounded-full border-2 mt-0.5 flex items-center justify-center ${
+                                  selectedMealPlan === 'none' ? 'border-primary' : 'border-muted-foreground'
+                                }`}>
+                                  {selectedMealPlan === 'none' && (
+                                    <div className="w-3 h-3 rounded-full bg-primary" />
+                                  )}
+                                </div>
+                                <div className="flex-1">
+                                  <h4 className="font-semibold">No Meals</h4>
+                                  <p className="text-sm text-muted-foreground">Room only - no meals included</p>
                                 </div>
                               </div>
+                            </div>
 
-                              <div 
-                                className={`p-4 border rounded-lg cursor-pointer transition-colors ${
-                                  selectedMealPlan === 'half-board' ? 'border-primary bg-primary/5' : 'border-border hover:border-primary/50'
-                                }`}
-                                onClick={() => setSelectedMealPlan('half-board')}
-                              >
-                                <div className="flex items-start gap-3">
-                                  <div className={`w-5 h-5 rounded-full border-2 mt-0.5 flex items-center justify-center ${
-                                    selectedMealPlan === 'half-board' ? 'border-primary' : 'border-muted-foreground'
-                                  }`}>
-                                    {selectedMealPlan === 'half-board' && (
-                                      <div className="w-3 h-3 rounded-full bg-primary" />
-                                    )}
-                                  </div>
-                                  <div className="flex-1">
-                                    <h4 className="font-semibold">Half Board</h4>
-                                    <p className="text-sm text-muted-foreground">Breakfast & Dinner included for all guests</p>
-                                    <div className="mt-2 text-sm">
-                                      <span className="font-medium text-primary">
-                                        {(() => {
-                                          const breakfastPrice = getMealPrice('breakfast', 'vegetarian') || 0;
-                                          const dinnerPrice = getMealPrice('dinner', 'vegetarian') || 0;
-                                          const totalPerDay = (breakfastPrice + dinnerPrice) * guests;
-                                          const totalCost = totalPerDay * calculateNights();
-                                          return `₹${totalCost.toLocaleString()}`;
-                                        })()}
-                                      </span>
-                                      <span className="text-muted-foreground"> for {guests} guest(s) × {calculateNights()} night(s)</span>
-                                    </div>
-                                  </div>
+                            <div 
+                              className={`p-4 border rounded-lg cursor-pointer transition-colors ${
+                                selectedMealPlan === 'half-board' ? 'border-primary bg-primary/5' : 'border-border hover:border-primary/50'
+                              }`}
+                              onClick={() => setSelectedMealPlan('half-board')}
+                            >
+                              <div className="flex items-start gap-3">
+                                <div className={`w-5 h-5 rounded-full border-2 mt-0.5 flex items-center justify-center ${
+                                  selectedMealPlan === 'half-board' ? 'border-primary' : 'border-muted-foreground'
+                                }`}>
+                                  {selectedMealPlan === 'half-board' && (
+                                    <div className="w-3 h-3 rounded-full bg-primary" />
+                                  )}
                                 </div>
-                              </div>
-
-                              <div 
-                                className={`p-4 border rounded-lg cursor-pointer transition-colors ${
-                                  selectedMealPlan === 'full-board' ? 'border-primary bg-primary/5' : 'border-border hover:border-primary/50'
-                                }`}
-                                onClick={() => setSelectedMealPlan('full-board')}
-                              >
-                                <div className="flex items-start gap-3">
-                                  <div className={`w-5 h-5 rounded-full border-2 mt-0.5 flex items-center justify-center ${
-                                    selectedMealPlan === 'full-board' ? 'border-primary' : 'border-muted-foreground'
-                                  }`}>
-                                    {selectedMealPlan === 'full-board' && (
-                                      <div className="w-3 h-3 rounded-full bg-primary" />
-                                    )}
-                                  </div>
-                                  <div className="flex-1">
-                                    <h4 className="font-semibold">Full Board</h4>
-                                    <p className="text-sm text-muted-foreground">Breakfast, Lunch, High Tea & Dinner included for all guests</p>
-                                    <div className="mt-2 text-sm">
-                                      <span className="font-medium text-primary">
-                                        {(() => {
-                                          const breakfastPrice = getMealPrice('breakfast', 'vegetarian') || 0;
-                                          const lunchPrice = getMealPrice('lunch', 'vegetarian') || 0;
-                                          const highTeaPrice = getMealPrice('high_tea', 'vegetarian') || 0;
-                                          const dinnerPrice = getMealPrice('dinner', 'vegetarian') || 0;
-                                          const totalPerDay = (breakfastPrice + lunchPrice + highTeaPrice + dinnerPrice) * guests;
-                                          const totalCost = totalPerDay * calculateNights();
-                                          return `₹${totalCost.toLocaleString()}`;
-                                        })()}
-                                      </span>
-                                      <span className="text-muted-foreground"> for {guests} guest(s) × {calculateNights()} night(s)</span>
-                                    </div>
+                                <div className="flex-1">
+                                  <h4 className="font-semibold">Half Board</h4>
+                                  <p className="text-sm text-muted-foreground">Breakfast & Dinner included for all guests</p>
+                                  <div className="mt-2 text-sm">
+                                    <span className="font-medium text-primary">
+                                      {(() => {
+                                        const breakfastPrice = getMealPrice('breakfast', 'vegetarian') || 0;
+                                        const dinnerPrice = getMealPrice('dinner', 'vegetarian') || 0;
+                                        const totalPerNight = (breakfastPrice + dinnerPrice) * guests;
+                                        const totalAllNights = totalPerNight * calculateNights();
+                                        return `₹${totalAllNights.toLocaleString()} total`;
+                                      })()}
+                                    </span>
                                   </div>
                                 </div>
                               </div>
                             </div>
-                          </CardContent>
-                        </Card>
-                      </TabsContent>
 
-                      {/* Spa Services Tab */}
-                      {showSpaInBooking && (
-                        <TabsContent value="spa" className="space-y-4">
+                            <div 
+                              className={`p-4 border rounded-lg cursor-pointer transition-colors ${
+                                selectedMealPlan === 'full-board' ? 'border-primary bg-primary/5' : 'border-border hover:border-primary/50'
+                              }`}
+                              onClick={() => setSelectedMealPlan('full-board')}
+                            >
+                              <div className="flex items-start gap-3">
+                                <div className={`w-5 h-5 rounded-full border-2 mt-0.5 flex items-center justify-center ${
+                                  selectedMealPlan === 'full-board' ? 'border-primary' : 'border-muted-foreground'
+                                }`}>
+                                  {selectedMealPlan === 'full-board' && (
+                                    <div className="w-3 h-3 rounded-full bg-primary" />
+                                  )}
+                                </div>
+                                <div className="flex-1">
+                                  <h4 className="font-semibold">Full Board</h4>
+                                  <p className="text-sm text-muted-foreground">Breakfast, Lunch, Hi Tea & Dinner included for all guests</p>
+                                  <div className="mt-2 text-sm">
+                                    <span className="font-medium text-primary">
+                                      {(() => {
+                                        const breakfastPrice = getMealPrice('breakfast', 'vegetarian') || 0;
+                                        const lunchPrice = getMealPrice('lunch', 'vegetarian') || 0;
+                                        const hiTeaPrice = getMealPrice('hi-tea', 'vegetarian') || 0;
+                                        const dinnerPrice = getMealPrice('dinner', 'vegetarian') || 0;
+                                        const totalPerNight = (breakfastPrice + lunchPrice + hiTeaPrice + dinnerPrice) * guests;
+                                        const totalAllNights = totalPerNight * calculateNights();
+                                        return `₹${totalAllNights.toLocaleString()} total`;
+                                      })()}
+                                    </span>
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        </CardContent>
+                      </CollapsibleContent>
+                    </Card>
+                  </Collapsible>
+                )}
+
+                {selectedRateVariant && selectedRateVariant.meal_cost > 0 && (
+                  <div className="p-3 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg">
+                    <p className="text-sm text-green-800 dark:text-green-200">
+                      ✓ Your selected rate plan includes: <strong>{selectedRateVariant.meal_plan_name}</strong>
+                      {selectedRateVariant.included_meals.length > 0 && (
+                        <span className="block mt-1 text-xs">
+                          ({selectedRateVariant.included_meals.join(', ')})
+                        </span>
+                      )}
+                    </p>
+                  </div>
+                )}
+
+                {/* Spa Services - Collapsible */}
+                {showSpaInBooking && (
+                  <Collapsible defaultOpen={false}>
+                    <Card>
+                      <CollapsibleTrigger className="w-full">
+                        <CardHeader className="flex flex-row items-center justify-between">
+                          <CardTitle className="text-left">Spa Services</CardTitle>
+                          <ChevronDown className="h-5 w-5 transition-transform duration-200 data-[state=open]:rotate-180" />
+                        </CardHeader>
+                      </CollapsibleTrigger>
+                      <CollapsibleContent>
+                        <CardContent>
                           {spaServicesByCategory.length > 0 ? (
                             <div className="space-y-6">
                               {spaServicesByCategory.map(([category, data]) => (
-                                <Card key={category}>
-                                  <CardHeader>
-                                    <CardTitle className="text-lg">{data.label}</CardTitle>
-                                  </CardHeader>
-                                  <CardContent>
-                                    <div className="grid gap-4">
-                                      {data.services.map((service) => {
-                                        const isSelected = selectedAddons.find(a => a.id === service.id);
-                                        const quantity = isSelected?.quantity || 0;
-                                        return (
-                                          <div key={service.id} className="p-4 border rounded-lg">
-                                            <div className="flex items-start justify-between gap-4">
-                                              <div className="flex-1">
-                                                <h4 className="font-medium">{service.title}</h4>
-                                                <p className="text-sm text-muted-foreground mt-1">{service.description}</p>
-                                                <div className="flex items-center gap-4 mt-2 text-sm text-muted-foreground">
-                                                  <span>₹{service.price}</span>
-                                                  {service.duration && <span>• {service.duration}</span>}
-                                                </div>
-                                              </div>
-                                              <div className="flex items-center gap-2">
-                                                <Button
-                                                  variant="outline"
-                                                  size="icon"
-                                                  className="h-8 w-8"
-                                                  onClick={() => handleAddonChange(service.id, Math.max(0, quantity - 1))}
-                                                  disabled={quantity === 0}
-                                                >
-                                                  <Minus className="h-4 w-4" />
-                                                </Button>
-                                                <span className="w-8 text-center font-medium">{quantity}</span>
-                                                <Button
-                                                  variant="outline"
-                                                  size="icon"
-                                                  className="h-8 w-8"
-                                                  onClick={() => handleAddonChange(service.id, quantity + 1)}
-                                                >
-                                                  <Plus className="h-4 w-4" />
-                                                </Button>
+                                <div key={category}>
+                                  <h3 className="text-lg font-semibold mb-3">{data.label}</h3>
+                                  <div className="grid gap-4">
+                                    {data.services.map((service) => {
+                                      const isSelected = selectedAddons.find(a => a.id === service.id);
+                                      const quantity = isSelected?.quantity || 0;
+                                      return (
+                                        <div key={service.id} className="p-4 border rounded-lg">
+                                          <div className="flex items-start justify-between gap-4">
+                                            <div className="flex-1">
+                                              <h4 className="font-medium">{service.title}</h4>
+                                              <p className="text-sm text-muted-foreground mt-1">{service.description}</p>
+                                              <div className="flex items-center gap-4 mt-2 text-sm text-muted-foreground">
+                                                <span>₹{service.price}</span>
+                                                {service.duration && <span>• {service.duration}</span>}
                                               </div>
                                             </div>
+                                            <div className="flex items-center gap-2">
+                                              <Button
+                                                variant="outline"
+                                                size="icon"
+                                                className="h-8 w-8"
+                                                onClick={() => handleAddonChange(service.id, Math.max(0, quantity - 1))}
+                                                disabled={quantity === 0}
+                                              >
+                                                <Minus className="h-4 w-4" />
+                                              </Button>
+                                              <span className="w-8 text-center font-medium">{quantity}</span>
+                                              <Button
+                                                variant="outline"
+                                                size="icon"
+                                                className="h-8 w-8"
+                                                onClick={() => handleAddonChange(service.id, quantity + 1)}
+                                              >
+                                                <Plus className="h-4 w-4" />
+                                              </Button>
+                                            </div>
                                           </div>
-                                        );
-                                      })}
-                                    </div>
-                                  </CardContent>
-                                </Card>
+                                        </div>
+                                      );
+                                    })}
+                                  </div>
+                                </div>
                               ))}
                             </div>
                           ) : (
@@ -1640,62 +1594,76 @@ const Booking = () => {
                               <p className="text-muted-foreground">No spa services available at this time</p>
                             </div>
                           )}
-                        </TabsContent>
-                      )}
+                        </CardContent>
+                      </CollapsibleContent>
+                    </Card>
+                  </Collapsible>
+                )}
 
-                      {/* Activities Tab */}
-                      {showActivitiesInBooking && (
-                        <TabsContent value="activities" className="space-y-4">
+                {/* Activities - Collapsible */}
+                {showActivitiesInBooking && (
+                  <Collapsible defaultOpen={false}>
+                    <Card>
+                      <CollapsibleTrigger className="w-full">
+                        <CardHeader className="flex flex-row items-center justify-between">
+                          <CardTitle className="text-left">Activities</CardTitle>
+                          <ChevronDown className="h-5 w-5 transition-transform duration-200 data-[state=open]:rotate-180" />
+                        </CardHeader>
+                      </CollapsibleTrigger>
+                      <CollapsibleContent>
+                        <CardContent>
                           {activitiesByCategory.length > 0 ? (
                             <div className="space-y-6">
                               {activitiesByCategory.map(([category, data]) => (
-                                <Card key={category}>
-                                  <CardHeader>
-                                    <CardTitle className="text-lg">{data.label}</CardTitle>
-                                  </CardHeader>
-                                  <CardContent>
-                                    <div className="grid gap-4">
-                                      {data.activities.map((activity) => {
-                                        const isSelected = selectedAddons.find(a => a.id === activity.id);
-                                        const quantity = isSelected?.quantity || 0;
-                                        return (
-                                          <div key={activity.id} className="p-4 border rounded-lg">
-                                            <div className="flex items-start justify-between gap-4">
-                                              <div className="flex-1">
-                                                <h4 className="font-medium">{activity.title}</h4>
-                                                <p className="text-sm text-muted-foreground mt-1">{activity.description}</p>
-                                                <div className="flex items-center gap-4 mt-2 text-sm text-muted-foreground">
+                                <div key={category}>
+                                  <h3 className="text-lg font-semibold mb-3">{data.label}</h3>
+                                  <div className="grid gap-4">
+                                    {data.activities.map((activity) => {
+                                      const isSelected = selectedAddons.find(a => a.id === activity.id);
+                                      const quantity = isSelected?.quantity || 0;
+                                      return (
+                                        <div key={activity.id} className="p-4 border rounded-lg">
+                                          <div className="flex items-start justify-between gap-4">
+                                            <div className="flex-1">
+                                              <h4 className="font-medium">{activity.title}</h4>
+                                              <p className="text-sm text-muted-foreground mt-1">{activity.description}</p>
+                                              <div className="flex items-center gap-4 mt-2 text-sm text-muted-foreground">
+                                                {activity.price && activity.price > 0 ? (
                                                   <span>₹{activity.price}</span>
-                                                  {activity.duration && <span>• {activity.duration}</span>}
-                                                </div>
-                                              </div>
-                                              <div className="flex items-center gap-2">
-                                                <Button
-                                                  variant="outline"
-                                                  size="icon"
-                                                  className="h-8 w-8"
-                                                  onClick={() => handleAddonChange(activity.id, Math.max(0, quantity - 1))}
-                                                  disabled={quantity === 0}
-                                                >
-                                                  <Minus className="h-4 w-4" />
-                                                </Button>
-                                                <span className="w-8 text-center font-medium">{quantity}</span>
-                                                <Button
-                                                  variant="outline"
-                                                  size="icon"
-                                                  className="h-8 w-8"
-                                                  onClick={() => handleAddonChange(activity.id, quantity + 1)}
-                                                >
-                                                  <Plus className="h-4 w-4" />
-                                                </Button>
+                                                ) : (
+                                                  <span>Free</span>
+                                                )}
+                                                {activity.duration && (
+                                                  <span>• {activity.duration}</span>
+                                                )}
                                               </div>
                                             </div>
+                                            <div className="flex items-center gap-2">
+                                              <Button
+                                                variant="outline"
+                                                size="icon"
+                                                className="h-8 w-8"
+                                                onClick={() => handleAddonChange(activity.id, Math.max(0, quantity - 1))}
+                                                disabled={quantity === 0}
+                                              >
+                                                <Minus className="h-4 w-4" />
+                                              </Button>
+                                              <span className="w-8 text-center font-medium">{quantity}</span>
+                                              <Button
+                                                variant="outline"
+                                                size="icon"
+                                                className="h-8 w-8"
+                                                onClick={() => handleAddonChange(activity.id, quantity + 1)}
+                                              >
+                                                <Plus className="h-4 w-4" />
+                                              </Button>
+                                            </div>
                                           </div>
-                                        );
-                                      })}
-                                    </div>
-                                  </CardContent>
-                                </Card>
+                                        </div>
+                                      );
+                                    })}
+                                  </div>
+                                </div>
                               ))}
                             </div>
                           ) : (
@@ -1704,21 +1672,28 @@ const Booking = () => {
                               <p className="text-muted-foreground">No activities available at this time</p>
                             </div>
                           )}
-                        </TabsContent>
-                      )}
-                    </Tabs>
-                  </CardContent>
-                </Card>
+                        </CardContent>
+                      </CollapsibleContent>
+                    </Card>
+                  </Collapsible>
+                )}
 
-                {/* Request Transfers */}
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Request Transfers</CardTitle>
-                    <p className="text-sm text-muted-foreground">
-                      Select pickup or drop service for your stay
-                    </p>
-                  </CardHeader>
-                  <CardContent>
+                {/* Request Transfers - Collapsible */}
+                <Collapsible defaultOpen={false}>
+                  <Card>
+                    <CollapsibleTrigger className="w-full">
+                      <CardHeader className="flex flex-row items-center justify-between">
+                        <div className="text-left">
+                          <CardTitle>Request Transfers</CardTitle>
+                          <p className="text-sm text-muted-foreground">
+                            Select pickup or drop service for your stay
+                          </p>
+                        </div>
+                        <ChevronDown className="h-5 w-5 transition-transform duration-200 data-[state=open]:rotate-180" />
+                      </CardHeader>
+                    </CollapsibleTrigger>
+                    <CollapsibleContent>
+                      <CardContent>
                     <div className="space-y-6">
                       <div className="grid md:grid-cols-3 gap-4">
                         {/* Transfer Type Dropdown */}
@@ -1842,13 +1817,20 @@ const Booking = () => {
                       )}
                     </div>
                   </CardContent>
+                  </CollapsibleContent>
                 </Card>
+              </Collapsible>
                 
-                  {/* Guest Details Form */}
-                  <Card>
-                    <CardHeader>
-                      <CardTitle>Guest Details</CardTitle>
-                    </CardHeader>
+                  {/* Guest Details Form - Collapsible */}
+                  <Collapsible defaultOpen={true}>
+                    <Card>
+                      <CollapsibleTrigger className="w-full">
+                        <CardHeader className="flex flex-row items-center justify-between">
+                          <CardTitle className="text-left">Guest Details</CardTitle>
+                          <ChevronDown className="h-5 w-5 transition-transform duration-200 data-[state=open]:rotate-180" />
+                        </CardHeader>
+                      </CollapsibleTrigger>
+                      <CollapsibleContent>
                     <CardContent className="space-y-4">
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
@@ -1939,24 +1921,33 @@ const Booking = () => {
                         </div>
                       </div>
                     </CardContent>
+                    </CollapsibleContent>
                   </Card>
-                  
-                  {/* Special Requests */}
-                  <Card>
-                    <CardHeader>
-                      <CardTitle>Special Requests</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <Label htmlFor="special">Any special requirements or requests?</Label>
-                      <textarea
-                        id="special"
-                        value={guestDetails.specialRequests}
-                        onChange={(e) => setGuestDetails(prev => ({ ...prev, specialRequests: e.target.value }))}
-                        placeholder="Please let us know if you have any special requirements, preferences, or requests for your stay..."
-                        className="w-full mt-2 p-3 border rounded-md min-h-[100px] resize-y"
-                      />
-                    </CardContent>
-                  </Card>
+                </Collapsible>
+                   
+                   {/* Special Requests - Collapsible */}
+                   <Collapsible defaultOpen={false}>
+                     <Card>
+                       <CollapsibleTrigger className="w-full">
+                         <CardHeader className="flex flex-row items-center justify-between">
+                           <CardTitle className="text-left">Special Requests</CardTitle>
+                           <ChevronDown className="h-5 w-5 transition-transform duration-200 data-[state=open]:rotate-180" />
+                         </CardHeader>
+                       </CollapsibleTrigger>
+                        <CollapsibleContent>
+                      <CardContent>
+                        <Label htmlFor="special">Any special requirements or requests?</Label>
+                        <textarea
+                          id="special"
+                          value={guestDetails.specialRequests}
+                          onChange={(e) => setGuestDetails(prev => ({ ...prev, specialRequests: e.target.value }))}
+                          placeholder="Please let us know if you have any special requirements, preferences, or requests for your stay..."
+                          className="w-full mt-2 p-3 border rounded-md min-h-[100px] resize-y"
+                        />
+                      </CardContent>
+                        </CollapsibleContent>
+                       </Card>
+                     </Collapsible>
               </div>
 
               {/* Booking Summary */}
