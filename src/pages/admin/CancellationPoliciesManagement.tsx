@@ -135,6 +135,13 @@ const CancellationPoliciesManagement = () => {
         <div>
           <h1 className="text-3xl font-bold">Cancellation Policies Management</h1>
           <p className="text-muted-foreground">Configure cancellation and refund policies</p>
+          <div className="mt-2 p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
+            <p className="text-sm text-blue-800 dark:text-blue-200">
+              <strong>How It Works:</strong> Cancellation policies are now independent from meal plans in the booking flow. 
+              Users select a cancellation policy separately, and the adjustment (percentage or fixed amount) is applied to the 
+              combined room + meal cost to calculate the final price.
+            </p>
+          </div>
         </div>
         <Dialog open={isOpen} onOpenChange={(open) => {
           setIsOpen(open);
