@@ -1923,20 +1923,20 @@ const Booking = () => {
                            <div className="text-left">
                              <CardTitle>Special Requests</CardTitle>
                              <p className="text-sm text-muted-foreground">
-                               Let us know about any special requirements or preferences for your stay
+                               Share any additional preferences to help us personalize your experience
                              </p>
                            </div>
                            <ChevronDown className="h-5 w-5 transition-transform duration-200 data-[state=open]:rotate-180" />
                          </CardHeader>
                        </CollapsibleTrigger>
-                        <CollapsibleContent>
+                       <CollapsibleContent>
                       <CardContent>
-                        <Label htmlFor="special">Any special requirements or requests?</Label>
+                        <Label htmlFor="special">Do you have any specific requirements? (Optional)</Label>
                         <textarea
                           id="special"
                           value={guestDetails.specialRequests}
                           onChange={(e) => setGuestDetails(prev => ({ ...prev, specialRequests: e.target.value }))}
-                          placeholder="Please let us know if you have any special requirements, preferences, or requests for your stay..."
+                          placeholder="E.g., early check-in, room on ground floor, dietary restrictions, celebration arrangements..."
                           className="w-full mt-2 p-3 border rounded-md min-h-[100px] resize-y"
                         />
                       </CardContent>
