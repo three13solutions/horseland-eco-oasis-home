@@ -1072,7 +1072,13 @@ const Booking = () => {
   }, [needsExtraBedding]);
 
   const handleProceedToPayment = () => {
-    console.log('Proceed to Payment clicked', { selectedRoomType, showPaymentModal });
+    console.log('Proceed to Payment clicked', { 
+      selectedRoomType: selectedRoomType?.name, 
+      showPaymentModal,
+      hasGuestName: !!guestDetails.name,
+      hasGuestEmail: !!guestDetails.email,
+      hasGuestPhone: !!guestDetails.phone
+    });
     
     if (!selectedRoomType) {
       toast({
@@ -1105,8 +1111,17 @@ const Booking = () => {
       return;
     }
     
-    console.log('Opening payment modal...');
+    console.log('All validations passed, opening payment modal...');
+    console.log('Payment details:', {
+      roomName: selectedRoomType?.name,
+      roomPrice: selectedRoomType?.base_price,
+      nights,
+      guestName: guestDetails.name,
+      guestEmail: guestDetails.email,
+      guestPhone: guestDetails.phone
+    });
     setShowPaymentModal(true);
+    console.log('setShowPaymentModal(true) called');
   };
 
   const handlePaymentSuccess = async (paymentId: string, orderId: string) => {
@@ -2301,7 +2316,10 @@ const Booking = () => {
       {/* Payment Modal */}
       <PaymentModal
         isOpen={showPaymentModal && !!selectedRoomType}
-        onClose={() => setShowPaymentModal(false)}
+        onClose={() => {
+          console.log('PaymentModal onClose called');
+          setShowPaymentModal(false);
+        }}
         onSuccess={handlePaymentSuccess}
         bookingDetails={{
           roomName: selectedRoomType?.name || '',
