@@ -4,6 +4,7 @@ import { Button } from './ui/button';
 import { Separator } from './ui/separator';
 import { CreditCard, Loader2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
+import { useToast } from '@/hooks/use-toast';
 import { 
   RAZORPAY_CONFIG, 
   calculateBookingAmount, 
@@ -43,6 +44,7 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
   bookingDetails,
 }) => {
   const [isProcessing, setIsProcessing] = useState(false);
+  const { toast } = useToast();
 
   const paymentBreakdown: BookingPaymentDetails = calculateBookingAmount(
     bookingDetails.roomPrice,
@@ -84,6 +86,11 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
 
       if (orderError || !orderData) {
         console.error('Order creation error:', orderError);
+        toast({
+          title: "Payment Error",
+          description: "Failed to create payment order. Please try again.",
+          variant: "destructive",
+        });
         throw new Error('Failed to create payment order');
       }
 
@@ -93,6 +100,11 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
       
       const scriptLoaded = await loadRazorpayScript();
       if (!scriptLoaded) {
+        toast({
+          title: "Payment Error",
+          description: "Failed to load payment gateway. Please refresh and try again.",
+          variant: "destructive",
+        });
         throw new Error('Failed to load Razorpay SDK');
       }
 
@@ -116,16 +128,25 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
             });
 
             if (verifyError || !verifyData?.verified) {
+              toast({
+                title: "Payment Verification Failed",
+                description: "Your payment could not be verified. Please contact support.",
+                variant: "destructive",
+              });
               throw new Error('Payment verification failed');
             }
 
             // Payment verified successfully - call success handler
-            onSuccess(response.razorpay_payment_id, orderData.order.id);
+            onSuccess(response.razorpay_payment_id, orderData.id);
             onClose();
           } catch (verificationError) {
             console.error('Payment verification error:', verificationError);
+            toast({
+              title: "Payment Processing Error",
+              description: "An error occurred while processing your payment. Please contact support if amount was deducted.",
+              variant: "destructive",
+            });
             setIsProcessing(false);
-            // Could show error toast here
           }
         },
         prefill: {
@@ -147,8 +168,12 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
       razorpay.open();
     } catch (error) {
       console.error('Payment error:', error);
+      toast({
+        title: "Payment Failed",
+        description: "An error occurred. Please try again or contact support.",
+        variant: "destructive",
+      });
       setIsProcessing(false);
-      // Could show error toast here
     }
   };
 
