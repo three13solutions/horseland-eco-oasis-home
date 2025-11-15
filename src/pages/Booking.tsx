@@ -106,8 +106,8 @@ const Booking = () => {
   // State
   const [availableRooms, setAvailableRooms] = useState<AvailableRoom[]>([]);
   const [loading, setLoading] = useState(true);
-  const [searchCheckIn, setSearchCheckIn] = useState('');
-  const [searchCheckOut, setSearchCheckOut] = useState('');
+  const [searchCheckIn, setSearchCheckIn] = useState(checkIn);
+  const [searchCheckOut, setSearchCheckOut] = useState(checkOut);
   const [searchGuests, setSearchGuests] = useState(guests.toString());
   const [selectedPackage, setSelectedPackage] = useState<any>(null);
   const [packageLoading, setPackageLoading] = useState(false);
