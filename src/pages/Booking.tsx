@@ -116,7 +116,7 @@ const Booking = () => {
   const [meals, setMeals] = useState<Addon[]>([]);
   const [activities, setActivities] = useState<Addon[]>([]);
   const [selectedMealPlan, setSelectedMealPlan] = useState<'none' | 'half-board' | 'full-board'>('none');
-  const [selectedCancellationPolicy, setSelectedCancellationPolicy] = useState<string>('refundable');
+  const [selectedCancellationPolicy, setSelectedCancellationPolicy] = useState<string>('refundable_credit');
   const [spaServices, setSpaServices] = useState<Addon[]>([]);
   const [showSpaInBooking, setShowSpaInBooking] = useState(false);
   const [showActivitiesInBooking, setShowActivitiesInBooking] = useState(false);
