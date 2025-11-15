@@ -38,7 +38,9 @@ const CategoryBookingModal: React.FC<Props> = ({ open, onOpenChange, category })
     roomTypeId: category?.id,
     checkIn: date?.from,
     checkOut: date?.to,
-    guestsCount: guests + extraMattress,
+    adultsCount: guests + extraMattress, // Using total guests as adults for backwards compatibility
+    childrenCount: 0,
+    infantsCount: 0,
     enabled: !!date?.from && !!date?.to && availableUnits > 0
   });
 

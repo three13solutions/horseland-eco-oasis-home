@@ -25,7 +25,9 @@ interface UseDynamicPricingParams {
   roomUnitId?: string;
   checkIn?: Date;
   checkOut?: Date;
-  guestsCount?: number;
+  adultsCount?: number;
+  childrenCount?: number;
+  infantsCount?: number;
   bookingChannel?: string;
   enabled?: boolean;
 }
@@ -35,12 +37,14 @@ export const useDynamicPricing = ({
   roomUnitId,
   checkIn,
   checkOut,
-  guestsCount = 2,
+  adultsCount = 2,
+  childrenCount = 0,
+  infantsCount = 0,
   bookingChannel = 'direct',
   enabled = true
 }: UseDynamicPricingParams) => {
   return useQuery({
-    queryKey: ['rate-variants', roomTypeId, roomUnitId, checkIn, checkOut, guestsCount, bookingChannel],
+    queryKey: ['rate-variants', roomTypeId, roomUnitId, checkIn, checkOut, adultsCount, childrenCount, infantsCount, bookingChannel],
     queryFn: async () => {
       if (!roomTypeId || !checkIn || !checkOut) {
         throw new Error('Missing required parameters');
@@ -51,7 +55,9 @@ export const useDynamicPricing = ({
         p_check_in: checkIn.toISOString().split('T')[0],
         p_check_out: checkOut.toISOString().split('T')[0],
         p_room_unit_id: roomUnitId || null,
-        p_guests_count: guestsCount,
+        p_adults_count: adultsCount,
+        p_children_count: childrenCount,
+        p_infants_count: infantsCount,
         p_booking_channel: bookingChannel
       });
 

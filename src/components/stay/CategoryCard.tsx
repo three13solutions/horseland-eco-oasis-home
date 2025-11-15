@@ -32,10 +32,12 @@ type Props = {
   checkIn?: Date;
   checkOut?: Date;
   guests?: number;
+  adults?: number;
+  children?: number;
   hideBookNow?: boolean;
 };
 
-const CategoryCard: React.FC<Props> = ({ category, onViewDetails, onBookNow, viewMode = 'grid', checkIn, checkOut, guests = 2, hideBookNow = false }) => {
+const CategoryCard: React.FC<Props> = ({ category, onViewDetails, onBookNow, viewMode = 'grid', checkIn, checkOut, guests = 2, adults = 2, children = 0, hideBookNow = false }) => {
   const navigate = useNavigate();
   const [selectedMealPlan, setSelectedMealPlan] = useState<string>('all_meals_inclusive');
   const [selectedCancellationPolicy, setSelectedCancellationPolicy] = useState<string>('non_refundable');
@@ -45,7 +47,9 @@ const CategoryCard: React.FC<Props> = ({ category, onViewDetails, onBookNow, vie
     roomTypeId: category.id,
     checkIn,
     checkOut,
-    guestsCount: guests,
+    adultsCount: adults,
+    childrenCount: children,
+    infantsCount: 0,
     enabled: !!(checkIn && checkOut)
   });
 

@@ -986,7 +986,7 @@ const SearchAvailability = () => {
                       ? 'grid md:grid-cols-2 gap-6' 
                       : 'flex flex-col gap-6'
                     }>
-                      {filteredCategories.map((category) => (
+                       {filteredCategories.map((category) => (
                         <CategoryCard
                           key={category.id}
                           category={category}
@@ -994,6 +994,8 @@ const SearchAvailability = () => {
                           checkIn={checkIn}
                           checkOut={checkOut}
                           guests={guests}
+                          adults={adults}
+                          children={children}
                           onViewDetails={(cat) => navigate(`/stay/${cat.id}`)}
                           onBookNow={(cat) => {
                             const params = new URLSearchParams({
