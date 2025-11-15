@@ -2223,21 +2223,6 @@ const Booking = () => {
                               ))}
                             </div>
                           )}
-                          
-                          {calculateMealPlanTotal() > 0 && (
-                            <div className="space-y-2">
-                              <Separator />
-                                <div className="flex justify-between gap-2 text-sm">
-                                  <span className="text-muted-foreground">
-                                    {selectedMealPlan === 'half-board' ? 'Half Board (Breakfast & Dinner)' : 'Full Board (All Meals)'}
-                                  </span>
-                                  <span className="font-medium whitespace-nowrap">₹{calculateMealPlanTotal().toLocaleString()}</span>
-                                </div>
-                                <div className="text-xs text-muted-foreground pl-4">
-                                  {guests} guest(s) × {calculateNights()} night(s)
-                                </div>
-                            </div>
-                          )}
                       
                           {selectedPickup && (
                             <div className="space-y-2">
