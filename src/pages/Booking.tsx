@@ -697,6 +697,9 @@ const Booking = () => {
       // Clear localStorage
       localStorage.removeItem('currentBooking');
       
+      // Clear URL parameters and navigate to clean booking page
+      navigate('/booking', { replace: true });
+      
       // Show success message
       toast({
         title: "Booking Cleared",
