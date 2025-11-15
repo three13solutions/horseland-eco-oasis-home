@@ -99,6 +99,9 @@ const Booking = () => {
   const checkIn = searchParams.get('checkIn') || '';
   const checkOut = searchParams.get('checkOut') || '';
   const guests = parseInt(searchParams.get('guests') || '2');
+  const urlAdults = parseInt(searchParams.get('adults') || '2');
+  const urlChildren = parseInt(searchParams.get('children') || '0');
+  const urlInfants = parseInt(searchParams.get('infants') || '0');
   const roomTypeId = searchParams.get('roomTypeId');
   const packageId = searchParams.get('packageId');
   const tabParam = searchParams.get('tab');
@@ -114,9 +117,9 @@ const Booking = () => {
   const [heroImage, setHeroImage] = useState<string>('');
   
   // Guest breakdown state
-  const [adultsCount, setAdultsCount] = useState(Math.max(1, guests));
-  const [childrenCount, setChildrenCount] = useState(0);
-  const [infantsCount, setInfantsCount] = useState(0);
+  const [adultsCount, setAdultsCount] = useState(Math.max(1, urlAdults));
+  const [childrenCount, setChildrenCount] = useState(urlChildren);
+  const [infantsCount, setInfantsCount] = useState(urlInfants);
   
   // Addon states
   const [meals, setMeals] = useState<Addon[]>([]);

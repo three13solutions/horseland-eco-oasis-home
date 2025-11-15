@@ -80,8 +80,9 @@ const SearchAvailability = () => {
     searchParams.get('checkOut') ? new Date(searchParams.get('checkOut')!) : undefined
   );
   const [guests, setGuests] = useState<number>(parseInt(searchParams.get('guests') || '2'));
-  const [adults, setAdults] = useState<number>(2);
-  const [children, setChildren] = useState<number>(0);
+  const [adults, setAdults] = useState<number>(parseInt(searchParams.get('adults') || '2'));
+  const [children, setChildren] = useState<number>(parseInt(searchParams.get('children') || '0'));
+  const [infants, setInfants] = useState<number>(parseInt(searchParams.get('infants') || '0'));
   
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(false);
@@ -142,7 +143,10 @@ const SearchAvailability = () => {
       const params = new URLSearchParams({
         checkIn: checkIn.toISOString().split('T')[0],
         checkOut: checkOut.toISOString().split('T')[0],
-        guests: guests.toString()
+        guests: guests.toString(),
+        adults: adults.toString(),
+        children: children.toString(),
+        infants: infants.toString()
       });
       setSearchParams(params);
 
@@ -290,10 +294,11 @@ const SearchAvailability = () => {
                 <label className="text-sm font-medium mb-2 block">Guests</label>
                 <GuestSelector
                   totalGuests={guests}
-                  onGuestsChange={(total, a, c) => {
+                  onGuestsChange={(total, a, c, i) => {
                     setGuests(total);
                     setAdults(a);
                     setChildren(c);
+                    setInfants(i || 0);
                   }}
                 />
               </div>
@@ -1002,6 +1007,9 @@ const SearchAvailability = () => {
                               checkIn: checkIn!.toISOString().split('T')[0],
                               checkOut: checkOut!.toISOString().split('T')[0],
                               guests: guests.toString(),
+                              adults: adults.toString(),
+                              children: children.toString(),
+                              infants: infants.toString(),
                               roomTypeId: cat.id
                             });
                             navigate(`/booking?${params.toString()}`);
