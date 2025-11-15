@@ -315,7 +315,7 @@ const CategoryCard: React.FC<Props> = ({ category, onViewDetails, onBookNow, vie
                 </span>
                 {selectedVariant && (
                   <div className="text-xs text-muted-foreground mt-1">
-                    Total: ₹{totalPrice.toLocaleString()} for {nights} night{nights > 1 ? 's' : ''}
+                    Total: ₹{totalPrice.toLocaleString()} for {nights} night{nights > 1 ? 's' : ''} · {adults} adult{adults > 1 ? 's' : ''}{children > 0 ? ` · ${children} child${children > 1 ? 'ren' : ''}` : ''}
                   </div>
                 )}
               </div>
@@ -456,7 +456,7 @@ const CategoryCard: React.FC<Props> = ({ category, onViewDetails, onBookNow, vie
             </span>
             {selectedVariant && (
               <div className="text-xs text-muted-foreground mt-1">
-                Total: ₹{totalPrice.toLocaleString()} for {nights} night{nights > 1 ? 's' : ''}
+                Total: ₹{totalPrice.toLocaleString()} for {nights} night{nights > 1 ? 's' : ''} · {adults} adult{adults > 1 ? 's' : ''}{children > 0 ? ` · ${children} child${children > 1 ? 'ren' : ''}` : ''}
               </div>
             )}
           </div>
