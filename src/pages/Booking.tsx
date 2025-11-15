@@ -2134,7 +2134,7 @@ const Booking = () => {
                                 className="w-full text-xs md:text-sm h-10 md:h-11" 
                                 onClick={handleProceedToPayment}
                               >
-                                Proceed to Payment
+                                Proceed
                               </Button>
                             </div>
                           </div>
