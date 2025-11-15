@@ -52,7 +52,9 @@ export const AvailableRoomCard: React.FC<AvailableRoomCardProps> = ({
     roomTypeId: roomType.id,
     checkIn: checkIn ? new Date(checkIn) : undefined,
     checkOut: checkOut ? new Date(checkOut) : undefined,
-    guestsCount: guests,
+    adultsCount: guests, // Using total guests as adults for backwards compatibility
+    childrenCount: 0,
+    infantsCount: 0,
     enabled: !!(checkIn && checkOut)
   });
 

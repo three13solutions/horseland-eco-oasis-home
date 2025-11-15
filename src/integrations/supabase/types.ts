@@ -2557,40 +2557,76 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      calculate_booking_total: {
-        Args: {
-          p_booking_channel?: string
-          p_check_in?: string
-          p_check_out?: string
-          p_guests_count?: number
-          p_room_type_id: string
-          p_room_unit_id?: string
-        }
-        Returns: {
-          nightly_breakdown: Json
-          total_amount: number
-          total_nights: number
-        }[]
-      }
+      calculate_booking_total:
+        | {
+            Args: {
+              p_booking_channel?: string
+              p_check_in?: string
+              p_check_out?: string
+              p_guests_count?: number
+              p_room_type_id: string
+              p_room_unit_id?: string
+            }
+            Returns: {
+              nightly_breakdown: Json
+              total_amount: number
+              total_nights: number
+            }[]
+          }
+        | {
+            Args: {
+              p_adults_count?: number
+              p_booking_channel?: string
+              p_check_in?: string
+              p_check_out?: string
+              p_children_count?: number
+              p_infants_count?: number
+              p_room_type_id: string
+              p_room_unit_id?: string
+            }
+            Returns: {
+              nightly_breakdown: Json
+              total_amount: number
+              total_nights: number
+            }[]
+          }
       calculate_credit_expiry: {
         Args: { original_booking_date: string }
         Returns: string
       }
-      calculate_dynamic_price: {
-        Args: {
-          p_booking_channel?: string
-          p_current_occupancy?: number
-          p_date?: string
-          p_guests_count?: number
-          p_room_type_id: string
-          p_room_unit_id?: string
-        }
-        Returns: {
-          adjustments: Json
-          base_price: number
-          final_price: number
-        }[]
-      }
+      calculate_dynamic_price:
+        | {
+            Args: {
+              p_booking_channel?: string
+              p_current_occupancy?: number
+              p_date?: string
+              p_guests_count?: number
+              p_room_type_id: string
+              p_room_unit_id?: string
+            }
+            Returns: {
+              adjustments: Json
+              base_price: number
+              final_price: number
+            }[]
+          }
+        | {
+            Args: {
+              p_adults_count?: number
+              p_booking_channel?: string
+              p_children_count?: number
+              p_current_occupancy?: number
+              p_date?: string
+              p_infants_count?: number
+              p_room_type_id: string
+              p_room_unit_id?: string
+            }
+            Returns: {
+              adjustments: Json
+              base_price: number
+              final_price: number
+            }[]
+          }
       calculate_invoice_totals: {
         Args: { p_subtotal: number }
         Returns: {
@@ -2612,17 +2648,31 @@ export type Database = {
           meal_cost: number
         }[]
       }
-      calculate_rate_variants: {
-        Args: {
-          p_booking_channel?: string
-          p_check_in: string
-          p_check_out: string
-          p_guests_count?: number
-          p_room_type_id: string
-          p_room_unit_id?: string
-        }
-        Returns: Json
-      }
+      calculate_rate_variants:
+        | {
+            Args: {
+              p_booking_channel?: string
+              p_check_in: string
+              p_check_out: string
+              p_guests_count?: number
+              p_room_type_id: string
+              p_room_unit_id?: string
+            }
+            Returns: Json
+          }
+        | {
+            Args: {
+              p_adults_count?: number
+              p_booking_channel?: string
+              p_check_in: string
+              p_check_out: string
+              p_children_count?: number
+              p_infants_count?: number
+              p_room_type_id: string
+              p_room_unit_id?: string
+            }
+            Returns: Json
+          }
       check_room_availability: {
         Args: {
           p_check_in: string
