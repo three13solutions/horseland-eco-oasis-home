@@ -14,8 +14,9 @@ import Index from "./pages/Index";
 import About from "./pages/About";
 import Contact from "./pages/Contact";
 import Stay from "./pages/Stay";
-import RoomDetail from "./pages/RoomDetail";
-import Dining from "./pages/Dining";
+import RoomDetail from './pages/RoomDetail';
+import SearchAvailability from './pages/SearchAvailability';
+import Dining from './pages/Dining';
 import Activities from "./pages/Activities";
 import ActivityDetail from "./pages/ActivityDetail";
 import Spa from "./pages/Spa";
@@ -90,6 +91,7 @@ function App() {
               <Route path="/contact" element={<Contact />} />
               <Route path="/stay" element={<Stay />} />
               <Route path="/stay/:roomId" element={<RoomDetail />} />
+              <Route path="/search-availability" element={<SearchAvailability />} />
               <Route path="/dining" element={<Dining />} />
               <Route path="/activities" element={<Activities />} />
               <Route path="/activities/:activityId" element={<ActivityDetail />} />
