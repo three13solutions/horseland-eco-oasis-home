@@ -46,11 +46,6 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
   const [isProcessing, setIsProcessing] = useState(false);
   const { toast } = useToast();
 
-  console.log('💳 PaymentModal rendered', {
-    isOpen,
-    bookingDetails: bookingDetails.roomName,
-  });
-
   const paymentBreakdown: BookingPaymentDetails = calculateBookingAmount(
     bookingDetails.roomPrice,
     bookingDetails.nights,
@@ -132,7 +127,7 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
               }
             });
 
-            if (verifyError || !verifyData?.verified) {
+            if (verifyError || !verifyData?.success) {
               toast({
                 title: "Payment Verification Failed",
                 description: "Your payment could not be verified. Please contact support.",

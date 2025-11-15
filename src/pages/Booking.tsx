@@ -1155,14 +1155,7 @@ const Booking = () => {
   }, [needsExtraBedding]);
 
   const handleProceedToPayment = () => {
-    console.log('🚀 handleProceedToPayment START');
-    console.log('  - selectedRoomType:', selectedRoomType?.name);
-    console.log('  - guestDetails:', guestDetails);
-    console.log('  - showPaymentModal before:', showPaymentModal);
-    console.log('  - paymentModalKey before:', paymentModalKey);
-    
     if (!selectedRoomType) {
-      console.log('❌ No room selected - returning');
       toast({
         title: "Room Not Selected",
         description: "Please select a room to continue with payment",
@@ -1177,10 +1170,7 @@ const Booking = () => {
     if (!guestDetails.email?.trim()) missingFields.push("Email");
     if (!guestDetails.phone?.trim()) missingFields.push("Phone Number");
     
-    console.log('  - missingFields:', missingFields);
-    
     if (missingFields.length > 0) {
-      console.log('❌ Missing fields - returning');
       toast({
         title: "Missing Required Information",
         description: `Please fill in: ${missingFields.join(", ")}`,
@@ -1197,13 +1187,9 @@ const Booking = () => {
     }
     
     // Increment key to force remount and open modal
-    console.log('✅ All checks passed - opening modal');
     const newKey = paymentModalKey + 1;
-    console.log('  - Setting paymentModalKey to:', newKey);
     setPaymentModalKey(newKey);
-    console.log('  - Setting showPaymentModal to: true');
     setShowPaymentModal(true);
-    console.log('🏁 handleProceedToPayment END');
   };
 
   const handlePaymentSuccess = async (paymentId: string, orderId: string) => {
@@ -2477,19 +2463,13 @@ const Booking = () => {
                               <Button 
                                 variant="destructive"
                                 className="w-full text-xs md:text-sm h-10 md:h-11" 
-                                onClick={() => {
-                                  console.log('🔘 Clear Booking button clicked');
-                                  handleClearBooking();
-                                }}
+                                onClick={handleClearBooking}
                               >
                                 Clear Booking
                               </Button>
                               <Button 
                                 className="w-full text-xs md:text-sm h-10 md:h-11" 
-                                onClick={() => {
-                                  console.log('🔘 Proceed button clicked');
-                                  handleProceedToPayment();
-                                }}
+                                onClick={handleProceedToPayment}
                               >
                                 Proceed
                               </Button>
