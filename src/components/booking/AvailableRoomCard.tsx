@@ -53,8 +53,8 @@ export const AvailableRoomCard: React.FC<AvailableRoomCardProps> = ({
 
   // Get unique meal plans and cancellation policies from static config
   const mealPlans = [
-    { code: 'all_meals_inclusive', name: 'All Meals Inclusive', description: 'Breakfast, Lunch & Dinner', icon: UtensilsCrossed },
-    { code: 'breakfast_and_dinner', name: 'Breakfast & Dinner', description: 'Half Board', icon: Coffee },
+    { code: 'all_meals_inclusive', name: 'Full Board', description: 'All Meals', icon: UtensilsCrossed },
+    { code: 'breakfast_and_dinner', name: 'Half Board', description: 'Breakfast & Dinner', icon: Coffee },
     { code: 'room_only', name: 'Room Only', description: 'No Meals', icon: Home }
   ];
 

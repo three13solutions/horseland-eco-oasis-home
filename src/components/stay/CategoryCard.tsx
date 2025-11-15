@@ -66,39 +66,29 @@ const CategoryCard: React.FC<Props> = ({ category, onViewDetails, onBookNow, vie
   const mealPlans = useMemo(() => {
     if (!variants || variants.length === 0) {
       return [
-        { code: 'all_meals_inclusive', name: 'All Meals Inclusive', description: 'Breakfast, Lunch & Dinner', icon: UtensilsCrossed },
-        { code: 'breakfast_and_dinner', name: 'Breakfast & Dinner', description: 'Half Board', icon: Coffee },
+        { code: 'all_meals_inclusive', name: 'Full Board', description: 'All Meals', icon: UtensilsCrossed },
+        { code: 'breakfast_and_dinner', name: 'Half Board', description: 'Breakfast & Dinner', icon: Coffee },
         { code: 'room_only', name: 'Room Only', description: 'No Meals', icon: Home }
       ];
     }
     const unique = Array.from(new Set(variants.map(v => v.meal_plan_code)));
     return unique.map(code => {
-      const variant = variants.find(v => v.meal_plan_code === code);
-      const name = variant?.meal_plan_name || code;
+      let name = '';
       let description = '';
       let icon = UtensilsCrossed;
       
       if (code === 'room_only') {
+        name = 'Room Only';
         description = 'No Meals';
         icon = Home;
       } else if (code === 'breakfast_and_dinner') {
+        name = 'Half Board';
         description = 'Breakfast & Dinner';
         icon = Coffee;
       } else if (code === 'all_meals_inclusive') {
+        name = 'Full Board';
         description = 'All Meals';
         icon = UtensilsCrossed;
-      } else {
-        // Fallback based on name
-        if (name.toLowerCase().includes('room only')) {
-          description = 'No Meals';
-          icon = Home;
-        } else if (name.toLowerCase().includes('breakfast') && name.toLowerCase().includes('dinner')) {
-          description = 'Breakfast & Dinner';
-          icon = Coffee;
-        } else {
-          description = 'All Meals';
-          icon = UtensilsCrossed;
-        }
       }
       
       return { code, name, description, icon };
@@ -244,14 +234,6 @@ const CategoryCard: React.FC<Props> = ({ category, onViewDetails, onBookNow, vie
                       );
                     })}
                   </div>
-                  {selectedVariant && selectedVariant.included_meals && selectedVariant.included_meals.length > 0 && (
-                    <div className="flex items-baseline gap-1 pt-2 px-1">
-                      <Coffee className="w-3 h-3 text-muted-foreground" />
-                      <span className="text-xs text-muted-foreground">
-                        Includes: {selectedVariant.included_meals.join(', ')}
-                      </span>
-                    </div>
-                  )}
                 </div>
                 
                 {/* Cancellation Policy Selection */}
@@ -388,14 +370,6 @@ const CategoryCard: React.FC<Props> = ({ category, onViewDetails, onBookNow, vie
                   );
                 })}
               </div>
-              {selectedVariant && selectedVariant.included_meals && selectedVariant.included_meals.length > 0 && (
-                <div className="flex items-baseline gap-1 pt-2 px-1">
-                  <Coffee className="w-3 h-3 text-muted-foreground" />
-                  <span className="text-xs text-muted-foreground">
-                    Includes: {selectedVariant.included_meals.join(', ')}
-                  </span>
-                </div>
-              )}
             </div>
             
             {/* Cancellation Policy Selection */}
