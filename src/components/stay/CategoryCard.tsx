@@ -66,30 +66,39 @@ const CategoryCard: React.FC<Props> = ({ category, onViewDetails, onBookNow, vie
   const mealPlans = useMemo(() => {
     if (!variants || variants.length === 0) {
       return [
-        { code: 'all_meals_inclusive', name: 'Full Board', description: 'All Meals', icon: UtensilsCrossed },
-        { code: 'half_board', name: 'Half Board', description: 'Breakfast & Dinner', icon: Coffee },
+        { code: 'all_meals_inclusive', name: 'All Meals Inclusive', description: 'Breakfast, Lunch & Dinner', icon: UtensilsCrossed },
+        { code: 'breakfast_and_dinner', name: 'Breakfast & Dinner', description: 'Half Board', icon: Coffee },
         { code: 'room_only', name: 'Room Only', description: 'No Meals', icon: Home }
       ];
     }
     const unique = Array.from(new Set(variants.map(v => v.meal_plan_code)));
     return unique.map(code => {
       const variant = variants.find(v => v.meal_plan_code === code);
-      let name = variant?.meal_plan_name || code;
+      const name = variant?.meal_plan_name || code;
       let description = '';
       let icon = UtensilsCrossed;
       
-      if (code.includes('room_only') || code === 'EP') {
-        name = 'Room Only';
+      if (code === 'room_only') {
         description = 'No Meals';
         icon = Home;
-      } else if (code.includes('half') || code === 'CP') {
-        name = 'Half Board';
+      } else if (code === 'breakfast_and_dinner') {
         description = 'Breakfast & Dinner';
         icon = Coffee;
-      } else {
-        name = 'Full Board';
+      } else if (code === 'all_meals_inclusive') {
         description = 'All Meals';
         icon = UtensilsCrossed;
+      } else {
+        // Fallback based on name
+        if (name.toLowerCase().includes('room only')) {
+          description = 'No Meals';
+          icon = Home;
+        } else if (name.toLowerCase().includes('breakfast') && name.toLowerCase().includes('dinner')) {
+          description = 'Breakfast & Dinner';
+          icon = Coffee;
+        } else {
+          description = 'All Meals';
+          icon = UtensilsCrossed;
+        }
       }
       
       return { code, name, description, icon };

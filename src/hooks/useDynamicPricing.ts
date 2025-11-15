@@ -31,12 +31,12 @@ export const applyMealPlanAdjustment = (
   const totalGuests = adultsCount + childrenCount;
   let adjustmentPerPersonPerNight = 0;
   
-  // Full board (AP/MAP with all meals) is the base price - no adjustment
-  // Half board: -200 per person per night
-  // Room only: -500 per person per night
-  if (mealPlanCode === 'CP' || mealPlanCode === 'half_board') {
+  // All Meals Inclusive (all_meals_inclusive) is the base price - no adjustment
+  // Breakfast & Dinner (breakfast_and_dinner): -200 per person per night
+  // Room only (room_only): -500 per person per night
+  if (mealPlanCode === 'breakfast_and_dinner') {
     adjustmentPerPersonPerNight = -200;
-  } else if (mealPlanCode === 'EP' || mealPlanCode === 'room_only') {
+  } else if (mealPlanCode === 'room_only') {
     adjustmentPerPersonPerNight = -500;
   }
   

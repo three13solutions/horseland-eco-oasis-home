@@ -45,7 +45,7 @@ export const AvailableRoomCard: React.FC<AvailableRoomCardProps> = ({
   onSelectRoom,
   getFeatureIcon
 }) => {
-  const [selectedMealPlan, setSelectedMealPlan] = useState<string>('AP');
+  const [selectedMealPlan, setSelectedMealPlan] = useState<string>('all_meals_inclusive');
   const [selectedCancellationPolicy, setSelectedCancellationPolicy] = useState<string>('refundable_credit');
 
   const minGuests = 2; // Default minimum guests for room types
@@ -53,9 +53,9 @@ export const AvailableRoomCard: React.FC<AvailableRoomCardProps> = ({
 
   // Get unique meal plans and cancellation policies from static config
   const mealPlans = [
-    { code: 'AP', name: 'Full Board', description: 'All Meals Included', icon: UtensilsCrossed },
-    { code: 'CP', name: 'Half Board', description: 'Breakfast & Dinner', icon: Coffee },
-    { code: 'EP', name: 'Room Only', description: 'No Meals', icon: Home }
+    { code: 'all_meals_inclusive', name: 'All Meals Inclusive', description: 'Breakfast, Lunch & Dinner', icon: UtensilsCrossed },
+    { code: 'breakfast_and_dinner', name: 'Breakfast & Dinner', description: 'Half Board', icon: Coffee },
+    { code: 'room_only', name: 'Room Only', description: 'No Meals', icon: Home }
   ];
 
   const cancellationPolicies = [

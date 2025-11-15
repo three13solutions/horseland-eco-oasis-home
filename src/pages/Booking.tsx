@@ -136,7 +136,7 @@ const Booking = () => {
   // Addon states
   const [meals, setMeals] = useState<Addon[]>([]);
   const [activities, setActivities] = useState<Addon[]>([]);
-  const [selectedMealPlan, setSelectedMealPlan] = useState<'none' | 'half-board' | 'full-board'>('full-board');
+  const [selectedMealPlan, setSelectedMealPlan] = useState<'room_only' | 'breakfast_and_dinner' | 'all_meals_inclusive'>('all_meals_inclusive');
   const [selectedCancellationPolicy, setSelectedCancellationPolicy] = useState<string>('refundable_credit');
   const [spaServices, setSpaServices] = useState<Addon[]>([]);
   const [showSpaInBooking, setShowSpaInBooking] = useState(false);
@@ -747,17 +747,11 @@ const Booking = () => {
     
     const nights = calculateNights();
     
-    // Base room price assumes full board (all meals included) for base occupancy (2 adults)
+    // Base room price assumes all meals inclusive for base occupancy (2 adults)
     const baseRoomTotal = selectedRoomType.base_price * nights;
     
-    // Map meal plan selection to codes for adjustment
-    const mealPlanCodeMap: { [key: string]: string } = {
-      'full-board': 'AP', // All meals - no adjustment
-      'half-board': 'CP', // Half board - deduct 200 per person per night
-      'none': 'EP' // Room only - deduct 500 per person per night
-    };
-    
-    const mealPlanCode = mealPlanCodeMap[selectedMealPlan] || 'AP';
+    // Meal plan code is now directly the value from state (no mapping needed)
+    const mealPlanCode = selectedMealPlan;
     
     // Apply meal plan adjustment for all adults and children (infants are free)
     const { adjustedTotal: roomTotalWithMealAdjustment } = applyMealPlanAdjustment(
@@ -1009,7 +1003,7 @@ const Booking = () => {
   };
 
   const calculateMealPlanTotal = () => {
-    if (selectedMealPlan === 'none') return 0;
+    if (selectedMealPlan === 'room_only') return 0;
     
     const nights = calculateNights();
     // Default to vegetarian pricing for meal plan calculation
@@ -1018,11 +1012,11 @@ const Booking = () => {
     const highTeaPrice = getMealPrice('high_tea', 'vegetarian') || 0;
     const dinnerPrice = getMealPrice('dinner', 'vegetarian') || 0;
     
-    if (selectedMealPlan === 'half-board') {
+    if (selectedMealPlan === 'breakfast_and_dinner') {
       return (breakfastPrice + dinnerPrice) * guests * nights;
     }
     
-    if (selectedMealPlan === 'full-board') {
+    if (selectedMealPlan === 'all_meals_inclusive') {
       return (breakfastPrice + lunchPrice + highTeaPrice + dinnerPrice) * guests * nights;
     }
     
@@ -1253,12 +1247,7 @@ const Booking = () => {
         cancellation_policy_code: selectedCancellationPolicy || 'refundable',
         room_cost: (() => {
           const baseRoomTotal = selectedRoomType!.base_price * calculateNights();
-          const mealPlanCodeMap: { [key: string]: string } = {
-            'full-board': 'AP',
-            'half-board': 'CP',
-            'none': 'EP'
-          };
-          const mealPlanCode = mealPlanCodeMap[selectedMealPlan] || 'AP';
+          const mealPlanCode = selectedMealPlan;
           const { adjustedTotal } = applyMealPlanAdjustment(
             baseRoomTotal,
             mealPlanCode,
@@ -1276,12 +1265,7 @@ const Booking = () => {
           infants_count: infantsCount,
           meal_adjustment: (() => {
             const baseRoomTotal = selectedRoomType!.base_price * calculateNights();
-            const mealPlanCodeMap: { [key: string]: string } = {
-              'full-board': 'AP',
-              'half-board': 'CP',
-              'none': 'EP'
-            };
-            const mealPlanCode = mealPlanCodeMap[selectedMealPlan] || 'AP';
+            const mealPlanCode = selectedMealPlan;
             const { adjustment } = applyMealPlanAdjustment(
               baseRoomTotal,
               mealPlanCode,
@@ -1559,20 +1543,20 @@ const Booking = () => {
                           <div className="space-y-3">
                             <div 
                               className={`p-4 border rounded-lg cursor-pointer transition-colors ${
-                                selectedMealPlan === 'full-board' ? 'border-primary bg-primary/5' : 'border-border hover:border-primary/50'
+                                selectedMealPlan === 'all_meals_inclusive' ? 'border-primary bg-primary/5' : 'border-border hover:border-primary/50'
                               }`}
-                              onClick={() => setSelectedMealPlan('full-board')}
+                              onClick={() => setSelectedMealPlan('all_meals_inclusive')}
                             >
                               <div className="flex items-start gap-3">
                                 <div className={`w-5 h-5 rounded-full border-2 mt-0.5 flex items-center justify-center ${
-                                  selectedMealPlan === 'full-board' ? 'border-primary' : 'border-muted-foreground'
+                                  selectedMealPlan === 'all_meals_inclusive' ? 'border-primary' : 'border-muted-foreground'
                                 }`}>
-                                  {selectedMealPlan === 'full-board' && (
+                                  {selectedMealPlan === 'all_meals_inclusive' && (
                                     <div className="w-3 h-3 rounded-full bg-primary" />
                                   )}
                                 </div>
                                 <div className="flex-1">
-                                  <h4 className="font-semibold">Full Board (All Meals)</h4>
+                                  <h4 className="font-semibold">All Meals Inclusive</h4>
                                   <p className="text-sm text-muted-foreground">Breakfast, Lunch, Hi Tea & Dinner included for all guests</p>
                                 </div>
                               </div>
@@ -1580,20 +1564,20 @@ const Booking = () => {
 
                             <div 
                               className={`p-4 border rounded-lg cursor-pointer transition-colors ${
-                                selectedMealPlan === 'half-board' ? 'border-primary bg-primary/5' : 'border-border hover:border-primary/50'
+                                selectedMealPlan === 'breakfast_and_dinner' ? 'border-primary bg-primary/5' : 'border-border hover:border-primary/50'
                               }`}
-                              onClick={() => setSelectedMealPlan('half-board')}
+                              onClick={() => setSelectedMealPlan('breakfast_and_dinner')}
                             >
                               <div className="flex items-start gap-3">
                                 <div className={`w-5 h-5 rounded-full border-2 mt-0.5 flex items-center justify-center ${
-                                  selectedMealPlan === 'half-board' ? 'border-primary' : 'border-muted-foreground'
+                                  selectedMealPlan === 'breakfast_and_dinner' ? 'border-primary' : 'border-muted-foreground'
                                 }`}>
-                                  {selectedMealPlan === 'half-board' && (
+                                  {selectedMealPlan === 'breakfast_and_dinner' && (
                                     <div className="w-3 h-3 rounded-full bg-primary" />
                                   )}
                                 </div>
                                 <div className="flex-1">
-                                  <h4 className="font-semibold">Half Board</h4>
+                                  <h4 className="font-semibold">Breakfast & Dinner</h4>
                                   <p className="text-sm text-muted-foreground">Breakfast & Dinner included for all guests</p>
                                 </div>
                               </div>
@@ -1601,15 +1585,15 @@ const Booking = () => {
 
                             <div 
                               className={`p-4 border rounded-lg cursor-pointer transition-colors ${
-                                selectedMealPlan === 'none' ? 'border-primary bg-primary/5' : 'border-border hover:border-primary/50'
+                                selectedMealPlan === 'room_only' ? 'border-primary bg-primary/5' : 'border-border hover:border-primary/50'
                               }`}
-                              onClick={() => setSelectedMealPlan('none')}
+                              onClick={() => setSelectedMealPlan('room_only')}
                             >
                               <div className="flex items-start gap-3">
                                 <div className={`w-5 h-5 rounded-full border-2 mt-0.5 flex items-center justify-center ${
-                                  selectedMealPlan === 'none' ? 'border-primary' : 'border-muted-foreground'
+                                  selectedMealPlan === 'room_only' ? 'border-primary' : 'border-muted-foreground'
                                 }`}>
-                                  {selectedMealPlan === 'none' && (
+                                  {selectedMealPlan === 'room_only' && (
                                     <div className="w-3 h-3 rounded-full bg-primary" />
                                   )}
                                 </div>
@@ -2258,12 +2242,7 @@ const Booking = () => {
                         <span className="font-semibold whitespace-nowrap">
                           ₹{(() => {
                             const baseRoomTotal = selectedRoomType.base_price * nights;
-                            const mealPlanCodeMap: { [key: string]: string } = {
-                              'full-board': 'AP',
-                              'half-board': 'CP',
-                              'none': 'EP'
-                            };
-                            const mealPlanCode = mealPlanCodeMap[selectedMealPlan] || 'AP';
+                            const mealPlanCode = selectedMealPlan;
                             // Calculate just for adults first (base 2 adults included)
                             const { adjustedTotal } = applyMealPlanAdjustment(
                               baseRoomTotal,
@@ -2282,12 +2261,7 @@ const Booking = () => {
                         const perGuestRate = basePerNight / 2; // Base price is for 2 adults
                         const childRate = (perGuestRate / 2) + 100; // Children: half adult rate + 100
                         
-                        const mealPlanCodeMap: { [key: string]: string } = {
-                          'full-board': 'AP',
-                          'half-board': 'CP',
-                          'none': 'EP'
-                        };
-                        const mealPlanCode = mealPlanCodeMap[selectedMealPlan] || 'AP';
+                        const mealPlanCode = selectedMealPlan;
                         
                         // Calculate meal adjustment for children only
                         const baseChildTotal = childRate * childrenCount * nights;
@@ -2329,12 +2303,7 @@ const Booking = () => {
                         let adjustment = 0;
                         if (selectedPolicyData.adjustment_type === 'percentage') {
                           const baseRoomTotal = selectedRoomType.base_price * nights;
-                          const mealPlanCodeMap: { [key: string]: string } = {
-                            'full-board': 'AP',
-                            'half-board': 'CP',
-                            'none': 'EP'
-                          };
-                          const mealPlanCode = mealPlanCodeMap[selectedMealPlan] || 'AP';
+                          const mealPlanCode = selectedMealPlan;
                           const { adjustedTotal: roomTotalWithMealAdjustment } = applyMealPlanAdjustment(
                             baseRoomTotal,
                             mealPlanCode,
