@@ -1103,13 +1103,7 @@ const Booking = () => {
       return;
     }
     
-    // Force reset if already open to trigger re-render
-    if (showPaymentModal) {
-      setShowPaymentModal(false);
-      setTimeout(() => setShowPaymentModal(true), 50);
-    } else {
-      setShowPaymentModal(true);
-    }
+    setShowPaymentModal(true);
   };
 
   const handlePaymentSuccess = async (paymentId: string, orderId: string) => {
@@ -2311,10 +2305,10 @@ const Booking = () => {
         </div>
       </section>
 
-      {/* Payment Modal - Only render when in booking form */}
-      {showBookingForm && selectedRoomType && showPaymentModal && (
+      {/* Payment Modal */}
+      {showBookingForm && selectedRoomType && (
         <PaymentModal
-          isOpen={true}
+          isOpen={showPaymentModal}
           onClose={() => {
             setShowPaymentModal(false);
           }}
