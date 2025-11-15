@@ -1519,7 +1519,7 @@ const Booking = () => {
                       <div className="flex-1">
                         <h3 className="font-semibold">{selectedRoomType.name}</h3>
                         <p className="text-sm text-muted-foreground">Up to {selectedRoomType.max_guests} guests</p>
-                        <p className="text-sm text-muted-foreground mt-1">₹{selectedRoomType.base_price.toLocaleString()}/night</p>
+                        <p className="text-sm text-muted-foreground mt-1">₹{Math.round(selectedRoomType.base_price / Math.max(2, guests)).toLocaleString()}/guest/night</p>
                       </div>
                       <Button variant="outline" onClick={() => {
                         // Navigate to search availability with current dates and guests

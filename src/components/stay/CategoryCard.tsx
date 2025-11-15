@@ -207,10 +207,10 @@ const CategoryCard: React.FC<Props> = ({ category, onViewDetails, onBookNow, vie
                   {selectedVariant ? 'Total Price' : 'Starting from'}
                 </div>
                 <span className="text-2xl font-heading font-bold text-primary">
-                  ₹{selectedVariant ? selectedVariant.total_price.toLocaleString() : displayPrice.toLocaleString()}
+                  ₹{selectedVariant ? selectedVariant.total_price.toLocaleString() : Math.round(displayPrice / guests).toLocaleString()}
                 </span>
                 <span className="text-sm text-muted-foreground ml-1">
-                  {selectedVariant ? `for ${nights} night${nights > 1 ? 's' : ''}` : '/night'}
+                  {selectedVariant ? `/night for ${nights} night${nights > 1 ? 's' : ''}` : '/guest/night'}
                 </span>
               </div>
               <div className="flex gap-2">
@@ -326,10 +326,10 @@ const CategoryCard: React.FC<Props> = ({ category, onViewDetails, onBookNow, vie
               {selectedVariant ? 'Total Price' : 'Starting from'}
             </div>
             <span className="text-2xl font-heading font-bold text-primary">
-              ₹{selectedVariant ? selectedVariant.total_price.toLocaleString() : displayPrice.toLocaleString()}
+              ₹{selectedVariant ? selectedVariant.total_price.toLocaleString() : Math.round(displayPrice / guests).toLocaleString()}
             </span>
             <span className="text-sm text-muted-foreground ml-1">
-              {selectedVariant ? `for ${nights} night${nights > 1 ? 's' : ''}` : '/night'}
+              {selectedVariant ? `/night for ${nights} night${nights > 1 ? 's' : ''}` : '/guest/night'}
             </span>
           </div>
           <div className="flex gap-2 w-full">
