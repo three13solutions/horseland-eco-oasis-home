@@ -48,6 +48,7 @@ interface Addon {
   price: number;
   description?: string;
   image?: string;
+  duration?: string;
   type: 'meal' | 'activity' | 'spa';
 }
 
@@ -114,6 +115,8 @@ const Booking = () => {
   const [meals, setMeals] = useState<Addon[]>([]);
   const [activities, setActivities] = useState<Addon[]>([]);
   const [spaServices, setSpaServices] = useState<Addon[]>([]);
+  const [showSpaInBooking, setShowSpaInBooking] = useState(false);
+  const [showActivitiesInBooking, setShowActivitiesInBooking] = useState(false);
   const [selectedAddons, setSelectedAddons] = useState<SelectedAddon[]>([]);
   const [selectedRoomType, setSelectedRoomType] = useState<RoomType | null>(null);
   const [showBookingForm, setShowBookingForm] = useState(false);
@@ -458,19 +461,31 @@ const Booking = () => {
         .eq('is_active', true)
         .order('title');
 
-      // Load activities  
-      const { data: activitiesData } = await supabase
+      // Load settings for spa and activities visibility
+      const { data: settingsData } = await supabase
+        .from('site_settings')
+        .select('*')
+        .in('setting_key', ['show_spa_in_booking', 'show_activities_in_booking']);
+      
+      const showSpa = settingsData?.find(s => s.setting_key === 'show_spa_in_booking')?.setting_value === 'true';
+      const showActivities = settingsData?.find(s => s.setting_key === 'show_activities_in_booking')?.setting_value === 'true';
+      
+      setShowSpaInBooking(showSpa);
+      setShowActivitiesInBooking(showActivities);
+
+      // Load activities if enabled
+      const { data: activitiesData } = showActivities ? await supabase
         .from('activities')
         .select('*')
         .eq('is_active', true)
-        .order('title');
+        .order('title') : { data: null };
 
-      // Load spa services
-      const { data: spaData } = await supabase
+      // Load spa services if enabled
+      const { data: spaData } = showSpa ? await supabase
         .from('spa_services')
         .select('*')
         .eq('is_active', true)
-        .order('title');
+        .order('title') : { data: null };
 
       // Load transport/pickup addons
       const { data: transportData } = await supabase
@@ -921,6 +936,29 @@ const Booking = () => {
     });
   };
 
+  const handleAddonChange = (addonId: string, newQuantity: number) => {
+    setSelectedAddons(prev => {
+      const existing = prev.find(a => a.id === addonId);
+      
+      if (newQuantity <= 0) {
+        // Remove the addon
+        return prev.filter(a => a.id !== addonId);
+      }
+      
+      if (existing) {
+        // Update quantity
+        return prev.map(a => a.id === addonId ? { ...a, quantity: newQuantity } : a);
+      } else {
+        // Add new addon
+        const addon = [...spaServices, ...activities].find(a => a.id === addonId);
+        if (addon) {
+          return [...prev, { ...addon, quantity: newQuantity }];
+        }
+        return prev;
+      }
+    });
+  };
+
   const calculateGuestMealsTotal = () => {
     let total = 0;
     
@@ -1320,12 +1358,20 @@ const Booking = () => {
                     <CardTitle>Add Services & Experiences</CardTitle>
                   </CardHeader>
                   <CardContent>
-                     <Tabs value={activeTab || (needsExtraBedding ? "bedding" : "meals")} onValueChange={setActiveTab} className="w-full">
-                      <TabsList className={`grid w-full ${needsExtraBedding && !selectedRateVariant ? 'grid-cols-3' : (selectedRateVariant && selectedRateVariant.meal_cost > 0) ? 'grid-cols-2' : 'grid-cols-2'}`}>
-                        {needsExtraBedding && !selectedRateVariant && <TabsTrigger value="bedding">Extra Bed</TabsTrigger>}
-                        {(!selectedRateVariant || selectedRateVariant.meal_cost === 0) && <TabsTrigger value="meals">Meals</TabsTrigger>}
-                        <TabsTrigger value="pickup">Pickup/Drop</TabsTrigger>
-                      </TabsList>
+                      <Tabs value={activeTab || (needsExtraBedding ? "bedding" : "meals")} onValueChange={setActiveTab} className="w-full">
+                       <TabsList className={`grid w-full grid-cols-${[
+                         needsExtraBedding && !selectedRateVariant ? 1 : 0,
+                         (!selectedRateVariant || selectedRateVariant.meal_cost === 0) ? 1 : 0,
+                         1, // pickup always shown
+                         showSpaInBooking ? 1 : 0,
+                         showActivitiesInBooking ? 1 : 0
+                       ].reduce((a, b) => a + b, 0)}`}>
+                         {needsExtraBedding && !selectedRateVariant && <TabsTrigger value="bedding">Extra Bed</TabsTrigger>}
+                         {(!selectedRateVariant || selectedRateVariant.meal_cost === 0) && <TabsTrigger value="meals">Meals</TabsTrigger>}
+                         <TabsTrigger value="pickup">Pickup/Drop</TabsTrigger>
+                         {showSpaInBooking && <TabsTrigger value="spa">Spa Services</TabsTrigger>}
+                         {showActivitiesInBooking && <TabsTrigger value="activities">Activities</TabsTrigger>}
+                       </TabsList>
                       
                       {selectedRateVariant && selectedRateVariant.meal_cost > 0 && (
                         <div className="mt-4 p-3 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg">
@@ -1762,6 +1808,134 @@ const Booking = () => {
                           )}
                         </div>
                       </TabsContent>
+
+                      {/* Spa Services Tab */}
+                      {showSpaInBooking && (
+                        <TabsContent value="spa" className="space-y-4">
+                          {spaServicesByCategory.length > 0 ? (
+                            <div className="space-y-6">
+                              {spaServicesByCategory.map(([category, data]) => (
+                                <Card key={category}>
+                                  <CardHeader>
+                                    <CardTitle className="text-lg">{data.label}</CardTitle>
+                                  </CardHeader>
+                                  <CardContent>
+                                    <div className="grid gap-4">
+                                      {data.services.map((service) => {
+                                        const isSelected = selectedAddons.find(a => a.id === service.id);
+                                        const quantity = isSelected?.quantity || 0;
+                                        return (
+                                          <div key={service.id} className="p-4 border rounded-lg">
+                                            <div className="flex items-start justify-between gap-4">
+                                              <div className="flex-1">
+                                                <h4 className="font-medium">{service.title}</h4>
+                                                <p className="text-sm text-muted-foreground mt-1">{service.description}</p>
+                                                <div className="flex items-center gap-4 mt-2 text-sm text-muted-foreground">
+                                                  <span>₹{service.price}</span>
+                                                  {service.duration && <span>• {service.duration}</span>}
+                                                </div>
+                                              </div>
+                                              <div className="flex items-center gap-2">
+                                                <Button
+                                                  variant="outline"
+                                                  size="icon"
+                                                  className="h-8 w-8"
+                                                  onClick={() => handleAddonChange(service.id, Math.max(0, quantity - 1))}
+                                                  disabled={quantity === 0}
+                                                >
+                                                  <Minus className="h-4 w-4" />
+                                                </Button>
+                                                <span className="w-8 text-center font-medium">{quantity}</span>
+                                                <Button
+                                                  variant="outline"
+                                                  size="icon"
+                                                  className="h-8 w-8"
+                                                  onClick={() => handleAddonChange(service.id, quantity + 1)}
+                                                >
+                                                  <Plus className="h-4 w-4" />
+                                                </Button>
+                                              </div>
+                                            </div>
+                                          </div>
+                                        );
+                                      })}
+                                    </div>
+                                  </CardContent>
+                                </Card>
+                              ))}
+                            </div>
+                          ) : (
+                            <div className="text-center p-8 border rounded-lg bg-muted/20">
+                              <Sparkles className="h-12 w-12 text-muted-foreground mx-auto mb-3" />
+                              <p className="text-muted-foreground">No spa services available at this time</p>
+                            </div>
+                          )}
+                        </TabsContent>
+                      )}
+
+                      {/* Activities Tab */}
+                      {showActivitiesInBooking && (
+                        <TabsContent value="activities" className="space-y-4">
+                          {activitiesByCategory.length > 0 ? (
+                            <div className="space-y-6">
+                              {activitiesByCategory.map(([category, data]) => (
+                                <Card key={category}>
+                                  <CardHeader>
+                                    <CardTitle className="text-lg">{data.label}</CardTitle>
+                                  </CardHeader>
+                                  <CardContent>
+                                    <div className="grid gap-4">
+                                      {data.activities.map((activity) => {
+                                        const isSelected = selectedAddons.find(a => a.id === activity.id);
+                                        const quantity = isSelected?.quantity || 0;
+                                        return (
+                                          <div key={activity.id} className="p-4 border rounded-lg">
+                                            <div className="flex items-start justify-between gap-4">
+                                              <div className="flex-1">
+                                                <h4 className="font-medium">{activity.title}</h4>
+                                                <p className="text-sm text-muted-foreground mt-1">{activity.description}</p>
+                                                <div className="flex items-center gap-4 mt-2 text-sm text-muted-foreground">
+                                                  <span>₹{activity.price}</span>
+                                                  {activity.duration && <span>• {activity.duration}</span>}
+                                                </div>
+                                              </div>
+                                              <div className="flex items-center gap-2">
+                                                <Button
+                                                  variant="outline"
+                                                  size="icon"
+                                                  className="h-8 w-8"
+                                                  onClick={() => handleAddonChange(activity.id, Math.max(0, quantity - 1))}
+                                                  disabled={quantity === 0}
+                                                >
+                                                  <Minus className="h-4 w-4" />
+                                                </Button>
+                                                <span className="w-8 text-center font-medium">{quantity}</span>
+                                                <Button
+                                                  variant="outline"
+                                                  size="icon"
+                                                  className="h-8 w-8"
+                                                  onClick={() => handleAddonChange(activity.id, quantity + 1)}
+                                                >
+                                                  <Plus className="h-4 w-4" />
+                                                </Button>
+                                              </div>
+                                            </div>
+                                          </div>
+                                        );
+                                      })}
+                                    </div>
+                                  </CardContent>
+                                </Card>
+                              ))}
+                            </div>
+                          ) : (
+                            <div className="text-center p-8 border rounded-lg bg-muted/20">
+                              <Package className="h-12 w-12 text-muted-foreground mx-auto mb-3" />
+                              <p className="text-muted-foreground">No activities available at this time</p>
+                            </div>
+                          )}
+                        </TabsContent>
+                      )}
                     </Tabs>
                   </CardContent>
                 </Card>
@@ -1941,38 +2115,19 @@ const Booking = () => {
                       <div className="space-y-2 pt-2">
                         <div className="grid grid-cols-2 gap-2">
                           <Button 
-                            variant="outline"
-                            className="w-full text-xs md:text-sm h-10 md:h-11" 
-                            onClick={() => {
-                              const summaryElement = document.querySelector('[data-booking-summary]');
-                              summaryElement?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                            }}
-                          >
-                            View Booking
-                          </Button>
-                          {!showGuestDetails ? (
-                            <Button 
-                              className="w-full text-xs md:text-sm h-10 md:h-11" 
-                              onClick={handleProceedToGuestDetails}
-                            >
-                              Add to Stay
-                            </Button>
-                          ) : (
-                            <Button 
-                              className="w-full text-xs md:text-sm h-10 md:h-11" 
-                              onClick={handleProceedToPayment}
-                            >
-                              Proceed to Payment
-                            </Button>
-                          )}
-                        </div>
-                        <Button 
                           variant="destructive"
-                          className="w-full text-xs md:text-sm h-10 md:h-11" 
-                          onClick={handleClearBooking}
-                        >
-                          Clear Booking
-                        </Button>
+                            className="w-full text-xs md:text-sm h-10 md:h-11" 
+                            onClick={handleClearBooking}
+                          >
+                            Clear Booking
+                          </Button>
+                          <Button 
+                            className="w-full text-xs md:text-sm h-10 md:h-11" 
+                            onClick={handleProceedToPayment}
+                          >
+                            Proceed to Payment
+                          </Button>
+                        </div>
                       </div>
                   </CardContent>
                 </Card>
