@@ -82,8 +82,25 @@ const CategoryCard: React.FC<Props> = ({ category, onViewDetails, onBookNow, vie
   const nights = checkIn && checkOut ? Math.ceil((checkOut.getTime() - checkIn.getTime()) / (1000 * 60 * 60 * 24)) : 1;
 
   const handleBookNow = () => {
-    // Navigate to search availability page
-    navigate('/search-availability');
+    if (checkIn && checkOut) {
+      // We have dates - navigate to booking page with room selected
+      const searchParams = new URLSearchParams({
+        checkIn: checkIn.toISOString().split('T')[0],
+        checkOut: checkOut.toISOString().split('T')[0],
+        guests: guests.toString(),
+        roomTypeId: category.id
+      });
+
+      if (selectedVariant) {
+        searchParams.set('mealPlan', selectedMealPlan);
+        searchParams.set('cancellationPolicy', selectedCancellationPolicy);
+      }
+      
+      navigate(`/booking?${searchParams.toString()}`);
+    } else {
+      // No dates - navigate to search availability page
+      navigate('/search-availability');
+    }
   };
 
   // List view
@@ -199,7 +216,7 @@ const CategoryCard: React.FC<Props> = ({ category, onViewDetails, onBookNow, vie
                   </Button>
                 </Link>
                 <Button className="font-body" onClick={handleBookNow}>
-                  Search Availability
+                  {checkIn && checkOut ? 'Book Now' : 'Search Availability'}
                 </Button>
               </div>
             </div>
@@ -318,7 +335,7 @@ const CategoryCard: React.FC<Props> = ({ category, onViewDetails, onBookNow, vie
               </Button>
             </Link>
             <Button size="sm" className="font-body flex-1" onClick={handleBookNow}>
-              Search Availability
+              {checkIn && checkOut ? 'Book Now' : 'Search Availability'}
             </Button>
           </div>
         </div>
