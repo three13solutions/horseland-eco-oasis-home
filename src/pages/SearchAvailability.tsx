@@ -18,95 +18,74 @@ import { Filters } from '@/components/stay/CategoryFilters';
 import CategoryFilters from '@/components/stay/CategoryFilters';
 import SEO from '@/components/SEO';
 
+// Helper function to map room features to category attributes
+const mapRoomToCategory = (room: any): Category => {
+  const features = room.features || [];
+  
+  // Extract bed configurations from features
+  const bedConfigurations = features.filter((f: string) => 
+    f.includes('double') || f.includes('bed') || f.includes('loft')
+  );
+  
+  // Determine audiences based on max guests and features
+  const audiences = [];
+  if (room.max_guests >= 2) audiences.push('Couple');
+  if (room.max_guests >= 3 || features.some((f: string) => f.includes('family') || f.includes('playground'))) audiences.push('Family with kids');
+  if (room.max_guests >= 4) audiences.push('Friends / Group');
+  
+  // Determine budget category based on price
+  let budget: 'Budget' | 'Mid-range' | 'Premium' = 'Budget';
+  if (room.base_price >= 4000) budget = 'Premium';
+  else if (room.base_price >= 3000) budget = 'Mid-range';
+  
+  // Extract view locations from features and name
+  const viewLocations = [];
+  if (features.some((f: string) => f.toLowerCase().includes('pool'))) viewLocations.push('Pool view (window)', 'Near pool');
+  if (features.some((f: string) => f.toLowerCase().includes('balcony'))) viewLocations.push('Balcony');
+  if (features.some((f: string) => f.toLowerCase().includes('highest'))) viewLocations.push('Highest point');
+  if (features.some((f: string) => f.toLowerCase().includes('sports'))) viewLocations.push('Near sports courts');
+  if (features.some((f: string) => f.toLowerCase().includes('playground'))) viewLocations.push('Near playground');
+  if (features.some((f: string) => f.toLowerCase().includes('entrance'))) viewLocations.push('Near entrance');
+  if (features.some((f: string) => f.toLowerCase().includes('private') || f.toLowerCase().includes('windowless'))) viewLocations.push('No view / private and snug');
+  
+  // Determine noise level
+  let noise: 'Lively zone' | 'Moderate' | 'Quiet' = 'Moderate';
+  if (features.some((f: string) => f.toLowerCase().includes('pool') || f.toLowerCase().includes('sports') || f.toLowerCase().includes('active'))) noise = 'Lively zone';
+  else if (features.some((f: string) => f.toLowerCase().includes('private') || f.toLowerCase().includes('quiet') || f.toLowerCase().includes('cave'))) noise = 'Quiet';
+  
+  // Create tagline from description or generate one
+  const tagline = room.description ? 
+    room.description.split('.')[0] : 
+    `Comfortable accommodation for up to ${room.max_guests} guests`;
+
+  return {
+    id: room.id,
+    name: room.name,
+    tagline,
+    image: room.hero_image || 'https://images.unsplash.com/photo-1571896349842-33c89424de2d?auto=format&fit=crop&w=800&q=80',
+    imageKey: room.hero_image_key,
+    maxGuests: room.max_guests,
+    bedConfigurations: bedConfigurations.length > 0 ? bedConfigurations : ['Standard bed'],
+    audiences: audiences.length > 0 ? audiences : ['Anyone'],
+    budget,
+    viewLocations: viewLocations.length > 0 ? viewLocations : ['Standard view'],
+    features,
+    noise,
+    basePrice: room.base_price || 0,
+  };
+};
+
 interface RoomType {
   id: string;
   name: string;
   description?: string;
   hero_image?: string;
+  hero_image_key?: string;
   gallery: any;
   max_guests: number;
   features: any;
   base_price: number;
 }
-
-interface AvailableRoom {
-  roomType: RoomType;
-  availableCount: number;
-}
-
-interface SimpleRoomCardProps {
-  roomType: RoomType;
-  availableCount: number;
-  checkIn?: string;
-  checkOut?: string;
-  guests: number;
-  onBookNow: () => void;
-  viewMode?: 'grid' | 'list';
-}
-
-// Simplified card component for search results
-const SimpleRoomCard: React.FC<SimpleRoomCardProps> = ({
-  roomType, 
-  availableCount, 
-  checkIn, 
-  checkOut, 
-  guests, 
-  onBookNow,
-  viewMode = 'grid'
-}) => {
-  const nights = checkIn && checkOut 
-    ? Math.ceil((new Date(checkOut).getTime() - new Date(checkIn).getTime()) / (1000 * 60 * 60 * 24))
-    : 1;
-
-  return (
-    <Card className="overflow-hidden hover:shadow-lg transition-shadow">
-      <div className={viewMode === 'list' ? 'flex' : ''}>
-        {roomType.hero_image && (
-          <div className={viewMode === 'list' ? 'w-1/3' : 'w-full h-48'}>
-            <img 
-              src={roomType.hero_image} 
-              alt={roomType.name}
-              className="w-full h-full object-cover"
-            />
-          </div>
-        )}
-        <CardContent className={`p-4 ${viewMode === 'list' ? 'flex-1' : ''}`}>
-          <div className="flex justify-between items-start mb-2">
-            <h3 className="text-xl font-semibold">{roomType.name}</h3>
-            <Badge variant="secondary">
-              {availableCount} available
-            </Badge>
-          </div>
-          
-          {roomType.description && (
-            <p className="text-sm text-muted-foreground mb-3 line-clamp-2">
-              {roomType.description}
-            </p>
-          )}
-
-          <div className="flex items-center gap-4 text-sm text-muted-foreground mb-4">
-            <div className="flex items-center gap-1">
-              <Users className="h-4 w-4" />
-              <span>Up to {roomType.max_guests} guests</span>
-            </div>
-          </div>
-
-          <div className="flex items-center justify-between">
-            <div>
-              <div className="text-2xl font-bold">
-                ₹{roomType.base_price.toLocaleString()}
-              </div>
-              <div className="text-xs text-muted-foreground">per night</div>
-            </div>
-            <Button onClick={onBookNow}>
-              Book Now
-            </Button>
-          </div>
-        </CardContent>
-      </div>
-    </Card>
-  );
-};
 
 const SearchAvailability = () => {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -123,9 +102,10 @@ const SearchAvailability = () => {
   const [guests, setGuests] = useState<number>(parseInt(searchParams.get('guests') || '2'));
   
   // Results
-  const [availableRooms, setAvailableRooms] = useState<AvailableRoom[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(false);
   const [searched, setSearched] = useState(false);
+  const [heroImage, setHeroImage] = useState('https://images.unsplash.com/photo-1571896349842-33c89424de2d?ixlib=rb-4.0.3&auto=format&fit=crop&w=2000&q=80');
 
   // Filters
   const [filters, setFilters] = useState<Filters>({
@@ -173,16 +153,14 @@ const SearchAvailability = () => {
       const { data: allRooms, error: roomsError } = await supabase
         .from('room_types')
         .select('*')
-        .eq('is_published', true);
+        .eq('is_published', true)
+        .order('name');
 
       if (roomsError) throw roomsError;
 
-      // For now, show all rooms with a count (we can enhance this later with actual availability check)
-      const available = allRooms?.map((room: any) => ({
-        roomType: room,
-        availableCount: 5 // Placeholder count
-      })) || [];
-
+      // Map to categories
+      const mappedCategories = allRooms?.map(mapRoomToCategory) || [];
+      setCategories(mappedCategories);
       setAvailableRooms(available);
 
       // Update URL
@@ -193,7 +171,7 @@ const SearchAvailability = () => {
       });
       setSearchParams(params);
 
-      if (available.length === 0) {
+      if (mappedCategories.length === 0) {
         toast({
           title: "No availability",
           description: "No rooms available for the selected dates",
@@ -221,45 +199,53 @@ const SearchAvailability = () => {
     navigate(`/booking?${params.toString()}`);
   };
 
-  // Apply filters
-  const filteredRooms = availableRooms.filter(({ roomType }) => {
-    // Parse guest filter
-    if (filters.guests) {
-      const guestFilter = filters.guests;
-      let minGuests = 0;
-      let maxGuests = 999;
-      
-      if (guestFilter === '1-2') { minGuests = 1; maxGuests = 2; }
-      else if (guestFilter === '3') { minGuests = 3; maxGuests = 3; }
-      else if (guestFilter === '4-6') { minGuests = 4; maxGuests = 6; }
-      else if (guestFilter === '6+') { minGuests = 6; }
-      
-      if (roomType.max_guests < minGuests || roomType.max_guests > maxGuests) return false;
-    }
-    
-    const features = roomType.features || [];
-    
-    if (filters.bed) {
-      const hasBed = features.some((f: string) => f.toLowerCase().includes(filters.bed!.toLowerCase()));
-      if (!hasBed) return false;
-    }
-    
-    if (filters.features.length > 0) {
-      const hasAllFeatures = filters.features.every(feature =>
-        features.some((f: string) => f.toLowerCase().includes(feature.toLowerCase()))
-      );
-      if (!hasAllFeatures) return false;
-    }
+  // Apply filters - same logic as Stay page
+  const filteredCategories = useMemo(() => {
+    return categories.filter((category) => {
+      // Parse guest filter
+      if (filters.guests) {
+        const guestFilter = filters.guests;
+        let minGuests = 0;
+        let maxGuests = 999;
+        
+        if (guestFilter === '1-2') { minGuests = 1; maxGuests = 2; }
+        else if (guestFilter === '3') { minGuests = 3; maxGuests = 3; }
+        else if (guestFilter === '4-6') { minGuests = 4; maxGuests = 6; }
+        else if (guestFilter === '6+') { minGuests = 6; }
+        
+        if (category.maxGuests < minGuests || category.maxGuests > maxGuests) return false;
+      }
 
-    if (filters.budget) {
-      let budget: 'Budget' | 'Mid-range' | 'Premium' = 'Budget';
-      if (roomType.base_price >= 4000) budget = 'Premium';
-      else if (roomType.base_price >= 3000) budget = 'Mid-range';
-      if (budget !== filters.budget) return false;
-    }
+      if (filters.bed && !category.bedConfigurations.some(bed => bed.toLowerCase().includes(filters.bed!.toLowerCase()))) {
+        return false;
+      }
 
-    return true;
-  });
+      if (filters.audience && !category.audiences.includes(filters.audience)) {
+        return false;
+      }
+
+      if (filters.budget && category.budget !== filters.budget) {
+        return false;
+      }
+
+      if (filters.view && !category.viewLocations.includes(filters.view)) {
+        return false;
+      }
+
+      if (filters.features.length > 0) {
+        const hasAllFeatures = filters.features.every(feature =>
+          category.features.some((f: string) => f.toLowerCase().includes(feature.toLowerCase()))
+        );
+        if (!hasAllFeatures) return false;
+      }
+
+      if (filters.noise && category.noise !== filters.noise) {
+        return false;
+      }
+
+      return true;
+    });
+  }, [categories, filters]);
 
   return (
     <>
@@ -342,7 +328,8 @@ const SearchAvailability = () => {
                   >
                     <Search className="mr-2 h-4 w-4" />
                     {loading ? 'Searching...' : 'Search'}
-                  </Button>
+                    </Button>
+                  </div>
                 </div>
               </CardContent>
             </Card>
@@ -367,7 +354,7 @@ const SearchAvailability = () => {
                   <div className="flex items-center justify-between mb-6">
                     <div>
                       <h2 className="text-2xl font-heading font-bold">
-                        {filteredRooms.length} {filteredRooms.length === 1 ? 'Room' : 'Rooms'} Available
+                        {filteredCategories.length} {filteredCategories.length === 1 ? 'Room' : 'Rooms'} Available
                       </h2>
                       {checkIn && checkOut && (
                         <p className="text-sm text-muted-foreground mt-1">
@@ -421,29 +408,51 @@ const SearchAvailability = () => {
                     <div className="text-center py-12">
                       <p className="text-muted-foreground">Searching for available rooms...</p>
                     </div>
-                  ) : filteredRooms.length === 0 ? (
-                    <Card>
-                      <CardContent className="py-12 text-center">
-                        <p className="text-muted-foreground">
-                          {searched ? 'No rooms available for the selected criteria' : 'Use the search above to find available rooms'}
-                        </p>
-                      </CardContent>
-                    </Card>
+                  ) : filteredCategories.length === 0 ? (
+                    <div className="text-center py-12 bg-card border rounded-lg">
+                      <p className="text-muted-foreground mb-4">
+                        {searched ? 'No rooms available for the selected criteria' : 'Use the search above to find available rooms'}
+                      </p>
+                      {searched && (
+                        <Button
+                          variant="outline"
+                          onClick={() => setFilters({
+                            guests: null,
+                            bed: null,
+                            audience: null,
+                            budget: null,
+                            view: null,
+                            features: [],
+                            noise: null,
+                          })}
+                        >
+                          Clear All Filters
+                        </Button>
+                      )}
+                    </div>
                   ) : (
                     <div className={viewMode === 'grid' 
-                      ? 'grid grid-cols-1 md:grid-cols-2 gap-6' 
-                      : 'space-y-6'
+                      ? 'grid md:grid-cols-2 gap-6' 
+                      : 'flex flex-col gap-6'
                     }>
-                      {filteredRooms.map(({ roomType, availableCount }) => (
-                        <SimpleRoomCard
-                          key={roomType.id}
-                          roomType={roomType}
-                          availableCount={availableCount}
-                          checkIn={checkIn ? format(checkIn, 'yyyy-MM-dd') : undefined}
-                          checkOut={checkOut ? format(checkOut, 'yyyy-MM-dd') : undefined}
-                          guests={guests}
-                          onBookNow={() => handleBookNow(roomType.id)}
+                      {filteredCategories.map((category) => (
+                        <CategoryCard
+                          key={category.id}
+                          category={category}
                           viewMode={viewMode}
+                          checkIn={checkIn}
+                          checkOut={checkOut}
+                          guests={guests}
+                          onViewDetails={(cat) => navigate(`/stay/${cat.id}`)}
+                          onBookNow={(cat) => {
+                            const params = new URLSearchParams({
+                              checkIn: checkIn!.toISOString().split('T')[0],
+                              checkOut: checkOut!.toISOString().split('T')[0],
+                              guests: guests.toString(),
+                              roomTypeId: cat.id
+                            });
+                            navigate(`/booking?${params.toString()}`);
+                          }}
                         />
                       ))}
                     </div>
@@ -454,6 +463,7 @@ const SearchAvailability = () => {
           </section>
         )}
 
+        <CombinedFloating />
         <DynamicFooter />
       </div>
     </>
