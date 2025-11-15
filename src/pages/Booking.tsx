@@ -1354,13 +1354,10 @@ const Booking = () => {
                         )}
                       </div>
                       <Button variant="outline" onClick={() => {
-                        // Clear selection and scroll to available rooms
+                        // Clear only room selection, keep everything else
                         setShowBookingForm(false);
                         setSelectedRoomType(null);
                         setSelectedRateVariant(null);
-                        setSelectedAddons([]);
-                        setSelectedPickup(null);
-                        setSelectedBedding([]);
                         
                         // Scroll to available rooms section
                         setTimeout(() => {
