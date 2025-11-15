@@ -42,9 +42,19 @@ export const PriceBreakdown: React.FC<PriceBreakdownProps> = ({
         <CardTitle className="text-lg">Price Breakdown</CardTitle>
       </CardHeader>
       <CardContent className="space-y-3">
-        <div className="flex justify-between text-sm">
-          <span>Room Rate ({nights} {nights === 1 ? 'night' : 'nights'})</span>
-          <span className="font-medium">₹{roomSubtotal.toLocaleString()}</span>
+        <div className="space-y-1">
+          <div className="flex justify-between text-sm">
+            <span>Room Rate ({nights} {nights === 1 ? 'night' : 'nights'})</span>
+            <span className="font-medium">₹{roomSubtotal.toLocaleString()}</span>
+          </div>
+          <div className="flex justify-between text-xs text-muted-foreground pl-3">
+            <span>≈ ₹{Math.round(roomSubtotal / guestCount).toLocaleString()} / person for {nights} {nights === 1 ? 'night' : 'nights'}</span>
+          </div>
+          {guestCount >= 2 && (
+            <div className="text-xs text-muted-foreground pl-3">
+              Minimum charge for {Math.max(2, guestCount)} {Math.max(2, guestCount) === 1 ? 'guest' : 'guests'}
+            </div>
+          )}
         </div>
 
         {mealCost > 0 && (

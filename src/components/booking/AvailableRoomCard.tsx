@@ -189,13 +189,24 @@ export const AvailableRoomCard: React.FC<AvailableRoomCardProps> = ({
               </div>
             )}
 
-            <div className="text-right">
+            <div className="text-right space-y-2">
               <div className="text-2xl font-bold">
                 ₹{displayPrice.toLocaleString()}
               </div>
               <div className="text-sm text-muted-foreground">per night</div>
+              
+              {guests >= 2 && (
+                <div className="text-xs text-muted-foreground bg-muted/30 rounded px-2 py-1 inline-block">
+                  Charged for minimum {Math.max(2, guests)} {Math.max(2, guests) === 1 ? 'guest' : 'guests'}
+                </div>
+              )}
+              
+              <div className="text-sm text-muted-foreground">
+                ≈ ₹{Math.round(displayPrice / Math.max(2, guests)).toLocaleString()} / person / night
+              </div>
+              
               {nights > 0 && (
-                <div className="text-lg font-semibold mt-1">
+                <div className="text-lg font-semibold mt-2">
                   Total: ₹{totalPrice.toLocaleString()}
                 </div>
               )}
