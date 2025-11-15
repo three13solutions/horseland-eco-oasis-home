@@ -1376,7 +1376,7 @@ const Booking = () => {
     }
   };
 
-  const handleSearchCriteriaUpdate = () => {
+  const handleSearchCriteriaUpdate = async () => {
     if (!tempCheckIn || !tempCheckOut) {
       toast({
         title: "Missing dates",
@@ -1395,32 +1395,66 @@ const Booking = () => {
       return;
     }
 
-    // Update URL with new parameters
-    const params = new URLSearchParams({
-      checkIn: tempCheckIn.toISOString().split('T')[0],
-      checkOut: tempCheckOut.toISOString().split('T')[0],
-      guests: tempGuests.toString(),
-      adults: tempAdults.toString(),
-      children: tempChildren.toString(),
-      infants: tempInfants.toString()
-    });
-
-    if (roomTypeId) {
-      params.set('roomTypeId', roomTypeId);
-    }
-
-    // Update URL and trigger reload
-    navigate(`/booking?${params.toString()}`, { replace: true });
-    
-    // Clear selected room and reload
-    setSelectedRoomType(null);
-    setShowBookingForm(false);
     setLoading(true);
-    
-    toast({
-      title: "Search Updated",
-      description: "Loading available rooms..."
-    });
+
+    try {
+      // Check if the currently selected room is still available with the new criteria
+      if (roomTypeId) {
+        const { data: roomCheck, error: roomError } = await supabase
+          .from('room_types')
+          .select('*')
+          .eq('id', roomTypeId)
+          .eq('is_published', true)
+          .gte('max_guests', tempGuests)
+          .single();
+
+        if (roomError || !roomCheck) {
+          // Room not available with new criteria, redirect to search
+          toast({
+            title: "Room Not Available",
+            description: "The selected room is not available for your new criteria. Showing all available rooms.",
+          });
+
+          const params = new URLSearchParams({
+            checkIn: tempCheckIn.toISOString().split('T')[0],
+            checkOut: tempCheckOut.toISOString().split('T')[0],
+            guests: tempGuests.toString(),
+            adults: tempAdults.toString(),
+            children: tempChildren.toString(),
+            infants: tempInfants.toString()
+          });
+
+          navigate(`/search-availability?${params.toString()}`);
+          return;
+        }
+      }
+
+      // Room is available, update URL and reload current page
+      const params = new URLSearchParams({
+        checkIn: tempCheckIn.toISOString().split('T')[0],
+        checkOut: tempCheckOut.toISOString().split('T')[0],
+        guests: tempGuests.toString(),
+        adults: tempAdults.toString(),
+        children: tempChildren.toString(),
+        infants: tempInfants.toString()
+      });
+
+      if (roomTypeId) {
+        params.set('roomTypeId', roomTypeId);
+      }
+
+      // Reload the page with new parameters
+      window.location.href = `/booking?${params.toString()}`;
+      
+    } catch (error) {
+      console.error('Error checking room availability:', error);
+      toast({
+        title: "Error",
+        description: "Failed to update search criteria. Please try again.",
+        variant: "destructive"
+      });
+      setLoading(false);
+    }
   };
 
   const handleProceedToGuestDetails = () => {
