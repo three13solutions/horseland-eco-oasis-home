@@ -5,7 +5,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { Calendar as CalendarIcon, Users, ArrowRight, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Calendar as CalendarIcon, ArrowRight, ChevronLeft, ChevronRight } from 'lucide-react';
+import GuestSelector from '@/components/GuestSelector';
 import { useTranslationContext } from '@/components/admin/TranslationProvider';
 import { supabase } from '@/integrations/supabase/client';
 import { format } from 'date-fns';
@@ -17,7 +18,9 @@ const HeroSection = () => {
   const [currentSlide, setCurrentSlide] = useState(0);
   const [checkIn, setCheckIn] = useState<Date>();
   const [checkOut, setCheckOut] = useState<Date>();
-  const [guests, setGuests] = useState('2');
+  const [guests, setGuests] = useState(2);
+  const [adults, setAdults] = useState(2);
+  const [children, setChildren] = useState(0);
   const [heroTitle, setHeroTitle] = useState('Escape to Nature\'s Embrace');
   const [heroSubtitle, setHeroSubtitle] = useState('A mindful retreat in Matheran\'s no-car eco zone');
   const [slides, setSlides] = useState<Array<{ type: string; content: string; alt: string }>>([]);
@@ -163,17 +166,15 @@ const HeroSection = () => {
                 
                 <div className="space-y-2">
                   <label className="text-white/80 text-sm font-medium block text-left">{getTranslation('hero.guests', 'Guests')}</label>
-                  <div className="relative">
-                    <Input
-                      type="number"
-                      min="1"
-                      max="8"
-                      value={guests}
-                      onChange={(e) => setGuests(e.target.value)}
-                      className="bg-white/20 border-white/30 text-white placeholder:text-white/60 rounded-xl h-12"
-                    />
-                    <Users className="absolute right-3 top-3 h-6 w-6 text-white/60 pointer-events-none" />
-                  </div>
+                  <GuestSelector
+                    totalGuests={guests}
+                    onGuestsChange={(total, a, c) => {
+                      setGuests(total);
+                      setAdults(a);
+                      setChildren(c);
+                    }}
+                    variant="hero"
+                  />
                 </div>
                 
                 <Button 
@@ -182,9 +183,9 @@ const HeroSection = () => {
                       const searchParams = new URLSearchParams({
                         checkIn: format(checkIn, 'yyyy-MM-dd'),
                         checkOut: format(checkOut, 'yyyy-MM-dd'),
-                        guests
+                        guests: guests.toString()
                       });
-                      navigate(`/booking?${searchParams.toString()}`);
+                      navigate(`/search-availability?${searchParams.toString()}`);
                     } else {
                       navigate('/stay');
                     }

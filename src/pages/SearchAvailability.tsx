@@ -4,7 +4,7 @@ import { CalendarIcon, Users, LayoutGrid, List, Filter } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import GuestSelector from '@/components/GuestSelector';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import Navigation from '@/components/Navigation';
 import DynamicFooter from '@/components/DynamicFooter';
@@ -80,6 +80,8 @@ const SearchAvailability = () => {
     searchParams.get('checkOut') ? new Date(searchParams.get('checkOut')!) : undefined
   );
   const [guests, setGuests] = useState<number>(parseInt(searchParams.get('guests') || '2'));
+  const [adults, setAdults] = useState<number>(2);
+  const [children, setChildren] = useState<number>(0);
   
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(false);
@@ -284,19 +286,16 @@ const SearchAvailability = () => {
                   </PopoverContent>
                 </Popover>
               </div>
-              <div className="w-32">
+              <div className="flex-1 min-w-[200px]">
                 <label className="text-sm font-medium mb-2 block">Guests</label>
-                <Select value={guests.toString()} onValueChange={(val) => setGuests(parseInt(val))}>
-                  <SelectTrigger>
-                    <Users className="mr-2 h-4 w-4" />
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {[1, 2, 3, 4, 5, 6, 7, 8].map(num => (
-                      <SelectItem key={num} value={num.toString()}>{num}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <GuestSelector
+                  totalGuests={guests}
+                  onGuestsChange={(total, a, c) => {
+                    setGuests(total);
+                    setAdults(a);
+                    setChildren(c);
+                  }}
+                />
               </div>
               <Button 
                 onClick={handleSearch} 
