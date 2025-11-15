@@ -3,6 +3,7 @@ import { useSearchParams, useNavigate } from 'react-router-dom';
 import { Calendar as CalendarIcon, Users, Search, LayoutGrid, List, Filter } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -33,8 +34,18 @@ interface AvailableRoom {
   availableCount: number;
 }
 
+interface SimpleRoomCardProps {
+  roomType: RoomType;
+  availableCount: number;
+  checkIn?: string;
+  checkOut?: string;
+  guests: number;
+  onBookNow: () => void;
+  viewMode?: 'grid' | 'list';
+}
+
 // Simplified card component for search results
-const SimpleRoomCard: React.FC<AvailableRoomCardProps> = ({ 
+const SimpleRoomCard: React.FC<SimpleRoomCardProps> = ({
   roomType, 
   availableCount, 
   checkIn, 
