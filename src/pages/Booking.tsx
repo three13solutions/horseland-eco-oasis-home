@@ -1080,6 +1080,9 @@ const Booking = () => {
       hasGuestPhone: !!guestDetails.phone
     });
     
+    // Reset modal state first to ensure clean render
+    setShowPaymentModal(false);
+    
     if (!selectedRoomType) {
       toast({
         title: "Room Not Selected",
@@ -1120,8 +1123,12 @@ const Booking = () => {
       guestEmail: guestDetails.email,
       guestPhone: guestDetails.phone
     });
-    setShowPaymentModal(true);
-    console.log('setShowPaymentModal(true) called');
+    
+    // Open modal after a brief delay to ensure state reset
+    setTimeout(() => {
+      setShowPaymentModal(true);
+      console.log('setShowPaymentModal(true) called');
+    }, 100);
   };
 
   const handlePaymentSuccess = async (paymentId: string, orderId: string) => {
