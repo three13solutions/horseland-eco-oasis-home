@@ -60,7 +60,7 @@ export const RateVariantCard: React.FC<RateVariantCardProps> = ({
         <div className="mb-4">
           <div className="text-3xl font-bold">₹{adjustedTotal.toLocaleString()}</div>
           <div className="text-sm text-muted-foreground">
-            ₹{Math.round(adjustedPerNight).toLocaleString()} per night × {nights} nights
+            ₹{Math.round(adjustedPerNight / (adultsCount + childrenCount)).toLocaleString()} /guest/night × {nights} nights
           </div>
           {adjustment !== 0 && (
             <div className="text-sm text-primary font-medium mt-1">
