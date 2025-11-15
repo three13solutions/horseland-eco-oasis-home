@@ -163,6 +163,7 @@ const Booking = () => {
   const [selectedPickup, setSelectedPickup] = useState<PickupService | null>(null);
   const [selectedBedding, setSelectedBedding] = useState<BeddingOption[]>([]);
   const [showPaymentModal, setShowPaymentModal] = useState(false);
+  const [paymentModalKey, setPaymentModalKey] = useState(0);
   const [activeTab, setActiveTab] = useState<string>('');
   const [guestMeals, setGuestMeals] = useState<GuestMeal[]>([]);
   const [pickupServices, setPickupServices] = useState<PickupService[]>([]);
@@ -1179,11 +1180,9 @@ const Booking = () => {
       return;
     }
     
-    // Force reset then open to ensure state change is detected
-    setShowPaymentModal(false);
-    setTimeout(() => {
-      setShowPaymentModal(true);
-    }, 10);
+    // Increment key to force remount and open modal
+    setPaymentModalKey(prev => prev + 1);
+    setShowPaymentModal(true);
   };
 
   const handlePaymentSuccess = async (paymentId: string, orderId: string) => {
@@ -2629,6 +2628,7 @@ const Booking = () => {
       {/* Payment Modal */}
       {showBookingForm && selectedRoomType && (
         <PaymentModal
+          key={paymentModalKey}
           isOpen={showPaymentModal}
           onClose={() => {
             setShowPaymentModal(false);
