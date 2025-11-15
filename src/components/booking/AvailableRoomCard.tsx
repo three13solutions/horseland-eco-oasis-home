@@ -2,9 +2,8 @@ import React, { useState, useMemo } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Separator } from '@/components/ui/separator';
-import { Users, Coffee } from 'lucide-react';
+import { Users, Coffee, UtensilsCrossed, Home, CreditCard, XCircle, Check } from 'lucide-react';
 import { useDynamicPricing, applyMealPlanAdjustment } from '@/hooks/useDynamicPricing';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Info } from 'lucide-react';
@@ -54,14 +53,14 @@ export const AvailableRoomCard: React.FC<AvailableRoomCardProps> = ({
 
   // Get unique meal plans and cancellation policies from static config
   const mealPlans = [
-    { code: 'AP', name: 'Full Board (All Meals)' },
-    { code: 'CP', name: 'Half Board' },
-    { code: 'EP', name: 'Room Only' }
+    { code: 'AP', name: 'Full Board', description: 'All Meals Included', icon: UtensilsCrossed },
+    { code: 'CP', name: 'Half Board', description: 'Breakfast & Dinner', icon: Coffee },
+    { code: 'EP', name: 'Room Only', description: 'No Meals', icon: Home }
   ];
 
   const cancellationPolicies = [
-    { code: 'refundable_credit', name: 'Refundable as Credit Voucher' },
-    { code: 'non_refundable', name: 'Non-Refundable' }
+    { code: 'refundable_credit', name: 'Credit Voucher', description: 'Refundable as credit', icon: CreditCard },
+    { code: 'non_refundable', name: 'Non-Refundable', description: 'Best price, no refund', icon: XCircle }
   ];
 
   // Calculate display price using meal plan adjustment from the base rate
@@ -166,36 +165,63 @@ export const AvailableRoomCard: React.FC<AvailableRoomCardProps> = ({
               </Alert>
             )}
             
-            <div className="space-y-3 p-3 bg-muted/30 rounded-lg">
-              <div className="space-y-2">
-                <label className="text-xs text-muted-foreground block">Meal Plan</label>
-                <Select value={selectedMealPlan} onValueChange={setSelectedMealPlan}>
-                  <SelectTrigger className="h-9 text-xs">
-                    <SelectValue placeholder="Select meal plan" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {mealPlans.map(mp => (
-                      <SelectItem key={mp.code} value={mp.code} className="text-xs">
-                        {mp.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+            <div className="space-y-4">
+              {/* Meal Plan Selection */}
+              <div>
+                <label className="text-xs font-medium text-muted-foreground block mb-2">Select Meal Plan</label>
+                <div className="grid grid-cols-3 gap-2">
+                  {mealPlans.map(mp => {
+                    const Icon = mp.icon;
+                    const isSelected = selectedMealPlan === mp.code;
+                    return (
+                      <button
+                        key={mp.code}
+                        onClick={() => setSelectedMealPlan(mp.code)}
+                        className={`relative p-3 rounded-lg border-2 transition-all text-left ${
+                          isSelected 
+                            ? 'border-primary bg-primary/5' 
+                            : 'border-border hover:border-primary/50 bg-background'
+                        }`}
+                      >
+                        {isSelected && (
+                          <Check className="absolute top-2 right-2 h-4 w-4 text-primary" />
+                        )}
+                        <Icon className={`h-5 w-5 mb-1 ${isSelected ? 'text-primary' : 'text-muted-foreground'}`} />
+                        <div className="text-xs font-medium">{mp.name}</div>
+                        <div className="text-[10px] text-muted-foreground">{mp.description}</div>
+                      </button>
+                    );
+                  })}
+                </div>
               </div>
-              <div className="space-y-2">
-                <label className="text-xs text-muted-foreground block">Cancellation Policy</label>
-                <Select value={selectedCancellationPolicy} onValueChange={setSelectedCancellationPolicy}>
-                  <SelectTrigger className="h-9 text-xs">
-                    <SelectValue placeholder="Refundable / Non-refundable" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {cancellationPolicies.map(cp => (
-                      <SelectItem key={cp.code} value={cp.code} className="text-xs">
-                        {cp.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+              
+              {/* Cancellation Policy Selection */}
+              <div>
+                <label className="text-xs font-medium text-muted-foreground block mb-2">Cancellation Policy</label>
+                <div className="grid grid-cols-2 gap-2">
+                  {cancellationPolicies.map(cp => {
+                    const Icon = cp.icon;
+                    const isSelected = selectedCancellationPolicy === cp.code;
+                    return (
+                      <button
+                        key={cp.code}
+                        onClick={() => setSelectedCancellationPolicy(cp.code)}
+                        className={`relative p-3 rounded-lg border-2 transition-all text-left ${
+                          isSelected 
+                            ? 'border-primary bg-primary/5' 
+                            : 'border-border hover:border-primary/50 bg-background'
+                        }`}
+                      >
+                        {isSelected && (
+                          <Check className="absolute top-2 right-2 h-4 w-4 text-primary" />
+                        )}
+                        <Icon className={`h-5 w-5 mb-1 ${isSelected ? 'text-primary' : 'text-muted-foreground'}`} />
+                        <div className="text-xs font-medium">{cp.name}</div>
+                        <div className="text-[10px] text-muted-foreground">{cp.description}</div>
+                      </button>
+                    );
+                  })}
+                </div>
               </div>
             </div>
 
