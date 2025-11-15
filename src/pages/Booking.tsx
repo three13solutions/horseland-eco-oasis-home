@@ -1072,6 +1072,11 @@ const Booking = () => {
   }, [needsExtraBedding]);
 
   const handleProceedToPayment = () => {
+    console.log('=== PROCEED TO PAYMENT CLICKED ===');
+    console.log('showBookingForm:', showBookingForm);
+    console.log('selectedRoomType:', selectedRoomType?.name);
+    console.log('showPaymentModal (before):', showPaymentModal);
+    
     if (!selectedRoomType) {
       toast({
         title: "Room Not Selected",
@@ -1088,6 +1093,7 @@ const Booking = () => {
     if (!guestDetails.phone?.trim()) missingFields.push("Phone Number");
     
     if (missingFields.length > 0) {
+      console.log('Missing fields:', missingFields);
       toast({
         title: "Missing Required Information",
         description: `Please fill in: ${missingFields.join(", ")}`,
@@ -1103,7 +1109,9 @@ const Booking = () => {
       return;
     }
     
+    console.log('All validations passed. Setting showPaymentModal to true...');
     setShowPaymentModal(true);
+    console.log('showPaymentModal set to true');
   };
 
   const handlePaymentSuccess = async (paymentId: string, orderId: string) => {
