@@ -9,6 +9,7 @@ import MediaAsset from "@/components/MediaAsset";
 import { toast } from "sonner";
 import { useContentTranslation } from "@/hooks/useContentTranslation";
 import { useTranslation } from "react-i18next";
+import DOMPurify from "dompurify";
 
 interface Page {
   id: string;
@@ -168,7 +169,7 @@ export default function DynamicPage() {
           <div className="w-full">
             <div
               className="prose prose-lg max-w-none dark:prose-invert"
-              dangerouslySetInnerHTML={{ __html: content }}
+              dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(content) }}
             />
           </div>
         );
@@ -178,7 +179,7 @@ export default function DynamicPage() {
           <div className="max-w-4xl mx-auto px-4">
             <div
               className="prose prose-lg dark:prose-invert"
-              dangerouslySetInnerHTML={{ __html: content }}
+              dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(content) }}
             />
           </div>
         );
@@ -200,7 +201,7 @@ export default function DynamicPage() {
             <main className="lg:col-span-3">
               <div
                 className="prose prose-lg dark:prose-invert"
-                dangerouslySetInnerHTML={{ __html: content }}
+                dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(content) }}
               />
             </main>
           </div>
@@ -210,7 +211,7 @@ export default function DynamicPage() {
         return (
           <div
             className="prose prose-lg dark:prose-invert"
-            dangerouslySetInnerHTML={{ __html: content }}
+            dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(content) }}
           />
         );
     }

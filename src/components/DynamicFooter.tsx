@@ -17,6 +17,7 @@ import {
   MessageCircle,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import DOMPurify from "dompurify";
 
 interface FooterSection {
   id: string;
@@ -359,7 +360,7 @@ const DynamicFooter = () => {
           {/* Copyright Row */}
           <div className="flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
             <p className="text-sm text-background/60">{siteSettings.copyright_text}</p>
-            <p className="text-sm text-background/60" dangerouslySetInnerHTML={{ __html: siteSettings.credits }} />
+            <p className="text-sm text-background/60" dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(siteSettings.credits) }} />
           </div>
         </div>
       </div>
