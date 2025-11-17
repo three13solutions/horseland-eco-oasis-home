@@ -672,8 +672,14 @@ const Booking = () => {
     navigate(`/booking?${newSearchParams.toString()}`);
   };
 
-  const handleSelectRoom = (roomType: RoomType, variant?: any) => {
+  const handleSelectRoom = (roomType: RoomType, variant?: RateVariant) => {
     setSelectedRoomType(roomType);
+    if (variant) {
+      setSelectedVariant(variant);
+      // Set meal plan and cancellation policy from variant
+      setSelectedMealPlan(variant.meal_plan_code as 'room_only' | 'breakfast_and_dinner' | 'all_meals_inclusive');
+      setSelectedCancellationPolicy(variant.cancellation_policy_code);
+    }
     setShowBookingForm(true);
   };
 
@@ -771,19 +777,13 @@ const Booking = () => {
     
     // Use total price from variant (includes all pricing rules + meal + policy)
     const roomTotalWithMealAndPolicy = selectedVariant.total_price;
-    if (selectedPolicyData) {
-      if (selectedPolicyData.adjustment_type === 'percentage') {
-        policyAdjustment = roomTotalWithMealAdjustment * (selectedPolicyData.adjustment_value / 100);
-      } else if (selectedPolicyData.adjustment_type === 'fixed') {
-        policyAdjustment = selectedPolicyData.adjustment_value;
-      }
-    }
     
+    // Add extras on top of the variant price
     const addonsTotal = selectedAddons.reduce((total, addon) => total + (addon.price * addon.quantity), 0);
     const pickupTotal = selectedPickup ? selectedPickup.price : 0;
     const beddingTotal = selectedBedding.reduce((total, bed) => total + bed.price, 0);
     
-    return roomTotalWithMealAdjustment + policyAdjustment + addonsTotal + pickupTotal + beddingTotal;
+    return roomTotalWithMealAndPolicy + addonsTotal + pickupTotal + beddingTotal;
   };
 
   const calculateTotal = () => {
@@ -1307,14 +1307,14 @@ const Booking = () => {
       }
 
       // Create payment record
-      const roomPrice = selectedRoomType!.base_price;
+      const roomPrice = selectedVariant?.total_price || 0;
       const addonTotal = selectedAddons.reduce((total, addon) => total + (addon.price * addon.quantity), 0) + 
                         (selectedPickup ? selectedPickup.price : 0) + 
                         selectedBedding.reduce((total, bed) => total + bed.price, 0);
       
       const paymentBreakdown = calculateBookingAmount(
         roomPrice,
-        calculateNights(),
+        1, // Already calculated in variant total_price
         addonTotal
       );
 
