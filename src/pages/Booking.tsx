@@ -23,7 +23,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { calculateBookingAmount, RAZORPAY_CONFIG } from '@/lib/razorpay';
 import { useQuery } from '@tanstack/react-query';
-import { applyMealPlanAdjustment } from '@/hooks/useDynamicPricing';
+import { RateVariant } from '@/hooks/useDynamicPricing';
 import { format } from 'date-fns';
 
 interface RoomType {
@@ -121,6 +121,7 @@ const Booking = () => {
   const [selectedPackage, setSelectedPackage] = useState<any>(null);
   const [packageLoading, setPackageLoading] = useState(false);
   const [heroImage, setHeroImage] = useState<string>('');
+  const [selectedVariant, setSelectedVariant] = useState<RateVariant | null>(null);
   
   // Guest breakdown state
   const [adultsCount, setAdultsCount] = useState(Math.max(1, urlAdults));
@@ -766,28 +767,10 @@ const Booking = () => {
   };
 
   const calculateSubtotal = () => {
-    if (!selectedRoomType) return 0;
+    if (!selectedRoomType || !selectedVariant) return 0;
     
-    const nights = calculateNights();
-    
-    // Base room price assumes all meals inclusive for base occupancy (2 adults)
-    const baseRoomTotal = selectedRoomType.base_price * nights;
-    
-    // Meal plan code is now directly the value from state (no mapping needed)
-    const mealPlanCode = selectedMealPlan;
-    
-    // Apply meal plan adjustment for all adults and children (infants are free)
-    const { adjustedTotal: roomTotalWithMealAdjustment } = applyMealPlanAdjustment(
-      baseRoomTotal,
-      mealPlanCode,
-      adultsCount,
-      childrenCount,
-      nights
-    );
-    
-    // Get selected cancellation policy and its adjustment
-    const selectedPolicyData = cancellationPolicies.find(cp => cp.policy_code === selectedCancellationPolicy);
-    let policyAdjustment = 0;
+    // Use total price from variant (includes all pricing rules + meal + policy)
+    const roomTotalWithMealAndPolicy = selectedVariant.total_price;
     if (selectedPolicyData) {
       if (selectedPolicyData.adjustment_type === 'percentage') {
         policyAdjustment = roomTotalWithMealAdjustment * (selectedPolicyData.adjustment_value / 100);
@@ -1277,36 +1260,18 @@ const Booking = () => {
         meal_plan_code: selectedMealPlan || 'room_only',
         meal_cost: 0, // Meal cost is now included in room rate adjustment
         cancellation_policy_code: selectedCancellationPolicy || 'refundable',
-        room_cost: (() => {
-          const baseRoomTotal = selectedRoomType!.base_price * calculateNights();
-          const mealPlanCode = selectedMealPlan;
-          const { adjustedTotal } = applyMealPlanAdjustment(
-            baseRoomTotal,
-            mealPlanCode,
-            adultsCount,
-            childrenCount,
-            calculateNights()
-          );
-          return adjustedTotal;
-        })(),
+        room_cost: selectedVariant?.room_rate || 0,
         rate_breakdown: {
           meal_plan: selectedMealPlan,
           cancellation_policy: selectedCancellationPolicy,
           adults_count: adultsCount,
           children_count: childrenCount,
           infants_count: infantsCount,
-          meal_adjustment: (() => {
-            const baseRoomTotal = selectedRoomType!.base_price * calculateNights();
-            const mealPlanCode = selectedMealPlan;
-            const { adjustment } = applyMealPlanAdjustment(
-              baseRoomTotal,
-              mealPlanCode,
-              adultsCount,
-              childrenCount,
-              calculateNights()
-            );
-            return adjustment;
-          })(),
+          room_rate: selectedVariant?.room_rate || 0,
+          meal_cost: selectedVariant?.meal_cost || 0,
+          policy_adjustment: selectedVariant?.policy_adjustment || 0,
+          total_price: selectedVariant?.total_price || 0,
+          price_per_night: selectedVariant?.price_per_night || 0,
           total_nights: calculateNights()
         },
         selected_meals: [],
@@ -2296,50 +2261,17 @@ const Booking = () => {
                           Room for {adultsCount} {adultsCount === 1 ? 'Adult' : 'Adults'} ({nights} {nights === 1 ? 'night' : 'nights'}):
                         </span>
                         <span className="font-semibold whitespace-nowrap">
-                          ₹{(() => {
-                            const baseRoomTotal = selectedRoomType.base_price * nights;
-                            const mealPlanCode = selectedMealPlan;
-                            // Calculate just for adults first (base 2 adults included)
-                            const { adjustedTotal } = applyMealPlanAdjustment(
-                              baseRoomTotal,
-                              mealPlanCode,
-                              adultsCount,
-                              0,
-                              nights
-                            );
-                            return adjustedTotal.toLocaleString();
-                          })()}
+                          ₹{selectedVariant?.total_price ? selectedVariant.total_price.toLocaleString() : '0'}
                         </span>
                       </div>
                       
-                      {childrenCount > 0 && (() => {
-                        const basePerNight = selectedRoomType.base_price;
-                        const perGuestRate = basePerNight / 2; // Base price is for 2 adults
-                        const childRate = (perGuestRate / 2) + 100; // Children: half adult rate + 100
-                        
-                        const mealPlanCode = selectedMealPlan;
-                        
-                        // Calculate meal adjustment for children only
-                        const baseChildTotal = childRate * childrenCount * nights;
-                        const { adjustedTotal: childAdjusted } = applyMealPlanAdjustment(
-                          baseChildTotal,
-                          mealPlanCode,
-                          0, // no adults
-                          childrenCount,
-                          nights
-                        );
-                        
-                        return (
-                          <div className="flex justify-between gap-2 text-sm">
-                            <span className="text-muted-foreground">
-                              {childrenCount} {childrenCount === 1 ? 'Child' : 'Children'} ({nights} {nights === 1 ? 'night' : 'nights'}):
-                            </span>
-                            <span className="font-semibold whitespace-nowrap">
-                              ₹{childAdjusted.toLocaleString()}
-                            </span>
-                          </div>
-                        );
-                      })()}
+                      {childrenCount > 0 && (
+                        <div className="flex justify-between gap-2 text-sm">
+                          <span className="text-muted-foreground">
+                            ({childrenCount} {childrenCount === 1 ? 'Child' : 'Children'} included above)
+                          </span>
+                        </div>
+                      )}
                       
                       {infantsCount > 0 && (
                         <div className="flex justify-between gap-2 text-sm">
@@ -2353,28 +2285,14 @@ const Booking = () => {
                       )}
                       
                       {(() => {
-                        const selectedPolicyData = cancellationPolicies.find(cp => cp.policy_code === selectedCancellationPolicy);
-                        if (!selectedPolicyData || selectedPolicyData.adjustment_value === 0) return null;
+                        if (!selectedVariant || selectedVariant.policy_adjustment === 0) return null;
                         
-                        let adjustment = 0;
-                        if (selectedPolicyData.adjustment_type === 'percentage') {
-                          const baseRoomTotal = selectedRoomType.base_price * nights;
-                          const mealPlanCode = selectedMealPlan;
-                          const { adjustedTotal: roomTotalWithMealAdjustment } = applyMealPlanAdjustment(
-                            baseRoomTotal,
-                            mealPlanCode,
-                            adultsCount,
-                            childrenCount,
-                            nights
-                          );
-                          adjustment = roomTotalWithMealAdjustment * (selectedPolicyData.adjustment_value / 100);
-                        } else {
-                          adjustment = selectedPolicyData.adjustment_value;
-                        }
+                        const adjustment = selectedVariant.policy_adjustment;
+                        const selectedPolicyData = cancellationPolicies.find(cp => cp.policy_code === selectedCancellationPolicy);
                         
                         return (
                           <div className="flex justify-between gap-2 text-sm">
-                            <span className="text-muted-foreground">{selectedPolicyData.policy_name === 'Non Refundable' ? 'Non Refundable Discount' : selectedPolicyData.policy_name}:</span>
+                            <span className="text-muted-foreground">{selectedPolicyData?.policy_name === 'Non Refundable' ? 'Non Refundable Discount' : selectedPolicyData?.policy_name}:</span>
                             <span className={`font-semibold whitespace-nowrap ${adjustment > 0 ? 'text-red-600' : 'text-green-600'}`}>
                               {adjustment > 0 ? '+' : ''}₹{Math.abs(adjustment).toLocaleString()}
                             </span>
@@ -2504,30 +2422,7 @@ const Booking = () => {
             onSuccess={handlePaymentSuccess}
             bookingDetails={{
               roomName: selectedRoomType.name,
-              roomPrice: (() => {
-                // Calculate room price with meal plan adjustment
-                const baseRoomTotal = selectedRoomType.base_price * nights;
-                const { adjustedTotal: roomWithMealAdjustment } = applyMealPlanAdjustment(
-                  baseRoomTotal,
-                  selectedMealPlan,
-                  adultsCount,
-                  childrenCount,
-                  nights
-                );
-                
-                // Add cancellation policy adjustment
-                const selectedPolicyData = cancellationPolicies.find(cp => cp.policy_code === selectedCancellationPolicy);
-                let policyAdjustment = 0;
-                if (selectedPolicyData) {
-                  if (selectedPolicyData.adjustment_type === 'percentage') {
-                    policyAdjustment = roomWithMealAdjustment * (selectedPolicyData.adjustment_value / 100);
-                  } else if (selectedPolicyData.adjustment_type === 'fixed') {
-                    policyAdjustment = selectedPolicyData.adjustment_value;
-                  }
-                }
-                
-                return roomWithMealAdjustment + policyAdjustment;
-              })(),
+              roomPrice: selectedVariant?.total_price || 0,
               nights: nights,
               addonTotal: selectedAddons.reduce((total, addon) => total + (addon.price * addon.quantity), 0) + 
                          (selectedPickup ? selectedPickup.price : 0) + 
