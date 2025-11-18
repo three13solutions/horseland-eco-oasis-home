@@ -6,7 +6,11 @@ import CombinedFloating from '../components/CombinedFloating';
 import MediaAsset from '../components/MediaAsset';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
+import { Calendar as CalendarComponent } from '@/components/ui/calendar';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { supabase } from '@/integrations/supabase/client';
+import { format } from 'date-fns';
+import { cn } from '@/lib/utils';
 import { 
   Users, 
   ChevronLeft, 
@@ -16,7 +20,7 @@ import {
   Info,
   ChevronDown,
   ChevronUp,
-  Calendar
+  Calendar as CalendarIcon
 } from 'lucide-react';
 
 const RoomDetail = () => {
@@ -30,6 +34,9 @@ const RoomDetail = () => {
   const [showSeasonalPricing, setShowSeasonalPricing] = useState(false);
   const [seasonalPricing, setSeasonalPricing] = useState<any[]>([]);
   const [seasons, setSeasons] = useState<any[]>([]);
+  const [checkInDate, setCheckInDate] = useState<Date>();
+  const [checkOutDate, setCheckOutDate] = useState<Date>();
+  const [guests, setGuests] = useState<number>(2);
 
   // Fetch room data from database
   useEffect(() => {
@@ -182,14 +189,18 @@ const RoomDetail = () => {
   };
 
   const handleBookNow = () => {
-    const today = new Date();
-    const tomorrow = new Date(today);
-    tomorrow.setDate(tomorrow.getDate() + 1);
+    // Use selected dates if available, otherwise use today/tomorrow
+    const checkIn = checkInDate || new Date();
+    const checkOut = checkOutDate || (() => {
+      const tomorrow = new Date(checkIn);
+      tomorrow.setDate(tomorrow.getDate() + 1);
+      return tomorrow;
+    })();
     
     const searchParams = new URLSearchParams({
-      checkIn: today.toISOString().split('T')[0],
-      checkOut: tomorrow.toISOString().split('T')[0],
-      guests: '2',
+      checkIn: checkIn.toISOString().split('T')[0],
+      checkOut: checkOut.toISOString().split('T')[0],
+      guests: guests.toString(),
       roomTypeId: roomData.id
     });
     
@@ -410,7 +421,7 @@ const RoomDetail = () => {
                           onClick={() => setShowSeasonalPricing(!showSeasonalPricing)}
                           className="flex items-center gap-2 text-xs text-primary hover:text-primary/80 transition-colors font-body"
                         >
-                          <Calendar className="w-3.5 h-3.5" />
+                          <CalendarIcon className="w-3.5 h-3.5" />
                           <span>See seasonal rates</span>
                           {showSeasonalPricing ? (
                             <ChevronUp className="w-3.5 h-3.5" />
@@ -505,21 +516,73 @@ const RoomDetail = () => {
                   <div className="space-y-4 mb-6">
                     <div>
                       <label className="block text-sm font-body font-medium mb-2">Check-in Date</label>
-                      <input 
-                        type="date" 
-                        className="w-full p-3 border rounded-lg font-body focus:outline-none focus:ring-2 focus:ring-primary"
-                      />
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <Button
+                            variant="outline"
+                            className={cn(
+                              "w-full justify-start text-left font-normal",
+                              !checkInDate && "text-muted-foreground"
+                            )}
+                          >
+                            <CalendarIcon className="mr-2 h-4 w-4" />
+                            {checkInDate ? format(checkInDate, "PPP") : "Pick a date"}
+                          </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-auto p-0 bg-background/95 backdrop-blur-xl border-2 shadow-2xl" align="start">
+                          <CalendarComponent
+                            mode="single"
+                            selected={checkInDate}
+                            onSelect={(newDate) => {
+                              setCheckInDate(newDate);
+                              // Clear checkout if new check-in is after current checkout
+                              if (newDate && checkOutDate && newDate >= checkOutDate) {
+                                setCheckOutDate(undefined);
+                              }
+                            }}
+                            disabled={(date) => date < new Date(new Date().setHours(0, 0, 0, 0))}
+                            initialFocus
+                          />
+                        </PopoverContent>
+                      </Popover>
                     </div>
                     <div>
                       <label className="block text-sm font-body font-medium mb-2">Check-out Date</label>
-                      <input 
-                        type="date" 
-                        className="w-full p-3 border rounded-lg font-body focus:outline-none focus:ring-2 focus:ring-primary"
-                      />
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <Button
+                            variant="outline"
+                            className={cn(
+                              "w-full justify-start text-left font-normal",
+                              !checkOutDate && "text-muted-foreground"
+                            )}
+                          >
+                            <CalendarIcon className="mr-2 h-4 w-4" />
+                            {checkOutDate ? format(checkOutDate, "PPP") : "Pick a date"}
+                          </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-auto p-0 bg-background/95 backdrop-blur-xl border-2 shadow-2xl" align="start">
+                          <CalendarComponent
+                            mode="single"
+                            selected={checkOutDate}
+                            onSelect={setCheckOutDate}
+                            defaultMonth={checkInDate}
+                            disabled={(date) => {
+                              const today = new Date(new Date().setHours(0, 0, 0, 0));
+                              return !checkInDate || date <= checkInDate || date < today;
+                            }}
+                            initialFocus
+                          />
+                        </PopoverContent>
+                      </Popover>
                     </div>
                     <div>
                       <label className="block text-sm font-body font-medium mb-2">Guests</label>
-                      <select className="w-full p-3 border rounded-lg font-body focus:outline-none focus:ring-2 focus:ring-primary">
+                      <select 
+                        className="w-full p-3 border rounded-lg font-body focus:outline-none focus:ring-2 focus:ring-primary"
+                        value={guests}
+                        onChange={(e) => setGuests(Number(e.target.value))}
+                      >
                         {Array.from({ length: roomData.max_guests }, (_, i) => i + 1).map(num => (
                           <option key={num} value={num}>{num} Guest{num > 1 ? 's' : ''}</option>
                         ))}
