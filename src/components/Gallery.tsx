@@ -20,66 +20,76 @@ const GalleryV5 = () => {
     try {
       setLoading(true);
       
-      // Fetch images from specific gallery categories
-      const { data: hotelData, error: hotelError } = await supabase
-        .from('image_categories')
-        .select(`
-          image_id,
-          gallery_images!inner(
-            id,
-            title,
-            image_url,
-            caption,
-            location,
-            likes_count,
-            guest_handle,
-            guest_name,
-            sort_order,
-            alt_text
-          ),
-          gallery_categories!inner(slug, name)
-        `)
-        .eq('gallery_categories.slug', 'hotel-photos')
-        .order('gallery_images(sort_order)', { ascending: true });
+      // First, get the category IDs for hotel-photos and guest-photos
+      const { data: categories, error: categoryError } = await supabase
+        .from('gallery_categories')
+        .select('id, slug, name')
+        .in('slug', ['hotel-photos', 'guest-photos']);
 
-      const { data: guestData, error: guestError } = await supabase
-        .from('image_categories')
-        .select(`
-          image_id,
-          gallery_images!inner(
-            id,
-            title,
-            image_url,
-            caption,
-            location,
-            likes_count,
-            guest_handle,
-            guest_name,
-            sort_order,
-            alt_text
-          ),
-          gallery_categories!inner(slug, name)
-        `)
-        .eq('gallery_categories.slug', 'guest-photos')
-        .order('gallery_images(sort_order)', { ascending: true });
-      
-      if (hotelError || guestError) {
-        console.error('Error fetching gallery images:', hotelError || guestError);
+      if (categoryError) {
+        console.error('Error fetching categories:', categoryError);
         setGalleryImages([]);
-      } else {
-        // Transform data to match expected format
-        const transformedHotel = (hotelData || []).map(item => ({
-          ...item.gallery_images,
-          gallery_categories: item.gallery_categories
-        }));
-        
-        const transformedGuests = (guestData || []).map(item => ({
-          ...item.gallery_images,
-          gallery_categories: item.gallery_categories
-        }));
-        
-        setGalleryImages([...transformedHotel, ...transformedGuests]);
+        return;
       }
+
+      if (!categories || categories.length === 0) {
+        console.warn('No gallery categories found');
+        setGalleryImages([]);
+        return;
+      }
+
+      const categoryIds = categories.map(cat => cat.id);
+      const categoryMap = categories.reduce((acc, cat) => {
+        acc[cat.id] = cat;
+        return acc;
+      }, {});
+
+      // Fetch image_categories to get the image-to-category relationships
+      const { data: imageCategoryLinks, error: linkError } = await supabase
+        .from('image_categories')
+        .select('image_id, category_id')
+        .in('category_id', categoryIds);
+
+      if (linkError) {
+        console.error('Error fetching image category links:', linkError);
+        setGalleryImages([]);
+        return;
+      }
+
+      if (!imageCategoryLinks || imageCategoryLinks.length === 0) {
+        console.warn('No images assigned to gallery categories');
+        setGalleryImages([]);
+        return;
+      }
+
+      const imageIds = imageCategoryLinks.map(link => link.image_id);
+
+      // Fetch the actual images
+      const { data: images, error: imageError } = await supabase
+        .from('gallery_images')
+        .select('*')
+        .in('id', imageIds);
+
+      if (imageError) {
+        console.error('Error fetching images:', imageError);
+        setGalleryImages([]);
+        return;
+      }
+
+      // Combine data: add category info to each image
+      const imagesWithCategories = images.map(image => {
+        const link = imageCategoryLinks.find(l => l.image_id === image.id);
+        const category = link ? categoryMap[link.category_id] : null;
+        return {
+          ...image,
+          gallery_categories: category
+        };
+      });
+
+      // Sort by sort_order
+      imagesWithCategories.sort((a, b) => (a.sort_order || 0) - (b.sort_order || 0));
+
+      setGalleryImages(imagesWithCategories);
     } catch (error) {
       console.error('Error fetching gallery images:', error);
       setGalleryImages([]);
