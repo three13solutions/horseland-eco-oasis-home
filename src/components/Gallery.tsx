@@ -19,56 +19,86 @@ const GalleryV5 = () => {
   const fetchGalleryImages = async () => {
     try {
       setLoading(true);
-      const { data, error } = await supabase
-        .from('gallery_images')
-        .select(`
-          *,
-          gallery_categories!inner(slug)
-        `)
-        .order('sort_order', { ascending: true });
       
-      if (error) {
-        console.error('Error fetching gallery images:', error);
-        // Fallback to hardcoded images
-        setGalleryImages(getHardcodedImages());
+      // Fetch images from specific gallery categories
+      const { data: hotelData, error: hotelError } = await supabase
+        .from('image_categories')
+        .select(`
+          image_id,
+          gallery_images!inner(
+            id,
+            title,
+            image_url,
+            caption,
+            location,
+            likes_count,
+            guest_handle,
+            guest_name,
+            sort_order,
+            alt_text
+          ),
+          gallery_categories!inner(slug, name)
+        `)
+        .eq('gallery_categories.slug', 'hotel-photos')
+        .order('gallery_images(sort_order)', { ascending: true });
+
+      const { data: guestData, error: guestError } = await supabase
+        .from('image_categories')
+        .select(`
+          image_id,
+          gallery_images!inner(
+            id,
+            title,
+            image_url,
+            caption,
+            location,
+            likes_count,
+            guest_handle,
+            guest_name,
+            sort_order,
+            alt_text
+          ),
+          gallery_categories!inner(slug, name)
+        `)
+        .eq('gallery_categories.slug', 'guest-photos')
+        .order('gallery_images(sort_order)', { ascending: true });
+      
+      if (hotelError || guestError) {
+        console.error('Error fetching gallery images:', hotelError || guestError);
+        setGalleryImages([]);
       } else {
-        setGalleryImages(data);
+        // Transform data to match expected format
+        const transformedHotel = (hotelData || []).map(item => ({
+          ...item.gallery_images,
+          gallery_categories: item.gallery_categories
+        }));
+        
+        const transformedGuests = (guestData || []).map(item => ({
+          ...item.gallery_images,
+          gallery_categories: item.gallery_categories
+        }));
+        
+        setGalleryImages([...transformedHotel, ...transformedGuests]);
       }
     } catch (error) {
       console.error('Error fetching gallery images:', error);
-      setGalleryImages(getHardcodedImages());
+      setGalleryImages([]);
     } finally {
       setLoading(false);
     }
   };
 
-  // Fallback hardcoded images in case database is empty
-  const getHardcodedImages = () => {
-    return [
-      // Hotel images
-      { id: '1', title: "Swimming Pool Paradise", image_url: "https://images.unsplash.com/photo-1566073771259-6a8506099945?w=800&h=400&fit=crop", caption: "Swimming Pool Paradise", location: "Main Pool Area", gallery_categories: { slug: 'hotel' } },
-      { id: '2', title: "Deluxe Mountain Suite", image_url: "https://images.unsplash.com/photo-1631049307264-da0ec9d70304?w=600&h=400&fit=crop", caption: "Deluxe Mountain Suite", location: "Premium Wing", gallery_categories: { slug: 'hotel' } },
-      { id: '3', title: "Grand Buffet Dining", image_url: "https://images.unsplash.com/photo-1555939594-58d7cb561ad1?w=600&h=400&fit=crop", caption: "Grand Buffet Dining", location: "Main Restaurant", gallery_categories: { slug: 'hotel' } },
-      { id: '4', title: "Executive Bedroom", image_url: "https://images.unsplash.com/photo-1571896349842-33c89424de2d?w=600&h=400&fit=crop", caption: "Executive Bedroom", location: "Heritage Block", gallery_categories: { slug: 'hotel' } },
-      { id: '5', title: "Spa & Wellness Center", image_url: "https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?w=600&h=400&fit=crop", caption: "Spa & Wellness Center", location: "Wellness Wing", gallery_categories: { slug: 'hotel' } },
-      { id: '6', title: "Horse Riding Arena", image_url: "https://images.unsplash.com/photo-1551632811-561732d1e306?w=600&h=400&fit=crop", caption: "Horse Riding Arena", location: "Adventure Zone", gallery_categories: { slug: 'hotel' } },
-      { id: '7', title: "Reception & Lobby", image_url: "https://images.unsplash.com/photo-1520250497591-112f2f40a3f4?w=600&h=400&fit=crop", caption: "Reception & Lobby", location: "Main Building", gallery_categories: { slug: 'hotel' } },
-      { id: '8', title: "Valley View Lounge", image_url: "https://images.unsplash.com/photo-1541971875076-8f970d573be6?w=600&h=400&fit=crop", caption: "Valley View Lounge", location: "Central Lobby", gallery_categories: { slug: 'hotel' } },
-      { id: '9', title: "Mountain Sunset", image_url: "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=600&h=400&fit=crop", caption: "Mountain Sunset", location: "Panorama Point", gallery_categories: { slug: 'hotel' } },
-      // Guest images
-      { id: '10', title: "Perfect honeymoon", image_url: "https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=800&h=400&fit=crop", caption: "Perfect honeymoon at Horseland! 💕", likes_count: 234, guest_handle: "@priya_travels", gallery_categories: { slug: 'guests' } },
-      { id: '11', title: "Family time", image_url: "https://images.unsplash.com/photo-1511895426328-dc8714191300?w=600&h=400&fit=crop", caption: "Family time by the pool 👨‍👩‍👧‍👦", likes_count: 189, guest_handle: "@sharma_family", gallery_categories: { slug: 'guests' } },
-      { id: '12', title: "Breakfast buffet", image_url: "https://images.unsplash.com/photo-1544161515-4ab6ce6db874?w=600&h=400&fit=crop", caption: "Couple enjoying breakfast buffet ✨", likes_count: 156, guest_handle: "@wellness_seeker", gallery_categories: { slug: 'guests' } },
-      { id: '13', title: "Horse ride", image_url: "https://images.unsplash.com/photo-1472396961693-142e6e269027?w=600&h=400&fit=crop", caption: "Morning horse ride adventure 🐎", likes_count: 298, guest_handle: "@mountain_lover", gallery_categories: { slug: 'guests' } },
-      { id: '14', title: "Spa retreat", image_url: "https://images.unsplash.com/photo-1506744038136-46273834b3fb?w=600&h=400&fit=crop", caption: "Friends at the spa retreat 🧘‍♀️", likes_count: 167, guest_handle: "@adventure_duo", gallery_categories: { slug: 'guests' } },
-      { id: '15', title: "Pool selfie", image_url: "https://images.unsplash.com/photo-1524230572899-a752b3835840?w=600&h=400&fit=crop", caption: "Swimming pool selfie time! 🏊‍♀️", likes_count: 203, guest_handle: "@zen_traveler", gallery_categories: { slug: 'guests' } },
-      { id: '16', title: "Group dining", image_url: "https://images.unsplash.com/photo-1514315384763-ba401779410f?w=600&h=400&fit=crop", caption: "Group dining experience 🍽️", likes_count: 178, guest_handle: "@equestrian_life", gallery_categories: { slug: 'guests' } },
-      { id: '17', title: "Room sunset", image_url: "https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=600&h=400&fit=crop", caption: "Sunset view from our room 🌅", likes_count: 245, guest_handle: "@nature_healer", gallery_categories: { slug: 'guests' } },
-      { id: '18', title: "Vacation memories", image_url: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=600&h=400&fit=crop", caption: "Best vacation memories made! 📸", likes_count: 267, guest_handle: "@early_bird_explorer", gallery_categories: { slug: 'guests' } }
-    ];
-  };
 
-  const currentImages = galleryImages.filter(img => img.gallery_categories?.slug === activeTab).slice(0, 16);
+  // Filter images based on active tab
+  const currentImages = galleryImages.filter(img => {
+    const categorySlug = img.gallery_categories?.slug;
+    if (activeTab === 'hotel') {
+      return categorySlug === 'hotel-photos';
+    } else if (activeTab === 'guests') {
+      return categorySlug === 'guest-photos';
+    }
+    return false;
+  }).slice(0, 16);
 
   const handleImageClick = (index) => {
     setSelectedImageIndex(index);
