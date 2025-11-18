@@ -581,14 +581,19 @@ export const ManualBookingModal: React.FC<ManualBookingModalProps> = ({
                     {checkInDate ? format(checkInDate, "PPP") : "Select date"}
                   </Button>
                 </PopoverTrigger>
-                <PopoverContent className="w-auto p-0" align="start">
+                <PopoverContent className="w-auto p-0 bg-background/95 backdrop-blur-xl border-2 shadow-2xl" align="start">
                   <Calendar
                     mode="single"
                     selected={checkInDate}
-                    onSelect={setCheckInDate}
-                    disabled={(date) => date < new Date()}
+                    onSelect={(date) => {
+                      setCheckInDate(date);
+                      // Clear checkout if new check-in is after current checkout
+                      if (date && checkOutDate && date >= checkOutDate) {
+                        setCheckOutDate(undefined);
+                      }
+                    }}
+                    disabled={(date) => date < new Date(new Date().setHours(0, 0, 0, 0))}
                     initialFocus
-                    className="pointer-events-auto"
                   />
                 </PopoverContent>
               </Popover>
@@ -609,14 +614,17 @@ export const ManualBookingModal: React.FC<ManualBookingModalProps> = ({
                     {checkOutDate ? format(checkOutDate, "PPP") : "Select date"}
                   </Button>
                 </PopoverTrigger>
-                <PopoverContent className="w-auto p-0" align="start">
+                <PopoverContent className="w-auto p-0 bg-background/95 backdrop-blur-xl border-2 shadow-2xl" align="start">
                   <Calendar
                     mode="single"
                     selected={checkOutDate}
                     onSelect={setCheckOutDate}
-                    disabled={(date) => !checkInDate || date <= checkInDate}
+                    defaultMonth={checkInDate}
+                    disabled={(date) => {
+                      const today = new Date(new Date().setHours(0, 0, 0, 0));
+                      return !checkInDate || date <= checkInDate || date < today;
+                    }}
                     initialFocus
-                    className="pointer-events-auto"
                   />
                 </PopoverContent>
               </Popover>

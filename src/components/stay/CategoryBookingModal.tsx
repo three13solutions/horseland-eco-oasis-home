@@ -2,11 +2,14 @@ import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { cn } from '@/lib/utils';
 import { DateRange } from 'react-day-picker';
+import { CalendarIcon } from 'lucide-react';
+import { format } from 'date-fns';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { RateVariantSelector } from '@/components/booking/RateVariantSelector';
@@ -181,14 +184,75 @@ const CategoryBookingModal: React.FC<Props> = ({ open, onOpenChange, category })
           {/* Date Selection */}
           <div className="space-y-3">
             <h3 className="font-semibold text-base">Select Dates</h3>
-            <div className="border rounded-lg p-1">
-              <Calendar
-                mode="range"
-                selected={date}
-                onSelect={setDate}
-                initialFocus
-                className={cn('pointer-events-auto')}
-              />
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <Label className="text-sm font-medium">Check-in</Label>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      className={cn(
+                        "w-full mt-1.5 justify-start text-left font-normal",
+                        !date?.from && "text-muted-foreground"
+                      )}
+                    >
+                      <CalendarIcon className="mr-2 h-4 w-4" />
+                      {date?.from ? format(date.from, "PPP") : "Pick a date"}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0 bg-background/95 backdrop-blur-xl border-2 shadow-2xl" align="start">
+                    <Calendar
+                      mode="single"
+                      selected={date?.from}
+                      onSelect={(newDate) => {
+                        setDate(prev => {
+                          const newRange = { from: newDate, to: prev?.to };
+                          // Clear checkout if new check-in is after current checkout
+                          if (newDate && prev?.to && newDate >= prev.to) {
+                            return { from: newDate, to: undefined };
+                          }
+                          return newRange;
+                        });
+                      }}
+                      disabled={(checkDate) => checkDate < new Date(new Date().setHours(0, 0, 0, 0))}
+                      initialFocus
+                    />
+                  </PopoverContent>
+                </Popover>
+              </div>
+              
+              <div>
+                <Label className="text-sm font-medium">Check-out</Label>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      className={cn(
+                        "w-full mt-1.5 justify-start text-left font-normal",
+                        !date?.to && "text-muted-foreground"
+                      )}
+                    >
+                      <CalendarIcon className="mr-2 h-4 w-4" />
+                      {date?.to ? format(date.to, "PPP") : "Pick a date"}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0 bg-background/95 backdrop-blur-xl border-2 shadow-2xl" align="start">
+                    <Calendar
+                      mode="single"
+                      selected={date?.to}
+                      onSelect={(newDate) => {
+                        setDate(prev => ({ from: prev?.from, to: newDate }));
+                      }}
+                      defaultMonth={date?.from}
+                      disabled={(checkDate) => {
+                        const today = new Date(new Date().setHours(0, 0, 0, 0));
+                        return !date?.from || checkDate <= date.from || checkDate < today;
+                      }}
+                      initialFocus
+                    />
+                  </PopoverContent>
+                </Popover>
+              </div>
             </div>
           </div>
 

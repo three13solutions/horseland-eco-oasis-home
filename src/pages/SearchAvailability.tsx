@@ -259,12 +259,18 @@ const SearchAvailability = () => {
                       {checkIn ? format(checkIn, 'PPP') : 'Select date'}
                     </Button>
                   </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0">
+                  <PopoverContent className="w-auto p-0 bg-background/95 backdrop-blur-xl border-2 shadow-2xl" align="start">
                     <Calendar 
                       mode="single" 
                       selected={checkIn} 
-                      onSelect={setCheckIn}
-                      disabled={(date) => date < new Date()}
+                      onSelect={(date) => {
+                        setCheckIn(date);
+                        // Clear checkout if new check-in is after current checkout
+                        if (date && checkOut && date >= checkOut) {
+                          setCheckOut(undefined);
+                        }
+                      }}
+                      disabled={(date) => date < new Date(new Date().setHours(0, 0, 0, 0))}
                       initialFocus 
                     />
                   </PopoverContent>
@@ -279,12 +285,16 @@ const SearchAvailability = () => {
                       {checkOut ? format(checkOut, 'PPP') : 'Select date'}
                     </Button>
                   </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0">
+                  <PopoverContent className="w-auto p-0 bg-background/95 backdrop-blur-xl border-2 shadow-2xl" align="start">
                     <Calendar 
                       mode="single" 
                       selected={checkOut} 
                       onSelect={setCheckOut}
-                      disabled={(date) => date <= (checkIn || new Date())}
+                      defaultMonth={checkIn}
+                      disabled={(date) => {
+                        const today = new Date(new Date().setHours(0, 0, 0, 0));
+                        return !checkIn || date <= checkIn || date < today;
+                      }}
                       initialFocus 
                     />
                   </PopoverContent>
