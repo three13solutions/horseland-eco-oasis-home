@@ -732,6 +732,32 @@ export default function PageManagement() {
                       }
                     />
                   </div>
+
+                  {/* Page-specific settings */}
+                  {formData.slug === 'activities' && (
+                    <div className="border-t pt-4 mt-4">
+                      <h3 className="text-sm font-semibold mb-4">Activities Page Settings</h3>
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <Label htmlFor="show_filters">Show Filters</Label>
+                          <p className="text-sm text-muted-foreground">Display filter sidebar and mobile filter button</p>
+                        </div>
+                        <Switch
+                          id="show_filters"
+                          checked={(formData.structured_content as any)?.show_filters || false}
+                          onCheckedChange={(checked) =>
+                            setFormData({ 
+                              ...formData, 
+                              structured_content: { 
+                                ...(formData.structured_content || {}),
+                                show_filters: checked 
+                              } 
+                            })
+                          }
+                        />
+                      </div>
+                    </div>
+                  )}
                 </TabsContent>
               </Tabs>
 

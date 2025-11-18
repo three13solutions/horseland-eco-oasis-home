@@ -33,6 +33,7 @@ const Activities = () => {
   const [heroImage, setHeroImage] = useState('https://images.unsplash.com/photo-1544568100-847a948585b9?ixlib=rb-4.0.3&auto=format&fit=crop&w=2000&q=80');
   const [subtitle, setSubtitle] = useState('Discover Matheran\'s natural wonders through guided activities');
   const [title, setTitle] = useState('Adventure Awaits');
+  const [showFilters, setShowFilters] = useState(false);
   
   // Filter states
   const [locationFilter, setLocationFilter] = useState<'all' | 'on_property' | 'off_property'>('all');
@@ -99,7 +100,7 @@ const Activities = () => {
   const loadPageData = async () => {
     const { data } = await supabase
       .from('pages')
-      .select('title, subtitle, hero_image')
+      .select('title, subtitle, hero_image, structured_content')
       .eq('slug', 'activities')
       .single();
     
@@ -107,6 +108,14 @@ const Activities = () => {
       setTitle(data.title);
       if (data.subtitle) setSubtitle(data.subtitle);
       if (data.hero_image) setHeroImage(data.hero_image);
+      
+      // Load filter visibility setting
+      if (data.structured_content && typeof data.structured_content === 'object') {
+        const settings = data.structured_content as any;
+        if (settings.show_filters !== undefined) {
+          setShowFilters(settings.show_filters);
+        }
+      }
     }
   };
 
@@ -342,6 +351,7 @@ const Activities = () => {
         <div className="max-w-7xl mx-auto px-4">
           <div className="flex gap-6">
             {/* Desktop Sidebar */}
+            {showFilters && (
             <aside className="hidden lg:block w-64 flex-shrink-0">
               <div className="sticky top-20 bg-card border rounded-lg p-4 space-y-4">
                 <div className="flex items-center justify-between mb-2">
@@ -834,8 +844,10 @@ const Activities = () => {
                 </div>
               </div>
             </aside>
+            )}
 
             {/* Mobile Filter Sheet */}
+            {showFilters && (
             <Sheet open={sidebarOpen} onOpenChange={setSidebarOpen}>
               <SheetTrigger asChild>
                 <Button 
@@ -1333,6 +1345,7 @@ const Activities = () => {
                 </div>
               </SheetContent>
             </Sheet>
+            )}
 
             {/* Main Content Area */}
             <div className="flex-1 min-w-0">
@@ -1436,17 +1449,10 @@ const Activities = () => {
                         <div className="flex gap-2">
                           <Button 
                             variant="outline" 
-                            className="font-body flex-1 h-10"
+                            className="font-body w-full h-10"
                             onClick={() => navigate(`/activities/${activity.id}`)}
                           >
                             Learn More
-                          </Button>
-                          <Button 
-                            className="font-body flex-1 h-10"
-                            onClick={() => handleAddToStay(activity)}
-                            variant={addedActivityIds.includes(activity.id) ? "secondary" : "default"}
-                          >
-                            {addedActivityIds.includes(activity.id) ? "✓ Added" : <><Plus className="h-4 w-4 mr-2" />Add to Stay</>}
                           </Button>
                         </div>
                       </div>
@@ -1510,18 +1516,11 @@ const Activities = () => {
 
                             <div className="flex gap-2 mt-auto">
                               <Button 
-                                variant="outline" 
-                                className="font-body h-10"
+                                variant="outline"
+                                className="font-body w-full h-10"
                                 onClick={() => navigate(`/activities/${activity.id}`)}
                               >
                                 Learn More
-                              </Button>
-                              <Button 
-                                className="font-body h-10"
-                                onClick={() => handleAddToStay(activity)}
-                                variant={addedActivityIds.includes(activity.id) ? "secondary" : "default"}
-                              >
-                                {addedActivityIds.includes(activity.id) ? "✓ Added" : <><Plus className="h-4 w-4 mr-2" />Add to Stay</>}
                               </Button>
                             </div>
                           </div>
