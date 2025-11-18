@@ -238,14 +238,13 @@ export function UpdateBookingModal({ isOpen, onClose, booking, onSuccess }: Upda
                           {newCheckOut ? format(newCheckOut, "PPP") : "Select new date"}
                         </Button>
                       </PopoverTrigger>
-                      <PopoverContent className="w-auto p-0" align="start">
+                      <PopoverContent className="w-auto p-0 bg-background/95 backdrop-blur-xl border-2 shadow-2xl" align="start">
                         <Calendar
                           mode="single"
                           selected={newCheckOut}
                           onSelect={setNewCheckOut}
                           disabled={(date) => date <= currentCheckOut}
                           initialFocus
-                          className="p-3 pointer-events-auto"
                         />
                       </PopoverContent>
                     </Popover>

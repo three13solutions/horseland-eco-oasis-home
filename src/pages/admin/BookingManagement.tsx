@@ -1578,14 +1578,21 @@ export default function BookingManagement() {
                         {createFormData.check_in ? format(createFormData.check_in, "PPP") : "Select check-in date"}
                       </Button>
                     </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0" align="start">
+                    <PopoverContent className="w-auto p-0 bg-background/95 backdrop-blur-xl border-2 shadow-2xl" align="start">
                       <CalendarComponent
                         mode="single"
                         selected={createFormData.check_in}
-                        onSelect={(date) => setCreateFormData(prev => ({ ...prev, check_in: date }))}
-                        disabled={(date) => date < new Date()}
+                        onSelect={(date) => {
+                          setCreateFormData(prev => {
+                            // Clear checkout if new check-in is after current checkout
+                            if (date && prev.check_out && date >= prev.check_out) {
+                              return { ...prev, check_in: date, check_out: undefined };
+                            }
+                            return { ...prev, check_in: date };
+                          });
+                        }}
+                        disabled={(date) => date < new Date(new Date().setHours(0, 0, 0, 0))}
                         initialFocus
-                        className="p-3 pointer-events-auto"
                       />
                     </PopoverContent>
                   </Popover>
@@ -1606,14 +1613,17 @@ export default function BookingManagement() {
                         {createFormData.check_out ? format(createFormData.check_out, "PPP") : "Select check-out date"}
                       </Button>
                     </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0" align="start">
+                    <PopoverContent className="w-auto p-0 bg-background/95 backdrop-blur-xl border-2 shadow-2xl" align="start">
                       <CalendarComponent
                         mode="single"
                         selected={createFormData.check_out}
                         onSelect={(date) => setCreateFormData(prev => ({ ...prev, check_out: date }))}
-                        disabled={(date) => date <= (createFormData.check_in || new Date())}
+                        defaultMonth={createFormData.check_in}
+                        disabled={(date) => {
+                          const today = new Date(new Date().setHours(0, 0, 0, 0));
+                          return !createFormData.check_in || date <= createFormData.check_in || date < today;
+                        }}
                         initialFocus
-                        className="p-3 pointer-events-auto"
                       />
                     </PopoverContent>
                   </Popover>

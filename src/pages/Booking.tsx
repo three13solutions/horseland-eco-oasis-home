@@ -2164,14 +2164,19 @@ const Booking = () => {
                                   {tempCheckIn ? format(tempCheckIn, 'PPP') : 'Select date'}
                                 </Button>
                               </PopoverTrigger>
-                              <PopoverContent className="w-auto p-0 bg-popover z-50" align="start">
+                              <PopoverContent className="w-auto p-0 bg-background/95 backdrop-blur-xl border-2 shadow-2xl" align="start">
                                 <CalendarComponent
                                   mode="single"
                                   selected={tempCheckIn}
-                                  onSelect={setTempCheckIn}
-                                  disabled={(date) => date < new Date()}
+                                  onSelect={(date) => {
+                                    setTempCheckIn(date);
+                                    // Clear checkout if new check-in is after current checkout
+                                    if (date && tempCheckOut && date >= tempCheckOut) {
+                                      setTempCheckOut(undefined);
+                                    }
+                                  }}
+                                  disabled={(date) => date < new Date(new Date().setHours(0, 0, 0, 0))}
                                   initialFocus
-                                  className="pointer-events-auto"
                                 />
                               </PopoverContent>
                             </Popover>
@@ -2187,14 +2192,17 @@ const Booking = () => {
                                   {tempCheckOut ? format(tempCheckOut, 'PPP') : 'Select date'}
                                 </Button>
                               </PopoverTrigger>
-                              <PopoverContent className="w-auto p-0 bg-popover z-50" align="start">
+                              <PopoverContent className="w-auto p-0 bg-background/95 backdrop-blur-xl border-2 shadow-2xl" align="start">
                                 <CalendarComponent
                                   mode="single"
                                   selected={tempCheckOut}
                                   onSelect={setTempCheckOut}
-                                  disabled={(date) => date <= (tempCheckIn || new Date())}
+                                  defaultMonth={tempCheckIn}
+                                  disabled={(date) => {
+                                    const today = new Date(new Date().setHours(0, 0, 0, 0));
+                                    return !tempCheckIn || date <= tempCheckIn || date < today;
+                                  }}
                                   initialFocus
-                                  className="pointer-events-auto"
                                 />
                               </PopoverContent>
                             </Popover>
