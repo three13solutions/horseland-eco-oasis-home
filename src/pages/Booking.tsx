@@ -702,6 +702,14 @@ const Booking = () => {
         specialRequests: ''
       });
       
+      // Reset calendar state
+      setTempCheckIn(undefined);
+      setTempCheckOut(undefined);
+      setTempGuests(2);
+      setTempAdults(2);
+      setTempChildren(0);
+      setTempInfants(0);
+      
       // Clear localStorage
       localStorage.removeItem('currentBooking');
       
