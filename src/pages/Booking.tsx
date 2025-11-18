@@ -25,6 +25,7 @@ import { calculateBookingAmount, RAZORPAY_CONFIG } from '@/lib/razorpay';
 import { useQuery } from '@tanstack/react-query';
 import { RateVariant } from '@/hooks/useDynamicPricing';
 import { format } from 'date-fns';
+import { cn } from '@/lib/utils';
 
 interface RoomType {
   id: string;
@@ -2167,9 +2168,15 @@ const Booking = () => {
                             <label className="text-sm font-medium">Check-in</label>
                             <Popover>
                               <PopoverTrigger asChild>
-                                <Button variant="outline" className="w-full justify-start text-left">
-                                  <CalendarIcon className="mr-2 h-4 w-4" />
-                                  {tempCheckIn ? format(tempCheckIn, 'PPP') : 'Select date'}
+                                <Button 
+                                  variant="outline" 
+                                  className={cn(
+                                    "w-full h-12 justify-start text-left font-normal rounded-xl",
+                                    !tempCheckIn && "text-muted-foreground"
+                                  )}
+                                >
+                                  <CalendarIcon className="mr-2 h-5 w-5" />
+                                  {tempCheckIn ? format(tempCheckIn, 'dd/MM/yyyy') : 'Pick a date'}
                                 </Button>
                               </PopoverTrigger>
                               <PopoverContent className="w-auto p-0 bg-background/95 backdrop-blur-xl border-2 shadow-2xl" align="start">
@@ -2195,9 +2202,15 @@ const Booking = () => {
                             <label className="text-sm font-medium">Check-out</label>
                             <Popover>
                               <PopoverTrigger asChild>
-                                <Button variant="outline" className="w-full justify-start text-left">
-                                  <CalendarIcon className="mr-2 h-4 w-4" />
-                                  {tempCheckOut ? format(tempCheckOut, 'PPP') : 'Select date'}
+                                <Button 
+                                  variant="outline" 
+                                  className={cn(
+                                    "w-full h-12 justify-start text-left font-normal rounded-xl",
+                                    !tempCheckOut && "text-muted-foreground"
+                                  )}
+                                >
+                                  <CalendarIcon className="mr-2 h-5 w-5" />
+                                  {tempCheckOut ? format(tempCheckOut, 'dd/MM/yyyy') : 'Pick a date'}
                                 </Button>
                               </PopoverTrigger>
                               <PopoverContent className="w-auto p-0 bg-background/95 backdrop-blur-xl border-2 shadow-2xl" align="start">
