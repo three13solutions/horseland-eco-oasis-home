@@ -58,9 +58,10 @@ const Experiences = () => {
       {/* Hero Section */}
       <section className="relative h-[60vh] min-h-[500px] flex items-center justify-center">
         <div 
-          className="absolute inset-0 bg-cover bg-center bg-no-repeat"
+          className="absolute inset-0 bg-cover bg-no-repeat"
           style={{
-            backgroundImage: `url('${heroImage}')`
+            backgroundImage: `url('${heroImage}')`,
+            backgroundPosition: 'center 40%'
           }}
         >
           <div className="absolute inset-0 bg-black/40"></div>
