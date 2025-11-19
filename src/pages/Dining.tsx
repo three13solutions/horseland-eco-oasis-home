@@ -296,21 +296,6 @@ const Dining = () => {
         </div>
       </section>
 
-      {/* Chef's Notes */}
-      <section className="py-16 bg-muted/30">
-        <div className="max-w-4xl mx-auto px-4 text-center">
-          <h2 className="text-3xl md:text-4xl font-heading font-bold mb-6 text-foreground">
-            Chef's Notes
-          </h2>
-          <div className="bg-card border rounded-lg p-8">
-            <blockquote className="text-lg font-body text-muted-foreground italic leading-relaxed">
-              "Our kitchen celebrates the bounty of the Western Ghats. Each meal is crafted with 
-              ingredients sourced within a 50-kilometer radius, ensuring freshness while supporting 
-              local farming communities."
-            </blockquote>
-          </div>
-        </div>
-      </section>
 
       {/* Special Services */}
       <section className="py-16 bg-muted/30">
@@ -320,29 +305,19 @@ const Dining = () => {
           </h2>
           
           <div className="grid md:grid-cols-2 gap-8 mb-12">
-            <div className="bg-card border rounded-lg overflow-hidden group">
-              <div className="relative h-48">
-                <img 
-                  src={inRoomDiningImage}
-                  alt="In-Room Dining"
-                  className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
-              </div>
-              <div className="p-8">
+            <div className="bg-card border rounded-lg overflow-hidden">
+              <div className="p-8 h-full flex flex-col justify-center">
                 <div className="flex items-center gap-3 mb-4">
-                  <Home className="w-8 h-8 text-primary" />
+                  <ChefHat className="w-8 h-8 text-primary" />
                   <h3 className="text-2xl font-heading font-semibold text-foreground">
-                    In-Room Dining
+                    Chef's Notes
                   </h3>
                 </div>
-                <p className="text-muted-foreground font-body leading-relaxed mb-4">
-                  For select rooms including poolside rooms with private sitouts, meals can be served 
-                  directly to your room for a private and intimate dining experience.
-                </p>
-                <p className="text-sm text-primary font-body font-semibold">
-                  Available at an additional service charge
-                </p>
+                <blockquote className="text-lg font-body text-muted-foreground italic leading-relaxed">
+                  "Our kitchen celebrates the bounty of the Western Ghats. Each meal is crafted with 
+                  ingredients sourced within a 50-kilometer radius, ensuring freshness while supporting 
+                  local farming communities."
+                </blockquote>
               </div>
             </div>
 
