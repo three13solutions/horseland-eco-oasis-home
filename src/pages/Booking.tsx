@@ -116,9 +116,11 @@ const Booking = () => {
   // State
   const [availableRooms, setAvailableRooms] = useState<AvailableRoom[]>([]);
   const [loading, setLoading] = useState(true);
-  const [searchCheckIn, setSearchCheckIn] = useState(checkIn);
-  const [searchCheckOut, setSearchCheckOut] = useState(checkOut);
+  const [searchCheckIn, setSearchCheckIn] = useState<Date | undefined>(checkIn ? new Date(checkIn) : undefined);
+  const [searchCheckOut, setSearchCheckOut] = useState<Date | undefined>(checkOut ? new Date(checkOut) : undefined);
   const [searchGuests, setSearchGuests] = useState(guests.toString());
+  const [searchAdults, setSearchAdults] = useState(urlAdults);
+  const [searchChildren, setSearchChildren] = useState(urlChildren);
   const [selectedPackage, setSelectedPackage] = useState<any>(null);
   const [packageLoading, setPackageLoading] = useState(false);
   const [heroImage, setHeroImage] = useState<string>('');
@@ -230,8 +232,8 @@ const Booking = () => {
       setSelectedPackage(data);
       
       // Clear dates and rooms to start fresh
-      setSearchCheckIn('');
-      setSearchCheckOut('');
+      setSearchCheckIn(undefined);
+      setSearchCheckOut(undefined);
       setSelectedRoomType(null);
       setShowBookingForm(false);
       
@@ -645,8 +647,11 @@ const Booking = () => {
       return;
     }
 
+    const formattedCheckIn = format(searchCheckIn, 'yyyy-MM-dd');
+    const formattedCheckOut = format(searchCheckOut, 'yyyy-MM-dd');
+
     // Check if dates have changed
-    const datesChanged = searchCheckIn !== checkIn || searchCheckOut !== checkOut;
+    const datesChanged = formattedCheckIn !== checkIn || formattedCheckOut !== checkOut;
     
     if (datesChanged) {
       // Clear room and addon selections when dates change
@@ -666,9 +671,11 @@ const Booking = () => {
     }
 
     const newSearchParams = new URLSearchParams();
-    newSearchParams.set('checkIn', searchCheckIn);
-    newSearchParams.set('checkOut', searchCheckOut);
+    newSearchParams.set('checkIn', formattedCheckIn);
+    newSearchParams.set('checkOut', formattedCheckOut);
     newSearchParams.set('guests', searchGuests);
+    newSearchParams.set('adults', searchAdults.toString());
+    newSearchParams.set('children', searchChildren.toString());
     
     navigate(`/booking?${newSearchParams.toString()}`);
   };
@@ -2497,55 +2504,92 @@ const Booking = () => {
       {/* Search Bar */}
       <section className="bg-muted/30 py-6">
         <div className="max-w-6xl mx-auto px-4">
-          <Card>
-            <CardContent className="p-6">
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <Card className="bg-card/95 backdrop-blur-xl border-2 shadow-2xl">
+            <CardContent className="p-6 md:p-8">
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-4 md:gap-6 items-end">
                 <div className="space-y-2">
-                  <Label htmlFor="checkIn">Check-in</Label>
-                  <div className="relative">
-                    <Input
-                      id="checkIn"
-                      type="date"
-                      value={searchCheckIn}
-                      onChange={(e) => setSearchCheckIn(e.target.value)}
-                      className="pl-10"
-                    />
-                    <Calendar className="absolute left-3 top-3 h-4 w-4 text-gray-500" />
-                  </div>
+                  <Label className="text-foreground text-sm font-medium block text-left">Check-in</Label>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="outline"
+                        className={cn(
+                          "w-full h-12 bg-background border-border hover:bg-accent hover:text-accent-foreground rounded-xl justify-start text-left font-normal",
+                          !searchCheckIn && "text-muted-foreground"
+                        )}
+                      >
+                        <CalendarIcon className="mr-2 h-5 w-5" />
+                        {searchCheckIn ? format(searchCheckIn, "dd/MM/yyyy") : <span>Pick a date</span>}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0 bg-background/95 backdrop-blur-xl border-2 shadow-2xl" align="start">
+                      <CalendarComponent
+                        mode="single"
+                        selected={searchCheckIn}
+                        onSelect={(date) => {
+                          setSearchCheckIn(date);
+                          // Clear checkout if new check-in is after current checkout
+                          if (date && searchCheckOut && date >= searchCheckOut) {
+                            setSearchCheckOut(undefined);
+                          }
+                        }}
+                        disabled={(date) => date < new Date(new Date().setHours(0, 0, 0, 0))}
+                        initialFocus
+                      />
+                    </PopoverContent>
+                  </Popover>
                 </div>
                 
                 <div className="space-y-2">
-                  <Label htmlFor="checkOut">Check-out</Label>
-                  <div className="relative">
-                    <Input
-                      id="checkOut"
-                      type="date"
-                      value={searchCheckOut}
-                      onChange={(e) => setSearchCheckOut(e.target.value)}
-                      className="pl-10"
-                    />
-                    <Calendar className="absolute left-3 top-3 h-4 w-4 text-gray-500" />
-                  </div>
+                  <Label className="text-foreground text-sm font-medium block text-left">Check-out</Label>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="outline"
+                        className={cn(
+                          "w-full h-12 bg-background border-border hover:bg-accent hover:text-accent-foreground rounded-xl justify-start text-left font-normal",
+                          !searchCheckOut && "text-muted-foreground"
+                        )}
+                      >
+                        <CalendarIcon className="mr-2 h-5 w-5" />
+                        {searchCheckOut ? format(searchCheckOut, "dd/MM/yyyy") : <span>Pick a date</span>}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0 bg-background/95 backdrop-blur-xl border-2 shadow-2xl" align="start">
+                      <CalendarComponent
+                        mode="single"
+                        selected={searchCheckOut}
+                        onSelect={setSearchCheckOut}
+                        defaultMonth={searchCheckIn}
+                        disabled={(date) => {
+                          const today = new Date(new Date().setHours(0, 0, 0, 0));
+                          // Disable if no check-in selected, or date is before/equal to check-in, or date is before today
+                          return !searchCheckIn || date <= searchCheckIn || date < today;
+                        }}
+                        initialFocus
+                      />
+                    </PopoverContent>
+                  </Popover>
                 </div>
                 
                 <div className="space-y-2">
-                  <Label htmlFor="guests">Guests</Label>
-                  <div className="relative">
-                    <Input
-                      id="guests"
-                      type="number"
-                      min="1"
-                      max="8"
-                      value={searchGuests}
-                      onChange={(e) => setSearchGuests(e.target.value)}
-                      className="pl-10"
-                    />
-                    <Users className="absolute left-3 top-3 h-4 w-4 text-gray-500" />
-                  </div>
+                  <Label className="text-foreground text-sm font-medium block text-left">Guests</Label>
+                  <GuestSelector
+                    totalGuests={parseInt(searchGuests)}
+                    onGuestsChange={(total, a, c) => {
+                      setSearchGuests(total.toString());
+                      setSearchAdults(a);
+                      setSearchChildren(c);
+                    }}
+                    className="w-full h-12 bg-background border-border hover:bg-accent hover:text-accent-foreground rounded-xl"
+                  />
                 </div>
                 
                 <div className="flex items-end">
-                  <Button onClick={handleSearch} className="w-full">
+                  <Button 
+                    onClick={handleSearch} 
+                    className="w-full h-12 rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground font-semibold shadow-lg hover:shadow-xl transition-all duration-200"
+                  >
                     Search
                   </Button>
                 </div>
