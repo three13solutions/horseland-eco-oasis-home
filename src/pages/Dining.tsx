@@ -18,6 +18,7 @@ const Dining = () => {
   const [meals, setMeals] = React.useState<any[]>([]);
   const [inRoomDiningImage, setInRoomDiningImage] = React.useState('https://images.unsplash.com/photo-1590846406792-0adc7f938f1d?w=600&h=400&fit=crop');
   const [candleLightDinnerImage, setCandleLightDinnerImage] = React.useState('https://images.unsplash.com/photo-1470337458703-46ad1756a187?w=600&h=400&fit=crop');
+  const [chefNotesImage, setChefNotesImage] = React.useState('https://images.unsplash.com/photo-1556910103-1c02745aae4d?w=600&h=400&fit=crop');
 
   React.useEffect(() => {
     const fetchPageData = async () => {
@@ -61,6 +62,18 @@ const Dining = () => {
       
       if (candleData?.image_url) {
         setCandleLightDinnerImage(candleData.image_url);
+      }
+
+      // Fetch chef notes image by tag
+      const { data: chefData } = await supabase
+        .from('gallery_images')
+        .select('image_url')
+        .contains('tags', ['chef-notes'])
+        .limit(1)
+        .maybeSingle();
+      
+      if (chefData?.image_url) {
+        setChefNotesImage(chefData.image_url);
       }
     };
     
@@ -305,8 +318,16 @@ const Dining = () => {
           </h2>
           
           <div className="grid md:grid-cols-2 gap-8 mb-12">
-            <div className="bg-card border rounded-lg overflow-hidden">
-              <div className="p-8 h-full flex flex-col justify-center">
+            <div className="bg-card border rounded-lg overflow-hidden group">
+              <div className="relative h-48">
+                <img 
+                  src={chefNotesImage}
+                  alt="Chef's Notes"
+                  className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+              </div>
+              <div className="p-8">
                 <div className="flex items-center gap-3 mb-4">
                   <ChefHat className="w-8 h-8 text-primary" />
                   <h3 className="text-2xl font-heading font-semibold text-foreground">
