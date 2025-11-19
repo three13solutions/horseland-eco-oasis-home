@@ -2504,7 +2504,7 @@ const Booking = () => {
       {/* Search Bar */}
       <section className="bg-muted/30 py-6">
         <div className="max-w-6xl mx-auto px-4">
-          <Card className="bg-card/95 backdrop-blur-xl border-2 shadow-2xl">
+          <Card className="bg-card/95 backdrop-blur-xl border-2">
             <CardContent className="p-6 md:p-8">
               <div className="grid grid-cols-1 md:grid-cols-4 gap-4 md:gap-6 items-end">
                 <div className="space-y-2">
