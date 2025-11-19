@@ -20,11 +20,11 @@ const GalleryV5 = () => {
     try {
       setLoading(true);
       
-      // First, get the category IDs for hotel-photos and guest-photos
+      // First, get the category IDs for hotel and guests
       const { data: categories, error: categoryError } = await supabase
         .from('gallery_categories')
         .select('id, slug, name')
-        .in('slug', ['hotel-photos', 'guest-photos']);
+        .in('slug', ['hotel', 'guests']);
 
       if (categoryError) {
         console.error('Error fetching categories:', categoryError);
@@ -103,9 +103,9 @@ const GalleryV5 = () => {
   const currentImages = galleryImages.filter(img => {
     const categorySlug = img.gallery_categories?.slug;
     if (activeTab === 'hotel') {
-      return categorySlug === 'hotel-photos';
+      return categorySlug === 'hotel';
     } else if (activeTab === 'guests') {
-      return categorySlug === 'guest-photos';
+      return categorySlug === 'guests';
     }
     return false;
   }).slice(0, 16);
