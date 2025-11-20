@@ -13,6 +13,7 @@ import { Calendar, User, ArrowLeft, Share2, Facebook, Twitter, Linkedin } from '
 import { format } from 'date-fns';
 import { useContentTranslation } from '@/hooks/useContentTranslation';
 import { useTranslation } from 'react-i18next';
+import DOMPurify from 'dompurify';
 
 interface BlogPost {
   id: string;
@@ -278,9 +279,10 @@ const BlogPost = () => {
 
           {/* Article Content */}
           <div className="prose prose-lg max-w-none">
-            <div className="whitespace-pre-wrap leading-relaxed">
-              {translatedContent}
-            </div>
+            <div 
+              className="leading-relaxed"
+              dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(translatedContent) }}
+            />
           </div>
 
           {/* Back to Journal */}

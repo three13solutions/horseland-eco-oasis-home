@@ -165,8 +165,8 @@ const Journal = () => {
                       {featuredPost.title}
                     </h3>
                     
-                    <p className="text-muted-foreground font-body mb-6 leading-relaxed line-clamp-3">
-                      {featuredPost.content}
+                      <p className="text-muted-foreground font-body mb-6 leading-relaxed line-clamp-3">
+                      {featuredPost.content.replace(/<[^>]*>/g, '').substring(0, 200)}...
                     </p>
                     
                     <div className="flex items-center justify-between">
@@ -250,7 +250,7 @@ const Journal = () => {
                       </h3>
                       
                       <p className="text-muted-foreground font-body text-sm mb-4 leading-relaxed line-clamp-2">
-                        {post.content}
+                        {post.content.replace(/<[^>]*>/g, '').substring(0, 150)}...
                       </p>
                       
                       <div className="flex items-center justify-between">
