@@ -239,10 +239,13 @@ const CategoryBookingModal: React.FC<Props> = ({ open, onOpenChange, category })
                   <PopoverContent className="w-auto p-0 bg-background/95 backdrop-blur-xl border-2 shadow-2xl" align="start">
                     <Calendar
                       mode="range"
-                      selected={date}
+                      selected={date?.from ? { from: date.from, to: date?.to } : undefined}
                       onSelect={(range) => {
                         if (range?.to) {
                           setDate(range);
+                        } else if (range?.from && !range?.to) {
+                          // Single click sets the checkout date
+                          setDate({ from: date?.from, to: range.from });
                         }
                       }}
                       defaultMonth={date?.from}
