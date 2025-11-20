@@ -35,6 +35,11 @@ const CategoryBookingModal: React.FC<Props> = ({ open, onOpenChange, category })
   const [loading, setLoading] = useState(false);
   const [selectedVariant, setSelectedVariant] = useState<any>(null);
   
+  // Popover states for auto-advance
+  const [checkInOpen, setCheckInOpen] = useState(false);
+  const [checkOutOpen, setCheckOutOpen] = useState(false);
+  const [guestSelectorOpen, setGuestSelectorOpen] = useState(false);
+  
   const nights = date?.from && date?.to 
     ? Math.ceil((date.to.getTime() - date.from.getTime()) / (1000 * 60 * 60 * 24))
     : 0;
@@ -187,7 +192,7 @@ const CategoryBookingModal: React.FC<Props> = ({ open, onOpenChange, category })
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <Label className="text-sm font-medium">Check-in</Label>
-                <Popover>
+                <Popover open={checkInOpen} onOpenChange={setCheckInOpen}>
                   <PopoverTrigger asChild>
                     <Button
                       variant="outline"
@@ -213,6 +218,11 @@ const CategoryBookingModal: React.FC<Props> = ({ open, onOpenChange, category })
                           }
                           return newRange;
                         });
+                        // Auto-advance: close check-in and open check-out
+                        if (newDate) {
+                          setCheckInOpen(false);
+                          setTimeout(() => setCheckOutOpen(true), 100);
+                        }
                       }}
                       disabled={(checkDate) => checkDate < new Date(new Date().setHours(0, 0, 0, 0))}
                       initialFocus
@@ -223,7 +233,7 @@ const CategoryBookingModal: React.FC<Props> = ({ open, onOpenChange, category })
               
               <div>
                 <Label className="text-sm font-medium">Check-out</Label>
-                <Popover>
+                <Popover open={checkOutOpen} onOpenChange={setCheckOutOpen}>
                   <PopoverTrigger asChild>
                     <Button
                       variant="outline"
@@ -243,9 +253,15 @@ const CategoryBookingModal: React.FC<Props> = ({ open, onOpenChange, category })
                       onSelect={(range) => {
                         if (range?.to) {
                           setDate(range);
+                          // Auto-advance: close check-out and open guest selector
+                          setCheckOutOpen(false);
+                          setTimeout(() => setGuestSelectorOpen(true), 100);
                         } else if (range?.from && !range?.to) {
                           // Single click sets the checkout date
                           setDate({ from: date?.from, to: range.from });
+                          // Auto-advance: close check-out and open guest selector
+                          setCheckOutOpen(false);
+                          setTimeout(() => setGuestSelectorOpen(true), 100);
                         }
                       }}
                       defaultMonth={date?.from}

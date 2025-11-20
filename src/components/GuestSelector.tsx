@@ -10,18 +10,26 @@ type GuestSelectorProps = {
   onGuestsChange: (total: number, adults: number, children: number, infants?: number) => void;
   className?: string;
   variant?: 'default' | 'hero';
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
 };
 
 const GuestSelector: React.FC<GuestSelectorProps> = ({ 
   totalGuests, 
   onGuestsChange, 
   className,
-  variant = 'default'
+  variant = 'default',
+  open: controlledOpen,
+  onOpenChange: controlledOnOpenChange
 }) => {
   const [adults, setAdults] = useState(2);
   const [children, setChildren] = useState(0);
   const [infants, setInfants] = useState(0);
-  const [isOpen, setIsOpen] = useState(false);
+  const [internalOpen, setInternalOpen] = useState(false);
+  
+  // Use controlled state if provided, otherwise use internal state
+  const isOpen = controlledOpen !== undefined ? controlledOpen : internalOpen;
+  const setIsOpen = controlledOnOpenChange || setInternalOpen;
 
   // Initialize from totalGuests prop
   useEffect(() => {
