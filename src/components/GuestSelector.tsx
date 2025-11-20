@@ -80,7 +80,7 @@ const GuestSelector: React.FC<GuestSelectorProps> = ({
             <div className="flex items-center justify-between py-2">
               <div>
                 <div className="font-medium">Adults</div>
-                <div className="text-xs text-muted-foreground">18+ Years</div>
+                <div className="text-xs text-muted-foreground">10+ Years</div>
               </div>
               <div className="flex items-center gap-3">
                 <Button
@@ -109,7 +109,7 @@ const GuestSelector: React.FC<GuestSelectorProps> = ({
             <div className="flex items-center justify-between py-2">
               <div>
                 <div className="font-medium">Children</div>
-                <div className="text-xs text-muted-foreground">0-17 Years</div>
+                <div className="text-xs text-muted-foreground">2-9 Years</div>
               </div>
               <div className="flex items-center gap-3">
                 <Button
@@ -166,7 +166,7 @@ const GuestSelector: React.FC<GuestSelectorProps> = ({
 
           <div className="pt-3 border-t">
             <p className="text-xs text-muted-foreground">
-              Adults pay full price. Children (0-17 years) are charged at reduced rates.
+              Adults (10+ years) pay full price. Children (2-9 years) are charged at half the adult rate.
               Infants (0-2 years) stay free.
               Please provide the right number of guests for the best options and prices.
             </p>
