@@ -41,6 +41,11 @@ const RoomDetail = () => {
   const [children, setChildren] = useState<number>(0);
   const [infants, setInfants] = useState<number>(0);
 
+  // Popover states for auto-advance
+  const [checkInOpen, setCheckInOpen] = useState(false);
+  const [checkOutOpen, setCheckOutOpen] = useState(false);
+  const [guestSelectorOpen, setGuestSelectorOpen] = useState(false);
+
   // Fetch room data from database
   useEffect(() => {
     const fetchRoomData = async () => {
@@ -523,7 +528,7 @@ const RoomDetail = () => {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
                     <div>
                       <label className="block text-sm font-body font-medium mb-2">Check-in Date</label>
-                      <Popover>
+                      <Popover open={checkInOpen} onOpenChange={setCheckInOpen}>
                         <PopoverTrigger asChild>
                           <Button
                             variant="outline"
@@ -546,6 +551,11 @@ const RoomDetail = () => {
                               if (newDate && checkOutDate && newDate >= checkOutDate) {
                                 setCheckOutDate(undefined);
                               }
+                              // Auto-advance: close check-in and open check-out
+                              if (newDate) {
+                                setCheckInOpen(false);
+                                setTimeout(() => setCheckOutOpen(true), 100);
+                              }
                             }}
                             disabled={(date) => date < new Date(new Date().setHours(0, 0, 0, 0))}
                             initialFocus
@@ -555,7 +565,7 @@ const RoomDetail = () => {
                     </div>
                     <div>
                       <label className="block text-sm font-body font-medium mb-2">Check-out Date</label>
-                      <Popover>
+                      <Popover open={checkOutOpen} onOpenChange={setCheckOutOpen}>
                         <PopoverTrigger asChild>
                           <Button
                             variant="outline"
@@ -575,9 +585,15 @@ const RoomDetail = () => {
                             onSelect={(range) => {
                               if (range?.to) {
                                 setCheckOutDate(range.to);
+                                // Auto-advance: close check-out and open guest selector
+                                setCheckOutOpen(false);
+                                setTimeout(() => setGuestSelectorOpen(true), 100);
                               } else if (range?.from && !range?.to) {
                                 // Single click sets the checkout date
                                 setCheckOutDate(range.from);
+                                // Auto-advance: close check-out and open guest selector
+                                setCheckOutOpen(false);
+                                setTimeout(() => setGuestSelectorOpen(true), 100);
                               }
                             }}
                             defaultMonth={checkInDate}
@@ -596,6 +612,8 @@ const RoomDetail = () => {
                     <label className="block text-sm font-body font-medium mb-2">Guests</label>
                     <GuestSelector
                       totalGuests={adults + children + infants}
+                      open={guestSelectorOpen}
+                      onOpenChange={setGuestSelectorOpen}
                       onGuestsChange={(total, adultsCount, childrenCount, infantsCount) => {
                         setAdults(adultsCount || 0);
                         setChildren(childrenCount || 0);

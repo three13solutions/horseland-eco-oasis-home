@@ -90,6 +90,11 @@ const SearchAvailability = () => {
   const [heroImage] = useState('https://images.unsplash.com/photo-1571896349842-33c89424de2d?ixlib=rb-4.0.3&auto=format&fit=crop&w=2000&q=80');
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
 
+  // Popover states for auto-advance
+  const [checkInOpen, setCheckInOpen] = useState(false);
+  const [checkOutOpen, setCheckOutOpen] = useState(false);
+  const [guestSelectorOpen, setGuestSelectorOpen] = useState(false);
+
   const [filters, setFilters] = useState<Filters>({
     guests: null,
     bed: null,
@@ -252,7 +257,7 @@ const SearchAvailability = () => {
             <div className="flex flex-wrap items-end gap-3">
               <div className="flex-1 min-w-[200px]">
                 <label className="text-sm font-medium mb-2 block">Check-in</label>
-                <Popover>
+                <Popover open={checkInOpen} onOpenChange={setCheckInOpen}>
                   <PopoverTrigger asChild>
                     <Button variant="outline" className="w-full justify-start text-left">
                       <CalendarIcon className="mr-2 h-4 w-4" />
@@ -269,6 +274,11 @@ const SearchAvailability = () => {
                         if (date && checkOut && date >= checkOut) {
                           setCheckOut(undefined);
                         }
+                        // Auto-advance: close check-in and open check-out
+                        if (date) {
+                          setCheckInOpen(false);
+                          setTimeout(() => setCheckOutOpen(true), 100);
+                        }
                       }}
                       disabled={(date) => date < new Date(new Date().setHours(0, 0, 0, 0))}
                       initialFocus 
@@ -278,7 +288,7 @@ const SearchAvailability = () => {
               </div>
               <div className="flex-1 min-w-[200px]">
                 <label className="text-sm font-medium mb-2 block">Check-out</label>
-                <Popover>
+                <Popover open={checkOutOpen} onOpenChange={setCheckOutOpen}>
                   <PopoverTrigger asChild>
                     <Button variant="outline" className="w-full justify-start text-left">
                       <CalendarIcon className="mr-2 h-4 w-4" />
@@ -292,9 +302,15 @@ const SearchAvailability = () => {
                       onSelect={(range) => {
                         if (range?.to) {
                           setCheckOut(range.to);
+                          // Auto-advance: close check-out and open guest selector
+                          setCheckOutOpen(false);
+                          setTimeout(() => setGuestSelectorOpen(true), 100);
                         } else if (range?.from && !range?.to) {
                           // Single click sets the checkout date
                           setCheckOut(range.from);
+                          // Auto-advance: close check-out and open guest selector
+                          setCheckOutOpen(false);
+                          setTimeout(() => setGuestSelectorOpen(true), 100);
                         }
                       }}
                       defaultMonth={checkIn}
@@ -311,6 +327,8 @@ const SearchAvailability = () => {
                 <label className="text-sm font-medium mb-2 block">Guests</label>
                 <GuestSelector
                   totalGuests={guests}
+                  open={guestSelectorOpen}
+                  onOpenChange={setGuestSelectorOpen}
                   onGuestsChange={(total, a, c, i) => {
                     setGuests(total);
                     setAdults(a);
