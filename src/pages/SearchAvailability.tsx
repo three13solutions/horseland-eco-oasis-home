@@ -107,26 +107,21 @@ const SearchAvailability = () => {
     noise: null,
   });
 
-  // Initial search on mount if dates are provided
+  // Set room type filter based on URL parameter
   useEffect(() => {
-    if (checkIn && checkOut && !searched) {
-      handleSearch();
+    if (roomTypeIdParam) {
+      // Coming from specific room card - pre-select only that room
+      setFilters(prev => ({ ...prev, roomType: roomTypeIdParam }));
     }
-  }, [checkIn, checkOut]);
+  }, [roomTypeIdParam]);
 
-  // Set room type filter based on context
+  // Set all room types as default after search (if not coming from specific room)
   useEffect(() => {
-    if (categories.length > 0 && !filters.roomType) {
-      if (roomTypeIdParam) {
-        // Coming from specific room card - select only that room
-        setFilters(prev => ({ ...prev, roomType: roomTypeIdParam }));
-      } else {
-        // Default - select all room types
-        const allRoomTypeIds = categories.map(c => c.id).join(',');
-        setFilters(prev => ({ ...prev, roomType: allRoomTypeIds }));
-      }
+    if (categories.length > 0 && searched && !roomTypeIdParam && !filters.roomType) {
+      const allRoomTypeIds = categories.map(c => c.id).join(',');
+      setFilters(prev => ({ ...prev, roomType: allRoomTypeIds }));
     }
-  }, [categories, roomTypeIdParam]);
+  }, [categories, searched, roomTypeIdParam]);
 
   const handleSearch = async () => {
     if (!checkIn || !checkOut) {
