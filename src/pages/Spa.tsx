@@ -354,6 +354,12 @@ const Spa = () => {
                                 <Badge className="absolute top-2 right-2 bg-primary text-primary-foreground text-xs">
                                   ₹{service.price}
                                 </Badge>
+                                <Badge 
+                                  className="absolute top-2 left-2 bg-primary text-primary-foreground text-xs cursor-pointer hover:bg-primary/90 transition-colors"
+                                  onClick={() => navigate(`/spa/${service.id}`)}
+                                >
+                                  Learn More
+                                </Badge>
                               </div>
                               
                               <div className="p-4">
@@ -372,28 +378,6 @@ const Spa = () => {
                                   </p>
                                 )}
                                 
-                                <div className="flex gap-2">
-                                  <Button 
-                                    variant="outline"
-                                    className="flex-1 font-body h-10"
-                                    onClick={() => navigate(`/spa/${service.id}`)}
-                                  >
-                                    <span className="hidden sm:inline text-xs">Learn More</span>
-                                    <span className="sm:hidden text-xs">View</span>
-                                  </Button>
-                                  <Button 
-                                    className="flex-1 font-body gap-1 h-10"
-                                    onClick={() => handleAddToStay(service)}
-                                    variant={addedServiceIds.includes(service.id) ? "secondary" : "default"}
-                                  >
-                                    <span className="hidden sm:inline text-xs">
-                                      {addedServiceIds.includes(service.id) ? "✓ Added" : "Add to Stay"}
-                                    </span>
-                                    <span className="sm:hidden text-xs">
-                                      {addedServiceIds.includes(service.id) ? "✓" : "Add+"}
-                                    </span>
-                                  </Button>
-                                </div>
                               </div>
                             </div>
                           </CarouselItem>
