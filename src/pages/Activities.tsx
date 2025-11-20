@@ -1416,8 +1416,11 @@ const Activities = () => {
                           <Star className="w-3 h-3 mr-1 fill-current" />
                           4.5
                         </Badge>
-                        <Badge className="absolute top-3 left-3 bg-primary text-primary-foreground">
-                          Book Now
+                        <Badge 
+                          className="absolute top-3 left-3 bg-primary text-primary-foreground cursor-pointer hover:bg-primary/90 transition-colors"
+                          onClick={() => navigate(`/activities/${activity.id}`)}
+                        >
+                          Learn More
                         </Badge>
                       </div>
                       
@@ -1446,15 +1449,6 @@ const Activities = () => {
                           </div>
                         </div>
 
-                        <div className="flex gap-2">
-                          <Button 
-                            variant="outline" 
-                            className="font-body w-full h-10"
-                            onClick={() => navigate(`/activities/${activity.id}`)}
-                          >
-                            Learn More
-                          </Button>
-                        </div>
                       </div>
                     </div>
                     ))}
@@ -1485,8 +1479,11 @@ const Activities = () => {
                             <div className="flex-1">
                               <div className="flex items-start justify-between mb-2">
                                 <h3 className="text-2xl font-heading font-semibold">{activity.title}</h3>
-                                <Badge className="ml-2 bg-primary text-primary-foreground whitespace-nowrap">
-                                  Book Now
+                                <Badge 
+                                  className="ml-2 bg-primary text-primary-foreground whitespace-nowrap cursor-pointer hover:bg-primary/90 transition-colors"
+                                  onClick={() => navigate(`/activities/${activity.id}`)}
+                                >
+                                  Learn More
                                 </Badge>
                               </div>
                               
@@ -1514,15 +1511,6 @@ const Activities = () => {
                               </div>
                             </div>
 
-                            <div className="flex gap-2 mt-auto">
-                              <Button 
-                                variant="outline"
-                                className="font-body w-full h-10"
-                                onClick={() => navigate(`/activities/${activity.id}`)}
-                              >
-                                Learn More
-                              </Button>
-                            </div>
                           </div>
                         </div>
                       </div>
