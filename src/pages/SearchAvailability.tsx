@@ -97,6 +97,7 @@ const SearchAvailability = () => {
   const [guestSelectorOpen, setGuestSelectorOpen] = useState(false);
 
   const [filters, setFilters] = useState<Filters>({
+    roomType: null,
     guests: null,
     bed: null,
     audience: null,
@@ -110,7 +111,14 @@ const SearchAvailability = () => {
     if (checkIn && checkOut) {
       handleSearch();
     }
-  }, []);
+    // Set room type filter if coming from specific room
+    if (roomTypeIdParam && categories.length > 0) {
+      const roomCategory = categories.find(c => c.id === roomTypeIdParam);
+      if (roomCategory) {
+        setFilters(prev => ({ ...prev, roomType: roomTypeIdParam }));
+      }
+    }
+  }, [roomTypeIdParam, categories]);
 
   const handleSearch = async () => {
     if (!checkIn || !checkOut) {
@@ -182,6 +190,11 @@ const SearchAvailability = () => {
 
   const filteredCategories = useMemo(() => {
     return categories.filter((category) => {
+      // Room Type filter
+      if (filters.roomType && category.id !== filters.roomType) {
+        return false;
+      }
+      
       if (filters.guests) {
         const guestFilter = filters.guests;
         let minGuests = 0;
@@ -363,11 +376,12 @@ const SearchAvailability = () => {
               <div className="sticky top-20 bg-card border rounded-lg p-4 space-y-4">
                 <div className="flex items-center justify-between mb-2">
                   <h3 className="text-base font-heading font-semibold">Filters</h3>
-                  {(filters.guests || filters.bed || filters.audience || filters.budget || filters.view || filters.features.length > 0 || filters.noise) && (
+                  {(filters.roomType || filters.guests || filters.bed || filters.audience || filters.budget || filters.view || filters.features.length > 0 || filters.noise) && (
                     <Button
                       variant="ghost"
                       size="sm"
                       onClick={() => setFilters({
+                        roomType: null,
                         guests: null,
                         bed: null,
                         audience: null,
@@ -382,6 +396,34 @@ const SearchAvailability = () => {
                     </Button>
                   )}
                 </div>
+
+                {/* Room Type */}
+                {categories.length > 1 && (
+                  <div>
+                    <label className="text-xs font-medium text-muted-foreground mb-2 block">Room Type</label>
+                    <div className="flex flex-col gap-1.5">
+                      <Button
+                        variant={!filters.roomType ? 'default' : 'outline'}
+                        size="sm"
+                        onClick={() => setFilters({ ...filters, roomType: null })}
+                        className="justify-start h-8 text-xs"
+                      >
+                        All
+                      </Button>
+                      {categories.map((category) => (
+                        <Button
+                          key={category.id}
+                          variant={filters.roomType === category.id ? 'default' : 'outline'}
+                          size="sm"
+                          onClick={() => setFilters({ ...filters, roomType: category.id })}
+                          className="justify-start h-8 text-xs"
+                        >
+                          {category.name}
+                        </Button>
+                      ))}
+                    </div>
+                  </div>
+                )}
 
                 {/* Guests */}
                 <div>
@@ -686,11 +728,12 @@ const SearchAvailability = () => {
                           <div className="mt-4 space-y-4">
                             {/* Same filters as desktop sidebar */}
                             <div className="flex items-center justify-between mb-2">
-                              {(filters.guests || filters.bed || filters.audience || filters.budget || filters.view || filters.features.length > 0 || filters.noise) && (
+                              {(filters.roomType || filters.guests || filters.bed || filters.audience || filters.budget || filters.view || filters.features.length > 0 || filters.noise) && (
                                 <Button
                                   variant="ghost"
                                   size="sm"
                                   onClick={() => setFilters({
+                                    roomType: null,
                                     guests: null,
                                     bed: null,
                                     audience: null,
@@ -705,6 +748,34 @@ const SearchAvailability = () => {
                                 </Button>
                               )}
                             </div>
+
+                            {/* Room Type */}
+                            {categories.length > 1 && (
+                              <div>
+                                <label className="text-xs font-medium text-muted-foreground mb-2 block">Room Type</label>
+                                <div className="flex flex-col gap-1.5">
+                                  <Button
+                                    variant={!filters.roomType ? 'default' : 'outline'}
+                                    size="sm"
+                                    onClick={() => setFilters({ ...filters, roomType: null })}
+                                    className="justify-start h-8 text-xs"
+                                  >
+                                    All
+                                  </Button>
+                                  {categories.map((category) => (
+                                    <Button
+                                      key={category.id}
+                                      variant={filters.roomType === category.id ? 'default' : 'outline'}
+                                      size="sm"
+                                      onClick={() => setFilters({ ...filters, roomType: category.id })}
+                                      className="justify-start h-8 text-xs"
+                                    >
+                                      {category.name}
+                                    </Button>
+                                  ))}
+                                </div>
+                              </div>
+                            )}
 
                             {/* Guests */}
                             <div>
@@ -1016,6 +1087,7 @@ const SearchAvailability = () => {
                       <Button
                         variant="outline"
                         onClick={() => setFilters({
+                          roomType: null,
                           guests: null,
                           bed: null,
                           audience: null,
