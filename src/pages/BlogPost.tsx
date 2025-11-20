@@ -38,6 +38,14 @@ const BlogPost = () => {
   const [relatedPosts, setRelatedPosts] = useState<BlogPost[]>([]);
   const [loading, setLoading] = useState(true);
 
+  // Helper function to strip HTML tags and get clean text excerpt
+  const getPlainTextExcerpt = (html: string, length: number = 120): string => {
+    const tmp = document.createElement('div');
+    tmp.innerHTML = html;
+    const text = tmp.textContent || tmp.innerText || '';
+    return text.length > length ? text.substring(0, length) + '...' : text;
+  };
+
   useEffect(() => {
     if (slug) {
       loadPost();
@@ -331,7 +339,7 @@ const BlogPost = () => {
                       </h3>
                       
                       <p className="text-sm text-muted-foreground line-clamp-2">
-                        {relatedPost.content.substring(0, 120)}...
+                        {getPlainTextExcerpt(relatedPost.content, 120)}
                       </p>
                     </div>
                   </Link>
