@@ -107,16 +107,17 @@ const SearchAvailability = () => {
     noise: null,
   });
 
+  // Initial search on mount if dates are provided
   useEffect(() => {
-    if (checkIn && checkOut) {
+    if (checkIn && checkOut && !searched) {
       handleSearch();
     }
-    // Set room type filter if coming from specific room
-    if (roomTypeIdParam && categories.length > 0) {
-      const roomCategory = categories.find(c => c.id === roomTypeIdParam);
-      if (roomCategory) {
-        setFilters(prev => ({ ...prev, roomType: roomTypeIdParam }));
-      }
+  }, [checkIn, checkOut]);
+
+  // Set room type filter if coming from specific room
+  useEffect(() => {
+    if (roomTypeIdParam && categories.length > 0 && !filters.roomType) {
+      setFilters(prev => ({ ...prev, roomType: roomTypeIdParam }));
     }
   }, [roomTypeIdParam, categories]);
 
@@ -190,8 +191,8 @@ const SearchAvailability = () => {
 
   const filteredCategories = useMemo(() => {
     return categories.filter((category) => {
-      // Room Type filter
-      if (filters.roomType && category.id !== filters.roomType) {
+      // Room Type filter (multi-select)
+      if (filters.roomType && !filters.roomType.split(',').includes(category.id)) {
         return false;
       }
       
@@ -402,25 +403,30 @@ const SearchAvailability = () => {
                   <div>
                     <label className="text-xs font-medium text-muted-foreground mb-2 block">Room Type</label>
                     <div className="flex flex-col gap-1.5">
-                      <Button
-                        variant={!filters.roomType ? 'default' : 'outline'}
-                        size="sm"
-                        onClick={() => setFilters({ ...filters, roomType: null })}
-                        className="justify-start h-8 text-xs"
-                      >
-                        All
-                      </Button>
-                      {categories.map((category) => (
-                        <Button
-                          key={category.id}
-                          variant={filters.roomType === category.id ? 'default' : 'outline'}
-                          size="sm"
-                          onClick={() => setFilters({ ...filters, roomType: category.id })}
-                          className="justify-start h-8 text-xs"
-                        >
-                          {category.name}
-                        </Button>
-                      ))}
+                      {categories.map((category) => {
+                        const selectedRoomTypes = filters.roomType ? filters.roomType.split(',') : [];
+                        const isSelected = selectedRoomTypes.includes(category.id);
+                        
+                        return (
+                          <Button
+                            key={category.id}
+                            variant={isSelected ? 'default' : 'outline'}
+                            size="sm"
+                            onClick={() => {
+                              if (isSelected) {
+                                const newSelection = selectedRoomTypes.filter(id => id !== category.id);
+                                setFilters({ ...filters, roomType: newSelection.length > 0 ? newSelection.join(',') : null });
+                              } else {
+                                const newSelection = [...selectedRoomTypes, category.id];
+                                setFilters({ ...filters, roomType: newSelection.join(',') });
+                              }
+                            }}
+                            className="justify-start h-8 text-xs"
+                          >
+                            {category.name}
+                          </Button>
+                        );
+                      })}
                     </div>
                   </div>
                 )}
@@ -754,25 +760,30 @@ const SearchAvailability = () => {
                               <div>
                                 <label className="text-xs font-medium text-muted-foreground mb-2 block">Room Type</label>
                                 <div className="flex flex-col gap-1.5">
-                                  <Button
-                                    variant={!filters.roomType ? 'default' : 'outline'}
-                                    size="sm"
-                                    onClick={() => setFilters({ ...filters, roomType: null })}
-                                    className="justify-start h-8 text-xs"
-                                  >
-                                    All
-                                  </Button>
-                                  {categories.map((category) => (
-                                    <Button
-                                      key={category.id}
-                                      variant={filters.roomType === category.id ? 'default' : 'outline'}
-                                      size="sm"
-                                      onClick={() => setFilters({ ...filters, roomType: category.id })}
-                                      className="justify-start h-8 text-xs"
-                                    >
-                                      {category.name}
-                                    </Button>
-                                  ))}
+                                  {categories.map((category) => {
+                                    const selectedRoomTypes = filters.roomType ? filters.roomType.split(',') : [];
+                                    const isSelected = selectedRoomTypes.includes(category.id);
+                                    
+                                    return (
+                                      <Button
+                                        key={category.id}
+                                        variant={isSelected ? 'default' : 'outline'}
+                                        size="sm"
+                                        onClick={() => {
+                                          if (isSelected) {
+                                            const newSelection = selectedRoomTypes.filter(id => id !== category.id);
+                                            setFilters({ ...filters, roomType: newSelection.length > 0 ? newSelection.join(',') : null });
+                                          } else {
+                                            const newSelection = [...selectedRoomTypes, category.id];
+                                            setFilters({ ...filters, roomType: newSelection.join(',') });
+                                          }
+                                        }}
+                                        className="justify-start h-8 text-xs"
+                                      >
+                                        {category.name}
+                                      </Button>
+                                    );
+                                  })}
                                 </div>
                               </div>
                             )}
