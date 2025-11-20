@@ -389,16 +389,12 @@ const Dining = () => {
       </section>
 
 
-      {/* Special Services */}
+      {/* Chef's Notes Section */}
       <section className="py-16 bg-muted/30">
         <div className="max-w-6xl mx-auto px-4">
-          <h2 className="text-3xl md:text-4xl font-heading font-bold text-center mb-12 text-foreground">
-            Special Dining Experiences
-          </h2>
-          
-          <div className="grid md:grid-cols-2 gap-8 mb-12">
-            <div className="bg-card border rounded-lg overflow-hidden group">
-              <div className="relative h-48">
+          <div className="flex flex-col md:flex-row gap-8 items-center">
+            <div className="md:w-1/2">
+              <div className="relative h-96 rounded-lg overflow-hidden group">
                 <img 
                   src={chefNotesImage}
                   alt="Chef's Notes"
@@ -406,23 +402,35 @@ const Dining = () => {
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
               </div>
-              <div className="p-8">
-                <div className="flex items-center gap-3 mb-4">
-                  <ChefHat className="w-8 h-8 text-primary" />
-                  <h3 className="text-2xl font-heading font-semibold text-foreground">
-                    Chef's Notes
-                  </h3>
-                </div>
-                <blockquote className="text-lg font-body text-muted-foreground italic leading-relaxed">
-                  "Our kitchen celebrates the bounty of the Western Ghats. Each meal is crafted with 
-                  ingredients sourced within a 50-kilometer radius, ensuring freshness while supporting 
-                  local farming communities."
-                </blockquote>
-              </div>
             </div>
+            <div className="md:w-1/2">
+              <div className="flex items-center gap-3 mb-6">
+                <ChefHat className="w-10 h-10 text-primary" />
+                <h2 className="text-3xl md:text-4xl font-heading font-bold text-foreground">
+                  Chef's Notes
+                </h2>
+              </div>
+              <blockquote className="text-xl font-body text-muted-foreground italic leading-relaxed mb-6">
+                "Our kitchen celebrates the bounty of the Western Ghats. Each meal is crafted with 
+                ingredients sourced within a 50-kilometer radius, ensuring freshness while supporting 
+                local farming communities."
+              </blockquote>
+              <p className="text-muted-foreground font-body leading-relaxed">
+                Our culinary team takes pride in transforming locally-sourced ingredients into memorable 
+                dining experiences. From farm-fresh vegetables to traditional recipes passed down through 
+                generations, every dish tells a story of our commitment to sustainable and authentic cuisine.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
 
-            <div className="bg-card border rounded-lg overflow-hidden group">
-              <div className="relative h-48">
+      {/* Candle Light Dinner Section */}
+      <section className="py-16">
+        <div className="max-w-6xl mx-auto px-4">
+          <div className="flex flex-col md:flex-row-reverse gap-8 items-center">
+            <div className="md:w-1/2">
+              <div className="relative h-96 rounded-lg overflow-hidden group">
                 <img 
                   src={candleLightDinnerImage}
                   alt="Candle Light Dinner"
@@ -430,21 +438,27 @@ const Dining = () => {
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
               </div>
-              <div className="p-8">
-                <div className="flex items-center gap-3 mb-4">
-                  <Sparkles className="w-8 h-8 text-primary" />
-                  <h3 className="text-2xl font-heading font-semibold text-foreground">
-                    Candle Light Dinner
-                  </h3>
-                </div>
-                <p className="text-muted-foreground font-body leading-relaxed mb-4">
-                  Create magical moments with a candle light dinner arranged by the poolside, 
-                  in select rooms with dining arrangements, or in our elegant dining area.
-                </p>
-                <p className="text-sm text-primary font-body font-semibold">
-                  Available on request at an additional service charge
-                </p>
+            </div>
+            <div className="md:w-1/2">
+              <div className="flex items-center gap-3 mb-6">
+                <Sparkles className="w-10 h-10 text-primary" />
+                <h2 className="text-3xl md:text-4xl font-heading font-bold text-foreground">
+                  Candle Light Dinner
+                </h2>
               </div>
+              <p className="text-xl font-body text-muted-foreground leading-relaxed mb-6">
+                Create magical moments with a candle light dinner arranged by the poolside, 
+                in select rooms with dining arrangements, or in our elegant dining area.
+              </p>
+              <p className="text-muted-foreground font-body leading-relaxed mb-4">
+                Whether celebrating a special occasion or simply enjoying an intimate evening, 
+                our candle light dinner service offers the perfect ambiance with personalized 
+                service and a curated menu featuring your choice of cuisine.
+              </p>
+              <p className="text-sm text-primary font-body font-semibold inline-flex items-center gap-2">
+                <Sparkles className="w-4 h-4" />
+                Available on request at an additional service charge
+              </p>
             </div>
           </div>
         </div>
