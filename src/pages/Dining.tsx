@@ -192,6 +192,83 @@ const Dining = () => {
         <DiningGalleryCollage />
       </section>
 
+      {/* Special Dietary Needs */}
+      <section className="py-16">
+        <div className="max-w-4xl mx-auto px-4 text-center">
+          <h2 className="text-3xl md:text-4xl font-heading font-bold mb-8 text-foreground">
+            Special Dietary Needs
+          </h2>
+          <p className="text-lg text-muted-foreground font-body mb-8 leading-relaxed">
+            We cater to various dietary preferences including vegetarian, non-vegetarian, and Jain meal options. 
+            Please inform us of any allergies or specific requirements during your booking.
+          </p>
+          <Button 
+            size="lg" 
+            className="font-body"
+            onClick={() => {
+              const bookingData = localStorage.getItem('currentBooking');
+              
+              if (!bookingData) {
+                toast({
+                  title: "Select Your Stay First",
+                  description: "Please select your accommodation and dates on the booking page first.",
+                  variant: "destructive",
+                  action: (
+                    <button onClick={() => navigate('/booking')} className="underline">
+                      Go to Booking
+                    </button>
+                  ),
+                });
+                return;
+              }
+
+              try {
+                const booking = JSON.parse(bookingData);
+                
+                if (!booking.checkIn || !booking.checkOut) {
+                  toast({
+                    title: "Select Dates First",
+                    description: "Please select your check-in and check-out dates on the booking page.",
+                    variant: "destructive",
+                    action: (
+                      <button onClick={() => navigate('/booking')} className="underline">
+                        Go to Booking
+                      </button>
+                    ),
+                  });
+                  return;
+                }
+
+                if (!booking.selectedRoom && !booking.roomType && !booking.roomUnit) {
+                  toast({
+                    title: "Select a Room First",
+                    description: "Please select your accommodation before managing dietary needs.",
+                    variant: "destructive",
+                    action: (
+                      <button onClick={() => navigate('/booking')} className="underline">
+                        Go to Booking
+                      </button>
+                    ),
+                  });
+                  return;
+                }
+
+                navigate('/booking?tab=meals');
+              } catch (error) {
+                console.error('Error checking booking:', error);
+                toast({
+                  title: "Oops!",
+                  description: "We encountered a small issue. Please try again.",
+                  variant: "destructive",
+                });
+              }
+            }}
+          >
+            Inform About Dietary Needs
+          </Button>
+        </div>
+      </section>
+
       {/* Separate Kitchens Section */}
       <section className="py-16 bg-muted/30">
         <div className="max-w-6xl mx-auto px-4">
@@ -368,83 +445,6 @@ const Dining = () => {
               </div>
             </div>
           </div>
-        </div>
-      </section>
-
-      {/* Dietary Information */}
-      <section className="py-16">
-        <div className="max-w-4xl mx-auto px-4 text-center">
-          <h2 className="text-3xl md:text-4xl font-heading font-bold mb-8 text-foreground">
-            Special Dietary Needs
-          </h2>
-          <p className="text-lg text-muted-foreground font-body mb-8 leading-relaxed">
-            We cater to various dietary preferences including vegetarian, non-vegetarian, and Jain meal options. 
-            Please inform us of any allergies or specific requirements during your booking.
-          </p>
-          <Button 
-            size="lg" 
-            className="font-body"
-            onClick={() => {
-              const bookingData = localStorage.getItem('currentBooking');
-              
-              if (!bookingData) {
-                toast({
-                  title: "Select Your Stay First",
-                  description: "Please select your accommodation and dates on the booking page first.",
-                  variant: "destructive",
-                  action: (
-                    <button onClick={() => navigate('/booking')} className="underline">
-                      Go to Booking
-                    </button>
-                  ),
-                });
-                return;
-              }
-
-              try {
-                const booking = JSON.parse(bookingData);
-                
-                if (!booking.checkIn || !booking.checkOut) {
-                  toast({
-                    title: "Select Dates First",
-                    description: "Please select your check-in and check-out dates on the booking page.",
-                    variant: "destructive",
-                    action: (
-                      <button onClick={() => navigate('/booking')} className="underline">
-                        Go to Booking
-                      </button>
-                    ),
-                  });
-                  return;
-                }
-
-                if (!booking.selectedRoom && !booking.roomType && !booking.roomUnit) {
-                  toast({
-                    title: "Select a Room First",
-                    description: "Please select your accommodation before managing dietary needs.",
-                    variant: "destructive",
-                    action: (
-                      <button onClick={() => navigate('/booking')} className="underline">
-                        Go to Booking
-                      </button>
-                    ),
-                  });
-                  return;
-                }
-
-                navigate('/booking?tab=meals');
-              } catch (error) {
-                console.error('Error checking booking:', error);
-                toast({
-                  title: "Oops!",
-                  description: "We encountered a small issue. Please try again.",
-                  variant: "destructive",
-                });
-              }
-            }}
-          >
-            Inform About Dietary Needs
-          </Button>
         </div>
       </section>
 
