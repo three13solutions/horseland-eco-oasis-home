@@ -22,11 +22,22 @@ const Dining = () => {
 
   React.useEffect(() => {
     const fetchPageData = async () => {
-      const { data } = await supabase.from('pages').select('title, subtitle, hero_image').eq('slug', 'dining').single();
+      const { data } = await supabase.from('pages').select('title, subtitle, hero_image, structured_content').eq('slug', 'dining').single();
       if (data) {
         if (data.title) setHeroTitle(data.title);
         if (data.subtitle) setHeroSubtitle(data.subtitle);
         if (data.hero_image) setHeroImage(data.hero_image);
+        
+        // Load images from structured_content if available
+        if (data.structured_content) {
+          const content = data.structured_content as any;
+          if (content.chefNotes?.image) {
+            setChefNotesImage(content.chefNotes.image);
+          }
+          if (content.candleLightDinner?.image) {
+            setCandleLightDinnerImage(content.candleLightDinner.image);
+          }
+        }
       }
     };
     
@@ -40,7 +51,7 @@ const Dining = () => {
     };
 
     const fetchSpecialDiningImages = async () => {
-      // Fetch in-room dining image by tag
+      // Fetch in-room dining image by tag (only if not already set from page content)
       const { data: inRoomData } = await supabase
         .from('gallery_images')
         .select('image_url')
@@ -50,30 +61,6 @@ const Dining = () => {
       
       if (inRoomData?.image_url) {
         setInRoomDiningImage(inRoomData.image_url);
-      }
-
-      // Fetch candle light dinner image by tag
-      const { data: candleData } = await supabase
-        .from('gallery_images')
-        .select('image_url')
-        .contains('tags', ['candle-light-dinner'])
-        .limit(1)
-        .maybeSingle();
-      
-      if (candleData?.image_url) {
-        setCandleLightDinnerImage(candleData.image_url);
-      }
-
-      // Fetch chef notes image by tag
-      const { data: chefData } = await supabase
-        .from('gallery_images')
-        .select('image_url')
-        .contains('tags', ['chef-notes'])
-        .limit(1)
-        .maybeSingle();
-      
-      if (chefData?.image_url) {
-        setChefNotesImage(chefData.image_url);
       }
     };
     

@@ -422,6 +422,50 @@ export const PageContentEditor: React.FC<PageContentEditorProps> = ({
     );
   }
 
+  // Render Dining Page Content
+  if (pageSlug === 'dining') {
+    const chefNotes = content.chefNotes || {};
+    const candleLightDinner = content.candleLightDinner || {};
+
+    return (
+      <div className="space-y-6">
+        {/* Chef Notes Section */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Chef Notes Section</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div>
+              <Label>Chef Notes Image</Label>
+              <MediaPicker
+                label=""
+                value={chefNotes.image || ''}
+                onChange={(url) => updateNestedField('chefNotes', ['image'], url)}
+              />
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Candle Light Dinner Section */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Candle Light Dinner Section</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div>
+              <Label>Candle Light Dinner Image</Label>
+              <MediaPicker
+                label=""
+                value={candleLightDinner.image || ''}
+                onChange={(url) => updateNestedField('candleLightDinner', ['image'], url)}
+              />
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
   // Render Experiences Page Content
   if (pageSlug === 'experiences') {
     const intro = content.intro || {};
