@@ -52,11 +52,12 @@ const CategoryCard: React.FC<Props> = ({ category, onViewDetails, onBookNow, vie
     enabled: !!(checkIn && checkOut)
   });
 
-  // Initialize selected meal plan when variants load
+  // Initialize selected meal plan when variants load - default to Full Board
   React.useEffect(() => {
     if (variants && variants.length > 0 && !selectedMealPlan) {
-      // Find the featured variant or default to first one
-      const defaultVariant = variants.find(v => v.is_featured) || variants[0];
+      // Default to Full Board (all_meals_inclusive) if available
+      const fullBoardVariant = variants.find(v => v.meal_plan_code === 'all_meals_inclusive');
+      const defaultVariant = fullBoardVariant || variants.find(v => v.is_featured) || variants[0];
       setSelectedMealPlan(defaultVariant.meal_plan_code);
       setSelectedCancellationPolicy(defaultVariant.cancellation_policy_code);
     }
@@ -71,35 +72,53 @@ const CategoryCard: React.FC<Props> = ({ category, onViewDetails, onBookNow, vie
         { code: 'room_only', name: 'Room Only', description: 'No Meals', icon: Home }
       ];
     }
+    
+    // Define the desired order
+    const order = ['all_meals_inclusive', 'breakfast_and_dinner', 'breakfast_included', 'breakfast_and_lunch', 'room_only'];
     const unique = Array.from(new Set(variants.map(v => v.meal_plan_code)));
-    return unique.map(code => {
-      let name = '';
-      let description = '';
-      let icon = UtensilsCrossed;
-      
-      if (code === 'room_only') {
-        name = 'Room Only';
-        description = 'No Meals';
-        icon = Home;
-      } else if (code === 'breakfast_and_dinner') {
-        name = 'Half Board';
-        description = 'Breakfast & Dinner';
-        icon = Coffee;
-      } else if (code === 'all_meals_inclusive') {
-        name = 'Full Board';
-        description = 'All Meals';
-        icon = UtensilsCrossed;
-      }
-      
-      return { code, name, description, icon };
-    });
+    
+    return unique
+      .map(code => {
+        let name = '';
+        let description = '';
+        let icon = UtensilsCrossed;
+        
+        if (code === 'room_only') {
+          name = 'Room Only';
+          description = 'No Meals';
+          icon = Home;
+        } else if (code === 'breakfast_and_dinner') {
+          name = 'Half Board';
+          description = 'Breakfast & Dinner';
+          icon = Coffee;
+        } else if (code === 'all_meals_inclusive') {
+          name = 'Full Board';
+          description = 'All Meals';
+          icon = UtensilsCrossed;
+        } else if (code === 'breakfast_included') {
+          name = 'With Breakfast';
+          description = 'Breakfast';
+          icon = Coffee;
+        } else if (code === 'breakfast_and_lunch') {
+          name = 'Breakfast & Lunch';
+          description = 'B&L';
+          icon = Coffee;
+        }
+        
+        return { code, name, description, icon, order: order.indexOf(code) };
+      })
+      .sort((a, b) => {
+        const orderA = a.order === -1 ? 999 : a.order;
+        const orderB = b.order === -1 ? 999 : b.order;
+        return orderA - orderB;
+      });
   }, [variants]);
 
   const cancellationPolicies = useMemo(() => {
     if (!variants || variants.length === 0) {
       return [
-        { code: 'refundable_credit', name: 'Credit Voucher', description: 'Refundable as credit', icon: CreditCard },
-        { code: 'non_refundable', name: 'Non-Refundable', description: 'Best price', icon: XCircle }
+        { code: 'refundable_credit', name: 'Credit Voucher', description: 'Refundable as credit', icon: CreditCard, redemptionText: 'Redeemable within 6 Months' },
+        { code: 'non_refundable', name: 'Non-Refundable', description: 'Best price', icon: XCircle, redemptionText: null }
       ];
     }
     const unique = Array.from(new Set(variants.map(v => v.cancellation_policy_code)));
@@ -108,6 +127,7 @@ const CategoryCard: React.FC<Props> = ({ category, onViewDetails, onBookNow, vie
       const name = variant?.cancellation_policy_name || code;
       let description = '';
       let icon = CreditCard;
+      let redemptionText = null;
       
       if (code.includes('non_refundable')) {
         description = 'Best price';
@@ -115,9 +135,12 @@ const CategoryCard: React.FC<Props> = ({ category, onViewDetails, onBookNow, vie
       } else {
         description = 'Refundable';
         icon = CreditCard;
+        if (name.toLowerCase().includes('credit') || name.toLowerCase().includes('voucher')) {
+          redemptionText = 'Redeemable within 6 Months';
+        }
       }
       
-      return { code, name, description, icon };
+      return { code, name, description, icon, redemptionText };
     });
   }, [variants]);
 
@@ -299,6 +322,9 @@ const CategoryCard: React.FC<Props> = ({ category, onViewDetails, onBookNow, vie
                           <Icon className={`h-4 w-4 mb-1 ${isSelected ? 'text-primary' : 'text-muted-foreground'}`} />
                           <div className="text-[10px] font-medium">{cp.name}</div>
                           <div className="text-[9px] text-muted-foreground">{cp.description}</div>
+                          {cp.redemptionText && (
+                            <div className="text-[8px] text-muted-foreground mt-0.5">{cp.redemptionText}</div>
+                          )}
                         </button>
                       );
                     })}
@@ -440,6 +466,9 @@ const CategoryCard: React.FC<Props> = ({ category, onViewDetails, onBookNow, vie
                       <Icon className={`h-4 w-4 mb-1 ${isSelected ? 'text-primary' : 'text-muted-foreground'}`} />
                       <div className="text-[10px] font-medium">{cp.name}</div>
                       <div className="text-[9px] text-muted-foreground">{cp.description}</div>
+                      {cp.redemptionText && (
+                        <div className="text-[8px] text-muted-foreground mt-0.5">{cp.redemptionText}</div>
+                      )}
                     </button>
                   );
                 })}
