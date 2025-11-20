@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 
 export type Filters = {
+  roomType: string | null;
   guests: '1-2' | '3' | '4-6' | '6+' | null;
   bed: '1 double' | '2 doubles' | 'double + sofa‑cum‑bed' | 'loft bed present' | null;
   audience: 'Couple' | 'Family with kids' | 'Friends / Group' | null;
@@ -32,11 +33,13 @@ export type Filters = {
 type Props = {
   filters: Filters;
   setFilters: (f: Filters) => void;
+  roomTypeOptions?: Array<{ id: string; name: string }>;
 };
 
-const CategoryFilters: React.FC<Props> = ({ filters, setFilters }) => {
+const CategoryFilters: React.FC<Props> = ({ filters, setFilters, roomTypeOptions = [] }) => {
   const reset = () =>
     setFilters({
+      roomType: null,
       guests: null,
       bed: null,
       audience: null,
@@ -85,6 +88,18 @@ const CategoryFilters: React.FC<Props> = ({ filters, setFilters }) => {
         </div>
         
         <div className="flex flex-wrap gap-x-6 gap-y-3">
+          {roomTypeOptions.length > 0 && (
+            <FilterPill
+              label="Room Type"
+              value={filters.roomType}
+              options={roomTypeOptions.map(rt => rt.name)}
+              onChange={(v) => {
+                const selectedRoom = roomTypeOptions.find(rt => rt.name === v);
+                setFilters({ ...filters, roomType: selectedRoom?.id || null });
+              }}
+            />
+          )}
+          
           <FilterPill
             label="Guests"
             value={filters.guests}

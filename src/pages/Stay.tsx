@@ -79,6 +79,7 @@ const Stay = () => {
   const [searchGuests, setSearchGuests] = useState<number>(2);
 
   const [filters, setFilters] = useState<Filters>({
+    roomType: null,
     guests: null,
     bed: null,
     audience: null,
@@ -206,6 +207,7 @@ const Stay = () => {
                       variant="ghost"
                       size="sm"
                       onClick={() => setFilters({
+                        roomType: null,
                         guests: null,
                         bed: null,
                         audience: null,
@@ -729,6 +731,7 @@ const Stay = () => {
                   <Button
                     variant="outline"
                     onClick={() => setFilters({
+                      roomType: null,
                       guests: null,
                       bed: null,
                       audience: null,
