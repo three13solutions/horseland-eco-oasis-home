@@ -571,10 +571,13 @@ const RoomDetail = () => {
                         <PopoverContent className="w-auto p-0 bg-background/95 backdrop-blur-xl border-2 shadow-2xl" align="start">
                           <CalendarComponent
                             mode="range"
-                            selected={checkInDate && checkOutDate ? { from: checkInDate, to: checkOutDate } : undefined}
+                            selected={checkInDate ? { from: checkInDate, to: checkOutDate } : undefined}
                             onSelect={(range) => {
                               if (range?.to) {
                                 setCheckOutDate(range.to);
+                              } else if (range?.from && !range?.to) {
+                                // Single click sets the checkout date
+                                setCheckOutDate(range.from);
                               }
                             }}
                             defaultMonth={checkInDate}

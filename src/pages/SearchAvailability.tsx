@@ -288,10 +288,13 @@ const SearchAvailability = () => {
                   <PopoverContent className="w-auto p-0 bg-background/95 backdrop-blur-xl border-2 shadow-2xl" align="start">
                     <Calendar 
                       mode="range"
-                      selected={checkIn && checkOut ? { from: checkIn, to: checkOut } : undefined}
+                      selected={checkIn ? { from: checkIn, to: checkOut } : undefined}
                       onSelect={(range) => {
                         if (range?.to) {
                           setCheckOut(range.to);
+                        } else if (range?.from && !range?.to) {
+                          // Single click sets the checkout date
+                          setCheckOut(range.from);
                         }
                       }}
                       defaultMonth={checkIn}
