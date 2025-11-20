@@ -32,19 +32,19 @@ const GuestSelector: React.FC<GuestSelectorProps> = ({
   }, []);
 
   const handleAdultsChange = (delta: number) => {
-    const newAdults = Math.max(1, Math.min(8, adults + delta));
+    const newAdults = Math.max(1, Math.min(20, adults + delta)); // Increased cap to 20
     setAdults(newAdults);
     onGuestsChange(newAdults + children, newAdults, children, infants);
   };
 
   const handleChildrenChange = (delta: number) => {
-    const newChildren = Math.max(0, Math.min(6, children + delta));
+    const newChildren = Math.max(0, Math.min(15, children + delta)); // Increased cap to 15
     setChildren(newChildren);
     onGuestsChange(adults + newChildren, adults, newChildren, infants);
   };
 
   const handleInfantsChange = (delta: number) => {
-    const newInfants = Math.max(0, Math.min(4, infants + delta));
+    const newInfants = Math.max(0, Math.min(10, infants + delta)); // Increased cap to 10
     setInfants(newInfants);
     onGuestsChange(adults + children, adults, children, newInfants);
   };
@@ -58,8 +58,8 @@ const GuestSelector: React.FC<GuestSelectorProps> = ({
   ].filter(Boolean).join(', ');
 
   const buttonClasses = variant === 'hero' 
-    ? "w-full h-auto min-h-[3rem] bg-white/20 border-white/30 text-white hover:bg-white/30 hover:text-white rounded-xl justify-start text-left font-normal flex-col items-start py-2"
-    : "w-full justify-start text-left h-auto flex-col items-start py-2";
+    ? "w-full h-12 bg-white/20 border-white/30 text-white hover:bg-white/30 hover:text-white rounded-xl justify-between text-left font-normal"
+    : "w-full justify-between text-left h-10";
 
   return (
     <Popover open={isOpen} onOpenChange={setIsOpen}>
@@ -67,16 +67,16 @@ const GuestSelector: React.FC<GuestSelectorProps> = ({
         <Button
           variant="outline"
           className={cn(buttonClasses, className)}
+          title={guestBreakdown || `${total} Guest${total !== 1 ? 's' : ''}`}
         >
-          <div className="flex items-center w-full">
-            <Users className="mr-2 h-4 w-4 flex-shrink-0" />
-            <span className="flex-1">
+          <div className="flex items-center gap-2">
+            <Users className="h-4 w-4 flex-shrink-0" />
+            <span>
               {total} {total === 1 ? 'Guest' : 'Guests'}
             </span>
-            <ChevronDown className="ml-2 h-4 w-4 flex-shrink-0 opacity-50" />
           </div>
           {guestBreakdown && (
-            <span className="text-xs text-muted-foreground mt-1 ml-6">
+            <span className="text-xs opacity-60 truncate max-w-[180px]">
               {guestBreakdown}
             </span>
           )}
@@ -107,7 +107,7 @@ const GuestSelector: React.FC<GuestSelectorProps> = ({
                   size="icon"
                   className="h-8 w-8 rounded-full"
                   onClick={() => handleAdultsChange(1)}
-                  disabled={adults >= 8}
+                  disabled={adults >= 20}
                 >
                   <Plus className="h-3 w-3" />
                 </Button>
@@ -136,7 +136,7 @@ const GuestSelector: React.FC<GuestSelectorProps> = ({
                   size="icon"
                   className="h-8 w-8 rounded-full"
                   onClick={() => handleChildrenChange(1)}
-                  disabled={children >= 6}
+                  disabled={children >= 15}
                 >
                   <Plus className="h-3 w-3" />
                 </Button>
@@ -165,7 +165,7 @@ const GuestSelector: React.FC<GuestSelectorProps> = ({
                   size="icon"
                   className="h-8 w-8 rounded-full"
                   onClick={() => handleInfantsChange(1)}
-                  disabled={infants >= 4}
+                  disabled={infants >= 10}
                 >
                   <Plus className="h-3 w-3" />
                 </Button>
