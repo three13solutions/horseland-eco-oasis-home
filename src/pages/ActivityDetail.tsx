@@ -415,23 +415,6 @@ const ActivityDetail = () => {
                 </div>
               )}
 
-              {/* Action Buttons */}
-              <div className="grid grid-cols-2 gap-3 mt-8">
-                <Button 
-                  className="font-body gap-2 h-12"
-                  onClick={handleAddToStay}
-                  variant={isAdded ? "secondary" : "default"}
-                >
-                  {isAdded ? "✓ Added" : <><Plus className="h-4 w-4" />Add to Stay</>}
-                </Button>
-                <Button 
-                  variant="outline"
-                  className="font-body h-12"
-                  onClick={() => navigate('/booking?tab=activities')}
-                >
-                  View Booking
-                </Button>
-              </div>
             </div>
 
             {/* Right: Image (Top on mobile) */}
