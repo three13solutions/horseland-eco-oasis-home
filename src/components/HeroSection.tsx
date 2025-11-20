@@ -26,6 +26,11 @@ const HeroSection = () => {
   const [slides, setSlides] = useState<Array<{ type: string; content: string; alt: string }>>([]);
   const [isLoading, setIsLoading] = useState(true);
 
+  // Popover states for auto-advance
+  const [checkInOpen, setCheckInOpen] = useState(false);
+  const [checkOutOpen, setCheckOutOpen] = useState(false);
+  const [guestSelectorOpen, setGuestSelectorOpen] = useState(false);
+
   useEffect(() => {
     const fetchPageData = async () => {
       const { data } = await supabase
@@ -101,7 +106,7 @@ const HeroSection = () => {
               <div className="grid grid-cols-1 md:grid-cols-4 gap-4 md:gap-6 items-end">
                 <div className="space-y-2">
                   <label className="text-white/80 text-sm font-medium block text-left">{getTranslation('hero.checkIn', 'Check-in')}</label>
-                  <Popover>
+                  <Popover open={checkInOpen} onOpenChange={setCheckInOpen}>
                     <PopoverTrigger asChild>
                       <Button
                         variant="outline"
@@ -124,6 +129,11 @@ const HeroSection = () => {
                           if (date && checkOut && date >= checkOut) {
                             setCheckOut(undefined);
                           }
+                          // Auto-advance: close check-in and open check-out
+                          if (date) {
+                            setCheckInOpen(false);
+                            setTimeout(() => setCheckOutOpen(true), 100);
+                          }
                         }}
                         disabled={(date) => date < new Date(new Date().setHours(0, 0, 0, 0))}
                         initialFocus
@@ -134,7 +144,7 @@ const HeroSection = () => {
                 
                 <div className="space-y-2">
                   <label className="text-white/80 text-sm font-medium block text-left">{getTranslation('hero.checkOut', 'Check-out')}</label>
-                  <Popover>
+                  <Popover open={checkOutOpen} onOpenChange={setCheckOutOpen}>
                     <PopoverTrigger asChild>
                       <Button
                         variant="outline"
@@ -149,9 +159,22 @@ const HeroSection = () => {
                     </PopoverTrigger>
                     <PopoverContent className="w-auto p-0 bg-background/95 backdrop-blur-xl border-2 shadow-2xl" align="start">
                       <Calendar
-                        mode="single"
-                        selected={checkOut}
-                        onSelect={setCheckOut}
+                        mode="range"
+                        selected={checkIn ? { from: checkIn, to: checkOut } : undefined}
+                        onSelect={(range) => {
+                          if (range?.to) {
+                            setCheckOut(range.to);
+                            // Auto-advance: close check-out and open guest selector
+                            setCheckOutOpen(false);
+                            setTimeout(() => setGuestSelectorOpen(true), 100);
+                          } else if (range?.from && !range?.to) {
+                            // Single click sets the checkout date
+                            setCheckOut(range.from);
+                            // Auto-advance: close check-out and open guest selector
+                            setCheckOutOpen(false);
+                            setTimeout(() => setGuestSelectorOpen(true), 100);
+                          }
+                        }}
                         defaultMonth={checkIn}
                         disabled={(date) => {
                           const today = new Date(new Date().setHours(0, 0, 0, 0));
@@ -168,6 +191,8 @@ const HeroSection = () => {
                   <label className="text-white/80 text-sm font-medium block text-left">{getTranslation('hero.guests', 'Guests')}</label>
                   <GuestSelector
                     totalGuests={guests}
+                    open={guestSelectorOpen}
+                    onOpenChange={setGuestSelectorOpen}
                     onGuestsChange={(total, a, c) => {
                       setGuests(total);
                       setAdults(a);
