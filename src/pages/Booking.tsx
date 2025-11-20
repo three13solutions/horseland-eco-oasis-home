@@ -1351,19 +1351,19 @@ const Booking = () => {
         guest_name: guestDetails.name,
         guest_email: guestDetails.email,
         guest_phone: guestDetails.phone,
-        room_type_id: selectedRoomType?.id,
-        check_in: checkIn,
-        check_out: checkOut,
-        guests_count: adultsCount + childrenCount, // Total paying guests (infants free)
-        total_amount: calculateTotal(),
-        payment_status: 'confirmed',
+        room_type_id: selectedRoomType?.id || null,
+        check_in: checkIn || null,
+        check_out: checkOut || null,
+        guests_count: (adultsCount || 0) + (childrenCount || 0), // Total paying guests (infants free)
+        total_amount: calculateTotal() || 0,
+        payment_status: 'completed',
         payment_id: paymentId,
         payment_order_id: orderId,
         payment_method: 'razorpay',
         // Store meal plan information
         meal_plan_code: selectedMealPlan || 'room_only',
-        meal_cost: 0, // Meal cost is now included in room rate adjustment
-        cancellation_policy_code: selectedCancellationPolicy || 'refundable',
+        meal_cost: selectedVariant?.meal_cost || 0,
+        cancellation_policy_code: selectedCancellationPolicy || 'flexible',
         room_cost: selectedVariant?.room_rate || 0,
         rate_breakdown: {
           meal_plan: selectedMealPlan,
@@ -1391,8 +1391,14 @@ const Booking = () => {
           price: a.price,
           quantity: a.quantity
         })),
-        notes: guestDetails.specialRequests
+        selected_bedding: selectedBedding.map(bed => ({
+          type: bed.type,
+          price: bed.price
+        })),
+        notes: guestDetails.specialRequests || null
       };
+
+      console.log('Creating booking with data:', bookingData);
 
       const { data: bookingResult, error } = await supabase
         .from('bookings')
@@ -1402,9 +1408,10 @@ const Booking = () => {
 
       if (error) {
         console.error('Error saving booking:', error);
+        console.error('Booking data that failed:', bookingData);
         toast({
           title: "Booking Error",
-          description: "Payment successful but booking couldn't be saved. Please contact support.",
+          description: `Payment successful but booking couldn't be saved: ${error.message}. Please contact support with payment ID: ${paymentId}`,
           variant: "destructive",
         });
         return;
