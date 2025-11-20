@@ -4,6 +4,7 @@ import Navigation from '../components/Navigation';
 import DynamicFooter from '../components/DynamicFooter';
 import CombinedFloating from '../components/CombinedFloating';
 import MediaAsset from '../components/MediaAsset';
+import GuestSelector from '../components/GuestSelector';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Calendar as CalendarComponent } from '@/components/ui/calendar';
@@ -36,7 +37,9 @@ const RoomDetail = () => {
   const [seasons, setSeasons] = useState<any[]>([]);
   const [checkInDate, setCheckInDate] = useState<Date>();
   const [checkOutDate, setCheckOutDate] = useState<Date>();
-  const [guests, setGuests] = useState<number>(2);
+  const [adults, setAdults] = useState<number>(2);
+  const [children, setChildren] = useState<number>(0);
+  const [infants, setInfants] = useState<number>(0);
 
   // Fetch room data from database
   useEffect(() => {
@@ -197,10 +200,14 @@ const RoomDetail = () => {
       return tomorrow;
     })();
     
+    const totalGuests = adults + children + infants;
     const searchParams = new URLSearchParams({
       checkIn: checkIn.toISOString().split('T')[0],
       checkOut: checkOut.toISOString().split('T')[0],
-      guests: guests.toString(),
+      guests: totalGuests.toString(),
+      adults: adults.toString(),
+      children: children.toString(),
+      infants: infants.toString(),
       roomTypeId: roomData.id
     });
     
@@ -578,15 +585,14 @@ const RoomDetail = () => {
                     </div>
                     <div>
                       <label className="block text-sm font-body font-medium mb-2">Guests</label>
-                      <select 
-                        className="w-full p-3 border rounded-lg font-body focus:outline-none focus:ring-2 focus:ring-primary"
-                        value={guests}
-                        onChange={(e) => setGuests(Number(e.target.value))}
-                      >
-                        {Array.from({ length: roomData.max_guests }, (_, i) => i + 1).map(num => (
-                          <option key={num} value={num}>{num} Guest{num > 1 ? 's' : ''}</option>
-                        ))}
-                      </select>
+                      <GuestSelector
+                        totalGuests={adults + children + infants}
+                        onGuestsChange={(total, adultsCount, childrenCount, infantsCount) => {
+                          setAdults(adultsCount || 0);
+                          setChildren(childrenCount || 0);
+                          setInfants(infantsCount || 0);
+                        }}
+                      />
                     </div>
                   </div>
 
@@ -600,7 +606,7 @@ const RoomDetail = () => {
 
                   <div className="text-center">
                     <p className="text-xs text-muted-foreground font-body mb-2">
-                      Free cancellation up to 7 days before arrival
+                      Cancellation policies vary by rate plan
                     </p>
                     <p className="text-xs text-muted-foreground font-body">
                       Need help? Contact us for details
