@@ -44,6 +44,7 @@ const Activities = () => {
   const [daysFilter, setDaysFilter] = useState<string>('all');
   const [bookingTypeFilter, setBookingTypeFilter] = useState<string>('all');
   const [durationFilter, setDurationFilter] = useState<string>('all');
+  const [priceCategoryFilter, setPriceCategoryFilter] = useState<'all' | 'free' | 'paid'>('all');
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [sidebarOpen, setSidebarOpen] = useState(false);
   
@@ -120,6 +121,10 @@ const Activities = () => {
   };
 
   const filteredActivities = activities.filter(activity => {
+    // Price category filter
+    if (priceCategoryFilter === 'free' && activity.price_amount && activity.price_amount > 0) return false;
+    if (priceCategoryFilter === 'paid' && (!activity.price_amount || activity.price_amount === 0)) return false;
+    
     // Location filter
     if (locationFilter === 'on_property' && activity.is_on_property !== true) return false;
     if (locationFilter === 'off_property' && activity.is_on_property !== false) return false;
@@ -1349,6 +1354,31 @@ const Activities = () => {
 
             {/* Main Content Area */}
             <div className="flex-1 min-w-0">
+              {/* Price Category Filter Buttons */}
+              <div className="flex gap-3 mb-6">
+                <Button
+                  variant={priceCategoryFilter === 'all' ? 'default' : 'outline'}
+                  onClick={() => setPriceCategoryFilter('all')}
+                  className="font-body"
+                >
+                  All Activities
+                </Button>
+                <Button
+                  variant={priceCategoryFilter === 'free' ? 'default' : 'outline'}
+                  onClick={() => setPriceCategoryFilter('free')}
+                  className="font-body"
+                >
+                  Free Activities
+                </Button>
+                <Button
+                  variant={priceCategoryFilter === 'paid' ? 'default' : 'outline'}
+                  onClick={() => setPriceCategoryFilter('paid')}
+                  className="font-body"
+                >
+                  Paid Activities
+                </Button>
+              </div>
+
               {/* Header with Results count and View Toggle */}
               <div className="flex items-center justify-between mb-6">
                 <p className="text-muted-foreground font-body">
@@ -1384,6 +1414,7 @@ const Activities = () => {
                   <Button
                     variant="outline"
                     onClick={() => {
+                      setPriceCategoryFilter('all');
                       setLocationFilter('all');
                       setSeasonFilter('all');
                       setAudienceFilter('all');
