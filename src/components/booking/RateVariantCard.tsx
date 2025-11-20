@@ -95,9 +95,10 @@ export const RateVariantCard: React.FC<RateVariantCardProps> = ({
               <>
                 <Check className="h-4 w-4 text-green-600 mt-0.5 flex-shrink-0" />
                 <div className="flex flex-col">
-                  <span>{variant.cancellation_terms?.terms || 'Flexible cancellation'}</span>
-                  {variant.cancellation_terms?.terms?.includes('Credit Voucher') && (
-                    <span className="text-xs text-muted-foreground mt-0.5">Redeemable within 6 Months</span>
+                  {variant.cancellation_terms?.terms?.includes('Credit Voucher') ? (
+                    <span className="text-muted-foreground">Redeemable within 6 Months</span>
+                  ) : (
+                    <span>{variant.cancellation_terms?.terms || 'Flexible cancellation'}</span>
                   )}
                 </div>
               </>
