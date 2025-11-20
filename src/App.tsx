@@ -63,6 +63,7 @@ import BaseConfiguration from "./pages/admin/BaseConfiguration";
 import BasePricing from "./pages/admin/BasePricing";
 import PricingRules from "./pages/admin/PricingRules";
 import LiveRateCard from "./pages/admin/LiveRateCard";
+import GSTConfiguration from "./pages/admin/GSTConfiguration";
 import { Navigate } from 'react-router-dom';
 // Old imports kept for backwards compatibility within consolidated pages
 import CategoryPricing from "./pages/admin/CategoryPricing";
@@ -124,14 +125,15 @@ function App() {
                 <Route path="pricing/rates" element={<BasePricing />} />
                 <Route path="pricing/rules" element={<PricingRules />} />
                 <Route path="pricing/rate-card" element={<LiveRateCard />} />
+                <Route path="pricing/meal-plans" element={<MealPlansManagement />} />
+                <Route path="pricing/cancellation-policies" element={<CancellationPoliciesManagement />} />
+                <Route path="pricing/gst" element={<GSTConfiguration />} />
                 
                 {/* Redirects for backwards compatibility */}
                 <Route path="pricing/categories" element={<Navigate to="/admin/pricing/rates?tab=categories" replace />} />
                 <Route path="pricing/units" element={<Navigate to="/admin/pricing/rates?tab=units" replace />} />
             <Route path="pricing/seasons" element={<Navigate to="/admin/pricing/config?section=seasons" replace />} />
             <Route path="pricing/rounding" element={<Navigate to="/admin/pricing/config?section=rounding" replace />} />
-            <Route path="pricing/meal-plans" element={<MealPlansManagement />} />
-            <Route path="pricing/cancellation-policies" element={<CancellationPoliciesManagement />} />
             <Route path="rooms" element={<RoomManagement />} />
             <Route path="packages" element={<PackageManagement />} />
             <Route path="meals" element={<MealsManagement />} />
