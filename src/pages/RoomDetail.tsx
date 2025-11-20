@@ -520,9 +520,9 @@ const RoomDetail = () => {
                     )}
                   </div>
 
-                  <div className="space-y-4 mb-6">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
                     <div>
-                      <label className="block text-sm font-body font-medium mb-2">Select Dates</label>
+                      <label className="block text-sm font-body font-medium mb-2">Check-in Date</label>
                       <Popover>
                         <PopoverTrigger asChild>
                           <Button
@@ -533,41 +533,72 @@ const RoomDetail = () => {
                             )}
                           >
                             <CalendarIcon className="mr-2 h-4 w-4" />
-                            {checkInDate && checkOutDate ? (
-                              `${format(checkInDate, 'PPP')} - ${format(checkOutDate, 'PPP')}`
-                            ) : checkInDate ? (
-                              `${format(checkInDate, 'PPP')} - Select check-out`
-                            ) : (
-                              'Select check-in and check-out dates'
-                            )}
+                            {checkInDate ? format(checkInDate, "PPP") : "Pick a date"}
                           </Button>
                         </PopoverTrigger>
                         <PopoverContent className="w-auto p-0 bg-background/95 backdrop-blur-xl border-2 shadow-2xl" align="start">
-                          <CalendarComponent 
-                            mode="range" 
-                            selected={{ from: checkInDate, to: checkOutDate }}
-                            onSelect={(range) => {
-                              setCheckInDate(range?.from);
-                              setCheckOutDate(range?.to);
+                          <CalendarComponent
+                            mode="single"
+                            selected={checkInDate}
+                            onSelect={(newDate) => {
+                              setCheckInDate(newDate);
+                              // Clear checkout if new check-in is after current checkout
+                              if (newDate && checkOutDate && newDate >= checkOutDate) {
+                                setCheckOutDate(undefined);
+                              }
                             }}
                             disabled={(date) => date < new Date(new Date().setHours(0, 0, 0, 0))}
-                            numberOfMonths={2}
-                            initialFocus 
+                            initialFocus
                           />
                         </PopoverContent>
                       </Popover>
                     </div>
                     <div>
-                      <label className="block text-sm font-body font-medium mb-2">Guests</label>
-                      <GuestSelector
-                        totalGuests={adults + children + infants}
-                        onGuestsChange={(total, adultsCount, childrenCount, infantsCount) => {
-                          setAdults(adultsCount || 0);
-                          setChildren(childrenCount || 0);
-                          setInfants(infantsCount || 0);
-                        }}
-                      />
+                      <label className="block text-sm font-body font-medium mb-2">Check-out Date</label>
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <Button
+                            variant="outline"
+                            className={cn(
+                              "w-full justify-start text-left font-normal",
+                              !checkOutDate && "text-muted-foreground"
+                            )}
+                          >
+                            <CalendarIcon className="mr-2 h-4 w-4" />
+                            {checkOutDate ? format(checkOutDate, "PPP") : "Pick a date"}
+                          </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-auto p-0 bg-background/95 backdrop-blur-xl border-2 shadow-2xl" align="start">
+                          <CalendarComponent
+                            mode="range"
+                            selected={checkInDate && checkOutDate ? { from: checkInDate, to: checkOutDate } : undefined}
+                            onSelect={(range) => {
+                              if (range?.to) {
+                                setCheckOutDate(range.to);
+                              }
+                            }}
+                            defaultMonth={checkInDate}
+                            disabled={(date) => {
+                              const today = new Date(new Date().setHours(0, 0, 0, 0));
+                              return !checkInDate || date <= checkInDate || date < today;
+                            }}
+                            initialFocus
+                          />
+                        </PopoverContent>
+                      </Popover>
                     </div>
+                  </div>
+
+                  <div className="mb-6">
+                    <label className="block text-sm font-body font-medium mb-2">Guests</label>
+                    <GuestSelector
+                      totalGuests={adults + children + infants}
+                      onGuestsChange={(total, adultsCount, childrenCount, infantsCount) => {
+                        setAdults(adultsCount || 0);
+                        setChildren(childrenCount || 0);
+                        setInfants(infantsCount || 0);
+                      }}
+                    />
                   </div>
 
                   <Button onClick={handleBookNow} className="w-full mb-4 font-body" size="lg">
