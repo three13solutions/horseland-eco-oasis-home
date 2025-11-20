@@ -23,7 +23,8 @@ import {
   Grid3x3,
   Image as ImageIcon,
   DollarSign,
-  Zap
+  Zap,
+  Percent
 } from 'lucide-react';
 import {
   Sidebar,
@@ -114,6 +115,12 @@ const pricingMenuItems = [
     label: 'Cancellation Policies', 
     path: '/admin/pricing/cancellation-policies', 
     description: 'Refund policy options' 
+  },
+  { 
+    icon: Percent, 
+    label: 'GST Configuration', 
+    path: '/admin/pricing/gst', 
+    description: 'Tiered GST rates' 
   },
   { 
     icon: Calendar, 
