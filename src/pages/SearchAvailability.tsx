@@ -114,12 +114,19 @@ const SearchAvailability = () => {
     }
   }, [checkIn, checkOut]);
 
-  // Set room type filter if coming from specific room
+  // Set room type filter based on context
   useEffect(() => {
-    if (roomTypeIdParam && categories.length > 0 && !filters.roomType) {
-      setFilters(prev => ({ ...prev, roomType: roomTypeIdParam }));
+    if (categories.length > 0 && !filters.roomType) {
+      if (roomTypeIdParam) {
+        // Coming from specific room card - select only that room
+        setFilters(prev => ({ ...prev, roomType: roomTypeIdParam }));
+      } else {
+        // Default - select all room types
+        const allRoomTypeIds = categories.map(c => c.id).join(',');
+        setFilters(prev => ({ ...prev, roomType: allRoomTypeIds }));
+      }
     }
-  }, [roomTypeIdParam, categories]);
+  }, [categories, roomTypeIdParam]);
 
   const handleSearch = async () => {
     if (!checkIn || !checkOut) {
