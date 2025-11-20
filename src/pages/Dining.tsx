@@ -187,9 +187,6 @@ const Dining = () => {
             </div>
           </div>
         </div>
-        
-        {/* Full-width Carousel */}
-        <DiningGalleryCollage />
       </section>
 
       {/* Special Dietary Needs */}
@@ -267,6 +264,11 @@ const Dining = () => {
             Inform About Dietary Needs
           </Button>
         </div>
+      </section>
+
+      {/* Image Slider */}
+      <section className="py-0">
+        <DiningGalleryCollage />
       </section>
 
       {/* Separate Kitchens Section */}
