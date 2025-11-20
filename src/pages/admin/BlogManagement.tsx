@@ -16,6 +16,7 @@ import { useToast } from '@/hooks/use-toast';
 import { MediaPicker } from '@/components/admin/MediaPicker';
 import { format } from 'date-fns';
 import { TranslationField } from '@/components/admin/TranslationField';
+import RichTextEditor from '@/components/admin/RichTextEditor';
 
 interface BlogPost {
   id?: string;
@@ -493,13 +494,10 @@ const BlogManagement = () => {
 
                       <div>
                         <Label htmlFor="content">Content *</Label>
-                        <Textarea
-                          id="content"
+                        <RichTextEditor
                           value={formData.content}
-                          onChange={(e) => setFormData(prev => ({ ...prev, content: e.target.value }))}
-                          placeholder="Write your post content (supports markdown)"
-                          rows={10}
-                          className="font-mono text-sm"
+                          onChange={(value) => setFormData(prev => ({ ...prev, content: value }))}
+                          placeholder="Write your post content..."
                         />
                       </div>
                     </>
