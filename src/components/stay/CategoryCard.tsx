@@ -221,8 +221,8 @@ const CategoryCard: React.FC<Props> = ({ category, onViewDetails, onBookNow, vie
       
       navigate(`/booking?${searchParams.toString()}`);
     } else {
-      // No dates - navigate to search availability page
-      navigate('/search-availability');
+      // No dates - navigate to search availability page with roomTypeId to filter
+      navigate(`/search-availability?roomTypeId=${category.id}`);
     }
   };
 

@@ -83,6 +83,7 @@ const SearchAvailability = () => {
   const [adults, setAdults] = useState<number>(parseInt(searchParams.get('adults') || '2'));
   const [children, setChildren] = useState<number>(parseInt(searchParams.get('children') || '0'));
   const [infants, setInfants] = useState<number>(parseInt(searchParams.get('infants') || '0'));
+  const roomTypeIdParam = searchParams.get('roomTypeId'); // Filter to specific room if provided
   
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(false);
@@ -134,11 +135,17 @@ const SearchAvailability = () => {
     setSearched(true);
 
     try {
-      const { data: allRooms, error: roomsError } = await supabase
+      // If roomTypeId is provided, only fetch that specific room
+      let query = supabase
         .from('room_types')
         .select('*')
-        .eq('is_published', true)
-        .order('name');
+        .eq('is_published', true);
+      
+      if (roomTypeIdParam) {
+        query = query.eq('id', roomTypeIdParam);
+      }
+      
+      const { data: allRooms, error: roomsError } = await query.order('name');
 
       if (roomsError) throw roomsError;
 
