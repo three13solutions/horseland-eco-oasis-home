@@ -214,6 +214,20 @@ const Booking = () => {
     }
   });
 
+  // Fetch GST tiers
+  const { data: gstTiers = [] } = useQuery({
+    queryKey: ['gst-tiers-booking'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('gst_tiers')
+        .select('*')
+        .eq('is_active', true)
+        .order('display_order');
+      if (error) throw error;
+      return data || [];
+    }
+  });
+
 
   // Load package if packageId is present
   useEffect(() => {
@@ -807,9 +821,26 @@ const Booking = () => {
     return roomTotalWithMealAndPolicy + addonsTotal + pickupTotal + beddingTotal;
   };
 
+  // Calculate GST rate based on per-night price and database tiers
+  const getGSTRate = () => {
+    if (!selectedVariant || nights === 0) return 0.18; // Default to 18%
+    
+    const perNightRate = selectedVariant.price_per_night;
+    
+    // Find applicable GST tier
+    const applicableTier = gstTiers.find(tier => {
+      const minMatch = perNightRate >= tier.min_amount;
+      const maxMatch = tier.max_amount === null || perNightRate <= tier.max_amount;
+      return minMatch && maxMatch;
+    });
+    
+    return applicableTier ? applicableTier.gst_percentage / 100 : 0.18; // Default to 18%
+  };
+
   const calculateTotal = () => {
     const subtotal = calculateSubtotal();
-    const gst = subtotal * RAZORPAY_CONFIG.GST_RATE;
+    const gstRate = getGSTRate();
+    const gst = subtotal * gstRate;
     return subtotal + gst;
   };
 
@@ -2452,8 +2483,17 @@ const Booking = () => {
                           </div>
                           
                           <div className="flex justify-between gap-2 text-sm">
-                            <span className="text-muted-foreground">GST (18%):</span>
-                            <span className="font-medium whitespace-nowrap">₹{(calculateSubtotal() * RAZORPAY_CONFIG.GST_RATE).toLocaleString()}</span>
+                            <span className="text-muted-foreground">
+                              GST ({(getGSTRate() * 100).toFixed(0)}%):
+                              {selectedVariant && nights > 0 && (
+                                <span className="text-xs ml-1">
+                                  {getGSTRate() === 0.05 
+                                    ? `(Rate ≤ ₹7,500/night)` 
+                                    : `(Rate > ₹7,500/night)`}
+                                </span>
+                              )}
+                            </span>
+                            <span className="font-medium whitespace-nowrap">₹{(calculateSubtotal() * getGSTRate()).toLocaleString()}</span>
                           </div>
                           
                           <Separator />
