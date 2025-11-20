@@ -2178,7 +2178,7 @@ const Booking = () => {
                           {/* Check-in Date */}
                           <div className="space-y-2">
                             <label className="text-sm font-medium">Check-in</label>
-                            <Popover>
+                            <Popover open={editCheckInOpen} onOpenChange={setEditCheckInOpen}>
                               <PopoverTrigger asChild>
                                 <Button 
                                   variant="outline" 
@@ -2200,6 +2200,11 @@ const Booking = () => {
                                     // Clear checkout if new check-in is after current checkout
                                     if (date && tempCheckOut && date >= tempCheckOut) {
                                       setTempCheckOut(undefined);
+                                    }
+                                    // Auto-advance: close check-in and open check-out
+                                    if (date) {
+                                      setEditCheckInOpen(false);
+                                      setTimeout(() => setEditCheckOutOpen(true), 100);
                                     }
                                   }}
                                   disabled={(date) => date < new Date(new Date().setHours(0, 0, 0, 0))}
