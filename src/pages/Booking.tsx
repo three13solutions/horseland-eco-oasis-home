@@ -64,7 +64,7 @@ interface SelectedAddon extends Addon {
 
 interface GuestDetails {
   name: string;
-  gender: 'male' | 'female' | 'other' | 'prefer_not_to_say' | '';
+  gender: 'male' | 'female' | 'other' | '';
   email: string;
   phone: string;
   idType: 'passport' | 'aadhar' | 'driving_license' | 'voter_id' | '';
@@ -1883,9 +1883,9 @@ const Booking = () => {
                         <p className="text-sm text-foreground">
                           <span className="font-semibold">Note:</span> Matheran is a car-free hill station. 
                           Transfers are available to/from Matheran Car Park (Dasturi Naka). From the car park, 
-                          various eco-friendly transport options are available to reach the property.{' '}
+                          various eco-friendly transport options are available to reach the property at an additional fees.{' '}
                           <a href="/faq" className="text-primary hover:underline font-medium">
-                            Learn more about transport options
+                            Learn more about transport options within Matheran
                           </a>
                         </p>
                       </div>
@@ -2060,7 +2060,6 @@ const Booking = () => {
                             <option value="male">Male</option>
                             <option value="female">Female</option>
                             <option value="other">Other</option>
-                            <option value="prefer_not_to_say">Prefer not to say</option>
                           </select>
                         </div>
                         <div>
