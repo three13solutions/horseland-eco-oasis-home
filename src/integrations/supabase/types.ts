@@ -1027,6 +1027,42 @@ export type Database = {
           },
         ]
       }
+      gst_tiers: {
+        Row: {
+          created_at: string
+          display_order: number
+          gst_percentage: number
+          id: string
+          is_active: boolean
+          max_amount: number | null
+          min_amount: number
+          tier_name: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          display_order?: number
+          gst_percentage: number
+          id?: string
+          is_active?: boolean
+          max_amount?: number | null
+          min_amount?: number
+          tier_name: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          display_order?: number
+          gst_percentage?: number
+          id?: string
+          is_active?: boolean
+          max_amount?: number | null
+          min_amount?: number
+          tier_name?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       guest_composition_rules: {
         Row: {
           base_guests_count: number
@@ -2651,14 +2687,24 @@ export type Database = {
               final_price: number
             }[]
           }
-      calculate_invoice_totals: {
-        Args: { p_subtotal: number }
-        Returns: {
-          gst_amount: number
-          subtotal: number
-          total_amount: number
-        }[]
-      }
+      calculate_invoice_totals:
+        | {
+            Args: { p_per_night_rate?: number; p_subtotal: number }
+            Returns: {
+              gst_amount: number
+              gst_rate: number
+              subtotal: number
+              total_amount: number
+            }[]
+          }
+        | {
+            Args: { p_subtotal: number }
+            Returns: {
+              gst_amount: number
+              subtotal: number
+              total_amount: number
+            }[]
+          }
       calculate_meal_plan_cost: {
         Args: {
           p_guests_count: number
@@ -2718,6 +2764,7 @@ export type Database = {
         }[]
       }
       get_current_user_role: { Args: never; Returns: string }
+      get_gst_rate_for_amount: { Args: { p_amount: number }; Returns: number }
       get_guest_available_credit: {
         Args: { p_guest_id: string }
         Returns: number
