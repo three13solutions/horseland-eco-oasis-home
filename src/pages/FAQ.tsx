@@ -51,7 +51,7 @@ const FAQ = () => {
         },
         {
           question: 'What is your cancellation policy?',
-          answer: 'Cancellations made 7 days before arrival receive a full refund minus processing charges. Cancellations made 3-7 days before arrival receive a 50% refund. Cancellations within 72 hours of arrival are non-refundable. Special packages may have different cancellation terms.'
+          answer: 'Cancellation policies vary by rate plan and are displayed during the booking process. Different meal plans and room rates may have different cancellation terms, ranging from flexible to non-refundable options. Please review the specific cancellation policy for your selected rate before confirming your booking.'
         },
         {
           question: 'Do you accept group bookings?',
