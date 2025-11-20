@@ -228,6 +228,58 @@ const Booking = () => {
     }
   });
 
+  // Fetch rate variants when room type and dates are selected
+  const { data: rateVariantsData } = useQuery({
+    queryKey: ['rate-variants', selectedRoomType?.id, checkIn, checkOut, adultsCount, childrenCount, infantsCount],
+    queryFn: async () => {
+      if (!selectedRoomType?.id || !checkIn || !checkOut) return null;
+      
+      const { data, error } = await supabase.rpc('calculate_rate_variants', {
+        p_room_type_id: selectedRoomType.id,
+        p_check_in: checkIn,
+        p_check_out: checkOut,
+        p_adults_count: adultsCount,
+        p_children_count: childrenCount,
+        p_infants_count: infantsCount,
+        p_booking_channel: 'direct'
+      });
+      
+      if (error) {
+        console.error('Error fetching rate variants:', error);
+        return null;
+      }
+      return data;
+    },
+    enabled: !!selectedRoomType?.id && !!checkIn && !!checkOut
+  });
+
+  // Parse rate variants
+  let rateVariants: RateVariant[] = [];
+  if (rateVariantsData && typeof rateVariantsData === 'object' && !Array.isArray(rateVariantsData)) {
+    // It's returned as JSONB, might need parsing
+    try {
+      rateVariants = Array.isArray(rateVariantsData) ? rateVariantsData as unknown as RateVariant[] : [];
+    } catch (e) {
+      console.error('Error parsing rate variants:', e);
+    }
+  } else if (Array.isArray(rateVariantsData)) {
+    rateVariants = rateVariantsData as unknown as RateVariant[];
+  }
+
+  // Update selected variant when meal plan or cancellation policy changes
+  useEffect(() => {
+    if (rateVariants.length > 0 && selectedMealPlan && selectedCancellationPolicy) {
+      const matchingVariant = rateVariants.find(
+        (v: RateVariant) => 
+          v.meal_plan_code === selectedMealPlan && 
+          v.cancellation_policy_code === selectedCancellationPolicy
+      );
+      if (matchingVariant) {
+        setSelectedVariant(matchingVariant);
+      }
+    }
+  }, [rateVariants, selectedMealPlan, selectedCancellationPolicy]);
+
 
   // Load package if packageId is present
   useEffect(() => {
