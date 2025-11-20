@@ -525,7 +525,7 @@ const RoomDetail = () => {
                     )}
                   </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                  <div className="space-y-4 mb-6">
                     <div>
                       <label className="block text-sm font-body font-medium mb-2">Check-in Date</label>
                       <Popover open={checkInOpen} onOpenChange={setCheckInOpen}>
