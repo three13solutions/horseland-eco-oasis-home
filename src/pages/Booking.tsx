@@ -2316,33 +2316,50 @@ const Booking = () => {
                     <Separator />
 
                     <div className="space-y-3">
+                      <div className="space-y-2 bg-muted/30 p-3 rounded-lg">
+                        <div className="font-medium text-sm mb-2">Guest Breakdown:</div>
+                        <div className="flex justify-between gap-2 text-sm">
+                          <span className="text-muted-foreground">
+                            {adultsCount} {adultsCount === 1 ? 'Adult' : 'Adults'}
+                          </span>
+                          <span className="font-medium">
+                            Included in room rate
+                          </span>
+                        </div>
+                        
+                        {childrenCount > 0 && (
+                          <div className="flex justify-between gap-2 text-sm">
+                            <span className="text-muted-foreground">
+                              {childrenCount} {childrenCount === 1 ? 'Child' : 'Children'}
+                            </span>
+                            <span className="font-medium">
+                              Included in room rate
+                            </span>
+                          </div>
+                        )}
+                        
+                        {infantsCount > 0 && (
+                          <div className="flex justify-between gap-2 text-sm">
+                            <span className="text-muted-foreground">
+                              {infantsCount} {infantsCount === 1 ? 'Infant' : 'Infants'}
+                            </span>
+                            <span className="font-medium text-green-600">
+                              Free
+                            </span>
+                          </div>
+                        )}
+                      </div>
+
+                      <Separator />
+
                       <div className="flex justify-between gap-2 text-sm">
                         <span className="text-muted-foreground">
-                          Room for {adultsCount} {adultsCount === 1 ? 'Adult' : 'Adults'} ({nights} {nights === 1 ? 'night' : 'nights'}):
+                          Room Rate ({nights} {nights === 1 ? 'night' : 'nights'}):
                         </span>
                         <span className="font-semibold whitespace-nowrap">
                           ₹{selectedVariant?.total_price ? selectedVariant.total_price.toLocaleString() : '0'}
                         </span>
                       </div>
-                      
-                      {childrenCount > 0 && (
-                        <div className="flex justify-between gap-2 text-sm">
-                          <span className="text-muted-foreground">
-                            ({childrenCount} {childrenCount === 1 ? 'Child' : 'Children'} included above)
-                          </span>
-                        </div>
-                      )}
-                      
-                      {infantsCount > 0 && (
-                        <div className="flex justify-between gap-2 text-sm">
-                          <span className="text-muted-foreground">
-                            {infantsCount} {infantsCount === 1 ? 'Infant' : 'Infants'} (Free):
-                          </span>
-                          <span className="font-semibold whitespace-nowrap text-green-600">
-                            ₹0
-                          </span>
-                        </div>
-                      )}
                       
                       {(() => {
                         if (!selectedVariant || selectedVariant.policy_adjustment === 0) return null;
