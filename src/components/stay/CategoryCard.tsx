@@ -39,7 +39,7 @@ type Props = {
 const CategoryCard: React.FC<Props> = ({ category, onViewDetails, onBookNow, viewMode = 'grid', checkIn, checkOut, guests = 2, adults = 2, children = 0, hideBookNow = false }) => {
   const navigate = useNavigate();
   const [selectedMealPlan, setSelectedMealPlan] = useState<string>('');
-  const [selectedCancellationPolicy, setSelectedCancellationPolicy] = useState<string>('refundable_credit');
+  const [selectedCancellationPolicy, setSelectedCancellationPolicy] = useState<string>('');
 
   // Fetch dynamic pricing variants
   const { data: variants, isLoading } = useDynamicPricing({
@@ -52,14 +52,20 @@ const CategoryCard: React.FC<Props> = ({ category, onViewDetails, onBookNow, vie
     enabled: !!(checkIn && checkOut)
   });
 
-  // Initialize selected meal plan when variants load - default to Full Board
+  // Initialize selected meal plan and cancellation policy when variants load
   React.useEffect(() => {
     if (variants && variants.length > 0 && !selectedMealPlan) {
       // Default to Full Board (all_meals_inclusive) if available
       const fullBoardVariant = variants.find(v => v.meal_plan_code === 'all_meals_inclusive');
       const defaultVariant = fullBoardVariant || variants.find(v => v.is_featured) || variants[0];
       setSelectedMealPlan(defaultVariant.meal_plan_code);
-      setSelectedCancellationPolicy(defaultVariant.cancellation_policy_code);
+      
+      // Default to refundable_credit cancellation policy if available
+      const creditVariant = variants.find(v => 
+        v.meal_plan_code === defaultVariant.meal_plan_code && 
+        v.cancellation_policy_code.includes('credit')
+      );
+      setSelectedCancellationPolicy(creditVariant?.cancellation_policy_code || defaultVariant.cancellation_policy_code);
     }
   }, [variants, selectedMealPlan]);
 
@@ -117,7 +123,7 @@ const CategoryCard: React.FC<Props> = ({ category, onViewDetails, onBookNow, vie
   const cancellationPolicies = useMemo(() => {
     if (!variants || variants.length === 0) {
       return [
-        { code: 'refundable_credit', name: 'Credit Voucher', description: 'Refundable as credit', icon: CreditCard, redemptionText: 'Redeemable within 6 Months' },
+        { code: 'refundable_credit', name: 'Credit Voucher', description: 'Redeemable within 6 Months', icon: CreditCard, redemptionText: null },
         { code: 'non_refundable', name: 'Non-Refundable', description: 'Best price', icon: XCircle, redemptionText: null }
       ];
     }
@@ -133,10 +139,11 @@ const CategoryCard: React.FC<Props> = ({ category, onViewDetails, onBookNow, vie
         description = 'Best price';
         icon = XCircle;
       } else {
-        description = 'Refundable';
         icon = CreditCard;
         if (name.toLowerCase().includes('credit') || name.toLowerCase().includes('voucher')) {
-          redemptionText = 'Redeemable within 6 Months';
+          description = 'Redeemable within 6 Months';
+        } else {
+          description = 'Refundable';
         }
       }
       
@@ -322,9 +329,6 @@ const CategoryCard: React.FC<Props> = ({ category, onViewDetails, onBookNow, vie
                           <Icon className={`h-4 w-4 mb-1 ${isSelected ? 'text-primary' : 'text-muted-foreground'}`} />
                           <div className="text-[10px] font-medium">{cp.name}</div>
                           <div className="text-[9px] text-muted-foreground">{cp.description}</div>
-                          {cp.redemptionText && (
-                            <div className="text-[8px] text-muted-foreground mt-0.5">{cp.redemptionText}</div>
-                          )}
                         </button>
                       );
                     })}
@@ -466,9 +470,6 @@ const CategoryCard: React.FC<Props> = ({ category, onViewDetails, onBookNow, vie
                       <Icon className={`h-4 w-4 mb-1 ${isSelected ? 'text-primary' : 'text-muted-foreground'}`} />
                       <div className="text-[10px] font-medium">{cp.name}</div>
                       <div className="text-[9px] text-muted-foreground">{cp.description}</div>
-                      {cp.redemptionText && (
-                        <div className="text-[8px] text-muted-foreground mt-0.5">{cp.redemptionText}</div>
-                      )}
                     </button>
                   );
                 })}
