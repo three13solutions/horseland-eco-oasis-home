@@ -21,7 +21,7 @@ export const RateVariantSelector: React.FC<RateVariantSelectorProps> = ({
   childrenCount = 0
 }) => {
   const [sortBy, setSortBy] = useState<'price' | 'savings' | 'popular'>('popular');
-  const [filterMealPlan, setFilterMealPlan] = useState<string>('all');
+  const [filterMealPlan, setFilterMealPlan] = useState<string>('all_meals_inclusive');
 
   // Filter out variants with empty meal_plan_code or cancellation_policy_code
   const validVariants = variants.filter(v => 
@@ -53,11 +53,11 @@ export const RateVariantSelector: React.FC<RateVariantSelectorProps> = ({
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">All Meal Plans</SelectItem>
-              <SelectItem value="room_only">Room Only</SelectItem>
+              <SelectItem value="all_meals_inclusive">Full Board (All Meals)</SelectItem>
+              <SelectItem value="breakfast_and_dinner">Half Board (Breakfast & Dinner)</SelectItem>
               <SelectItem value="breakfast_included">With Breakfast</SelectItem>
-              <SelectItem value="breakfast_and_dinner">Breakfast & Dinner</SelectItem>
               <SelectItem value="breakfast_and_lunch">Breakfast & Lunch</SelectItem>
-              <SelectItem value="all_meals_inclusive">All Meals</SelectItem>
+              <SelectItem value="room_only">Room Only</SelectItem>
             </SelectContent>
           </Select>
         </div>
