@@ -1273,10 +1273,14 @@ const Booking = () => {
       return;
     }
     
-    // Increment key to force remount and open modal
-    const newKey = paymentModalKey + 1;
-    setPaymentModalKey(newKey);
-    setShowPaymentModal(true);
+    // Wait a brief moment to ensure all data is loaded and DOM is ready
+    // This prevents Razorpay from being blocked by loading states
+    setTimeout(() => {
+      // Increment key to force remount and open modal
+      const newKey = paymentModalKey + 1;
+      setPaymentModalKey(newKey);
+      setShowPaymentModal(true);
+    }, 100);
   };
 
   const handlePaymentSuccess = async (paymentId: string, orderId: string) => {
