@@ -188,15 +188,18 @@ export function GuestCompositionTab() {
                 <div className="space-y-2">
                   <Label>Extra Adult Charge (₹)</Label>
                   <Input type="number" step="0.01" placeholder="1000" value={formData.extra_adult_charge} onChange={(e) => setFormData({ ...formData, extra_adult_charge: e.target.value })} required />
+                  <p className="text-xs text-muted-foreground">Per adult (10+ years) beyond base count</p>
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label>Extra Child Charge (₹) - Optional</Label>
                     <Input type="number" step="0.01" placeholder="500" value={formData.extra_child_charge} onChange={(e) => setFormData({ ...formData, extra_child_charge: e.target.value })} />
+                    <p className="text-xs text-muted-foreground">Per child (2-9 years) - charged at half adult rate</p>
                   </div>
                   <div className="space-y-2">
                     <Label>Extra Infant Charge (₹) - Optional</Label>
                     <Input type="number" step="0.01" placeholder="0" value={formData.extra_infant_charge} onChange={(e) => setFormData({ ...formData, extra_infant_charge: e.target.value })} />
+                    <p className="text-xs text-muted-foreground">Infants (0-2 years) stay free</p>
                   </div>
                 </div>
                 <div className="flex items-center space-x-2">
