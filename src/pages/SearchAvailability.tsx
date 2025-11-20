@@ -107,6 +107,13 @@ const SearchAvailability = () => {
     noise: null,
   });
 
+  // Auto-search on initial load if dates are present in URL
+  useEffect(() => {
+    if (checkIn && checkOut && !searched) {
+      handleSearch();
+    }
+  }, []); // Empty dependency array - only run once on mount
+
   // Set room type filter based on URL parameter
   useEffect(() => {
     if (roomTypeIdParam) {
