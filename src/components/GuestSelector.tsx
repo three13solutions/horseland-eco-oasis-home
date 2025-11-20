@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { Users, Plus, Minus, ChevronDown } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -62,26 +63,31 @@ const GuestSelector: React.FC<GuestSelectorProps> = ({
     : "w-full justify-between text-left h-10";
 
   return (
-    <Popover open={isOpen} onOpenChange={setIsOpen}>
-      <PopoverTrigger asChild>
-        <Button
-          variant="outline"
-          className={cn(buttonClasses, className)}
-          title={guestBreakdown || `${total} Guest${total !== 1 ? 's' : ''}`}
-        >
-          <div className="flex items-center gap-2">
-            <Users className="h-4 w-4 flex-shrink-0" />
-            <span>
-              {total} {total === 1 ? 'Guest' : 'Guests'}
-            </span>
-          </div>
+    <TooltipProvider>
+      <Popover open={isOpen} onOpenChange={setIsOpen}>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <PopoverTrigger asChild>
+              <Button
+                variant="outline"
+                className={cn(buttonClasses, className)}
+              >
+                <div className="flex items-center gap-2 w-full">
+                  <Users className="h-4 w-4 flex-shrink-0" />
+                  <span className="flex-1 text-left">
+                    {total} {total === 1 ? 'Guest' : 'Guests'}
+                  </span>
+                  <ChevronDown className="h-4 w-4 flex-shrink-0 opacity-50" />
+                </div>
+              </Button>
+            </PopoverTrigger>
+          </TooltipTrigger>
           {guestBreakdown && (
-            <span className="text-xs opacity-60 truncate max-w-[180px]">
-              {guestBreakdown}
-            </span>
+            <TooltipContent side="top" className="bg-popover text-popover-foreground">
+              <p className="text-sm">{guestBreakdown}</p>
+            </TooltipContent>
           )}
-        </Button>
-      </PopoverTrigger>
+        </Tooltip>
       <PopoverContent className="w-80 bg-background border shadow-lg z-50" align="start">
         <div className="space-y-4 p-2">
           <div className="space-y-3">
@@ -190,6 +196,7 @@ const GuestSelector: React.FC<GuestSelectorProps> = ({
         </div>
       </PopoverContent>
     </Popover>
+    </TooltipProvider>
   );
 };
 
