@@ -139,6 +139,11 @@ const Booking = () => {
   const [tempChildren, setTempChildren] = useState(childrenCount);
   const [tempInfants, setTempInfants] = useState(infantsCount);
 
+  // Popover states for auto-advance
+  const [editCheckInOpen, setEditCheckInOpen] = useState(false);
+  const [editCheckOutOpen, setEditCheckOutOpen] = useState(false);
+  const [editGuestSelectorOpen, setEditGuestSelectorOpen] = useState(false);
+
   // Addon states
   const [meals, setMeals] = useState<Addon[]>([]);
   const [activities, setActivities] = useState<Addon[]>([]);
@@ -2207,7 +2212,7 @@ const Booking = () => {
                           {/* Check-out Date */}
                           <div className="space-y-2">
                             <label className="text-sm font-medium">Check-out</label>
-                            <Popover>
+                            <Popover open={editCheckOutOpen} onOpenChange={setEditCheckOutOpen}>
                               <PopoverTrigger asChild>
                                 <Button 
                                   variant="outline" 
@@ -2222,9 +2227,22 @@ const Booking = () => {
                               </PopoverTrigger>
                               <PopoverContent className="w-auto p-0 bg-background/95 backdrop-blur-xl border-2 shadow-2xl" align="start">
                                 <CalendarComponent
-                                  mode="single"
-                                  selected={tempCheckOut}
-                                  onSelect={setTempCheckOut}
+                                  mode="range"
+                                  selected={tempCheckIn ? { from: tempCheckIn, to: tempCheckOut } : undefined}
+                                  onSelect={(range) => {
+                                    if (range?.to) {
+                                      setTempCheckOut(range.to);
+                                      // Auto-advance: close check-out and open guest selector
+                                      setEditCheckOutOpen(false);
+                                      setTimeout(() => setEditGuestSelectorOpen(true), 100);
+                                    } else if (range?.from && !range?.to) {
+                                      // Single click sets the checkout date
+                                      setTempCheckOut(range.from);
+                                      // Auto-advance: close check-out and open guest selector
+                                      setEditCheckOutOpen(false);
+                                      setTimeout(() => setEditGuestSelectorOpen(true), 100);
+                                    }
+                                  }}
                                   defaultMonth={tempCheckIn}
                                   disabled={(date) => {
                                     const today = new Date(new Date().setHours(0, 0, 0, 0));
@@ -2241,6 +2259,8 @@ const Booking = () => {
                             <label className="text-sm font-medium">Guests</label>
                             <GuestSelector
                               totalGuests={tempGuests}
+                              open={editGuestSelectorOpen}
+                              onOpenChange={setEditGuestSelectorOpen}
                               onGuestsChange={(total, adults, children, infants) => {
                                 setTempGuests(total);
                                 setTempAdults(adults);
@@ -2509,7 +2529,7 @@ const Booking = () => {
               <div className="grid grid-cols-1 md:grid-cols-4 gap-4 md:gap-6 items-end">
                 <div className="space-y-2">
                   <Label className="text-foreground text-sm font-medium block text-left">Check-in</Label>
-                  <Popover>
+                  <Popover open={editCheckInOpen} onOpenChange={setEditCheckInOpen}>
                     <PopoverTrigger asChild>
                       <Button
                         variant="outline"
@@ -2532,6 +2552,11 @@ const Booking = () => {
                           if (date && searchCheckOut && date >= searchCheckOut) {
                             setSearchCheckOut(undefined);
                           }
+                          // Auto-advance: close check-in and open check-out
+                          if (date) {
+                            setEditCheckInOpen(false);
+                            setTimeout(() => setEditCheckOutOpen(true), 100);
+                          }
                         }}
                         disabled={(date) => date < new Date(new Date().setHours(0, 0, 0, 0))}
                         initialFocus
@@ -2542,7 +2567,7 @@ const Booking = () => {
                 
                 <div className="space-y-2">
                   <Label className="text-foreground text-sm font-medium block text-left">Check-out</Label>
-                  <Popover>
+                  <Popover open={editCheckOutOpen} onOpenChange={setEditCheckOutOpen}>
                     <PopoverTrigger asChild>
                       <Button
                         variant="outline"
@@ -2557,9 +2582,22 @@ const Booking = () => {
                     </PopoverTrigger>
                     <PopoverContent className="w-auto p-0 bg-background/95 backdrop-blur-xl border-2 shadow-2xl" align="start">
                       <CalendarComponent
-                        mode="single"
-                        selected={searchCheckOut}
-                        onSelect={setSearchCheckOut}
+                        mode="range"
+                        selected={searchCheckIn ? { from: searchCheckIn, to: searchCheckOut } : undefined}
+                        onSelect={(range) => {
+                          if (range?.to) {
+                            setSearchCheckOut(range.to);
+                            // Auto-advance: close check-out and open guest selector
+                            setEditCheckOutOpen(false);
+                            setTimeout(() => setEditGuestSelectorOpen(true), 100);
+                          } else if (range?.from && !range?.to) {
+                            // Single click sets the checkout date
+                            setSearchCheckOut(range.from);
+                            // Auto-advance: close check-out and open guest selector
+                            setEditCheckOutOpen(false);
+                            setTimeout(() => setEditGuestSelectorOpen(true), 100);
+                          }
+                        }}
                         defaultMonth={searchCheckIn}
                         disabled={(date) => {
                           const today = new Date(new Date().setHours(0, 0, 0, 0));
@@ -2576,6 +2614,8 @@ const Booking = () => {
                   <Label className="text-foreground text-sm font-medium block text-left">Guests</Label>
                   <GuestSelector
                     totalGuests={parseInt(searchGuests)}
+                    open={editGuestSelectorOpen}
+                    onOpenChange={setEditGuestSelectorOpen}
                     onGuestsChange={(total, a, c) => {
                       setSearchGuests(total.toString());
                       setSearchAdults(a);
