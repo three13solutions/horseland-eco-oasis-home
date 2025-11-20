@@ -33,7 +33,11 @@ export const PriceBreakdown: React.FC<PriceBreakdownProps> = ({
   const roomSubtotal = roomRate;
   const mealSubtotal = mealCost;
   const subtotal = roomSubtotal + mealSubtotal + policyAdjustment;
-  const gstAmount = subtotal * 0.18;
+  
+  // Calculate GST based on per-night rate
+  const perNightRate = roomSubtotal / nights;
+  const gstRate = perNightRate <= 7500 ? 0.05 : 0.18; // 5% if ≤ ₹7,500, else 18%
+  const gstAmount = subtotal * gstRate;
   const grandTotal = subtotal + addonsTotal + gstAmount;
 
   return (
@@ -113,7 +117,12 @@ export const PriceBreakdown: React.FC<PriceBreakdownProps> = ({
         )}
 
         <div className="flex justify-between text-sm text-muted-foreground">
-          <span>GST (18%)</span>
+          <span>
+            GST ({(gstRate * 100).toFixed(0)}%)
+            <span className="text-xs ml-1">
+              {gstRate === 0.05 ? '(Rate ≤ ₹7,500/night)' : '(Rate > ₹7,500/night)'}
+            </span>
+          </span>
           <span>₹{gstAmount.toLocaleString()}</span>
         </div>
 
