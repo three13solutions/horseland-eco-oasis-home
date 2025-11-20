@@ -250,51 +250,31 @@ const SearchAvailability = () => {
               <p className="text-sm text-muted-foreground mt-1">Find available rooms for your dates</p>
             </div>
             <div className="flex flex-wrap items-end gap-3">
-              <div className="flex-1 min-w-[200px]">
-                <label className="text-sm font-medium mb-2 block">Check-in</label>
+              <div className="flex-1 min-w-[280px]">
+                <label className="text-sm font-medium mb-2 block">Select Dates</label>
                 <Popover>
                   <PopoverTrigger asChild>
                     <Button variant="outline" className="w-full justify-start text-left">
                       <CalendarIcon className="mr-2 h-4 w-4" />
-                      {checkIn ? format(checkIn, 'PPP') : 'Select date'}
+                      {checkIn && checkOut ? (
+                        `${format(checkIn, 'PPP')} - ${format(checkOut, 'PPP')}`
+                      ) : checkIn ? (
+                        `${format(checkIn, 'PPP')} - Select check-out`
+                      ) : (
+                        'Select check-in and check-out dates'
+                      )}
                     </Button>
                   </PopoverTrigger>
                   <PopoverContent className="w-auto p-0 bg-background/95 backdrop-blur-xl border-2 shadow-2xl" align="start">
                     <Calendar 
-                      mode="single" 
-                      selected={checkIn} 
-                      onSelect={(date) => {
-                        setCheckIn(date);
-                        // Clear checkout if new check-in is after current checkout
-                        if (date && checkOut && date >= checkOut) {
-                          setCheckOut(undefined);
-                        }
+                      mode="range" 
+                      selected={{ from: checkIn, to: checkOut }}
+                      onSelect={(range) => {
+                        setCheckIn(range?.from);
+                        setCheckOut(range?.to);
                       }}
                       disabled={(date) => date < new Date(new Date().setHours(0, 0, 0, 0))}
-                      initialFocus 
-                    />
-                  </PopoverContent>
-                </Popover>
-              </div>
-              <div className="flex-1 min-w-[200px]">
-                <label className="text-sm font-medium mb-2 block">Check-out</label>
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <Button variant="outline" className="w-full justify-start text-left">
-                      <CalendarIcon className="mr-2 h-4 w-4" />
-                      {checkOut ? format(checkOut, 'PPP') : 'Select date'}
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0 bg-background/95 backdrop-blur-xl border-2 shadow-2xl" align="start">
-                    <Calendar 
-                      mode="single" 
-                      selected={checkOut} 
-                      onSelect={setCheckOut}
-                      defaultMonth={checkIn}
-                      disabled={(date) => {
-                        const today = new Date(new Date().setHours(0, 0, 0, 0));
-                        return !checkIn || date <= checkIn || date < today;
-                      }}
+                      numberOfMonths={2}
                       initialFocus 
                     />
                   </PopoverContent>

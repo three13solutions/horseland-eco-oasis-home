@@ -522,7 +522,7 @@ const RoomDetail = () => {
 
                   <div className="space-y-4 mb-6">
                     <div>
-                      <label className="block text-sm font-body font-medium mb-2">Check-in Date</label>
+                      <label className="block text-sm font-body font-medium mb-2">Select Dates</label>
                       <Popover>
                         <PopoverTrigger asChild>
                           <Button
@@ -533,52 +533,26 @@ const RoomDetail = () => {
                             )}
                           >
                             <CalendarIcon className="mr-2 h-4 w-4" />
-                            {checkInDate ? format(checkInDate, "PPP") : "Pick a date"}
+                            {checkInDate && checkOutDate ? (
+                              `${format(checkInDate, 'PPP')} - ${format(checkOutDate, 'PPP')}`
+                            ) : checkInDate ? (
+                              `${format(checkInDate, 'PPP')} - Select check-out`
+                            ) : (
+                              'Select check-in and check-out dates'
+                            )}
                           </Button>
                         </PopoverTrigger>
                         <PopoverContent className="w-auto p-0 bg-background/95 backdrop-blur-xl border-2 shadow-2xl" align="start">
-                          <CalendarComponent
-                            mode="single"
-                            selected={checkInDate}
-                            onSelect={(newDate) => {
-                              setCheckInDate(newDate);
-                              // Clear checkout if new check-in is after current checkout
-                              if (newDate && checkOutDate && newDate >= checkOutDate) {
-                                setCheckOutDate(undefined);
-                              }
+                          <CalendarComponent 
+                            mode="range" 
+                            selected={{ from: checkInDate, to: checkOutDate }}
+                            onSelect={(range) => {
+                              setCheckInDate(range?.from);
+                              setCheckOutDate(range?.to);
                             }}
                             disabled={(date) => date < new Date(new Date().setHours(0, 0, 0, 0))}
-                            initialFocus
-                          />
-                        </PopoverContent>
-                      </Popover>
-                    </div>
-                    <div>
-                      <label className="block text-sm font-body font-medium mb-2">Check-out Date</label>
-                      <Popover>
-                        <PopoverTrigger asChild>
-                          <Button
-                            variant="outline"
-                            className={cn(
-                              "w-full justify-start text-left font-normal",
-                              !checkOutDate && "text-muted-foreground"
-                            )}
-                          >
-                            <CalendarIcon className="mr-2 h-4 w-4" />
-                            {checkOutDate ? format(checkOutDate, "PPP") : "Pick a date"}
-                          </Button>
-                        </PopoverTrigger>
-                        <PopoverContent className="w-auto p-0 bg-background/95 backdrop-blur-xl border-2 shadow-2xl" align="start">
-                          <CalendarComponent
-                            mode="single"
-                            selected={checkOutDate}
-                            onSelect={setCheckOutDate}
-                            defaultMonth={checkInDate}
-                            disabled={(date) => {
-                              const today = new Date(new Date().setHours(0, 0, 0, 0));
-                              return !checkInDate || date <= checkInDate || date < today;
-                            }}
-                            initialFocus
+                            numberOfMonths={2}
+                            initialFocus 
                           />
                         </PopoverContent>
                       </Popover>

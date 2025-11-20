@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { Users, Plus, Minus } from 'lucide-react';
+import { Users, Plus, Minus, ChevronDown } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 type GuestSelectorProps = {
@@ -51,9 +51,15 @@ const GuestSelector: React.FC<GuestSelectorProps> = ({
 
   const total = adults + children;
 
+  const guestBreakdown = [
+    adults > 0 && `${adults} Adult${adults !== 1 ? 's' : ''}`,
+    children > 0 && `${children} Child${children !== 1 ? 'ren' : ''}`,
+    infants > 0 && `${infants} Infant${infants !== 1 ? 's' : ''}`
+  ].filter(Boolean).join(', ');
+
   const buttonClasses = variant === 'hero' 
-    ? "w-full h-12 bg-white/20 border-white/30 text-white hover:bg-white/30 hover:text-white rounded-xl justify-start text-left font-normal"
-    : "w-full justify-start text-left h-10";
+    ? "w-full h-auto min-h-[3rem] bg-white/20 border-white/30 text-white hover:bg-white/30 hover:text-white rounded-xl justify-start text-left font-normal flex-col items-start py-2"
+    : "w-full justify-start text-left h-auto flex-col items-start py-2";
 
   return (
     <Popover open={isOpen} onOpenChange={setIsOpen}>
@@ -62,13 +68,16 @@ const GuestSelector: React.FC<GuestSelectorProps> = ({
           variant="outline"
           className={cn(buttonClasses, className)}
         >
-          <Users className="mr-2 h-4 w-4" />
-          {total} {total === 1 ? 'Guest' : 'Guests'}
-          {(children > 0 || infants > 0) && (
-            <span className="ml-2 text-xs opacity-70">
-              ({adults} {adults === 1 ? 'Adult' : 'Adults'}
-              {children > 0 && `, ${children} ${children === 1 ? 'Child' : 'Children'}`}
-              {infants > 0 && `, ${infants} ${infants === 1 ? 'Infant' : 'Infants'}`})
+          <div className="flex items-center w-full">
+            <Users className="mr-2 h-4 w-4 flex-shrink-0" />
+            <span className="flex-1">
+              {total} {total === 1 ? 'Guest' : 'Guests'}
+            </span>
+            <ChevronDown className="ml-2 h-4 w-4 flex-shrink-0 opacity-50" />
+          </div>
+          {guestBreakdown && (
+            <span className="text-xs text-muted-foreground mt-1 ml-6">
+              {guestBreakdown}
             </span>
           )}
         </Button>
