@@ -11,7 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Trash2, Plus, Save, Edit, FileText, Eye, Languages, Copy, Loader2 } from 'lucide-react';
+import { Trash2, Plus, Save, Edit, FileText, Eye, Languages, Copy, Loader2, ArrowUpDown, ArrowUp, ArrowDown } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { MediaPicker } from '@/components/admin/MediaPicker';
 import { format } from 'date-fns';
@@ -69,6 +69,8 @@ const BlogManagement = () => {
   const [selectedLanguage, setSelectedLanguage] = useState('en');
   const [translations, setTranslations] = useState<{ [key: string]: string }>({});
   const [isTranslating, setIsTranslating] = useState(false);
+  const [sortColumn, setSortColumn] = useState<'title' | 'created_at' | 'is_published'>('created_at');
+  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
   const [formData, setFormData] = useState<BlogPost>({
     title: '',
     slug: '',
@@ -355,6 +357,48 @@ const BlogManagement = () => {
     } else {
       setTranslations({});
     }
+  };
+
+  const handleSort = (column: 'title' | 'created_at' | 'is_published') => {
+    if (sortColumn === column) {
+      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortColumn(column);
+      setSortDirection('asc');
+    }
+  };
+
+  const sortedPosts = [...posts].sort((a, b) => {
+    let aValue: any;
+    let bValue: any;
+
+    switch (sortColumn) {
+      case 'title':
+        aValue = a.title.toLowerCase();
+        bValue = b.title.toLowerCase();
+        break;
+      case 'created_at':
+        aValue = new Date(a.created_at || 0).getTime();
+        bValue = new Date(b.created_at || 0).getTime();
+        break;
+      case 'is_published':
+        aValue = a.is_published ? 1 : 0;
+        bValue = b.is_published ? 1 : 0;
+        break;
+      default:
+        return 0;
+    }
+
+    if (aValue < bValue) return sortDirection === 'asc' ? -1 : 1;
+    if (aValue > bValue) return sortDirection === 'asc' ? 1 : -1;
+    return 0;
+  });
+
+  const SortIcon = ({ column }: { column: 'title' | 'created_at' | 'is_published' }) => {
+    if (sortColumn !== column) return <ArrowUpDown className="w-4 h-4 ml-2 text-muted-foreground" />;
+    return sortDirection === 'asc' ? 
+      <ArrowUp className="w-4 h-4 ml-2" /> : 
+      <ArrowDown className="w-4 h-4 ml-2" />;
   };
 
   if (loading) {
@@ -685,23 +729,47 @@ const BlogManagement = () => {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Title</TableHead>
+                <TableHead 
+                  className="cursor-pointer select-none hover:bg-muted/50 transition-colors"
+                  onClick={() => handleSort('title')}
+                >
+                  <div className="flex items-center">
+                    Title
+                    <SortIcon column="title" />
+                  </div>
+                </TableHead>
                 <TableHead>Author</TableHead>
                 <TableHead>Category</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Published</TableHead>
+                <TableHead 
+                  className="cursor-pointer select-none hover:bg-muted/50 transition-colors"
+                  onClick={() => handleSort('is_published')}
+                >
+                  <div className="flex items-center">
+                    Status
+                    <SortIcon column="is_published" />
+                  </div>
+                </TableHead>
+                <TableHead 
+                  className="cursor-pointer select-none hover:bg-muted/50 transition-colors"
+                  onClick={() => handleSort('created_at')}
+                >
+                  <div className="flex items-center">
+                    Created Date
+                    <SortIcon column="created_at" />
+                  </div>
+                </TableHead>
                 <TableHead className="text-right">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {posts.length === 0 ? (
+              {sortedPosts.length === 0 ? (
                 <TableRow>
                   <TableCell colSpan={6} className="text-center text-muted-foreground">
                     No posts yet. Create your first blog post!
                   </TableCell>
                 </TableRow>
               ) : (
-                posts.map((post) => (
+                sortedPosts.map((post) => (
                   <TableRow key={post.id}>
                     <TableCell className="font-medium">{post.title}</TableCell>
                     <TableCell>{post.author}</TableCell>
@@ -716,7 +784,7 @@ const BlogManagement = () => {
                       </Badge>
                     </TableCell>
                     <TableCell>
-                      {post.publish_date ? format(new Date(post.publish_date), 'MMM dd, yyyy') : '-'}
+                      {post.created_at ? format(new Date(post.created_at), 'MMM dd, yyyy') : '-'}
                     </TableCell>
                     <TableCell className="text-right">
                       <div className="flex justify-end gap-2">
