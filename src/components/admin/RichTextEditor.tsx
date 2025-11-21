@@ -3,12 +3,31 @@ import ReactQuill from 'react-quill';
 import 'react-quill/dist/quill.snow.css';
 import { Button } from '@/components/ui/button';
 import { Code, Eye } from 'lucide-react';
+import DOMPurify from 'dompurify';
 
 interface RichTextEditorProps {
   value: string;
   onChange: (value: string) => void;
   placeholder?: string;
 }
+
+// Normalize HTML content to ensure consistency
+const normalizeContent = (html: string): string => {
+  if (!html || html === '<p><br></p>') return '';
+  
+  // Sanitize the HTML
+  const sanitized = DOMPurify.sanitize(html, {
+    ALLOWED_TAGS: ['p', 'br', 'strong', 'em', 'u', 's', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 
+                    'ul', 'ol', 'li', 'blockquote', 'pre', 'code', 'a', 'img', 'span', 'div'],
+    ALLOWED_ATTR: ['href', 'src', 'alt', 'title', 'class', 'style', 'target', 'rel']
+  });
+  
+  // Remove empty paragraphs and normalize whitespace
+  return sanitized
+    .replace(/<p><\/p>/g, '')
+    .replace(/<p>\s*<br>\s*<\/p>/g, '')
+    .trim();
+};
 
 const RichTextEditor: React.FC<RichTextEditorProps> = ({ value, onChange, placeholder }) => {
   const [isCodeMode, setIsCodeMode] = useState(false);
@@ -25,6 +44,9 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({ value, onChange, placeh
       [{ 'color': [] }, { 'background': [] }],
       ['clean']
     ],
+    clipboard: {
+      matchVisual: false // Prevent auto-formatting on paste
+    }
   }), []);
 
   const formats = [
@@ -36,6 +58,11 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({ value, onChange, placeh
     'link', 'image',
     'color', 'background'
   ];
+
+  const handleChange = (content: string) => {
+    const normalized = normalizeContent(content);
+    onChange(normalized);
+  };
 
   return (
     <div className="border rounded-md overflow-hidden">
@@ -67,15 +94,15 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({ value, onChange, placeh
       {isCodeMode ? (
         <textarea
           value={value}
-          onChange={(e) => onChange(e.target.value)}
+          onChange={(e) => handleChange(e.target.value)}
           className="w-full min-h-[300px] p-4 font-mono text-sm bg-background focus:outline-none resize-y"
           placeholder={placeholder}
         />
       ) : (
         <ReactQuill
           theme="snow"
-          value={value}
-          onChange={onChange}
+          value={value || ''}
+          onChange={handleChange}
           modules={modules}
           formats={formats}
           placeholder={placeholder}

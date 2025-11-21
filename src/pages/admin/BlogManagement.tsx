@@ -17,6 +17,7 @@ import { MediaPicker } from '@/components/admin/MediaPicker';
 import { format } from 'date-fns';
 import { TranslationField } from '@/components/admin/TranslationField';
 import RichTextEditor from '@/components/admin/RichTextEditor';
+import DOMPurify from 'dompurify';
 
 interface BlogPost {
   id?: string;
@@ -240,8 +241,16 @@ const BlogManagement = () => {
         return;
       }
 
+      // Sanitize and normalize content before saving
+      const sanitizedContent = DOMPurify.sanitize(formData.content, {
+        ALLOWED_TAGS: ['p', 'br', 'strong', 'em', 'u', 's', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 
+                      'ul', 'ol', 'li', 'blockquote', 'pre', 'code', 'a', 'img', 'span', 'div'],
+        ALLOWED_ATTR: ['href', 'src', 'alt', 'title', 'class', 'style', 'target', 'rel']
+      });
+
       const postData = {
         ...formData,
+        content: sanitizedContent,
         meta_title: formData.meta_title || formData.title,
         publish_date: formData.is_published && !formData.publish_date 
           ? new Date().toISOString() 
