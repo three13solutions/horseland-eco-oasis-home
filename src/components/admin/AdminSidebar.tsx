@@ -24,7 +24,8 @@ import {
   Image as ImageIcon,
   DollarSign,
   Zap,
-  Percent
+  Percent,
+  MessageCircle
 } from 'lucide-react';
 import {
   Sidebar,
@@ -214,6 +215,12 @@ const systemMenuItems = [
     label: 'Users', 
     path: '/admin/users', 
     description: 'Admin users' 
+  },
+  { 
+    icon: MessageCircle, 
+    label: 'FAQ Management', 
+    path: '/admin/faq', 
+    description: 'Manage FAQ sections' 
   },
   { 
     icon: SettingsIcon, 
