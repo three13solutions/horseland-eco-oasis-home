@@ -180,27 +180,31 @@ export default function FAQManagement() {
   const handleSaveCategory = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const formData = new FormData(e.currentTarget);
-    const category = {
-      id: editingCategory?.id,
+    const category: any = {
       title: formData.get("title") as string,
       icon: formData.get("icon") as string,
       sort_order: parseInt(formData.get("sort_order") as string),
       is_active: formData.get("is_active") === "on",
     };
+    if (editingCategory?.id) {
+      category.id = editingCategory.id;
+    }
     saveCategoryMutation.mutate(category);
   };
 
   const handleSaveItem = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const formData = new FormData(e.currentTarget);
-    const item = {
-      id: editingItem?.id,
+    const item: any = {
       category_id: formData.get("category_id") as string,
       question: formData.get("question") as string,
       answer: formData.get("answer") as string,
       sort_order: parseInt(formData.get("sort_order") as string),
       is_active: formData.get("is_active") === "on",
     };
+    if (editingItem?.id) {
+      item.id = editingItem.id;
+    }
     saveItemMutation.mutate(item);
   };
 
