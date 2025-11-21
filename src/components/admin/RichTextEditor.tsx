@@ -11,26 +11,67 @@ interface RichTextEditorProps {
   placeholder?: string;
 }
 
-// Normalize HTML content to ensure consistency
-const normalizeContent = (html: string): string => {
-  if (!html || html === '<p><br></p>') return '';
+// Sanitize HTML without modifying structure
+const sanitizeContent = (html: string): string => {
+  if (!html) return '';
   
-  // Sanitize the HTML
-  const sanitized = DOMPurify.sanitize(html, {
+  // Only sanitize for security, don't modify structure
+  return DOMPurify.sanitize(html, {
     ALLOWED_TAGS: ['p', 'br', 'strong', 'em', 'u', 's', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 
-                    'ul', 'ol', 'li', 'blockquote', 'pre', 'code', 'a', 'img', 'span', 'div'],
-    ALLOWED_ATTR: ['href', 'src', 'alt', 'title', 'class', 'style', 'target', 'rel']
+                    'ul', 'ol', 'li', 'blockquote', 'pre', 'code', 'a', 'img', 'span', 'div',
+                    'table', 'thead', 'tbody', 'tr', 'th', 'td', 'hr', 'b', 'i', 'sub', 'sup'],
+    ALLOWED_ATTR: ['href', 'src', 'alt', 'title', 'class', 'style', 'target', 'rel', 'width', 'height'],
+    KEEP_CONTENT: true
   });
+};
+
+// Format HTML for better readability in code mode
+const formatHTML = (html: string): string => {
+  if (!html) return '';
   
-  // Remove empty paragraphs and normalize whitespace
-  return sanitized
-    .replace(/<p><\/p>/g, '')
-    .replace(/<p>\s*<br>\s*<\/p>/g, '')
-    .trim();
+  let formatted = html;
+  let indent = 0;
+  const indentStr = '  ';
+  
+  // Add newlines after block-level tags
+  formatted = formatted.replace(/(<\/?(p|div|h[1-6]|ul|ol|li|blockquote|pre|table|thead|tbody|tr|th|td)([^>]*)>)/gi, '\n$1\n');
+  
+  // Split by newlines and indent
+  const lines = formatted.split('\n').filter(line => line.trim());
+  
+  formatted = lines.map(line => {
+    const trimmed = line.trim();
+    if (!trimmed) return '';
+    
+    // Decrease indent for closing tags
+    if (trimmed.match(/^<\/(p|div|h[1-6]|ul|ol|li|blockquote|pre|table|thead|tbody|tr)>/i)) {
+      indent = Math.max(0, indent - 1);
+    }
+    
+    const result = indentStr.repeat(indent) + trimmed;
+    
+    // Increase indent for opening tags
+    if (trimmed.match(/^<(p|div|h[1-6]|ul|ol|li|blockquote|pre|table|thead|tbody|tr)([^>]*)>$/i) && 
+        !trimmed.match(/^<(p|div|h[1-6]|ul|ol|li|blockquote|pre|table|thead|tbody|tr)([^>]*)>.*<\/\1>$/i)) {
+      indent++;
+    }
+    
+    return result;
+  }).join('\n');
+  
+  return formatted;
 };
 
 const RichTextEditor: React.FC<RichTextEditorProps> = ({ value, onChange, placeholder }) => {
   const [isCodeMode, setIsCodeMode] = useState(false);
+  const [codeValue, setCodeValue] = useState('');
+
+  // Format HTML when switching to code mode
+  React.useEffect(() => {
+    if (isCodeMode) {
+      setCodeValue(formatHTML(value));
+    }
+  }, [isCodeMode, value]);
 
   const modules = useMemo(() => ({
     toolbar: [
@@ -45,7 +86,7 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({ value, onChange, placeh
       ['clean']
     ],
     clipboard: {
-      matchVisual: false // Prevent auto-formatting on paste
+      matchVisual: false
     }
   }), []);
 
@@ -59,9 +100,17 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({ value, onChange, placeh
     'color', 'background'
   ];
 
-  const handleChange = (content: string) => {
-    const normalized = normalizeContent(content);
-    onChange(normalized);
+  const handleVisualChange = (content: string) => {
+    // Only sanitize, don't modify structure
+    const sanitized = sanitizeContent(content);
+    onChange(sanitized);
+  };
+
+  const handleCodeChange = (content: string) => {
+    setCodeValue(content);
+    // Only sanitize, don't modify structure
+    const sanitized = sanitizeContent(content);
+    onChange(sanitized);
   };
 
   return (
@@ -93,20 +142,22 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({ value, onChange, placeh
       
       {isCodeMode ? (
         <textarea
-          value={value}
-          onChange={(e) => handleChange(e.target.value)}
+          value={codeValue}
+          onChange={(e) => handleCodeChange(e.target.value)}
           className="w-full min-h-[300px] p-4 font-mono text-sm bg-background focus:outline-none resize-y"
           placeholder={placeholder}
+          spellCheck={false}
         />
       ) : (
         <ReactQuill
           theme="snow"
           value={value || ''}
-          onChange={handleChange}
+          onChange={handleVisualChange}
           modules={modules}
           formats={formats}
           placeholder={placeholder}
           className="bg-background"
+          preserveWhitespace
         />
       )}
     </div>
