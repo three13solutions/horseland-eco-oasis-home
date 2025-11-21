@@ -292,8 +292,10 @@ const BlogPost = () => {
               dangerouslySetInnerHTML={{ 
                 __html: DOMPurify.sanitize(translatedContent, {
                   ALLOWED_TAGS: ['p', 'br', 'strong', 'em', 'u', 's', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 
-                                'ul', 'ol', 'li', 'blockquote', 'pre', 'code', 'a', 'img', 'span', 'div'],
-                  ALLOWED_ATTR: ['href', 'src', 'alt', 'title', 'class', 'style', 'target', 'rel']
+                                'ul', 'ol', 'li', 'blockquote', 'pre', 'code', 'a', 'img', 'span', 'div',
+                                'table', 'thead', 'tbody', 'tr', 'th', 'td', 'hr', 'b', 'i', 'sub', 'sup'],
+                  ALLOWED_ATTR: ['href', 'src', 'alt', 'title', 'class', 'style', 'target', 'rel', 'width', 'height'],
+                  KEEP_CONTENT: true
                 })
               }}
             />
