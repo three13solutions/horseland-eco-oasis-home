@@ -109,6 +109,9 @@ export default function AdminLayout() {
     if (path.startsWith('/admin/addons')) return { label: 'Addons', description: 'Additional services' };
     if (path.startsWith('/admin/media')) return { label: 'Media', description: 'Gallery & uploads' };
     if (path.startsWith('/admin/content')) return { label: 'Content', description: 'Website content' };
+    if (path.startsWith('/admin/blog')) return { label: 'Blog', description: 'Blog posts' };
+    if (path.startsWith('/admin/pages')) return { label: 'Pages', description: 'Page management' };
+    if (path.startsWith('/admin/faq')) return { label: 'FAQ Management', description: 'Manage FAQ sections' };
     if (path.startsWith('/admin/integrations')) return { label: 'Integrations', description: 'API connections' };
     if (path.startsWith('/admin/users')) return { label: 'Users', description: 'Admin users' };
     if (path.startsWith('/admin/settings')) return { label: 'Settings', description: 'Site configuration' };

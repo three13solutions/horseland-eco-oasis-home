@@ -57,6 +57,7 @@ import UserManagement from "./pages/admin/UserManagement";
 import SiteSettings from "./pages/admin/SiteSettings";
 import BlogManagement from "./pages/admin/BlogManagement";
 import PageManagement from "./pages/admin/PageManagement";
+import FAQManagement from "./pages/admin/FAQManagement";
 import DynamicPage from "./pages/DynamicPage";
 import PricingDashboard from "./pages/admin/PricingDashboard";
 import BaseConfiguration from "./pages/admin/BaseConfiguration";
@@ -148,6 +149,7 @@ function App() {
                 <Route path="integrations" element={<IntegrationsManagement />} />
                 <Route path="blog" element={<BlogManagement />} />
                 <Route path="pages" element={<PageManagement />} />
+                <Route path="faq" element={<FAQManagement />} />
                 <Route path="users" element={<UserManagement />} />
                 <Route path="settings" element={<SiteSettings />} />
               </Route>
