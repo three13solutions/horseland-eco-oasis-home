@@ -71,6 +71,7 @@ export default function FAQManagement() {
   const [editingItem, setEditingItem] = useState<FAQItem | null>(null);
   const [selectedCategoryId, setSelectedCategoryId] = useState<string>("");
   const [expandedCategories, setExpandedCategories] = useState<Set<string>>(new Set());
+  const [statusFilter, setStatusFilter] = useState<"all" | "active" | "inactive">("all");
 
   // Fetch categories
   const { data: categories = [], isLoading: categoriesLoading } = useQuery({
@@ -222,6 +223,12 @@ export default function FAQManagement() {
     return items.filter((item) => item.category_id === categoryId);
   };
 
+  const filteredCategories = categories.filter((category) => {
+    if (statusFilter === "active") return category.is_active;
+    if (statusFilter === "inactive") return !category.is_active;
+    return true;
+  });
+
   if (categoriesLoading || itemsLoading) {
     return <div className="p-8">Loading...</div>;
   }
@@ -233,18 +240,30 @@ export default function FAQManagement() {
           <h1 className="text-3xl font-heading font-bold text-foreground">FAQ Management</h1>
           <p className="text-muted-foreground mt-2">Manage FAQ categories and items</p>
         </div>
-        <Button onClick={() => {
-          setEditingCategory(null);
-          setCategoryDialogOpen(true);
-        }}>
-          <Plus className="w-4 h-4 mr-2" />
-          Add Category
-        </Button>
+        <div className="flex items-center gap-4">
+          <Select value={statusFilter} onValueChange={(value: "all" | "active" | "inactive") => setStatusFilter(value)}>
+            <SelectTrigger className="w-[180px]">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Categories</SelectItem>
+              <SelectItem value="active">Active Only</SelectItem>
+              <SelectItem value="inactive">Inactive Only</SelectItem>
+            </SelectContent>
+          </Select>
+          <Button onClick={() => {
+            setEditingCategory(null);
+            setCategoryDialogOpen(true);
+          }}>
+            <Plus className="w-4 h-4 mr-2" />
+            Add Category
+          </Button>
+        </div>
       </div>
 
       {/* Categories List */}
       <div className="space-y-4">
-        {categories.map((category) => {
+        {filteredCategories.map((category) => {
           const categoryItems = getItemsByCategory(category.id);
           const isExpanded = expandedCategories.has(category.id);
           
