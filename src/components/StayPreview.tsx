@@ -88,7 +88,7 @@ const StayPreviewV5 = () => {
                   <div className="absolute top-4 right-4 bg-white/90 backdrop-blur-sm rounded-full px-4 py-2 text-left">
                     <div className="text-xs text-muted-foreground mb-1">{getTranslation('stay.startingFrom', 'Starting from')}</div>
                     <span className="text-2xl font-bold text-foreground">₹{room.base_price?.toLocaleString()}</span>
-                    <span className="text-sm text-muted-foreground">/{getTranslation('stay.perNight', '/night')}</span>
+                    <span className="text-sm text-muted-foreground">{getTranslation('stay.perNight', '/night')}</span>
                   </div>
                 </div>
 
