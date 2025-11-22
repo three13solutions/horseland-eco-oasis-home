@@ -869,7 +869,6 @@ export type Database = {
           icon: string
           id: string
           is_active: boolean
-          parent_id: string | null
           sort_order: number
           title: string
           updated_at: string
@@ -879,7 +878,6 @@ export type Database = {
           icon?: string
           id?: string
           is_active?: boolean
-          parent_id?: string | null
           sort_order?: number
           title: string
           updated_at?: string
@@ -889,20 +887,11 @@ export type Database = {
           icon?: string
           id?: string
           is_active?: boolean
-          parent_id?: string | null
           sort_order?: number
           title?: string
           updated_at?: string
         }
-        Relationships: [
-          {
-            foreignKeyName: "faq_categories_parent_id_fkey"
-            columns: ["parent_id"]
-            isOneToOne: false
-            referencedRelation: "faq_categories"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       faq_items: {
         Row: {

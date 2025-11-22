@@ -10,28 +10,15 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
-import { BookOpen, Hotel, TreePine, Shield, HelpCircle, Info, MessageCircle, Settings } from 'lucide-react';
+import { BookOpen, Hotel, TreePine, Shield } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useSiteSettings } from '@/hooks/useSiteSettings';
-
-interface FAQSection {
-  parentTitle: string;
-  parentIcon: React.ElementType;
-  subSections: {
-    title: string;
-    icon: React.ElementType;
-    items: {
-      question: string;
-      answer: string;
-    }[];
-  }[];
-}
 
 const FAQ = () => {
   const navigate = useNavigate();
   const { settings } = useSiteSettings();
   const [heroImage, setHeroImage] = useState<string>('https://images.unsplash.com/photo-1506905925346-21bda4d32df4?ixlib=rb-4.0.3&auto=format&fit=crop&w=2000&q=80');
-  const [faqSections, setFaqSections] = useState<FAQSection[]>([]);
+  const [faqSections, setFaqSections] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -54,71 +41,39 @@ const FAQ = () => {
         }
       }
 
-      // Fetch parent categories (the 4 main sections)
-      const { data: parentCategories } = await supabase
+      // Fetch FAQ categories and items
+      const { data: categories } = await supabase
         .from('faq_categories')
         .select('*')
-        .is('parent_id', null)
         .eq('is_active', true)
         .order('sort_order', { ascending: true });
 
-      // Fetch all sub-categories
-      const { data: allCategories } = await supabase
-        .from('faq_categories')
-        .select('*')
-        .not('parent_id', 'is', null)
-        .eq('is_active', true)
-        .order('sort_order', { ascending: true });
-
-      // Fetch FAQ items
       const { data: items } = await supabase
         .from('faq_items')
         .select('*')
         .eq('is_active', true)
         .order('sort_order', { ascending: true });
 
-      if (parentCategories && allCategories && items) {
+      if (categories && items) {
         // Map icon strings to actual icon components
         const iconMap: Record<string, any> = {
           BookOpen: BookOpen,
           Hotel: Hotel,
           TreePine: TreePine,
           Shield: Shield,
-          HelpCircle: HelpCircle,
-          Info: Info,
-          MessageCircle: MessageCircle,
-          Settings: Settings,
         };
 
-        // Build hierarchical sections: Parent → Sub-categories → FAQ items
-        const sectionsData = parentCategories.map((parent: any) => {
-          // Get sub-categories for this parent
-          const subCategories = allCategories.filter(
-            (cat: any) => cat.parent_id === parent.id
-          );
-
-          // For each sub-category, get its FAQ items
-          const subSections = subCategories.map((subCat: any) => {
-            const categoryItems = items.filter(
-              (item: any) => item.category_id === subCat.id
-            );
-
-            return {
-              title: subCat.title,
-              icon: iconMap[subCat.icon] || BookOpen,
-              items: categoryItems.map((item: any) => ({
-                question: item.question,
-                answer: item.answer,
-              })),
-            };
-          }).filter((sub) => sub.items.length > 0);
-
-          return {
-            parentTitle: parent.title,
-            parentIcon: iconMap[parent.icon] || BookOpen,
-            subSections,
-          };
-        }).filter((section) => section.subSections.length > 0);
+        const sectionsData = categories.map((category: any) => ({
+          id: category.id,
+          title: category.title,
+          icon: iconMap[category.icon] || BookOpen,
+          faqs: items
+            .filter((item: any) => item.category_id === category.id)
+            .map((item: any) => ({
+              question: item.question,
+              answer: item.answer,
+            })),
+        }));
 
         setFaqSections(sectionsData);
       }
@@ -163,58 +118,39 @@ const FAQ = () => {
         </div>
       </section>
 
-      {/* FAQ Sections - Hierarchical Display */}
+      {/* FAQ Sections */}
       <section className="py-16">
-        <div className="max-w-4xl mx-auto px-4 space-y-20">
-          {faqSections.map((parentSection, parentIndex) => {
-            const ParentIcon = parentSection.parentIcon;
+        <div className="max-w-4xl mx-auto px-4">
+          {faqSections.map((section) => {
+            const IconComponent = section.icon;
             
             return (
-              <div key={parentIndex} className="space-y-8">
-                {/* Parent Category Header */}
-                <div className="flex items-center gap-4 mb-8 pb-4 border-b-2 border-primary/20">
-                  <div className="p-4 bg-primary/10 rounded-xl">
-                    <ParentIcon className="w-8 h-8 text-primary" />
+              <div key={section.id} className="mb-12">
+                <div className="flex items-center gap-3 mb-6">
+                  <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center">
+                    <IconComponent className="w-6 h-6 text-primary" />
                   </div>
-                  <h2 className="text-3xl md:text-4xl font-heading font-bold text-foreground">
-                    {parentSection.parentTitle}
+                  <h2 className="text-2xl md:text-3xl font-heading font-bold text-foreground">
+                    {section.title}
                   </h2>
                 </div>
-
-                {/* Sub-categories under this parent */}
-                {parentSection.subSections.map((subSection, subIndex) => {
-                  const SubIcon = subSection.icon;
-                  
-                  return (
-                    <div key={subIndex} className="space-y-4 ml-0 md:ml-4">
-                      <div className="flex items-center gap-3 mb-4">
-                        <div className="w-10 h-10 bg-muted rounded-lg flex items-center justify-center">
-                          <SubIcon className="w-5 h-5 text-muted-foreground" />
-                        </div>
-                        <h3 className="text-xl md:text-2xl font-heading font-semibold text-foreground">
-                          {subSection.title}
-                        </h3>
-                      </div>
-                      
-                      <Accordion type="single" collapsible className="space-y-3">
-                        {subSection.items.map((item, itemIndex) => (
-                          <AccordionItem
-                            key={itemIndex}
-                            value={`item-${parentIndex}-${subIndex}-${itemIndex}`}
-                            className="bg-card border rounded-lg px-6"
-                          >
-                            <AccordionTrigger className="text-left font-body font-semibold text-foreground hover:text-primary transition-colors py-5">
-                              {item.question}
-                            </AccordionTrigger>
-                            <AccordionContent className="text-muted-foreground font-body leading-relaxed pt-2 pb-5">
-                              {item.answer}
-                            </AccordionContent>
-                          </AccordionItem>
-                        ))}
-                      </Accordion>
-                    </div>
-                  );
-                })}
+                
+                <Accordion type="single" collapsible className="space-y-4">
+                  {section.faqs.map((faq, index) => (
+                    <AccordionItem 
+                      key={index} 
+                      value={`${section.id}-${index}`}
+                      className="bg-card border rounded-lg px-6"
+                    >
+                      <AccordionTrigger className="text-left font-body font-semibold text-foreground hover:text-primary transition-colors">
+                        {faq.question}
+                      </AccordionTrigger>
+                      <AccordionContent className="text-muted-foreground font-body leading-relaxed pt-2 pb-4">
+                        {faq.answer}
+                      </AccordionContent>
+                    </AccordionItem>
+                  ))}
+                </Accordion>
               </div>
             );
           })}
