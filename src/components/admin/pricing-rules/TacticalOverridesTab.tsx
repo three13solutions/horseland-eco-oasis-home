@@ -243,7 +243,7 @@ export function TacticalOverridesTab() {
       roomTypeId: string,
       rateRow: RateRow,
       minNights: number,
-      maxNights: number,
+      maxNights: number | null,
       dayType: 'weekday' | 'weekend',
       reason: string
     ) => {
@@ -314,11 +314,11 @@ export function TacticalOverridesTab() {
       // 1 Night Weekend
       createPayload(roomTypeId, rates.oneNightWeekend, 1, 1, 'weekend', formData.reason);
       
-      // 2 Nights Weekday
-      createPayload(roomTypeId, rates.twoNightsWeekday, 2, 2, 'weekday', formData.reason);
+      // 2+ Nights Weekday (per-night rate, null max_nights for unlimited)
+      createPayload(roomTypeId, rates.twoNightsWeekday, 2, null, 'weekday', formData.reason);
       
-      // 2 Nights Weekend
-      createPayload(roomTypeId, rates.twoNightsWeekend, 2, 2, 'weekend', formData.reason);
+      // 2+ Nights Weekend (per-night rate, null max_nights for unlimited)
+      createPayload(roomTypeId, rates.twoNightsWeekend, 2, null, 'weekend', formData.reason);
     }
     
     if (payloads.length === 0) {
@@ -340,8 +340,8 @@ export function TacticalOverridesTab() {
       };
       conditions.push(labels[rule.occupancy_type] || rule.occupancy_type);
     }
-    if (rule.min_nights && rule.max_nights && rule.min_nights === rule.max_nights) {
-      conditions.push(`${rule.min_nights}N`);
+    if (rule.min_nights) {
+      conditions.push(rule.max_nights ? `${rule.min_nights}N` : `${rule.min_nights}+N`);
     }
     if (rule.meal_plan_code) {
       const labels: Record<string, string> = {
@@ -516,7 +516,7 @@ export function TacticalOverridesTab() {
                           </TableCell>
                         </TableRow>
                         <TableRow>
-                          <TableCell className="py-2 font-medium text-sm">2 Nights <Badge variant="secondary" className="ml-1 text-xs">Weekday</Badge></TableCell>
+                          <TableCell className="py-2 font-medium text-sm">2+ Nights <Badge variant="secondary" className="ml-1 text-xs">Weekday</Badge></TableCell>
                           <TableCell className="py-2">
                             <Input 
                               type="number" 
@@ -546,7 +546,7 @@ export function TacticalOverridesTab() {
                           </TableCell>
                         </TableRow>
                         <TableRow>
-                          <TableCell className="py-2 font-medium text-sm">2 Nights <Badge variant="outline" className="ml-1 text-xs">Weekend</Badge></TableCell>
+                          <TableCell className="py-2 font-medium text-sm">2+ Nights <Badge variant="outline" className="ml-1 text-xs">Weekend</Badge></TableCell>
                           <TableCell className="py-2">
                             <Input 
                               type="number" 
