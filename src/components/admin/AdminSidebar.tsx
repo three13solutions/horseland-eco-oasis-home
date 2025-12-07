@@ -106,6 +106,12 @@ const pricingMenuItems = [
     description: 'Revenue optimization' 
   },
   { 
+    icon: Zap, 
+    label: 'Rate Overrides', 
+    path: '/admin/pricing/overrides', 
+    description: 'Manual price overrides' 
+  },
+  { 
     icon: UtensilsCrossed, 
     label: 'Meal Plans', 
     path: '/admin/pricing/meal-plans', 
@@ -122,12 +128,6 @@ const pricingMenuItems = [
     label: 'GST Configuration', 
     path: '/admin/pricing/gst', 
     description: 'Tiered GST rates' 
-  },
-  { 
-    icon: Zap, 
-    label: 'Rate Overrides', 
-    path: '/admin/pricing/overrides', 
-    description: 'Manual price overrides' 
   },
   { 
     icon: Calendar, 
