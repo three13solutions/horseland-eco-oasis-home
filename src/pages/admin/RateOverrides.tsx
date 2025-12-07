@@ -24,11 +24,13 @@ const RateOverrides = () => {
         <CardHeader>
           <div className="flex items-center gap-2">
             <Zap className="h-5 w-5 text-primary" />
-            <CardTitle>Manual Price Overrides</CardTitle>
+            <div>
+              <CardTitle>Manual Price Overrides</CardTitle>
+              <CardDescription>
+                Set fixed prices or adjustments for specific date ranges. Useful for special events, promotions, or exceptional circumstances.
+              </CardDescription>
+            </div>
           </div>
-          <CardDescription>
-            Set fixed prices or adjustments for specific date ranges. Useful for special events, promotions, or exceptional circumstances where automated rules don't apply.
-          </CardDescription>
         </CardHeader>
         <CardContent>
           <TacticalOverridesTab />
