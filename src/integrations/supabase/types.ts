@@ -2894,10 +2894,12 @@ export type Database = {
       calculate_rate_variants:
         | {
             Args: {
+              p_adults_count?: number
               p_booking_channel?: string
               p_check_in: string
               p_check_out: string
-              p_guests_count?: number
+              p_children_count?: number
+              p_infants_count?: number
               p_room_type_id: string
               p_room_unit_id?: string
             }
@@ -2905,12 +2907,10 @@ export type Database = {
           }
         | {
             Args: {
-              p_adults_count?: number
               p_booking_channel?: string
               p_check_in: string
               p_check_out: string
-              p_children_count?: number
-              p_infants_count?: number
+              p_guests_count?: number
               p_room_type_id: string
               p_room_unit_id?: string
             }
