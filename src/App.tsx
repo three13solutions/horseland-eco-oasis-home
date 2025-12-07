@@ -65,6 +65,7 @@ import BasePricing from "./pages/admin/BasePricing";
 import PricingRules from "./pages/admin/PricingRules";
 import LiveRateCard from "./pages/admin/LiveRateCard";
 import GSTConfiguration from "./pages/admin/GSTConfiguration";
+import RateOverrides from "./pages/admin/RateOverrides";
 import { Navigate } from 'react-router-dom';
 // Old imports kept for backwards compatibility within consolidated pages
 import CategoryPricing from "./pages/admin/CategoryPricing";
@@ -129,6 +130,7 @@ function App() {
                 <Route path="pricing/meal-plans" element={<MealPlansManagement />} />
                 <Route path="pricing/cancellation-policies" element={<CancellationPoliciesManagement />} />
                 <Route path="pricing/gst" element={<GSTConfiguration />} />
+                <Route path="pricing/overrides" element={<RateOverrides />} />
                 
                 {/* Redirects for backwards compatibility */}
                 <Route path="pricing/categories" element={<Navigate to="/admin/pricing/rates?tab=categories" replace />} />

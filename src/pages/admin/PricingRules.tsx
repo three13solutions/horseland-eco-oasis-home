@@ -2,15 +2,14 @@ import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Shield, TrendingUp, Clock, Users, Radio, Zap, Trophy, Info } from 'lucide-react';
+import { Card, CardContent } from '@/components/ui/card';
+import { Shield, TrendingUp, Clock, Users, Radio, Trophy, Info } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { PricingConstraintsTab } from '@/components/admin/pricing-rules/PricingConstraintsTab';
 import { OccupancyYieldTab } from '@/components/admin/pricing-rules/OccupancyYieldTab';
 import { LeadTimeRulesTab } from '@/components/admin/pricing-rules/LeadTimeRulesTab';
 import { GuestCompositionTab } from '@/components/admin/pricing-rules/GuestCompositionTab';
 import { ChannelRulesTab } from '@/components/admin/pricing-rules/ChannelRulesTab';
-import { TacticalOverridesTab } from '@/components/admin/pricing-rules/TacticalOverridesTab';
 import { CompetitorRatesTab } from '@/components/admin/pricing-rules/CompetitorRatesTab';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 
@@ -51,13 +50,13 @@ export default function PricingRules() {
       <Alert>
         <Info className="h-4 w-4" />
         <AlertDescription>
-          Rules are applied in sequence: Constraints → Occupancy → Lead Time → Guest Composition → Channels → Tactical Overrides. 
-          View the final computed rates in <strong>Live Rate Card</strong>.
+          Rules are applied in sequence: Constraints → Occupancy → Lead Time → Guest Composition → Channels. 
+          Manual overrides (Rate Overrides) take highest priority. View the final computed rates in <strong>Live Rate Card</strong>.
         </AlertDescription>
       </Alert>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid w-full grid-cols-4 lg:grid-cols-7 gap-2">
+        <TabsList className="grid w-full grid-cols-3 lg:grid-cols-6 gap-2">
           <TabsTrigger value="constraints" className="flex items-center gap-2">
             <Shield className="h-4 w-4" />
             <span className="hidden sm:inline">Constraints</span>
@@ -92,10 +91,6 @@ export default function PricingRules() {
             {ruleCounts && ruleCounts.channels > 0 && (
               <Badge variant="secondary" className="ml-1 text-xs">{ruleCounts.channels}</Badge>
             )}
-          </TabsTrigger>
-          <TabsTrigger value="overrides" className="flex items-center gap-2">
-            <Zap className="h-4 w-4" />
-            <span className="hidden sm:inline">Overrides</span>
           </TabsTrigger>
           <TabsTrigger value="competitors" className="flex items-center gap-2">
             <Trophy className="h-4 w-4" />
@@ -188,22 +183,6 @@ export default function PricingRules() {
           <ChannelRulesTab />
         </TabsContent>
 
-        <TabsContent value="overrides" className="mt-6 space-y-4">
-          <Card className="bg-red-50 dark:bg-red-950/20 border-red-200">
-            <CardContent className="pt-6">
-              <div className="flex items-start gap-3">
-                <Zap className="h-5 w-5 text-red-600 mt-0.5" />
-                <div>
-                  <h4 className="font-semibold text-red-900 dark:text-red-100">Manual Price Overrides</h4>
-                  <p className="text-sm text-red-700 dark:text-red-300 mt-1">
-                    Set specific prices for particular dates or events that override all automated rules. Use for special events, maintenance, or strategic pricing.
-                  </p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-          <TacticalOverridesTab />
-        </TabsContent>
 
         <TabsContent value="competitors" className="mt-6 space-y-4">
           <Card className="bg-yellow-50 dark:bg-yellow-950/20 border-yellow-200">
