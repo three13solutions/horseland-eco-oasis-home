@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -10,20 +10,24 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Plus, Pencil, Trash2, Zap } from 'lucide-react';
 import { toast } from 'sonner';
-import { format } from 'date-fns';
+import { format, isBefore, startOfDay } from 'date-fns';
 import { EmptyRuleState } from './EmptyRuleState';
+
+type StatusFilter = 'all' | 'active' | 'expired' | 'upcoming';
 
 export function TacticalOverridesTab() {
   const queryClient = useQueryClient();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingRule, setEditingRule] = useState<any>(null);
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
   const [formData, setFormData] = useState({
     reason: '',
     start_date: '',
     end_date: '',
-    room_type_id: '',
+    selected_room_types: [] as string[],
     room_unit_id: '',
     override_type: 'fixed_price',
     override_price: '',
@@ -45,11 +49,11 @@ export function TacticalOverridesTab() {
   });
 
   const { data: roomTypes } = useQuery({
-    queryKey: ['room-types'],
+    queryKey: ['room-types-for-overrides'],
     queryFn: async () => {
       const { data, error } = await supabase.from('room_types').select('id, name');
       if (error) throw error;
-      return data;
+      return data?.filter(rt => rt) || [];
     }
   });
 
@@ -62,14 +66,49 @@ export function TacticalOverridesTab() {
     }
   });
 
+  const today = startOfDay(new Date());
+
+  const getOverrideStatus = (rule: any): 'active' | 'expired' | 'upcoming' | 'inactive' => {
+    if (!rule.is_active) return 'inactive';
+    const endDate = startOfDay(new Date(rule.end_date));
+    const startDate = startOfDay(new Date(rule.start_date));
+    if (isBefore(endDate, today)) return 'expired';
+    if (isBefore(today, startDate)) return 'upcoming';
+    return 'active';
+  };
+
+  const filteredRules = useMemo(() => {
+    if (!rules) return [];
+    if (statusFilter === 'all') return rules;
+    return rules.filter(rule => {
+      const status = getOverrideStatus(rule);
+      if (statusFilter === 'active') return status === 'active';
+      if (statusFilter === 'expired') return status === 'expired';
+      if (statusFilter === 'upcoming') return status === 'upcoming';
+      return true;
+    });
+  }, [rules, statusFilter]);
+
+  const statusCounts = useMemo(() => {
+    if (!rules) return { all: 0, active: 0, expired: 0, upcoming: 0 };
+    return rules.reduce((acc, rule) => {
+      acc.all++;
+      const status = getOverrideStatus(rule);
+      if (status === 'active') acc.active++;
+      else if (status === 'expired') acc.expired++;
+      else if (status === 'upcoming') acc.upcoming++;
+      return acc;
+    }, { all: 0, active: 0, expired: 0, upcoming: 0 });
+  }, [rules]);
+
   const createMutation = useMutation({
-    mutationFn: async (data: any) => {
-      const { error } = await supabase.from('tactical_overrides').insert([data]);
+    mutationFn: async (dataList: any[]) => {
+      const { error } = await supabase.from('tactical_overrides').insert(dataList);
       if (error) throw error;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['tactical-overrides'] });
-      toast.success('Tactical override created');
+      toast.success('Tactical override(s) created');
       setIsDialogOpen(false);
       resetForm();
     }
@@ -115,7 +154,7 @@ export function TacticalOverridesTab() {
       reason: '',
       start_date: '',
       end_date: '',
-      room_type_id: '',
+      selected_room_types: [],
       room_unit_id: '',
       override_type: 'fixed_price',
       override_price: '',
@@ -126,13 +165,31 @@ export function TacticalOverridesTab() {
     setEditingRule(null);
   };
 
+  const handleRoomTypeToggle = (roomTypeId: string) => {
+    setFormData(prev => ({
+      ...prev,
+      selected_room_types: prev.selected_room_types.includes(roomTypeId)
+        ? prev.selected_room_types.filter(id => id !== roomTypeId)
+        : [...prev.selected_room_types, roomTypeId],
+      room_unit_id: ''
+    }));
+  };
+
+  const handleSelectAllRoomTypes = () => {
+    if (formData.selected_room_types.length === roomTypes?.length) {
+      setFormData(prev => ({ ...prev, selected_room_types: [], room_unit_id: '' }));
+    } else {
+      setFormData(prev => ({ ...prev, selected_room_types: roomTypes?.map(t => t.id) || [], room_unit_id: '' }));
+    }
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    const payload = {
+    
+    const basePayload = {
       reason: formData.reason,
       start_date: formData.start_date,
       end_date: formData.end_date,
-      room_type_id: formData.room_type_id || null,
       room_unit_id: formData.room_unit_id || null,
       override_price: formData.override_type === 'fixed_price' ? parseFloat(formData.override_price) : null,
       adjustment_type: formData.override_type === 'adjustment' ? formData.adjustment_type : null,
@@ -141,9 +198,21 @@ export function TacticalOverridesTab() {
     };
 
     if (editingRule) {
-      updateMutation.mutate({ id: editingRule.id, data: payload });
+      updateMutation.mutate({ 
+        id: editingRule.id, 
+        data: { ...basePayload, room_type_id: formData.selected_room_types[0] || null }
+      });
     } else {
-      createMutation.mutate(payload);
+      // Bulk create: one override per selected room type, or one for "all" if none selected
+      if (formData.selected_room_types.length === 0) {
+        createMutation.mutate([{ ...basePayload, room_type_id: null }]);
+      } else {
+        const payloads = formData.selected_room_types.map(room_type_id => ({
+          ...basePayload,
+          room_type_id
+        }));
+        createMutation.mutate(payloads);
+      }
     }
   };
 
@@ -153,7 +222,7 @@ export function TacticalOverridesTab() {
       reason: rule.reason,
       start_date: rule.start_date,
       end_date: rule.end_date,
-      room_type_id: rule.room_type_id || '',
+      selected_room_types: rule.room_type_id ? [rule.room_type_id] : [],
       room_unit_id: rule.room_unit_id || '',
       override_type: rule.override_price ? 'fixed_price' : 'adjustment',
       override_price: rule.override_price?.toString() || '',
@@ -166,20 +235,20 @@ export function TacticalOverridesTab() {
 
   return (
     <Card>
-      <CardHeader>
+      <CardHeader className="pb-3">
         <div className="flex items-center justify-between">
           <div>
-            <CardTitle className="flex items-center gap-2">
-              <Zap className="h-5 w-5" />
+            <CardTitle className="flex items-center gap-2 text-lg">
+              <Zap className="h-4 w-4" />
               Tactical Overrides
             </CardTitle>
-            <CardDescription>
-              Manual price overrides for special events, maintenance, or promotions
+            <CardDescription className="text-xs">
+              Manual price overrides for special events or promotions
             </CardDescription>
           </div>
           <Dialog open={isDialogOpen} onOpenChange={(open) => { setIsDialogOpen(open); if (!open) resetForm(); }}>
             <DialogTrigger asChild>
-              <Button><Plus className="h-4 w-4 mr-2" />Add Override</Button>
+              <Button size="sm"><Plus className="h-4 w-4 mr-1" />Add Override</Button>
             </DialogTrigger>
             <DialogContent className="max-w-2xl">
               <DialogHeader>
@@ -200,28 +269,66 @@ export function TacticalOverridesTab() {
                     <Input type="date" value={formData.end_date} onChange={(e) => setFormData({ ...formData, end_date: e.target.value })} required />
                   </div>
                 </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label>Room Category (Optional)</Label>
-                    <Select value={formData.room_type_id || '__all__'} onValueChange={(value) => setFormData({ ...formData, room_type_id: value === '__all__' ? '' : value, room_unit_id: '' })}>
+                
+                {/* Bulk Room Type Selection */}
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <Label>Room Categories {!editingRule && '(Select multiple for bulk override)'}</Label>
+                    {!editingRule && roomTypes && roomTypes.length > 0 && (
+                      <Button type="button" variant="ghost" size="sm" onClick={handleSelectAllRoomTypes}>
+                        {formData.selected_room_types.length === roomTypes.length ? 'Deselect All' : 'Select All'}
+                      </Button>
+                    )}
+                  </div>
+                  {editingRule ? (
+                    <Select 
+                      value={formData.selected_room_types[0] || '__all__'} 
+                      onValueChange={(value) => setFormData({ ...formData, selected_room_types: value === '__all__' ? [] : [value], room_unit_id: '' })}
+                    >
                       <SelectTrigger><SelectValue placeholder="All categories" /></SelectTrigger>
                       <SelectContent>
                         <SelectItem value="__all__">All Categories</SelectItem>
                         {roomTypes?.map((type) => <SelectItem key={type.id} value={type.id}>{type.name}</SelectItem>)}
                       </SelectContent>
                     </Select>
-                  </div>
+                  ) : (
+                    <div className="grid grid-cols-2 gap-2 p-3 border rounded-md bg-muted/30 max-h-40 overflow-y-auto">
+                      {roomTypes?.map((type) => (
+                        <div key={type.id} className="flex items-center gap-2">
+                          <Checkbox
+                            id={`room-type-${type.id}`}
+                            checked={formData.selected_room_types.includes(type.id)}
+                            onCheckedChange={() => handleRoomTypeToggle(type.id)}
+                          />
+                          <label htmlFor={`room-type-${type.id}`} className="text-sm cursor-pointer">{type.name}</label>
+                        </div>
+                      ))}
+                      {(!roomTypes || roomTypes.length === 0) && (
+                        <p className="text-sm text-muted-foreground col-span-2">No room categories available</p>
+                      )}
+                    </div>
+                  )}
+                  {formData.selected_room_types.length === 0 && !editingRule && (
+                    <p className="text-xs text-muted-foreground">Leave empty to apply to all categories</p>
+                  )}
+                </div>
+
+                {/* Specific Unit - only show if single room type selected */}
+                {formData.selected_room_types.length === 1 && (
                   <div className="space-y-2">
                     <Label>Specific Unit (Optional)</Label>
-                    <Select value={formData.room_unit_id || '__all__'} onValueChange={(value) => setFormData({ ...formData, room_unit_id: value === '__all__' ? '' : value })} disabled={!formData.room_type_id}>
+                    <Select value={formData.room_unit_id || '__all__'} onValueChange={(value) => setFormData({ ...formData, room_unit_id: value === '__all__' ? '' : value })}>
                       <SelectTrigger><SelectValue placeholder="All units" /></SelectTrigger>
                       <SelectContent>
                         <SelectItem value="__all__">All Units</SelectItem>
-                        {roomUnits?.filter(u => !formData.room_type_id || u.room_type_id === formData.room_type_id).map((unit) => <SelectItem key={unit.id} value={unit.id}>{unit.unit_number}</SelectItem>)}
+                        {roomUnits?.filter(u => u.room_type_id === formData.selected_room_types[0]).map((unit) => (
+                          <SelectItem key={unit.id} value={unit.id}>{unit.unit_number}</SelectItem>
+                        ))}
                       </SelectContent>
                     </Select>
                   </div>
-                </div>
+                )}
+
                 <div className="space-y-2">
                   <Label>Override Type</Label>
                   <Select value={formData.override_type} onValueChange={(value) => setFormData({ ...formData, override_type: value })}>
@@ -261,74 +368,126 @@ export function TacticalOverridesTab() {
                 </div>
                 <div className="flex justify-end gap-2">
                   <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>Cancel</Button>
-                  <Button type="submit">{editingRule ? 'Update' : 'Create'}</Button>
+                  <Button type="submit">
+                    {editingRule ? 'Update' : formData.selected_room_types.length > 1 ? `Create ${formData.selected_room_types.length} Overrides` : 'Create'}
+                  </Button>
                 </div>
               </form>
             </DialogContent>
           </Dialog>
         </div>
       </CardHeader>
-      <CardContent>
+      
+      {/* Status Filter */}
+      {rules && rules.length > 0 && (
+        <div className="px-6 pb-3">
+          <div className="flex gap-1 flex-wrap">
+            {(['all', 'active', 'upcoming', 'expired'] as StatusFilter[]).map((status) => (
+              <Button
+                key={status}
+                variant={statusFilter === status ? 'default' : 'ghost'}
+                size="sm"
+                className="h-7 text-xs"
+                onClick={() => setStatusFilter(status)}
+              >
+                {status.charAt(0).toUpperCase() + status.slice(1)}
+                <Badge variant="secondary" className="ml-1 h-4 px-1 text-[10px]">
+                  {statusCounts[status]}
+                </Badge>
+              </Button>
+            ))}
+          </div>
+        </div>
+      )}
+
+      <CardContent className="pt-0">
         <Table>
           <TableHeader>
-            <TableRow>
-              <TableHead>Reason</TableHead>
-              <TableHead>Period</TableHead>
-              <TableHead>Scope</TableHead>
-              <TableHead>Override</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead className="text-right">Actions</TableHead>
+            <TableRow className="hover:bg-transparent">
+              <TableHead className="h-8 text-xs">Reason</TableHead>
+              <TableHead className="h-8 text-xs">Period</TableHead>
+              <TableHead className="h-8 text-xs">Scope</TableHead>
+              <TableHead className="h-8 text-xs">Override</TableHead>
+              <TableHead className="h-8 text-xs">Status</TableHead>
+              <TableHead className="h-8 text-xs text-right">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {isLoading ? (
-              <TableRow><TableCell colSpan={6} className="text-center">Loading...</TableCell></TableRow>
-            ) : rules?.length === 0 ? (
-              <TableRow>
-                <TableCell colSpan={6} className="p-0">
-                  <EmptyRuleState
-                    icon={Zap}
-                    title="No Tactical Overrides Defined"
-                    description="Create manual price overrides for special situations like events, maintenance, or flash sales. These take highest priority and override all other rules."
-                    examples={[
-                      "Premium pricing for festival weekends",
-                      "Discounts during renovation periods",
-                      "Special event packages with fixed rates"
-                    ]}
-                    onAddClick={() => setIsDialogOpen(true)}
-                  />
-                </TableCell>
-              </TableRow>
-            ) : (
-              rules?.map((rule) => (
-                <TableRow key={rule.id}>
-                  <TableCell className="font-medium">{rule.reason}</TableCell>
-                  <TableCell className="text-sm">{format(new Date(rule.start_date), 'MMM dd')} - {format(new Date(rule.end_date), 'MMM dd, yyyy')}</TableCell>
-                  <TableCell>{rule.room_units?.unit_number || rule.room_types?.name || 'All'}</TableCell>
-                  <TableCell>
-                    <Badge variant="outline" className="font-mono">
-                      {rule.override_price ? `₹${rule.override_price}` : `${rule.adjustment_value > 0 ? '+' : ''}${rule.adjustment_type === 'percentage' ? `${rule.adjustment_value}%` : `₹${rule.adjustment_value}`}`}
-                    </Badge>
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex items-center gap-2">
-                      <Switch
-                        checked={rule.is_active}
-                        onCheckedChange={(checked) => 
-                          toggleActiveMutation.mutate({ id: rule.id, is_active: checked })
-                        }
-                      />
-                      <span className="text-sm text-muted-foreground">
-                        {rule.is_active ? 'Active' : 'Inactive'}
-                      </span>
-                    </div>
-                  </TableCell>
-                  <TableCell className="text-right">
-                    <Button variant="ghost" size="icon" onClick={() => handleEdit(rule)}><Pencil className="h-4 w-4" /></Button>
-                    <Button variant="ghost" size="icon" onClick={() => deleteMutation.mutate(rule.id)}><Trash2 className="h-4 w-4" /></Button>
+              <TableRow><TableCell colSpan={6} className="text-center py-4 text-sm">Loading...</TableCell></TableRow>
+            ) : filteredRules.length === 0 ? (
+              statusFilter !== 'all' && rules && rules.length > 0 ? (
+                <TableRow>
+                  <TableCell colSpan={6} className="text-center py-8 text-muted-foreground text-sm">
+                    No {statusFilter} overrides found
                   </TableCell>
                 </TableRow>
-              ))
+              ) : (
+                <TableRow>
+                  <TableCell colSpan={6} className="p-0">
+                    <EmptyRuleState
+                      icon={Zap}
+                      title="No Tactical Overrides Defined"
+                      description="Create manual price overrides for special situations like events, maintenance, or flash sales. These take highest priority and override all other rules."
+                      examples={[
+                        "Premium pricing for festival weekends",
+                        "Discounts during renovation periods",
+                        "Special event packages with fixed rates"
+                      ]}
+                      onAddClick={() => setIsDialogOpen(true)}
+                    />
+                  </TableCell>
+                </TableRow>
+              )
+            ) : (
+              filteredRules.map((rule) => {
+                const status = getOverrideStatus(rule);
+                const isExpired = status === 'expired';
+                return (
+                  <TableRow 
+                    key={rule.id} 
+                    className={isExpired ? 'opacity-50 bg-muted/30' : ''}
+                  >
+                    <TableCell className="py-2 text-sm font-medium">{rule.reason}</TableCell>
+                    <TableCell className="py-2 text-xs text-muted-foreground">
+                      {format(new Date(rule.start_date), 'MMM dd')} - {format(new Date(rule.end_date), 'MMM dd, yy')}
+                    </TableCell>
+                    <TableCell className="py-2 text-xs">
+                      {rule.room_units?.unit_number || rule.room_types?.name || 'All'}
+                    </TableCell>
+                    <TableCell className="py-2">
+                      <Badge variant="outline" className="font-mono text-xs h-5">
+                        {rule.override_price ? `₹${rule.override_price}` : `${rule.adjustment_value > 0 ? '+' : ''}${rule.adjustment_type === 'percentage' ? `${rule.adjustment_value}%` : `₹${rule.adjustment_value}`}`}
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="py-2">
+                      <div className="flex items-center gap-1.5">
+                        <Switch
+                          checked={rule.is_active}
+                          onCheckedChange={(checked) => 
+                            toggleActiveMutation.mutate({ id: rule.id, is_active: checked })
+                          }
+                          className="scale-75"
+                        />
+                        <Badge 
+                          variant={status === 'active' ? 'default' : status === 'upcoming' ? 'secondary' : 'outline'}
+                          className="text-[10px] h-4 px-1"
+                        >
+                          {status === 'inactive' ? 'Off' : status.charAt(0).toUpperCase() + status.slice(1)}
+                        </Badge>
+                      </div>
+                    </TableCell>
+                    <TableCell className="py-2 text-right">
+                      <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => handleEdit(rule)}>
+                        <Pencil className="h-3 w-3" />
+                      </Button>
+                      <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => deleteMutation.mutate(rule.id)}>
+                        <Trash2 className="h-3 w-3" />
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                );
+              })
             )}
           </TableBody>
         </Table>
