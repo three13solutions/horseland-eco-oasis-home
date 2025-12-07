@@ -18,6 +18,7 @@ import { EmptyRuleState } from './EmptyRuleState';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
 type StatusFilter = 'all' | 'active' | 'expired' | 'upcoming';
+type OverrideLevel = 'category' | 'room_type' | 'room_unit';
 
 interface RateRow {
   double: string;
@@ -26,8 +27,8 @@ interface RateRow {
 }
 
 interface RoomCategoryRates {
-  roomTypeId: string;
-  roomTypeName: string;
+  id: string;
+  name: string;
   rates: {
     oneNightWeekday: RateRow;
     oneNightWeekend: RateRow;
@@ -42,8 +43,9 @@ interface FormData {
   end_date: string;
   is_active: boolean;
   sameRateForAllDays: boolean;
-  selectedRoomTypeIds: string[];
-  roomCategoryRates: RoomCategoryRates[];
+  overrideLevel: OverrideLevel;
+  selectedIds: string[];
+  categoryRates: RoomCategoryRates[];
 }
 
 const initialFormData: FormData = {
@@ -52,8 +54,9 @@ const initialFormData: FormData = {
   end_date: '',
   is_active: true,
   sameRateForAllDays: true,
-  selectedRoomTypeIds: [],
-  roomCategoryRates: []
+  overrideLevel: 'room_type',
+  selectedIds: [],
+  categoryRates: []
 };
 
 const emptyRateRow: RateRow = { double: '', extraAdult: '', extraChild: '' };
@@ -80,22 +83,39 @@ export function TacticalOverridesTab() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('tactical_overrides')
-        .select('*, room_types(name), room_units(unit_number)')
+        .select('*, room_types(name), room_units(unit_number, unit_name), room_categories(name)')
         .order('start_date', { ascending: false });
       if (error) throw error;
       return data;
     }
   });
 
+  const { data: roomCategories } = useQuery({
+    queryKey: ['room-categories-for-overrides'],
+    queryFn: async () => {
+      const { data, error } = await supabase.from('room_categories').select('id, name').eq('is_active', true).order('display_order');
+      if (error) throw error;
+      return data || [];
+    }
+  });
+
   const { data: roomTypes } = useQuery({
     queryKey: ['room-types-for-overrides'],
     queryFn: async () => {
-      const { data, error } = await supabase.from('room_types').select('id, name');
+      const { data, error } = await supabase.from('room_types').select('id, name, category_id');
       if (error) throw error;
       return data?.filter(rt => rt) || [];
     }
   });
 
+  const { data: roomUnits } = useQuery({
+    queryKey: ['room-units-for-overrides'],
+    queryFn: async () => {
+      const { data, error } = await supabase.from('room_units').select('id, unit_number, unit_name, room_type_id, room_types(name)').eq('is_active', true).order('unit_number');
+      if (error) throw error;
+      return data || [];
+    }
+  });
 
   const today = startOfDay(new Date());
 
@@ -176,22 +196,22 @@ export function TacticalOverridesTab() {
     setEditingRule(null);
   };
 
-  const handleRoomTypeToggle = (roomTypeId: string, roomTypeName: string) => {
+  const handleItemToggle = (id: string, name: string) => {
     setFormData(prev => {
-      const isSelected = prev.selectedRoomTypeIds.includes(roomTypeId);
+      const isSelected = prev.selectedIds.includes(id);
       if (isSelected) {
         return {
           ...prev,
-          selectedRoomTypeIds: prev.selectedRoomTypeIds.filter(id => id !== roomTypeId),
-          roomCategoryRates: prev.roomCategoryRates.filter(r => r.roomTypeId !== roomTypeId)
+          selectedIds: prev.selectedIds.filter(i => i !== id),
+          categoryRates: prev.categoryRates.filter(r => r.id !== id)
         };
       } else {
         return {
           ...prev,
-          selectedRoomTypeIds: [...prev.selectedRoomTypeIds, roomTypeId],
-          roomCategoryRates: [...prev.roomCategoryRates, {
-            roomTypeId,
-            roomTypeName,
+          selectedIds: [...prev.selectedIds, id],
+          categoryRates: [...prev.categoryRates, {
+            id,
+            name,
             rates: { ...emptyRates }
           }]
         };
@@ -199,33 +219,59 @@ export function TacticalOverridesTab() {
     });
   };
 
-  const handleSelectAllRoomTypes = () => {
-    if (!roomTypes) return;
-    if (formData.selectedRoomTypeIds.length === roomTypes.length) {
-      setFormData(prev => ({ ...prev, selectedRoomTypeIds: [], roomCategoryRates: [] }));
+  const handleSelectAll = () => {
+    const items = getSelectableItems();
+    if (!items) return;
+    if (formData.selectedIds.length === items.length) {
+      setFormData(prev => ({ ...prev, selectedIds: [], categoryRates: [] }));
     } else {
       setFormData(prev => ({
         ...prev,
-        selectedRoomTypeIds: roomTypes.map(t => t.id),
-        roomCategoryRates: roomTypes.map(t => ({
-          roomTypeId: t.id,
-          roomTypeName: t.name,
+        selectedIds: items.map(t => t.id),
+        categoryRates: items.map(t => ({
+          id: t.id,
+          name: t.name,
           rates: { ...emptyRates }
         }))
       }));
     }
   };
 
-  const updateRoomCategoryRateValue = (
-    roomTypeId: string, 
+  const getSelectableItems = (): { id: string; name: string }[] | undefined => {
+    switch (formData.overrideLevel) {
+      case 'category':
+        return roomCategories?.map(c => ({ id: c.id, name: c.name }));
+      case 'room_type':
+        return roomTypes?.map(t => ({ id: t.id, name: t.name }));
+      case 'room_unit':
+        return roomUnits?.map(u => ({ 
+          id: u.id, 
+          name: `${u.unit_number}${u.unit_name ? ` - ${u.unit_name}` : ''} (${u.room_types?.name || 'Unknown'})` 
+        }));
+      default:
+        return [];
+    }
+  };
+
+  const handleOverrideLevelChange = (level: OverrideLevel) => {
+    setFormData(prev => ({
+      ...prev,
+      overrideLevel: level,
+      selectedIds: [],
+      categoryRates: []
+    }));
+  };
+
+  const updateRateValue = (
+    id: string, 
     duration: 'oneNightWeekday' | 'oneNightWeekend' | 'twoNightsWeekday' | 'twoNightsWeekend', 
     field: 'double' | 'extraAdult' | 'extraChild', 
     value: string
   ) => {
     setFormData(prev => ({
       ...prev,
-      roomCategoryRates: prev.roomCategoryRates.map(r => 
-        r.roomTypeId === roomTypeId 
+      categoryRates: prev.categoryRates.map(r => 
+        r.id === id 
           ? { ...r, rates: { ...r.rates, [duration]: { ...r.rates[duration], [field]: value } } }
           : r
       )
@@ -236,16 +282,15 @@ export function TacticalOverridesTab() {
     const categoriesWithMissingCharges: string[] = [];
     
     for (const categoryRate of categoryRates) {
-      const { rates, roomTypeName } = categoryRate;
+      const { rates, name } = categoryRate;
       const ratesToCheck = formData.sameRateForAllDays 
         ? [rates.oneNightWeekday, rates.twoNightsWeekday]
         : [rates.oneNightWeekday, rates.oneNightWeekend, rates.twoNightsWeekday, rates.twoNightsWeekend];
       
       for (const rateRow of ratesToCheck) {
-        // If base rate is entered but extra charges are missing
         if (rateRow.double && (!rateRow.extraAdult || !rateRow.extraChild)) {
-          if (!categoriesWithMissingCharges.includes(roomTypeName)) {
-            categoriesWithMissingCharges.push(roomTypeName);
+          if (!categoriesWithMissingCharges.includes(name)) {
+            categoriesWithMissingCharges.push(name);
           }
         }
       }
@@ -257,88 +302,82 @@ export function TacticalOverridesTab() {
   const buildPayloads = (): any[] => {
     const payloads: any[] = [];
     
-    // Default meal plan and cancellation policy for all overrides
     const defaultMealPlanCode = 'all_meals_inclusive';
     
     const createPayload = (
-      roomTypeId: string,
+      targetId: string,
       rateRow: RateRow,
       minNights: number,
       maxNights: number | null,
       dayType: 'weekday' | 'weekend',
       reason: string
     ) => {
-      // Double Occupancy (base rate)
+      const basePayload: any = {
+        reason,
+        start_date: formData.start_date,
+        end_date: formData.end_date,
+        meal_plan_code: defaultMealPlanCode,
+        min_nights: minNights,
+        max_nights: maxNights,
+        day_type: dayType,
+        is_active: formData.is_active
+      };
+
+      // Set the correct ID based on override level
+      if (formData.overrideLevel === 'category') {
+        basePayload.room_category_id = targetId;
+      } else if (formData.overrideLevel === 'room_type') {
+        basePayload.room_type_id = targetId;
+      } else if (formData.overrideLevel === 'room_unit') {
+        basePayload.room_unit_id = targetId;
+      }
+
       if (rateRow.double) {
         payloads.push({
-          reason,
-          start_date: formData.start_date,
-          end_date: formData.end_date,
-          room_type_id: roomTypeId,
-          meal_plan_code: defaultMealPlanCode,
+          ...basePayload,
           override_price: parseFloat(rateRow.double),
-          min_nights: minNights,
-          max_nights: maxNights,
           min_adults: 2,
           max_adults: 2,
           occupancy_type: 'double',
-          day_type: dayType,
-          is_active: formData.is_active
         });
       }
       
-      // Extra Adult charges (from 3rd guest onwards)
       if (rateRow.extraAdult) {
         payloads.push({
+          ...basePayload,
           reason: `${reason} - Extra Adult`,
-          start_date: formData.start_date,
-          end_date: formData.end_date,
-          room_type_id: roomTypeId,
-          meal_plan_code: defaultMealPlanCode,
           adjustment_type: 'fixed',
           adjustment_value: parseFloat(rateRow.extraAdult),
-          min_nights: minNights,
-          max_nights: maxNights,
           min_adults: 3,
           occupancy_type: 'extra_adult',
-          day_type: dayType,
-          is_active: formData.is_active
         });
       }
       
-      // Extra Child charges (from 3rd guest onwards)
       if (rateRow.extraChild) {
         payloads.push({
+          ...basePayload,
           reason: `${reason} - Extra Child`,
-          start_date: formData.start_date,
-          end_date: formData.end_date,
-          room_type_id: roomTypeId,
-          meal_plan_code: defaultMealPlanCode,
           adjustment_type: 'fixed',
           adjustment_value: parseFloat(rateRow.extraChild),
-          min_nights: minNights,
-          max_nights: maxNights,
           min_children: 1,
           occupancy_type: 'extra_child',
-          day_type: dayType,
-          is_active: formData.is_active
         });
       }
     };
     
-    for (const categoryRate of formData.roomCategoryRates) {
-      const { rates, roomTypeId } = categoryRate;
+    for (const categoryRate of formData.categoryRates) {
+      const { rates, id } = categoryRate;
       
       if (formData.sameRateForAllDays) {
-        createPayload(roomTypeId, rates.oneNightWeekday, 1, 1, 'weekday', formData.reason);
-        createPayload(roomTypeId, rates.oneNightWeekday, 1, 1, 'weekend', formData.reason);
-        createPayload(roomTypeId, rates.twoNightsWeekday, 2, null, 'weekday', formData.reason);
-        createPayload(roomTypeId, rates.twoNightsWeekday, 2, null, 'weekend', formData.reason);
+        createPayload(id, rates.oneNightWeekday, 1, 1, 'weekday', formData.reason);
+        createPayload(id, rates.oneNightWeekday, 1, 1, 'weekend', formData.reason);
+        createPayload(id, rates.twoNightsWeekday, 2, null, 'weekday', formData.reason);
+        createPayload(id, rates.twoNightsWeekday, 2, null, 'weekend', formData.reason);
       } else {
-        createPayload(roomTypeId, rates.oneNightWeekday, 1, 1, 'weekday', formData.reason);
-        createPayload(roomTypeId, rates.oneNightWeekend, 1, 1, 'weekend', formData.reason);
-        createPayload(roomTypeId, rates.twoNightsWeekday, 2, null, 'weekday', formData.reason);
-        createPayload(roomTypeId, rates.twoNightsWeekend, 2, null, 'weekend', formData.reason);
+        createPayload(id, rates.oneNightWeekday, 1, 1, 'weekday', formData.reason);
+        createPayload(id, rates.oneNightWeekend, 1, 1, 'weekend', formData.reason);
+        createPayload(id, rates.twoNightsWeekday, 2, null, 'weekday', formData.reason);
+        createPayload(id, rates.twoNightsWeekend, 2, null, 'weekend', formData.reason);
       }
     }
     
@@ -348,8 +387,8 @@ export function TacticalOverridesTab() {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (formData.roomCategoryRates.length === 0) {
-      toast.error('Please select at least one room category');
+    if (formData.categoryRates.length === 0) {
+      toast.error('Please select at least one item');
       return;
     }
 
@@ -360,8 +399,7 @@ export function TacticalOverridesTab() {
       return;
     }
 
-    // Check for missing extra charges
-    const missingCharges = checkMissingExtraCharges(formData.roomCategoryRates);
+    const missingCharges = checkMissingExtraCharges(formData.categoryRates);
     
     if (missingCharges.length > 0) {
       setCategoriesMissingCharges(missingCharges);
@@ -457,22 +495,48 @@ export function TacticalOverridesTab() {
                 </div>
               </div>
 
-              {/* Room Category Selection */}
+              {/* Override Level Selection */}
+              <div className="space-y-2">
+                <Label>Override Level</Label>
+                <div className="flex gap-2">
+                  {[
+                    { value: 'category' as OverrideLevel, label: 'By Category' },
+                    { value: 'room_type' as OverrideLevel, label: 'By Room Type' },
+                    { value: 'room_unit' as OverrideLevel, label: 'By Room Unit' }
+                  ].map((option) => (
+                    <Button
+                      key={option.value}
+                      type="button"
+                      variant={formData.overrideLevel === option.value ? 'default' : 'outline'}
+                      size="sm"
+                      onClick={() => handleOverrideLevelChange(option.value)}
+                    >
+                      {option.label}
+                    </Button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Item Selection */}
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
-                  <Label>Select Room Categories</Label>
-                  <Button type="button" variant="ghost" size="sm" onClick={handleSelectAllRoomTypes}>
-                    {formData.selectedRoomTypeIds.length === roomTypes?.length ? 'Deselect All' : 'Select All'}
+                  <Label>
+                    {formData.overrideLevel === 'category' && 'Select Categories'}
+                    {formData.overrideLevel === 'room_type' && 'Select Room Types'}
+                    {formData.overrideLevel === 'room_unit' && 'Select Room Units'}
+                  </Label>
+                  <Button type="button" variant="ghost" size="sm" onClick={handleSelectAll}>
+                    {formData.selectedIds.length === (getSelectableItems()?.length || 0) ? 'Deselect All' : 'Select All'}
                   </Button>
                 </div>
-                <div className="flex flex-wrap gap-2 p-3 border rounded-md bg-muted/30">
-                  {roomTypes?.map((type) => (
-                    <label key={type.id} className="flex items-center gap-2 px-3 py-1.5 border rounded-md bg-background cursor-pointer hover:bg-muted/50">
+                <div className="flex flex-wrap gap-2 p-3 border rounded-md bg-muted/30 max-h-48 overflow-y-auto">
+                  {getSelectableItems()?.map((item) => (
+                    <label key={item.id} className="flex items-center gap-2 px-3 py-1.5 border rounded-md bg-background cursor-pointer hover:bg-muted/50">
                       <Checkbox
-                        checked={formData.selectedRoomTypeIds.includes(type.id)}
-                        onCheckedChange={() => handleRoomTypeToggle(type.id, type.name)}
+                        checked={formData.selectedIds.includes(item.id)}
+                        onCheckedChange={() => handleItemToggle(item.id, item.name)}
                       />
-                      <span className="text-sm">{type.name}</span>
+                      <span className="text-sm">{item.name}</span>
                     </label>
                   ))}
                 </div>
@@ -489,23 +553,23 @@ export function TacticalOverridesTab() {
                   Same rate for weekdays and weekends
                 </Label>
               </div>
-              {formData.roomCategoryRates.length > 0 && (
+              {formData.categoryRates.length > 0 && (
                 <div className="rounded-lg border bg-muted/30 p-3 text-sm text-muted-foreground">
                   <span className="font-medium text-foreground">Note:</span> All override rates are for <span className="font-medium text-foreground">Full Board (All Meals Inclusive)</span> meal plan with <span className="font-medium text-foreground">Refundable as Credit Voucher</span> cancellation policy. Extra adult/child charges apply from the 3rd guest onwards.
                 </div>
               )}
 
-              {formData.roomCategoryRates.map((categoryRate) => (
-                <Card key={categoryRate.roomTypeId} className="border-2">
+              {formData.categoryRates.map((categoryRate) => (
+                <Card key={categoryRate.id} className="border-2">
                   <CardHeader className="pb-3">
                     <div className="flex items-center justify-between">
-                      <CardTitle className="text-base">{categoryRate.roomTypeName}</CardTitle>
+                      <CardTitle className="text-base">{categoryRate.name}</CardTitle>
                       <Button
                         type="button"
                         variant="ghost"
                         size="icon"
                         className="h-6 w-6"
-                        onClick={() => handleRoomTypeToggle(categoryRate.roomTypeId, categoryRate.roomTypeName)}
+                        onClick={() => handleItemToggle(categoryRate.id, categoryRate.name)}
                       >
                         <X className="h-4 w-4" />
                       </Button>
@@ -526,25 +590,25 @@ export function TacticalOverridesTab() {
                           <TableRow>
                             <TableCell className="py-2 font-medium text-sm">1 Night</TableCell>
                             <TableCell className="py-1 px-2">
-                              <Input type="number" placeholder="—" className="h-8 text-center text-sm" value={categoryRate.rates.oneNightWeekday.double} onChange={(e) => updateRoomCategoryRateValue(categoryRate.roomTypeId, 'oneNightWeekday', 'double', e.target.value)} />
+                              <Input type="number" placeholder="—" className="h-8 text-center text-sm" value={categoryRate.rates.oneNightWeekday.double} onChange={(e) => updateRateValue(categoryRate.id, 'oneNightWeekday', 'double', e.target.value)} />
                             </TableCell>
                             <TableCell className="py-1 px-2">
-                              <Input type="number" placeholder="—" className="h-8 text-center text-sm" value={categoryRate.rates.oneNightWeekday.extraAdult} onChange={(e) => updateRoomCategoryRateValue(categoryRate.roomTypeId, 'oneNightWeekday', 'extraAdult', e.target.value)} />
+                              <Input type="number" placeholder="—" className="h-8 text-center text-sm" value={categoryRate.rates.oneNightWeekday.extraAdult} onChange={(e) => updateRateValue(categoryRate.id, 'oneNightWeekday', 'extraAdult', e.target.value)} />
                             </TableCell>
                             <TableCell className="py-1 px-2">
-                              <Input type="number" placeholder="—" className="h-8 text-center text-sm" value={categoryRate.rates.oneNightWeekday.extraChild} onChange={(e) => updateRoomCategoryRateValue(categoryRate.roomTypeId, 'oneNightWeekday', 'extraChild', e.target.value)} />
+                              <Input type="number" placeholder="—" className="h-8 text-center text-sm" value={categoryRate.rates.oneNightWeekday.extraChild} onChange={(e) => updateRateValue(categoryRate.id, 'oneNightWeekday', 'extraChild', e.target.value)} />
                             </TableCell>
                           </TableRow>
                           <TableRow>
                             <TableCell className="py-2 font-medium text-sm">2+ Nights</TableCell>
                             <TableCell className="py-1 px-2">
-                              <Input type="number" placeholder="—" className="h-8 text-center text-sm" value={categoryRate.rates.twoNightsWeekday.double} onChange={(e) => updateRoomCategoryRateValue(categoryRate.roomTypeId, 'twoNightsWeekday', 'double', e.target.value)} />
+                              <Input type="number" placeholder="—" className="h-8 text-center text-sm" value={categoryRate.rates.twoNightsWeekday.double} onChange={(e) => updateRateValue(categoryRate.id, 'twoNightsWeekday', 'double', e.target.value)} />
                             </TableCell>
                             <TableCell className="py-1 px-2">
-                              <Input type="number" placeholder="—" className="h-8 text-center text-sm" value={categoryRate.rates.twoNightsWeekday.extraAdult} onChange={(e) => updateRoomCategoryRateValue(categoryRate.roomTypeId, 'twoNightsWeekday', 'extraAdult', e.target.value)} />
+                              <Input type="number" placeholder="—" className="h-8 text-center text-sm" value={categoryRate.rates.twoNightsWeekday.extraAdult} onChange={(e) => updateRateValue(categoryRate.id, 'twoNightsWeekday', 'extraAdult', e.target.value)} />
                             </TableCell>
                             <TableCell className="py-1 px-2">
-                              <Input type="number" placeholder="—" className="h-8 text-center text-sm" value={categoryRate.rates.twoNightsWeekday.extraChild} onChange={(e) => updateRoomCategoryRateValue(categoryRate.roomTypeId, 'twoNightsWeekday', 'extraChild', e.target.value)} />
+                              <Input type="number" placeholder="—" className="h-8 text-center text-sm" value={categoryRate.rates.twoNightsWeekday.extraChild} onChange={(e) => updateRateValue(categoryRate.id, 'twoNightsWeekday', 'extraChild', e.target.value)} />
                             </TableCell>
                           </TableRow>
                         </TableBody>
@@ -574,43 +638,43 @@ export function TacticalOverridesTab() {
                         <TableRow>
                           <TableCell className="py-2 font-medium text-sm">1 Night</TableCell>
                           <TableCell className="py-1 px-1 border-l">
-                            <Input type="number" placeholder="—" className="h-8 text-center text-sm" value={categoryRate.rates.oneNightWeekday.double} onChange={(e) => updateRoomCategoryRateValue(categoryRate.roomTypeId, 'oneNightWeekday', 'double', e.target.value)} />
+                            <Input type="number" placeholder="—" className="h-8 text-center text-sm" value={categoryRate.rates.oneNightWeekday.double} onChange={(e) => updateRateValue(categoryRate.id, 'oneNightWeekday', 'double', e.target.value)} />
                           </TableCell>
                           <TableCell className="py-1 px-1">
-                            <Input type="number" placeholder="—" className="h-8 text-center text-sm" value={categoryRate.rates.oneNightWeekday.extraAdult} onChange={(e) => updateRoomCategoryRateValue(categoryRate.roomTypeId, 'oneNightWeekday', 'extraAdult', e.target.value)} />
+                            <Input type="number" placeholder="—" className="h-8 text-center text-sm" value={categoryRate.rates.oneNightWeekday.extraAdult} onChange={(e) => updateRateValue(categoryRate.id, 'oneNightWeekday', 'extraAdult', e.target.value)} />
                           </TableCell>
                           <TableCell className="py-1 px-1">
-                            <Input type="number" placeholder="—" className="h-8 text-center text-sm" value={categoryRate.rates.oneNightWeekday.extraChild} onChange={(e) => updateRoomCategoryRateValue(categoryRate.roomTypeId, 'oneNightWeekday', 'extraChild', e.target.value)} />
+                            <Input type="number" placeholder="—" className="h-8 text-center text-sm" value={categoryRate.rates.oneNightWeekday.extraChild} onChange={(e) => updateRateValue(categoryRate.id, 'oneNightWeekday', 'extraChild', e.target.value)} />
                           </TableCell>
                           <TableCell className="py-1 px-1 border-l">
-                            <Input type="number" placeholder="—" className="h-8 text-center text-sm" value={categoryRate.rates.oneNightWeekend.double} onChange={(e) => updateRoomCategoryRateValue(categoryRate.roomTypeId, 'oneNightWeekend', 'double', e.target.value)} />
+                            <Input type="number" placeholder="—" className="h-8 text-center text-sm" value={categoryRate.rates.oneNightWeekend.double} onChange={(e) => updateRateValue(categoryRate.id, 'oneNightWeekend', 'double', e.target.value)} />
                           </TableCell>
                           <TableCell className="py-1 px-1">
-                            <Input type="number" placeholder="—" className="h-8 text-center text-sm" value={categoryRate.rates.oneNightWeekend.extraAdult} onChange={(e) => updateRoomCategoryRateValue(categoryRate.roomTypeId, 'oneNightWeekend', 'extraAdult', e.target.value)} />
+                            <Input type="number" placeholder="—" className="h-8 text-center text-sm" value={categoryRate.rates.oneNightWeekend.extraAdult} onChange={(e) => updateRateValue(categoryRate.id, 'oneNightWeekend', 'extraAdult', e.target.value)} />
                           </TableCell>
                           <TableCell className="py-1 px-1">
-                            <Input type="number" placeholder="—" className="h-8 text-center text-sm" value={categoryRate.rates.oneNightWeekend.extraChild} onChange={(e) => updateRoomCategoryRateValue(categoryRate.roomTypeId, 'oneNightWeekend', 'extraChild', e.target.value)} />
+                            <Input type="number" placeholder="—" className="h-8 text-center text-sm" value={categoryRate.rates.oneNightWeekend.extraChild} onChange={(e) => updateRateValue(categoryRate.id, 'oneNightWeekend', 'extraChild', e.target.value)} />
                           </TableCell>
                         </TableRow>
                         <TableRow>
                           <TableCell className="py-2 font-medium text-sm">2+ Nights</TableCell>
                           <TableCell className="py-1 px-1 border-l">
-                            <Input type="number" placeholder="—" className="h-8 text-center text-sm" value={categoryRate.rates.twoNightsWeekday.double} onChange={(e) => updateRoomCategoryRateValue(categoryRate.roomTypeId, 'twoNightsWeekday', 'double', e.target.value)} />
+                            <Input type="number" placeholder="—" className="h-8 text-center text-sm" value={categoryRate.rates.twoNightsWeekday.double} onChange={(e) => updateRateValue(categoryRate.id, 'twoNightsWeekday', 'double', e.target.value)} />
                           </TableCell>
                           <TableCell className="py-1 px-1">
-                            <Input type="number" placeholder="—" className="h-8 text-center text-sm" value={categoryRate.rates.twoNightsWeekday.extraAdult} onChange={(e) => updateRoomCategoryRateValue(categoryRate.roomTypeId, 'twoNightsWeekday', 'extraAdult', e.target.value)} />
+                            <Input type="number" placeholder="—" className="h-8 text-center text-sm" value={categoryRate.rates.twoNightsWeekday.extraAdult} onChange={(e) => updateRateValue(categoryRate.id, 'twoNightsWeekday', 'extraAdult', e.target.value)} />
                           </TableCell>
                           <TableCell className="py-1 px-1">
-                            <Input type="number" placeholder="—" className="h-8 text-center text-sm" value={categoryRate.rates.twoNightsWeekday.extraChild} onChange={(e) => updateRoomCategoryRateValue(categoryRate.roomTypeId, 'twoNightsWeekday', 'extraChild', e.target.value)} />
+                            <Input type="number" placeholder="—" className="h-8 text-center text-sm" value={categoryRate.rates.twoNightsWeekday.extraChild} onChange={(e) => updateRateValue(categoryRate.id, 'twoNightsWeekday', 'extraChild', e.target.value)} />
                           </TableCell>
                           <TableCell className="py-1 px-1 border-l">
-                            <Input type="number" placeholder="—" className="h-8 text-center text-sm" value={categoryRate.rates.twoNightsWeekend.double} onChange={(e) => updateRoomCategoryRateValue(categoryRate.roomTypeId, 'twoNightsWeekend', 'double', e.target.value)} />
+                            <Input type="number" placeholder="—" className="h-8 text-center text-sm" value={categoryRate.rates.twoNightsWeekend.double} onChange={(e) => updateRateValue(categoryRate.id, 'twoNightsWeekend', 'double', e.target.value)} />
                           </TableCell>
                           <TableCell className="py-1 px-1">
-                            <Input type="number" placeholder="—" className="h-8 text-center text-sm" value={categoryRate.rates.twoNightsWeekend.extraAdult} onChange={(e) => updateRoomCategoryRateValue(categoryRate.roomTypeId, 'twoNightsWeekend', 'extraAdult', e.target.value)} />
+                            <Input type="number" placeholder="—" className="h-8 text-center text-sm" value={categoryRate.rates.twoNightsWeekend.extraAdult} onChange={(e) => updateRateValue(categoryRate.id, 'twoNightsWeekend', 'extraAdult', e.target.value)} />
                           </TableCell>
                           <TableCell className="py-1 px-1">
-                            <Input type="number" placeholder="—" className="h-8 text-center text-sm" value={categoryRate.rates.twoNightsWeekend.extraChild} onChange={(e) => updateRoomCategoryRateValue(categoryRate.roomTypeId, 'twoNightsWeekend', 'extraChild', e.target.value)} />
+                            <Input type="number" placeholder="—" className="h-8 text-center text-sm" value={categoryRate.rates.twoNightsWeekend.extraChild} onChange={(e) => updateRateValue(categoryRate.id, 'twoNightsWeekend', 'extraChild', e.target.value)} />
                           </TableCell>
                         </TableRow>
                       </TableBody>
@@ -620,9 +684,9 @@ export function TacticalOverridesTab() {
                 </Card>
               ))}
 
-              {formData.selectedRoomTypeIds.length === 0 && (
+              {formData.selectedIds.length === 0 && (
                 <div className="text-center py-8 text-muted-foreground border-2 border-dashed rounded-lg">
-                  Select room categories above to enter override rates
+                  Select {formData.overrideLevel === 'category' ? 'categories' : formData.overrideLevel === 'room_type' ? 'room types' : 'room units'} above to enter override rates
                 </div>
               )}
 
@@ -698,7 +762,13 @@ export function TacticalOverridesTab() {
                     {format(new Date(rule.start_date), 'MMM dd')} - {format(new Date(rule.end_date), 'MMM dd, yy')}
                   </TableCell>
                   <TableCell className="py-2.5 text-sm">
-                    {rule.room_types?.name || 'All'}
+                    {rule.room_categories?.name 
+                      ? <Badge variant="outline" className="text-xs">{rule.room_categories.name}</Badge>
+                      : rule.room_types?.name 
+                        ? rule.room_types.name 
+                        : rule.room_units?.unit_number 
+                          ? `Unit ${rule.room_units.unit_number}${rule.room_units.unit_name ? ` - ${rule.room_units.unit_name}` : ''}`
+                          : 'All'}
                   </TableCell>
                   <TableCell className="py-2.5">
                     {conditions.length > 0 ? (

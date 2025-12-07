@@ -2609,6 +2609,7 @@ export type Database = {
           override_price: number | null
           override_type: string
           reason: string
+          room_category_id: string | null
           room_type_id: string | null
           room_unit_id: string | null
           start_date: string
@@ -2634,6 +2635,7 @@ export type Database = {
           override_price?: number | null
           override_type: string
           reason: string
+          room_category_id?: string | null
           room_type_id?: string | null
           room_unit_id?: string | null
           start_date: string
@@ -2659,6 +2661,7 @@ export type Database = {
           override_price?: number | null
           override_type?: string
           reason?: string
+          room_category_id?: string | null
           room_type_id?: string | null
           room_unit_id?: string | null
           start_date?: string
@@ -2670,6 +2673,13 @@ export type Database = {
             columns: ["created_by"]
             isOneToOne: false
             referencedRelation: "admin_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tactical_overrides_room_category_id_fkey"
+            columns: ["room_category_id"]
+            isOneToOne: false
+            referencedRelation: "room_categories"
             referencedColumns: ["id"]
           },
           {
