@@ -7,10 +7,11 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Plus, Pencil, Trash2, Zap, X } from 'lucide-react';
+import { Plus, Pencil, Trash2, Zap, X, AlertTriangle } from 'lucide-react';
 import { toast } from 'sonner';
 import { format, isBefore, startOfDay } from 'date-fns';
 import { EmptyRuleState } from './EmptyRuleState';
@@ -70,6 +71,9 @@ export function TacticalOverridesTab() {
   const [editingRule, setEditingRule] = useState<any>(null);
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
   const [formData, setFormData] = useState<FormData>(initialFormData);
+  const [showExtraChargesWarning, setShowExtraChargesWarning] = useState(false);
+  const [pendingPayloads, setPendingPayloads] = useState<any[]>([]);
+  const [categoriesMissingCharges, setCategoriesMissingCharges] = useState<string[]>([]);
 
   const { data: rules, isLoading } = useQuery({
     queryKey: ['tactical-overrides'],
@@ -228,14 +232,29 @@ export function TacticalOverridesTab() {
     }));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
+  const checkMissingExtraCharges = (categoryRates: RoomCategoryRates[]): string[] => {
+    const categoriesWithMissingCharges: string[] = [];
     
-    if (formData.roomCategoryRates.length === 0) {
-      toast.error('Please select at least one room category');
-      return;
+    for (const categoryRate of categoryRates) {
+      const { rates, roomTypeName } = categoryRate;
+      const ratesToCheck = formData.sameRateForAllDays 
+        ? [rates.oneNightWeekday, rates.twoNightsWeekday]
+        : [rates.oneNightWeekday, rates.oneNightWeekend, rates.twoNightsWeekday, rates.twoNightsWeekend];
+      
+      for (const rateRow of ratesToCheck) {
+        // If base rate is entered but extra charges are missing
+        if (rateRow.double && (!rateRow.extraAdult || !rateRow.extraChild)) {
+          if (!categoriesWithMissingCharges.includes(roomTypeName)) {
+            categoriesWithMissingCharges.push(roomTypeName);
+          }
+        }
+      }
     }
+    
+    return categoriesWithMissingCharges;
+  };
 
+  const buildPayloads = (): any[] => {
     const payloads: any[] = [];
     
     // Default meal plan and cancellation policy for all overrides
@@ -311,13 +330,11 @@ export function TacticalOverridesTab() {
       const { rates, roomTypeId } = categoryRate;
       
       if (formData.sameRateForAllDays) {
-        // Use weekday rates for both weekday and weekend
         createPayload(roomTypeId, rates.oneNightWeekday, 1, 1, 'weekday', formData.reason);
         createPayload(roomTypeId, rates.oneNightWeekday, 1, 1, 'weekend', formData.reason);
         createPayload(roomTypeId, rates.twoNightsWeekday, 2, null, 'weekday', formData.reason);
         createPayload(roomTypeId, rates.twoNightsWeekday, 2, null, 'weekend', formData.reason);
       } else {
-        // Separate rates for weekday and weekend
         createPayload(roomTypeId, rates.oneNightWeekday, 1, 1, 'weekday', formData.reason);
         createPayload(roomTypeId, rates.oneNightWeekend, 1, 1, 'weekend', formData.reason);
         createPayload(roomTypeId, rates.twoNightsWeekday, 2, null, 'weekday', formData.reason);
@@ -325,12 +342,48 @@ export function TacticalOverridesTab() {
       }
     }
     
+    return payloads;
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (formData.roomCategoryRates.length === 0) {
+      toast.error('Please select at least one room category');
+      return;
+    }
+
+    const payloads = buildPayloads();
+    
     if (payloads.length === 0) {
       toast.error('Please enter at least one rate');
       return;
     }
 
+    // Check for missing extra charges
+    const missingCharges = checkMissingExtraCharges(formData.roomCategoryRates);
+    
+    if (missingCharges.length > 0) {
+      setCategoriesMissingCharges(missingCharges);
+      setPendingPayloads(payloads);
+      setShowExtraChargesWarning(true);
+      return;
+    }
+
     createMutation.mutate(payloads);
+  };
+
+  const handleConfirmWithDynamicPricing = () => {
+    createMutation.mutate(pendingPayloads);
+    setShowExtraChargesWarning(false);
+    setPendingPayloads([]);
+    setCategoriesMissingCharges([]);
+  };
+
+  const handleCancelWarning = () => {
+    setShowExtraChargesWarning(false);
+    setPendingPayloads([]);
+    setCategoriesMissingCharges([]);
   };
 
   const getConditionsSummary = (rule: any) => {
@@ -696,6 +749,41 @@ export function TacticalOverridesTab() {
           )}
         </TableBody>
       </Table>
+
+      {/* Warning Dialog for Missing Extra Charges */}
+      <AlertDialog open={showExtraChargesWarning} onOpenChange={setShowExtraChargesWarning}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2">
+              <AlertTriangle className="h-5 w-5 text-amber-500" />
+              Missing Extra Guest Charges
+            </AlertDialogTitle>
+            <AlertDialogDescription asChild>
+              <div className="space-y-3">
+                <p>
+                  The following room categories have base rates but are missing extra adult or extra child charges:
+                </p>
+                <ul className="list-disc pl-5 space-y-1">
+                  {categoriesMissingCharges.map((name) => (
+                    <li key={name} className="font-medium text-foreground">{name}</li>
+                  ))}
+                </ul>
+                <p className="text-amber-600 dark:text-amber-400">
+                  Dynamic pricing rates will be applied for additional guests during this period.
+                </p>
+              </div>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={handleCancelWarning}>
+              Cancel - Edit Rates
+            </AlertDialogCancel>
+            <AlertDialogAction onClick={handleConfirmWithDynamicPricing}>
+              Continue - Use Dynamic Pricing
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
