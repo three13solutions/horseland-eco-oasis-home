@@ -159,8 +159,8 @@ export function PricingConstraintsTab() {
     e.preventDefault();
     
     const payload = {
-      room_type_id: formData.room_type_id || null,
-      room_unit_id: formData.room_unit_id || null,
+      room_type_id: formData.room_type_id && formData.room_type_id !== 'all' ? formData.room_type_id : null,
+      room_unit_id: formData.room_unit_id && formData.room_unit_id !== 'all' ? formData.room_unit_id : null,
       floor_price: parseFloat(formData.floor_price),
       ceiling_price: formData.ceiling_price ? parseFloat(formData.ceiling_price) : null,
       is_active: formData.is_active
@@ -216,14 +216,14 @@ export function PricingConstraintsTab() {
                   <div className="space-y-2">
                     <Label htmlFor="room_type">Room Category</Label>
                     <Select
-                      value={formData.room_type_id}
-                      onValueChange={(value) => setFormData({ ...formData, room_type_id: value, room_unit_id: '' })}
+                      value={formData.room_type_id || 'all'}
+                      onValueChange={(value) => setFormData({ ...formData, room_type_id: value === 'all' ? '' : value, room_unit_id: '' })}
                     >
                       <SelectTrigger>
                         <SelectValue placeholder="Select category" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="">All Categories</SelectItem>
+                        <SelectItem value="all">All Categories</SelectItem>
                         {roomTypes?.map((type) => (
                           <SelectItem key={type.id} value={type.id}>
                             {type.name}
@@ -236,15 +236,15 @@ export function PricingConstraintsTab() {
                   <div className="space-y-2">
                     <Label htmlFor="room_unit">Specific Unit (Optional)</Label>
                     <Select
-                      value={formData.room_unit_id}
-                      onValueChange={(value) => setFormData({ ...formData, room_unit_id: value })}
+                      value={formData.room_unit_id || 'all'}
+                      onValueChange={(value) => setFormData({ ...formData, room_unit_id: value === 'all' ? '' : value })}
                       disabled={!formData.room_type_id}
                     >
                       <SelectTrigger>
                         <SelectValue placeholder="Select unit" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="">All Units</SelectItem>
+                        <SelectItem value="all">All Units</SelectItem>
                         {roomUnits?.map((unit) => (
                           <SelectItem key={unit.id} value={unit.id}>
                             {unit.unit_number}
