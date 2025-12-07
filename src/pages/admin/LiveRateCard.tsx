@@ -5,12 +5,13 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { Calendar, RefreshCw } from 'lucide-react';
+import { Calendar, RefreshCw, ChevronRight, ArrowRight } from 'lucide-react';
 import { format } from 'date-fns';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar as CalendarComponent } from '@/components/ui/calendar';
 import { cn } from '@/lib/utils';
+import { HoverCard, HoverCardContent, HoverCardTrigger } from '@/components/ui/hover-card';
 
 interface LiveRateResult {
   roomTypeId: string;
@@ -215,56 +216,138 @@ export default function LiveRateCard() {
             <div className="border rounded-lg overflow-hidden">
               <Table>
                 <TableHeader>
-                  <TableRow>
-                    <TableHead>Room Type</TableHead>
-                    <TableHead className="text-right">Base Price</TableHead>
-                    <TableHead className="text-right">Final Price</TableHead>
-                    <TableHead className="text-right">Adjustment</TableHead>
-                    <TableHead>Rules Applied</TableHead>
+                  <TableRow className="text-xs">
+                    <TableHead className="py-2 px-3">Room Type</TableHead>
+                    <TableHead className="py-2 px-3 text-right">Base</TableHead>
+                    <TableHead className="py-2 px-3 text-right">Final</TableHead>
+                    <TableHead className="py-2 px-3 text-right">Adj.</TableHead>
+                    <TableHead className="py-2 px-3">Rules</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {liveRates.map((rate) => {
                     const adjustment = rate.finalPrice - rate.basePrice;
                     const adjustmentPercent = rate.basePrice > 0 
-                      ? ((adjustment / rate.basePrice) * 100).toFixed(1)
+                      ? ((adjustment / rate.basePrice) * 100).toFixed(0)
                       : '0';
 
                     return (
-                      <TableRow key={rate.roomTypeId}>
-                        <TableCell className="font-medium">
-                          {rate.roomTypeName}
-                        </TableCell>
-                        <TableCell className="text-right text-muted-foreground">
-                          ₹{rate.basePrice.toLocaleString('en-IN')}
-                        </TableCell>
-                        <TableCell className="text-right font-semibold text-lg">
-                          ₹{rate.finalPrice.toLocaleString('en-IN')}
-                        </TableCell>
-                        <TableCell className="text-right">
-                          {adjustment !== 0 ? (
-                            <span className={adjustment >= 0 ? 'text-green-600' : 'text-red-600'}>
-                              {adjustment >= 0 ? '+' : ''}₹{adjustment.toLocaleString('en-IN')}
-                              <span className="text-xs ml-1">({adjustmentPercent}%)</span>
-                            </span>
-                          ) : (
-                            <span className="text-muted-foreground">-</span>
-                          )}
-                        </TableCell>
-                        <TableCell>
-                          <div className="flex gap-1 flex-wrap">
-                            {rate.adjustments && rate.adjustments.length > 0 ? (
-                              rate.adjustments.map((rule: any, idx: number) => (
-                                <Badge key={idx} variant="secondary" className="text-xs">
-                                  {rule.type || rule.rule_type || 'Rule'}
-                                </Badge>
-                              ))
-                            ) : (
-                              <span className="text-xs text-muted-foreground">Base only</span>
-                            )}
+                      <HoverCard key={rate.roomTypeId} openDelay={100} closeDelay={100}>
+                        <HoverCardTrigger asChild>
+                          <TableRow className="cursor-pointer hover:bg-muted/80 text-sm">
+                            <TableCell className="py-2 px-3 font-medium">
+                              {rate.roomTypeName}
+                            </TableCell>
+                            <TableCell className="py-2 px-3 text-right text-muted-foreground text-xs">
+                              ₹{rate.basePrice.toLocaleString('en-IN')}
+                            </TableCell>
+                            <TableCell className="py-2 px-3 text-right font-semibold">
+                              ₹{rate.finalPrice.toLocaleString('en-IN')}
+                            </TableCell>
+                            <TableCell className="py-2 px-3 text-right text-xs">
+                              {adjustment !== 0 ? (
+                                <span className={adjustment >= 0 ? 'text-green-600' : 'text-red-600'}>
+                                  {adjustment >= 0 ? '+' : ''}{adjustmentPercent}%
+                                </span>
+                              ) : (
+                                <span className="text-muted-foreground">-</span>
+                              )}
+                            </TableCell>
+                            <TableCell className="py-2 px-3">
+                              <div className="flex items-center gap-1">
+                                {rate.adjustments && rate.adjustments.length > 0 ? (
+                                  <Badge variant="secondary" className="text-[10px] px-1.5 py-0">
+                                    {rate.adjustments.length} rule{rate.adjustments.length > 1 ? 's' : ''}
+                                  </Badge>
+                                ) : (
+                                  <span className="text-[10px] text-muted-foreground">Base</span>
+                                )}
+                                <ChevronRight className="h-3 w-3 text-muted-foreground" />
+                              </div>
+                            </TableCell>
+                          </TableRow>
+                        </HoverCardTrigger>
+                        <HoverCardContent className="w-80 p-0" side="left" align="start">
+                          <div className="p-3 border-b bg-muted/30">
+                            <div className="font-semibold text-sm">{rate.roomTypeName}</div>
+                            <div className="text-xs text-muted-foreground">Rate Calculation Breakdown</div>
                           </div>
-                        </TableCell>
-                      </TableRow>
+                          <div className="p-3 space-y-2 max-h-[300px] overflow-y-auto">
+                            {/* Step 1: Base Price */}
+                            <div className="flex items-center justify-between text-sm">
+                              <div className="flex items-center gap-2">
+                                <Badge variant="outline" className="text-[10px] px-1.5 py-0 bg-background">1</Badge>
+                                <span>Base Price</span>
+                              </div>
+                              <span className="font-mono text-xs">₹{rate.basePrice.toLocaleString('en-IN')}</span>
+                            </div>
+                            
+                            {/* Rule adjustments */}
+                            {rate.adjustments && rate.adjustments.length > 0 ? (
+                              rate.adjustments.map((rule: any, idx: number) => {
+                                const ruleAdjustment = rule.adjustment || (rule.to - rule.from) || 0;
+                                const newPrice = rule.new_price || rule.to || rate.finalPrice;
+                                
+                                return (
+                                  <div key={idx} className="space-y-1">
+                                    <div className="flex items-start justify-between text-sm">
+                                      <div className="flex items-center gap-2">
+                                        <Badge variant="outline" className="text-[10px] px-1.5 py-0 bg-background">{idx + 2}</Badge>
+                                        <div>
+                                          <div className="font-medium text-xs capitalize">
+                                            {(rule.type || rule.rule_type || 'Adjustment').replace(/_/g, ' ')}
+                                          </div>
+                                          {rule.rule && (
+                                            <div className="text-[10px] text-muted-foreground">{rule.rule}</div>
+                                          )}
+                                          {rule.reason && (
+                                            <div className="text-[10px] text-muted-foreground">{rule.reason}</div>
+                                          )}
+                                        </div>
+                                      </div>
+                                      <div className="text-right">
+                                        <div className={cn(
+                                          "font-mono text-xs",
+                                          ruleAdjustment >= 0 ? "text-green-600" : "text-red-600"
+                                        )}>
+                                          {ruleAdjustment >= 0 ? '+' : ''}₹{Math.abs(ruleAdjustment).toLocaleString('en-IN')}
+                                        </div>
+                                        {newPrice > 0 && (
+                                          <div className="text-[10px] text-muted-foreground">
+                                            = ₹{newPrice.toLocaleString('en-IN')}
+                                          </div>
+                                        )}
+                                      </div>
+                                    </div>
+                                  </div>
+                                );
+                              })
+                            ) : (
+                              <div className="text-xs text-muted-foreground italic py-2">
+                                No additional rules applied. Using base price only.
+                              </div>
+                            )}
+                            
+                            {/* Final Price */}
+                            <div className="border-t pt-2 mt-2">
+                              <div className="flex items-center justify-between">
+                                <div className="flex items-center gap-2">
+                                  <ArrowRight className="h-3 w-3" />
+                                  <span className="font-semibold text-sm">Final Price</span>
+                                </div>
+                                <span className="font-mono font-bold">₹{rate.finalPrice.toLocaleString('en-IN')}</span>
+                              </div>
+                              {adjustment !== 0 && (
+                                <div className="text-right text-xs text-muted-foreground">
+                                  Total adjustment: <span className={adjustment >= 0 ? 'text-green-600' : 'text-red-600'}>
+                                    {adjustment >= 0 ? '+' : ''}₹{adjustment.toLocaleString('en-IN')} ({adjustmentPercent}%)
+                                  </span>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        </HoverCardContent>
+                      </HoverCard>
                     );
                   })}
                 </TableBody>
