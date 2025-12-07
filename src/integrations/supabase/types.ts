@@ -2208,10 +2208,44 @@ export type Database = {
           },
         ]
       }
+      room_categories: {
+        Row: {
+          created_at: string
+          description: string | null
+          display_order: number
+          id: string
+          is_active: boolean
+          name: string
+          slug: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          display_order?: number
+          id?: string
+          is_active?: boolean
+          name: string
+          slug: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          display_order?: number
+          id?: string
+          is_active?: boolean
+          name?: string
+          slug?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       room_types: {
         Row: {
           availability_calendar: Json | null
           base_price: number
+          category_id: string | null
           created_at: string
           description: string | null
           features: Json | null
@@ -2229,6 +2263,7 @@ export type Database = {
         Insert: {
           availability_calendar?: Json | null
           base_price?: number
+          category_id?: string | null
           created_at?: string
           description?: string | null
           features?: Json | null
@@ -2246,6 +2281,7 @@ export type Database = {
         Update: {
           availability_calendar?: Json | null
           base_price?: number
+          category_id?: string | null
           created_at?: string
           description?: string | null
           features?: Json | null
@@ -2260,7 +2296,15 @@ export type Database = {
           seasonal_pricing?: Json | null
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "room_types_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "room_categories"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       room_units: {
         Row: {
