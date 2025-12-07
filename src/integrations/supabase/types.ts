@@ -2546,6 +2546,7 @@ export type Database = {
           max_adults: number | null
           max_children: number | null
           max_nights: number | null
+          meal_plan_code: string | null
           min_adults: number | null
           min_children: number | null
           min_nights: number | null
@@ -2569,6 +2570,7 @@ export type Database = {
           max_adults?: number | null
           max_children?: number | null
           max_nights?: number | null
+          meal_plan_code?: string | null
           min_adults?: number | null
           min_children?: number | null
           min_nights?: number | null
@@ -2592,6 +2594,7 @@ export type Database = {
           max_adults?: number | null
           max_children?: number | null
           max_nights?: number | null
+          meal_plan_code?: string | null
           min_adults?: number | null
           min_children?: number | null
           min_nights?: number | null

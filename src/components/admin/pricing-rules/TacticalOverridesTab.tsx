@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
@@ -10,13 +10,22 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Plus, Pencil, Trash2, Zap, Users, Calendar } from 'lucide-react';
+import { Plus, Pencil, Trash2, Zap, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
-import { format, isBefore, startOfDay } from 'date-fns';
+import { format, isBefore, startOfDay, addDays } from 'date-fns';
 import { EmptyRuleState } from './EmptyRuleState';
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 
 type StatusFilter = 'all' | 'active' | 'expired' | 'upcoming';
+
+interface RateScenario {
+  key: string;
+  label: string;
+  nights: number;
+  adults: number;
+  children: number;
+  currentRate: number | null;
+  overrideRate: string;
+}
 
 interface FormData {
   reason: string;
@@ -24,21 +33,18 @@ interface FormData {
   end_date: string;
   selected_room_types: string[];
   room_unit_id: string;
-  override_type: string;
-  override_price: string;
-  adjustment_type: string;
-  adjustment_value: string;
+  meal_plan_code: string;
   is_active: boolean;
-  // Occupancy conditions
-  occupancy_type: string;
-  min_adults: string;
-  max_adults: string;
-  min_children: string;
-  max_children: string;
-  // Length of stay conditions
-  min_nights: string;
-  max_nights: string;
+  scenarios: RateScenario[];
 }
+
+const defaultScenarios: Omit<RateScenario, 'currentRate' | 'overrideRate'>[] = [
+  { key: '1n_double', label: '1 Night - Double Occupancy', nights: 1, adults: 2, children: 0 },
+  { key: '2n_double', label: '2 Nights - Double Occupancy', nights: 2, adults: 2, children: 0 },
+  { key: '1n_single', label: '1 Night - Single Occupancy', nights: 1, adults: 1, children: 0 },
+  { key: '1n_extra_adult', label: '1 Night - With Extra Adult', nights: 1, adults: 3, children: 0 },
+  { key: '1n_with_child', label: '1 Night - With 1 Child', nights: 1, adults: 2, children: 1 },
+];
 
 const initialFormData: FormData = {
   reason: '',
@@ -46,18 +52,9 @@ const initialFormData: FormData = {
   end_date: '',
   selected_room_types: [],
   room_unit_id: '',
-  override_type: 'fixed_price',
-  override_price: '',
-  adjustment_type: 'percentage',
-  adjustment_value: '',
+  meal_plan_code: '',
   is_active: true,
-  occupancy_type: '',
-  min_adults: '',
-  max_adults: '',
-  min_children: '',
-  max_children: '',
-  min_nights: '',
-  max_nights: ''
+  scenarios: defaultScenarios.map(s => ({ ...s, currentRate: null, overrideRate: '' }))
 };
 
 export function TacticalOverridesTab() {
@@ -65,9 +62,8 @@ export function TacticalOverridesTab() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingRule, setEditingRule] = useState<any>(null);
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
-  const [showOccupancyOptions, setShowOccupancyOptions] = useState(false);
-  const [showStayOptions, setShowStayOptions] = useState(false);
   const [formData, setFormData] = useState<FormData>(initialFormData);
+  const [isLoadingRates, setIsLoadingRates] = useState(false);
 
   const { data: rules, isLoading } = useQuery({
     queryKey: ['tactical-overrides'],
@@ -99,7 +95,70 @@ export function TacticalOverridesTab() {
     }
   });
 
+  const { data: mealPlans } = useQuery({
+    queryKey: ['meal-plans'],
+    queryFn: async () => {
+      const { data, error } = await supabase.from('meal_plan_rules').select('plan_code, plan_name').eq('is_active', true);
+      if (error) throw error;
+      return data;
+    }
+  });
+
   const today = startOfDay(new Date());
+
+  // Fetch current calculated rates when room type and dates change
+  useEffect(() => {
+    const fetchCurrentRates = async () => {
+      if (!formData.selected_room_types.length || !formData.start_date) return;
+      
+      setIsLoadingRates(true);
+      try {
+        const roomTypeId = formData.selected_room_types[0];
+        const checkIn = new Date(formData.start_date);
+        
+        const updatedScenarios = await Promise.all(
+          formData.scenarios.map(async (scenario) => {
+            const checkOut = addDays(checkIn, scenario.nights);
+            
+            const { data, error } = await supabase.rpc('calculate_rate_variants', {
+              p_room_type_id: roomTypeId,
+              p_check_in: format(checkIn, 'yyyy-MM-dd'),
+              p_check_out: format(checkOut, 'yyyy-MM-dd'),
+              p_adults_count: scenario.adults,
+              p_children_count: scenario.children,
+              p_infants_count: 0,
+              p_booking_channel: 'direct'
+            });
+            
+            if (error || !data || !Array.isArray(data) || data.length === 0) {
+              return { ...scenario, currentRate: null };
+            }
+            
+            // Find the matching meal plan rate or use first one
+            const variants = data as any[];
+            const matchingVariant = formData.meal_plan_code 
+              ? variants.find(v => v.meal_plan_code === formData.meal_plan_code)
+              : variants[0];
+            
+            return { 
+              ...scenario, 
+              currentRate: matchingVariant ? Math.round(matchingVariant.total_price) : null 
+            };
+          })
+        );
+        
+        setFormData(prev => ({ ...prev, scenarios: updatedScenarios }));
+      } catch (err) {
+        console.error('Error fetching rates:', err);
+      } finally {
+        setIsLoadingRates(false);
+      }
+    };
+    
+    if (formData.selected_room_types.length === 1 && formData.start_date && !editingRule) {
+      fetchCurrentRates();
+    }
+  }, [formData.selected_room_types[0], formData.start_date, formData.meal_plan_code]);
 
   const getOverrideStatus = (rule: any): 'active' | 'expired' | 'upcoming' | 'inactive' => {
     if (!rule.is_active) return 'inactive';
@@ -185,8 +244,6 @@ export function TacticalOverridesTab() {
   const resetForm = () => {
     setFormData(initialFormData);
     setEditingRule(null);
-    setShowOccupancyOptions(false);
-    setShowStayOptions(false);
   };
 
   const handleRoomTypeToggle = (roomTypeId: string) => {
@@ -195,7 +252,8 @@ export function TacticalOverridesTab() {
       selected_room_types: prev.selected_room_types.includes(roomTypeId)
         ? prev.selected_room_types.filter(id => id !== roomTypeId)
         : [...prev.selected_room_types, roomTypeId],
-      room_unit_id: ''
+      room_unit_id: '',
+      scenarios: defaultScenarios.map(s => ({ ...s, currentRate: null, overrideRate: '' }))
     }));
   };
 
@@ -207,94 +265,124 @@ export function TacticalOverridesTab() {
     }
   };
 
+  const handleScenarioRateChange = (key: string, value: string) => {
+    setFormData(prev => ({
+      ...prev,
+      scenarios: prev.scenarios.map(s => 
+        s.key === key ? { ...s, overrideRate: value } : s
+      )
+    }));
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
-    const basePayload = {
-      reason: formData.reason,
-      start_date: formData.start_date,
-      end_date: formData.end_date,
-      room_unit_id: formData.room_unit_id || null,
-      override_price: formData.override_type === 'fixed_price' ? parseFloat(formData.override_price) : null,
-      adjustment_type: formData.override_type === 'adjustment' ? formData.adjustment_type : null,
-      adjustment_value: formData.override_type === 'adjustment' ? parseFloat(formData.adjustment_value) : null,
-      is_active: formData.is_active,
-      // Occupancy conditions
-      occupancy_type: formData.occupancy_type || null,
-      min_adults: formData.min_adults ? parseInt(formData.min_adults) : null,
-      max_adults: formData.max_adults ? parseInt(formData.max_adults) : null,
-      min_children: formData.min_children ? parseInt(formData.min_children) : null,
-      max_children: formData.max_children ? parseInt(formData.max_children) : null,
-      // Length of stay conditions
-      min_nights: formData.min_nights ? parseInt(formData.min_nights) : null,
-      max_nights: formData.max_nights ? parseInt(formData.max_nights) : null
-    };
+    // Get scenarios with override rates filled in
+    const scenariosWithRates = formData.scenarios.filter(s => s.overrideRate);
+    
+    if (scenariosWithRates.length === 0) {
+      toast.error('Please enter at least one override rate');
+      return;
+    }
 
     if (editingRule) {
+      // For editing, use the first scenario's rate
+      const scenario = scenariosWithRates[0];
       updateMutation.mutate({ 
         id: editingRule.id, 
-        data: { ...basePayload, room_type_id: formData.selected_room_types[0] || null }
+        data: {
+          reason: formData.reason,
+          start_date: formData.start_date,
+          end_date: formData.end_date,
+          room_type_id: formData.selected_room_types[0] || null,
+          room_unit_id: formData.room_unit_id || null,
+          meal_plan_code: formData.meal_plan_code || null,
+          override_price: parseFloat(scenario.overrideRate),
+          min_nights: scenario.nights,
+          max_nights: scenario.nights,
+          min_adults: scenario.adults,
+          max_adults: scenario.adults,
+          min_children: scenario.children > 0 ? scenario.children : null,
+          max_children: scenario.children > 0 ? scenario.children : null,
+          is_active: formData.is_active
+        }
       });
     } else {
-      if (formData.selected_room_types.length === 0) {
-        createMutation.mutate([{ ...basePayload, room_type_id: null }]);
-      } else {
-        const payloads = formData.selected_room_types.map(room_type_id => ({
-          ...basePayload,
-          room_type_id
-        }));
-        createMutation.mutate(payloads);
+      // Create one override per scenario per room type
+      const payloads: any[] = [];
+      const roomTypeIds = formData.selected_room_types.length > 0 
+        ? formData.selected_room_types 
+        : [null];
+
+      for (const roomTypeId of roomTypeIds) {
+        for (const scenario of scenariosWithRates) {
+          payloads.push({
+            reason: `${formData.reason} (${scenario.label})`,
+            start_date: formData.start_date,
+            end_date: formData.end_date,
+            room_type_id: roomTypeId,
+            room_unit_id: formData.room_unit_id || null,
+            meal_plan_code: formData.meal_plan_code || null,
+            override_price: parseFloat(scenario.overrideRate),
+            min_nights: scenario.nights,
+            max_nights: scenario.nights,
+            min_adults: scenario.adults,
+            max_adults: scenario.adults,
+            min_children: scenario.children > 0 ? scenario.children : null,
+            max_children: scenario.children > 0 ? scenario.children : null,
+            is_active: formData.is_active
+          });
+        }
       }
+      
+      createMutation.mutate(payloads);
     }
   };
 
   const handleEdit = (rule: any) => {
     setEditingRule(rule);
-    const hasOccupancyConditions = rule.occupancy_type || rule.min_adults || rule.max_adults || rule.min_children || rule.max_children;
-    const hasStayConditions = rule.min_nights || rule.max_nights;
-    setShowOccupancyOptions(hasOccupancyConditions);
-    setShowStayOptions(hasStayConditions);
+    // Find matching scenario or use first one
+    const matchingScenario = defaultScenarios.find(s => 
+      s.nights === rule.min_nights && s.adults === rule.min_adults
+    ) || defaultScenarios[0];
+    
     setFormData({
-      reason: rule.reason,
+      reason: rule.reason.replace(/ \([^)]+\)$/, ''), // Remove scenario suffix
       start_date: rule.start_date,
       end_date: rule.end_date,
       selected_room_types: rule.room_type_id ? [rule.room_type_id] : [],
       room_unit_id: rule.room_unit_id || '',
-      override_type: rule.override_price ? 'fixed_price' : 'adjustment',
-      override_price: rule.override_price?.toString() || '',
-      adjustment_type: rule.adjustment_type || 'percentage',
-      adjustment_value: rule.adjustment_value?.toString() || '',
+      meal_plan_code: rule.meal_plan_code || '',
       is_active: rule.is_active,
-      occupancy_type: rule.occupancy_type || '',
-      min_adults: rule.min_adults?.toString() || '',
-      max_adults: rule.max_adults?.toString() || '',
-      min_children: rule.min_children?.toString() || '',
-      max_children: rule.max_children?.toString() || '',
-      min_nights: rule.min_nights?.toString() || '',
-      max_nights: rule.max_nights?.toString() || ''
+      scenarios: defaultScenarios.map(s => ({
+        ...s,
+        currentRate: null,
+        overrideRate: s.key === matchingScenario.key ? rule.override_price?.toString() || '' : ''
+      }))
     });
     setIsDialogOpen(true);
   };
 
   const getConditionsSummary = (rule: any) => {
     const conditions: string[] = [];
-    if (rule.occupancy_type) {
-      const labels: Record<string, string> = {
-        single: 'Single',
-        double: 'Double',
-        extra_adult: '+Adult',
-        extra_child: '+Child'
-      };
-      conditions.push(labels[rule.occupancy_type] || rule.occupancy_type);
+    if (rule.min_nights && rule.max_nights && rule.min_nights === rule.max_nights) {
+      conditions.push(`${rule.min_nights}N`);
+    } else if (rule.min_nights || rule.max_nights) {
+      conditions.push(`${rule.min_nights || 1}-${rule.max_nights || '∞'}N`);
     }
-    if (rule.min_nights || rule.max_nights) {
-      if (rule.min_nights && rule.max_nights) {
-        conditions.push(`${rule.min_nights}-${rule.max_nights}N`);
-      } else if (rule.min_nights) {
-        conditions.push(`${rule.min_nights}+N`);
-      } else if (rule.max_nights) {
-        conditions.push(`≤${rule.max_nights}N`);
-      }
+    if (rule.min_adults) {
+      conditions.push(`${rule.min_adults}A`);
+    }
+    if (rule.min_children) {
+      conditions.push(`${rule.min_children}C`);
+    }
+    if (rule.meal_plan_code) {
+      const labels: Record<string, string> = {
+        all_meals_inclusive: 'FB',
+        breakfast_and_dinner: 'HB',
+        room_only: 'RO'
+      };
+      conditions.push(labels[rule.meal_plan_code] || rule.meal_plan_code);
     }
     return conditions;
   };
@@ -324,15 +412,16 @@ export function TacticalOverridesTab() {
           <DialogTrigger asChild>
             <Button size="sm"><Plus className="h-4 w-4 mr-1" />Add Override</Button>
           </DialogTrigger>
-          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>{editingRule ? 'Edit' : 'Add'} Tactical Override</DialogTitle>
             </DialogHeader>
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="space-y-2">
-                <Label>Reason</Label>
-                <Input placeholder="e.g., Special Event Premium / Maintenance Discount" value={formData.reason} onChange={(e) => setFormData({ ...formData, reason: e.target.value })} required />
+                <Label>Reason / Event Name</Label>
+                <Input placeholder="e.g., Diwali Special, New Year Package" value={formData.reason} onChange={(e) => setFormData({ ...formData, reason: e.target.value })} required />
               </div>
+              
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label>Start Date</Label>
@@ -343,176 +432,111 @@ export function TacticalOverridesTab() {
                   <Input type="date" value={formData.end_date} onChange={(e) => setFormData({ ...formData, end_date: e.target.value })} required />
                 </div>
               </div>
-              
-              {/* Bulk Room Type Selection */}
-              <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <Label>Room Categories {!editingRule && '(Select multiple for bulk override)'}</Label>
-                  {!editingRule && roomTypes && roomTypes.length > 0 && (
-                    <Button type="button" variant="ghost" size="sm" onClick={handleSelectAllRoomTypes}>
-                      {formData.selected_room_types.length === roomTypes.length ? 'Deselect All' : 'Select All'}
-                    </Button>
+
+              <div className="grid grid-cols-2 gap-4">
+                {/* Room Type Selection */}
+                <div className="space-y-2">
+                  <Label>Room Category</Label>
+                  {editingRule ? (
+                    <Select 
+                      value={formData.selected_room_types[0] || '__all__'} 
+                      onValueChange={(value) => setFormData({ ...formData, selected_room_types: value === '__all__' ? [] : [value], room_unit_id: '' })}
+                    >
+                      <SelectTrigger><SelectValue placeholder="All categories" /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="__all__">All Categories</SelectItem>
+                        {roomTypes?.map((type) => <SelectItem key={type.id} value={type.id}>{type.name}</SelectItem>)}
+                      </SelectContent>
+                    </Select>
+                  ) : (
+                    <Select 
+                      value={formData.selected_room_types.length === 1 ? formData.selected_room_types[0] : '__all__'} 
+                      onValueChange={(value) => setFormData({ 
+                        ...formData, 
+                        selected_room_types: value === '__all__' ? [] : [value], 
+                        room_unit_id: '',
+                        scenarios: defaultScenarios.map(s => ({ ...s, currentRate: null, overrideRate: '' }))
+                      })}
+                    >
+                      <SelectTrigger><SelectValue placeholder="Select room category" /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="__all__">All Categories</SelectItem>
+                        {roomTypes?.map((type) => <SelectItem key={type.id} value={type.id}>{type.name}</SelectItem>)}
+                      </SelectContent>
+                    </Select>
                   )}
                 </div>
-                {editingRule ? (
-                  <Select 
-                    value={formData.selected_room_types[0] || '__all__'} 
-                    onValueChange={(value) => setFormData({ ...formData, selected_room_types: value === '__all__' ? [] : [value], room_unit_id: '' })}
-                  >
-                    <SelectTrigger><SelectValue placeholder="All categories" /></SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="__all__">All Categories</SelectItem>
-                      {roomTypes?.map((type) => <SelectItem key={type.id} value={type.id}>{type.name}</SelectItem>)}
-                    </SelectContent>
-                  </Select>
-                ) : (
-                  <div className="grid grid-cols-2 gap-2 p-3 border rounded-md bg-muted/30 max-h-32 overflow-y-auto">
-                    {roomTypes?.map((type) => (
-                      <div key={type.id} className="flex items-center gap-2">
-                        <Checkbox
-                          id={`room-type-${type.id}`}
-                          checked={formData.selected_room_types.includes(type.id)}
-                          onCheckedChange={() => handleRoomTypeToggle(type.id)}
-                        />
-                        <label htmlFor={`room-type-${type.id}`} className="text-sm cursor-pointer">{type.name}</label>
-                      </div>
-                    ))}
-                    {(!roomTypes || roomTypes.length === 0) && (
-                      <p className="text-sm text-muted-foreground col-span-2">No room categories available</p>
-                    )}
-                  </div>
-                )}
-                {formData.selected_room_types.length === 0 && !editingRule && (
-                  <p className="text-xs text-muted-foreground">Leave empty to apply to all categories</p>
-                )}
-              </div>
 
-              {/* Specific Unit - only show if single room type selected */}
-              {formData.selected_room_types.length === 1 && (
+                {/* Meal Plan Selection */}
                 <div className="space-y-2">
-                  <Label>Specific Unit (Optional)</Label>
-                  <Select value={formData.room_unit_id || '__all__'} onValueChange={(value) => setFormData({ ...formData, room_unit_id: value === '__all__' ? '' : value })}>
-                    <SelectTrigger><SelectValue placeholder="All units" /></SelectTrigger>
+                  <Label>Meal Plan</Label>
+                  <Select value={formData.meal_plan_code || '__all__'} onValueChange={(value) => setFormData({ ...formData, meal_plan_code: value === '__all__' ? '' : value })}>
+                    <SelectTrigger><SelectValue placeholder="All meal plans" /></SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="__all__">All Units</SelectItem>
-                      {roomUnits?.filter(u => u.room_type_id === formData.selected_room_types[0]).map((unit) => (
-                        <SelectItem key={unit.id} value={unit.id}>{unit.unit_number}</SelectItem>
+                      <SelectItem value="__all__">All Meal Plans</SelectItem>
+                      {mealPlans?.map((plan) => (
+                        <SelectItem key={plan.plan_code} value={plan.plan_code}>{plan.plan_name}</SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
                 </div>
-              )}
-
-              {/* Occupancy Conditions */}
-              <Collapsible open={showOccupancyOptions} onOpenChange={setShowOccupancyOptions}>
-                <CollapsibleTrigger asChild>
-                  <Button type="button" variant="outline" size="sm" className="w-full justify-start gap-2">
-                    <Users className="h-4 w-4" />
-                    Occupancy Conditions
-                    <Badge variant="secondary" className="ml-auto">{showOccupancyOptions ? 'Collapse' : 'Expand'}</Badge>
-                  </Button>
-                </CollapsibleTrigger>
-                <CollapsibleContent className="pt-3 space-y-3">
-                  <div className="space-y-2">
-                    <Label>Occupancy Type</Label>
-                    <Select value={formData.occupancy_type || '__any__'} onValueChange={(value) => setFormData({ ...formData, occupancy_type: value === '__any__' ? '' : value })}>
-                      <SelectTrigger><SelectValue placeholder="Any occupancy" /></SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="__any__">Any Occupancy</SelectItem>
-                        <SelectItem value="single">Single (1 adult)</SelectItem>
-                        <SelectItem value="double">Double (2 adults)</SelectItem>
-                        <SelectItem value="extra_adult">With Extra Adult (3+ adults)</SelectItem>
-                        <SelectItem value="extra_child">With Children</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="grid grid-cols-2 gap-3">
-                    <div className="space-y-2">
-                      <Label className="text-xs">Min Adults</Label>
-                      <Input type="number" min="0" placeholder="Any" value={formData.min_adults} onChange={(e) => setFormData({ ...formData, min_adults: e.target.value })} />
-                    </div>
-                    <div className="space-y-2">
-                      <Label className="text-xs">Max Adults</Label>
-                      <Input type="number" min="0" placeholder="Any" value={formData.max_adults} onChange={(e) => setFormData({ ...formData, max_adults: e.target.value })} />
-                    </div>
-                  </div>
-                  <div className="grid grid-cols-2 gap-3">
-                    <div className="space-y-2">
-                      <Label className="text-xs">Min Children</Label>
-                      <Input type="number" min="0" placeholder="Any" value={formData.min_children} onChange={(e) => setFormData({ ...formData, min_children: e.target.value })} />
-                    </div>
-                    <div className="space-y-2">
-                      <Label className="text-xs">Max Children</Label>
-                      <Input type="number" min="0" placeholder="Any" value={formData.max_children} onChange={(e) => setFormData({ ...formData, max_children: e.target.value })} />
-                    </div>
-                  </div>
-                </CollapsibleContent>
-              </Collapsible>
-
-              {/* Length of Stay Conditions */}
-              <Collapsible open={showStayOptions} onOpenChange={setShowStayOptions}>
-                <CollapsibleTrigger asChild>
-                  <Button type="button" variant="outline" size="sm" className="w-full justify-start gap-2">
-                    <Calendar className="h-4 w-4" />
-                    Length of Stay Conditions
-                    <Badge variant="secondary" className="ml-auto">{showStayOptions ? 'Collapse' : 'Expand'}</Badge>
-                  </Button>
-                </CollapsibleTrigger>
-                <CollapsibleContent className="pt-3">
-                  <div className="grid grid-cols-2 gap-3">
-                    <div className="space-y-2">
-                      <Label className="text-xs">Minimum Nights</Label>
-                      <Input type="number" min="1" placeholder="Any" value={formData.min_nights} onChange={(e) => setFormData({ ...formData, min_nights: e.target.value })} />
-                    </div>
-                    <div className="space-y-2">
-                      <Label className="text-xs">Maximum Nights</Label>
-                      <Input type="number" min="1" placeholder="Any" value={formData.max_nights} onChange={(e) => setFormData({ ...formData, max_nights: e.target.value })} />
-                    </div>
-                  </div>
-                </CollapsibleContent>
-              </Collapsible>
-
-              <div className="space-y-2">
-                <Label>Override Type</Label>
-                <Select value={formData.override_type} onValueChange={(value) => setFormData({ ...formData, override_type: value })}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="fixed_price">Fixed Price</SelectItem>
-                    <SelectItem value="adjustment">Price Adjustment</SelectItem>
-                  </SelectContent>
-                </Select>
               </div>
-              {formData.override_type === 'fixed_price' ? (
-                <div className="space-y-2">
-                  <Label>Override Price (₹)</Label>
-                  <Input type="number" step="0.01" placeholder="5000" value={formData.override_price} onChange={(e) => setFormData({ ...formData, override_price: e.target.value })} required />
+
+              {/* Rate Entry Table */}
+              <div className="space-y-2">
+                <Label>Override Rates</Label>
+                <p className="text-xs text-muted-foreground">Enter override prices. Leave blank for scenarios you don't want to override.</p>
+                <div className="border rounded-md overflow-hidden">
+                  <Table>
+                    <TableHeader>
+                      <TableRow className="bg-muted/50">
+                        <TableHead className="h-9">Scenario</TableHead>
+                        <TableHead className="h-9 text-right w-32">Current Rate</TableHead>
+                        <TableHead className="h-9 text-right w-36">Override Rate (₹)</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {formData.scenarios.map((scenario) => (
+                        <TableRow key={scenario.key}>
+                          <TableCell className="py-2 font-medium text-sm">{scenario.label}</TableCell>
+                          <TableCell className="py-2 text-right">
+                            {isLoadingRates ? (
+                              <Loader2 className="h-4 w-4 animate-spin ml-auto" />
+                            ) : scenario.currentRate !== null ? (
+                              <span className="text-muted-foreground">₹{scenario.currentRate.toLocaleString()}</span>
+                            ) : (
+                              <span className="text-muted-foreground text-xs">—</span>
+                            )}
+                          </TableCell>
+                          <TableCell className="py-2">
+                            <Input 
+                              type="number" 
+                              step="1"
+                              placeholder="Enter rate"
+                              className="h-8 text-right"
+                              value={scenario.overrideRate}
+                              onChange={(e) => handleScenarioRateChange(scenario.key, e.target.value)}
+                            />
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
                 </div>
-              ) : (
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label>Adjustment Type</Label>
-                    <Select value={formData.adjustment_type} onValueChange={(value) => setFormData({ ...formData, adjustment_type: value })}>
-                      <SelectTrigger><SelectValue /></SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="percentage">Percentage</SelectItem>
-                        <SelectItem value="fixed">Fixed Amount</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="space-y-2">
-                    <Label>Adjustment Value</Label>
-                    <Input type="number" step="0.01" placeholder={formData.adjustment_type === 'percentage' ? '20' : '1000'} value={formData.adjustment_value} onChange={(e) => setFormData({ ...formData, adjustment_value: e.target.value })} required />
-                  </div>
-                </div>
-              )}
+                {formData.selected_room_types.length !== 1 && (
+                  <p className="text-xs text-amber-600">Select a specific room category to see current calculated rates</p>
+                )}
+              </div>
+
               <div className="flex items-center space-x-2">
                 <Switch checked={formData.is_active} onCheckedChange={(checked) => setFormData({ ...formData, is_active: checked })} />
                 <Label>Active</Label>
               </div>
+              
               <div className="flex justify-end gap-2">
                 <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>Cancel</Button>
                 <Button type="submit">
-                  {editingRule ? 'Update' : formData.selected_room_types.length > 1 ? `Create ${formData.selected_room_types.length} Overrides` : 'Create'}
+                  {editingRule ? 'Update' : 'Create Overrides'}
                 </Button>
               </div>
             </form>
@@ -590,7 +614,7 @@ export function TacticalOverridesTab() {
                   </TableCell>
                   <TableCell className="py-2.5">
                     <Badge variant="outline" className="font-mono">
-                      {rule.override_price ? `₹${rule.override_price}` : `${rule.adjustment_value > 0 ? '+' : ''}${rule.adjustment_type === 'percentage' ? `${rule.adjustment_value}%` : `₹${rule.adjustment_value}`}`}
+                      {rule.override_price ? `₹${rule.override_price.toLocaleString()}` : `${rule.adjustment_value > 0 ? '+' : ''}${rule.adjustment_type === 'percentage' ? `${rule.adjustment_value}%` : `₹${rule.adjustment_value}`}`}
                     </Badge>
                   </TableCell>
                   <TableCell className="py-2.5">
