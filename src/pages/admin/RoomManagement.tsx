@@ -18,12 +18,19 @@ import { Link, useNavigate } from 'react-router-dom';
 import { BulkUnitsDialog } from '@/components/admin/BulkUnitsDialog';
 import { BedConfiguration } from '@/components/admin/BedConfiguration';
 import { MediaPicker } from '@/components/admin/MediaPicker';
+import { RoomCategoriesTab } from '@/components/admin/RoomCategoriesTab';
 
 const ROOM_FEATURES = [
   'Wi-Fi', 'Air Conditioning', 'TV', 'Mini Bar', 'Balcony', 
   'Sea View', 'Mountain View', 'Room Service', 'Kitchenette', 'Jacuzzi',
   'Private Bathroom', 'Hair Dryer', 'Safe', 'Coffee Machine', 'Terrace'
 ];
+
+interface RoomCategory {
+  id: string;
+  name: string;
+  slug: string;
+}
 
 interface RoomType {
   id: string;
@@ -39,6 +46,8 @@ interface RoomType {
   seasonal_pricing: any;
   availability_calendar: any;
   is_published: boolean;
+  category_id?: string | null;
+  room_categories?: RoomCategory | null;
   created_at: string;
   updated_at: string;
 }
@@ -71,10 +80,11 @@ export default function RoomManagement() {
   const [showRoomForm, setShowRoomForm] = useState(false);
   const [editingRoom, setEditingRoom] = useState<RoomType | null>(null);
   const [editingUnit, setEditingUnit] = useState<RoomUnit | null>(null);
-  const [activeTab, setActiveTab] = useState<'rooms' | 'units'>('rooms');
+  const [activeTab, setActiveTab] = useState<'categories' | 'rooms' | 'units'>('rooms');
   const [viewMode, setViewMode] = useState<'card' | 'list'>('card');
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
+  const [roomCategories, setRoomCategories] = useState<RoomCategory[]>([]);
   const { toast } = useToast();
   const navigate = useNavigate();
 
@@ -89,6 +99,7 @@ export default function RoomManagement() {
     features: [] as string[],
     base_price: 0,
     is_published: false,
+    category_id: '',
   });
 
   const [unitFormData, setUnitFormData] = useState({
@@ -121,14 +132,27 @@ export default function RoomManagement() {
   useEffect(() => {
     loadRooms();
     loadUnits();
+    loadCategories();
   }, []);
+
+  const loadCategories = async () => {
+    const { data } = await supabase
+      .from('room_categories')
+      .select('id, name, slug')
+      .eq('is_active', true)
+      .order('display_order');
+    if (data) setRoomCategories(data);
+  };
 
   const loadRooms = async () => {
     try {
       setLoading(true);
       const { data, error } = await supabase
         .from('room_types')
-        .select('*')
+        .select(`
+          *,
+          room_categories(id, name, slug)
+        `)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
@@ -191,6 +215,7 @@ export default function RoomManagement() {
       features: [],
       base_price: 0,
       is_published: false,
+      category_id: '',
     });
     setEditingRoom(null);
   };
@@ -224,6 +249,7 @@ export default function RoomManagement() {
       features: [],
       base_price: 0,
       is_published: false,
+      category_id: '',
     });
     setEditingRoom(null);
     setShowRoomForm(true);
@@ -242,6 +268,7 @@ export default function RoomManagement() {
       features: room.features,
       base_price: Number(room.base_price),
       is_published: room.is_published,
+      category_id: room.category_id || '',
     });
     setShowRoomForm(true);
   };
@@ -288,6 +315,7 @@ export default function RoomManagement() {
       const roomData = {
         ...formData,
         gallery: formData.gallery.filter(url => url.trim() !== ''),
+        category_id: formData.category_id || null,
       };
 
       let error;
@@ -674,17 +702,37 @@ export default function RoomManagement() {
                 </div>
               </div>
 
-              <div>
-                <Label htmlFor="max_guests">Max Guests *</Label>
-                <Input
-                  id="max_guests"
-                  type="number"
-                  min="1"
-                  value={formData.max_guests}
-                  onChange={(e) => setFormData({...formData, max_guests: Number(e.target.value)})}
-                  required
-                  className="max-w-xs"
-                />
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="category_id">Room Category</Label>
+                  <Select 
+                    value={formData.category_id || 'none'} 
+                    onValueChange={(value) => setFormData({...formData, category_id: value === 'none' ? '' : value})}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select category" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="none">No Category</SelectItem>
+                      {roomCategories.map((cat) => (
+                        <SelectItem key={cat.id} value={cat.id}>
+                          {cat.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label htmlFor="max_guests">Max Guests *</Label>
+                  <Input
+                    id="max_guests"
+                    type="number"
+                    min="1"
+                    value={formData.max_guests}
+                    onChange={(e) => setFormData({...formData, max_guests: Number(e.target.value)})}
+                    required
+                  />
+                </div>
               </div>
 
               <div>
@@ -1055,63 +1103,70 @@ export default function RoomManagement() {
         </Card>
       )}
 
-      <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as 'rooms' | 'units')}>
+      <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as 'categories' | 'rooms' | 'units')}>
         <div className="flex justify-between items-center mb-6">
           <TabsList>
+            <TabsTrigger value="categories">Categories</TabsTrigger>
             <TabsTrigger value="rooms">Room Types</TabsTrigger>
             <TabsTrigger value="units">Room Units</TabsTrigger>
           </TabsList>
           
-          <div className="flex items-center gap-4">
-            <div className="flex items-center gap-2">
-              <Button
-                variant={viewMode === 'card' ? 'default' : 'outline'}
-                size="sm"
-                onClick={() => setViewMode('card')}
+          {activeTab !== 'categories' && (
+            <div className="flex items-center gap-4">
+              <div className="flex items-center gap-2">
+                <Button
+                  variant={viewMode === 'card' ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => setViewMode('card')}
+                >
+                  <Grid className="h-4 w-4" />
+                </Button>
+                <Button
+                  variant={viewMode === 'list' ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => setViewMode('list')}
+                >
+                  <List className="h-4 w-4" />
+                </Button>
+              </div>
+              
+              <div className="relative">
+                <Search className="w-4 h-4 absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground" />
+                <Input
+                  placeholder={activeTab === 'rooms' ? 'Search room types...' : 'Search units...'}
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-9 w-64"
+                />
+              </div>
+              
+              <select
+                value={statusFilter}
+                onChange={(e) => setStatusFilter(e.target.value)}
+                className="px-3 py-2 border border-input bg-background rounded-md text-sm"
               >
-                <Grid className="h-4 w-4" />
-              </Button>
-              <Button
-                variant={viewMode === 'list' ? 'default' : 'outline'}
-                size="sm"
-                onClick={() => setViewMode('list')}
-              >
-                <List className="h-4 w-4" />
-              </Button>
+                <option value="all">All Status</option>
+                {activeTab === 'rooms' ? (
+                  <>
+                    <option value="published">Published</option>
+                    <option value="draft">Draft</option>
+                  </>
+                ) : (
+                  <>
+                    <option value="available">Available</option>
+                    <option value="maintenance">Maintenance</option>
+                    <option value="out_of_order">Out of Order</option>
+                    <option value="occupied">Occupied</option>
+                  </>
+                )}
+              </select>
             </div>
-            
-            <div className="relative">
-              <Search className="w-4 h-4 absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground" />
-              <Input
-                placeholder={activeTab === 'rooms' ? 'Search room types...' : 'Search units...'}
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-9 w-64"
-              />
-            </div>
-            
-            <select
-              value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value)}
-              className="px-3 py-2 border border-input bg-background rounded-md text-sm"
-            >
-              <option value="all">All Status</option>
-              {activeTab === 'rooms' ? (
-                <>
-                  <option value="published">Published</option>
-                  <option value="draft">Draft</option>
-                </>
-              ) : (
-                <>
-                  <option value="available">Available</option>
-                  <option value="maintenance">Maintenance</option>
-                  <option value="out_of_order">Out of Order</option>
-                  <option value="occupied">Occupied</option>
-                </>
-              )}
-            </select>
-          </div>
+          )}
         </div>
+
+        <TabsContent value="categories">
+          <RoomCategoriesTab />
+        </TabsContent>
 
 
         <TabsContent value="rooms">
@@ -1130,6 +1185,11 @@ export default function RoomManagement() {
                           <IndianRupee className="w-4 h-4" />
                           ₹{room.base_price}/night
                         </CardDescription>
+                        {room.room_categories && (
+                          <Badge variant="outline" className="mt-1 text-xs">
+                            {room.room_categories.name}
+                          </Badge>
+                        )}
                       </div>
                       <Badge variant={room.is_published ? "default" : "secondary"}>
                         {room.is_published ? 'Published' : 'Draft'}
@@ -1203,6 +1263,7 @@ export default function RoomManagement() {
                 <TableHeader>
                   <TableRow>
                     <TableHead>Room Name</TableHead>
+                    <TableHead>Category</TableHead>
                     <TableHead>Max Guests</TableHead>
                     <TableHead>Base Price</TableHead>
                     <TableHead>Status</TableHead>
@@ -1223,6 +1284,13 @@ export default function RoomManagement() {
                           )}
                           <span>{room.name}</span>
                         </div>
+                      </TableCell>
+                      <TableCell>
+                        {room.room_categories ? (
+                          <Badge variant="outline">{room.room_categories.name}</Badge>
+                        ) : (
+                          <span className="text-muted-foreground">-</span>
+                        )}
                       </TableCell>
                       <TableCell>{room.max_guests}</TableCell>
                       <TableCell>₹{room.base_price}</TableCell>
