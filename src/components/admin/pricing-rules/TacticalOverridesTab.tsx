@@ -76,6 +76,8 @@ export function TacticalOverridesTab() {
   const [formData, setFormData] = useState<FormData>(initialFormData);
   const [showExtraChargesWarning, setShowExtraChargesWarning] = useState(false);
   const [pendingPayloads, setPendingPayloads] = useState<any[]>([]);
+  const [showConflictDialog, setShowConflictDialog] = useState(false);
+  const [conflictingOverrides, setConflictingOverrides] = useState<any[]>([]);
   const [categoriesMissingCharges, setCategoriesMissingCharges] = useState<string[]>([]);
 
   const { data: rules, isLoading } = useQuery({
@@ -161,6 +163,36 @@ export function TacticalOverridesTab() {
       queryClient.invalidateQueries({ queryKey: ['tactical-overrides'] });
       toast.success('Tactical override(s) created');
       setIsDialogOpen(false);
+      setShowConflictDialog(false);
+      setConflictingOverrides([]);
+      resetForm();
+    },
+    onError: (err) => {
+      toast.error('Failed to create overrides');
+      console.error(err);
+    }
+  });
+
+  const deactivateAndCreateMutation = useMutation({
+    mutationFn: async ({ idsToDeactivate, newPayloads }: { idsToDeactivate: string[]; newPayloads: any[] }) => {
+      // Deactivate conflicting overrides
+      if (idsToDeactivate.length > 0) {
+        const { error: deactivateError } = await supabase
+          .from('tactical_overrides')
+          .update({ is_active: false })
+          .in('id', idsToDeactivate);
+        if (deactivateError) throw deactivateError;
+      }
+      // Create new overrides
+      const { error: insertError } = await supabase.from('tactical_overrides').insert(newPayloads);
+      if (insertError) throw insertError;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['tactical-overrides'] });
+      toast.success('Override(s) created successfully');
+      setIsDialogOpen(false);
+      setShowConflictDialog(false);
+      setConflictingOverrides([]);
       resetForm();
     },
     onError: (err) => {
@@ -384,7 +416,41 @@ export function TacticalOverridesTab() {
     return payloads;
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const checkForConflicts = async (payloads: any[]): Promise<any[]> => {
+    const conflicts: any[] = [];
+    
+    for (const payload of payloads) {
+      let query = supabase
+        .from('tactical_overrides')
+        .select('*, room_types(name), room_units(unit_number, unit_name), room_categories(name)')
+        .eq('is_active', true)
+        .lte('start_date', payload.end_date)
+        .gte('end_date', payload.start_date);
+      
+      // Filter by same target
+      if (payload.room_category_id) {
+        query = query.eq('room_category_id', payload.room_category_id);
+      } else if (payload.room_type_id) {
+        query = query.eq('room_type_id', payload.room_type_id);
+      } else if (payload.room_unit_id) {
+        query = query.eq('room_unit_id', payload.room_unit_id);
+      }
+      
+      const { data } = await query;
+      
+      if (data && data.length > 0) {
+        for (const conflict of data) {
+          if (!conflicts.find(c => c.id === conflict.id)) {
+            conflicts.push(conflict);
+          }
+        }
+      }
+    }
+    
+    return conflicts;
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (formData.categoryRates.length === 0) {
@@ -408,7 +474,49 @@ export function TacticalOverridesTab() {
       return;
     }
 
+    // Check for conflicts
+    const conflicts = await checkForConflicts(payloads);
+    
+    if (conflicts.length > 0) {
+      setConflictingOverrides(conflicts);
+      setPendingPayloads(payloads);
+      setShowConflictDialog(true);
+      return;
+    }
+
     createMutation.mutate(payloads);
+  };
+
+  const handleConflictCancel = () => {
+    setShowConflictDialog(false);
+    setConflictingOverrides([]);
+    setPendingPayloads([]);
+  };
+
+  const handleConflictCreateAnyway = () => {
+    // New override will take precedence due to created_at
+    createMutation.mutate(pendingPayloads);
+  };
+
+  const handleConflictKeepHigherPrice = () => {
+    // Compare prices and deactivate lower ones
+    const idsToDeactivate: string[] = [];
+    const newMaxPrice = Math.max(...pendingPayloads.filter(p => p.override_price).map(p => p.override_price));
+    
+    for (const conflict of conflictingOverrides) {
+      if (conflict.override_price && conflict.override_price < newMaxPrice) {
+        idsToDeactivate.push(conflict.id);
+      } else if (conflict.override_price && conflict.override_price >= newMaxPrice) {
+        // Existing has higher price, don't create the new ones with lower price
+        toast.info('Existing override has higher or equal price, keeping it active');
+        setShowConflictDialog(false);
+        setConflictingOverrides([]);
+        setPendingPayloads([]);
+        return;
+      }
+    }
+    
+    deactivateAndCreateMutation.mutate({ idsToDeactivate, newPayloads: pendingPayloads });
   };
 
   const handleConfirmWithDynamicPricing = () => {
@@ -851,6 +959,61 @@ export function TacticalOverridesTab() {
             <AlertDialogAction onClick={handleConfirmWithDynamicPricing}>
               Continue - Use Dynamic Pricing
             </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Conflict Dialog */}
+      <AlertDialog open={showConflictDialog} onOpenChange={setShowConflictDialog}>
+        <AlertDialogContent className="max-w-lg">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2">
+              <AlertTriangle className="h-5 w-5 text-amber-500" />
+              Conflicting Override Found
+            </AlertDialogTitle>
+            <AlertDialogDescription asChild>
+              <div className="space-y-3">
+                <p>
+                  An active override already exists for the same period and room:
+                </p>
+                <div className="rounded-md border bg-muted/30 p-3 space-y-2">
+                  {conflictingOverrides.map((conflict) => (
+                    <div key={conflict.id} className="text-sm">
+                      <p className="font-medium text-foreground">{conflict.reason}</p>
+                      <p className="text-muted-foreground">
+                        {format(new Date(conflict.start_date), 'MMM dd')} - {format(new Date(conflict.end_date), 'MMM dd, yyyy')}
+                        {conflict.override_price && ` • ₹${conflict.override_price.toLocaleString()}`}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+                <p>How would you like to proceed?</p>
+              </div>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="flex-col sm:flex-col gap-2">
+            <Button 
+              variant="outline" 
+              className="w-full justify-start"
+              onClick={handleConflictCancel}
+            >
+              Cancel - Don't create this override
+            </Button>
+            <Button 
+              variant="outline" 
+              className="w-full justify-start"
+              onClick={handleConflictCreateAnyway}
+              disabled={createMutation.isPending}
+            >
+              Create anyway - New override takes precedence
+            </Button>
+            <Button 
+              className="w-full justify-start"
+              onClick={handleConflictKeepHigherPrice}
+              disabled={deactivateAndCreateMutation.isPending}
+            >
+              Keep higher price - Deactivate lower rate override
+            </Button>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
