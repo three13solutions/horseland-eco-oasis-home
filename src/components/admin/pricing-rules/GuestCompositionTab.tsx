@@ -113,7 +113,7 @@ export function GuestCompositionTab() {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     const payload = {
-      room_type_id: formData.room_type_id || null,
+      room_type_id: formData.room_type_id && formData.room_type_id !== 'all' ? formData.room_type_id : null,
       base_guests_count: parseInt(formData.base_guests_count),
       max_extra_guests: parseInt(formData.max_extra_guests),
       extra_adult_charge: parseFloat(formData.extra_adult_charge),
@@ -167,10 +167,10 @@ export function GuestCompositionTab() {
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div className="space-y-2">
                   <Label>Room Category (Optional - leave empty for all)</Label>
-                  <Select value={formData.room_type_id} onValueChange={(value) => setFormData({ ...formData, room_type_id: value })}>
+                  <Select value={formData.room_type_id || 'all'} onValueChange={(value) => setFormData({ ...formData, room_type_id: value === 'all' ? '' : value })}>
                     <SelectTrigger><SelectValue placeholder="All categories" /></SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">All Categories</SelectItem>
+                      <SelectItem value="all">All Categories</SelectItem>
                       {roomTypes?.map((type) => <SelectItem key={type.id} value={type.id}>{type.name}</SelectItem>)}
                     </SelectContent>
                   </Select>
