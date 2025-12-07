@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
@@ -10,51 +10,56 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Plus, Pencil, Trash2, Zap, Loader2 } from 'lucide-react';
+import { Plus, Pencil, Trash2, Zap, X } from 'lucide-react';
 import { toast } from 'sonner';
-import { format, isBefore, startOfDay, addDays } from 'date-fns';
+import { format, isBefore, startOfDay } from 'date-fns';
 import { EmptyRuleState } from './EmptyRuleState';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
 type StatusFilter = 'all' | 'active' | 'expired' | 'upcoming';
 
-interface RateScenario {
-  key: string;
-  label: string;
-  nights: number;
-  adults: number;
-  children: number;
-  currentRate: number | null;
-  overrideRate: string;
+interface RoomCategoryRates {
+  roomTypeId: string;
+  roomTypeName: string;
+  mealPlanCode: string;
+  cancellationPolicyCode: string;
+  rates: {
+    oneNight: {
+      double: string;
+      single: string;
+      extraAdult: string;
+      extraChild: string;
+    };
+    twoNights: {
+      double: string;
+      single: string;
+      extraAdult: string;
+      extraChild: string;
+    };
+  };
 }
 
 interface FormData {
   reason: string;
   start_date: string;
   end_date: string;
-  selected_room_types: string[];
-  room_unit_id: string;
-  meal_plan_code: string;
   is_active: boolean;
-  scenarios: RateScenario[];
+  selectedRoomTypeIds: string[];
+  roomCategoryRates: RoomCategoryRates[];
 }
-
-const defaultScenarios: Omit<RateScenario, 'currentRate' | 'overrideRate'>[] = [
-  { key: '1n_double', label: '1 Night - Double Occupancy', nights: 1, adults: 2, children: 0 },
-  { key: '2n_double', label: '2 Nights - Double Occupancy', nights: 2, adults: 2, children: 0 },
-  { key: '1n_single', label: '1 Night - Single Occupancy', nights: 1, adults: 1, children: 0 },
-  { key: '1n_extra_adult', label: '1 Night - With Extra Adult', nights: 1, adults: 3, children: 0 },
-  { key: '1n_with_child', label: '1 Night - With 1 Child', nights: 1, adults: 2, children: 1 },
-];
 
 const initialFormData: FormData = {
   reason: '',
   start_date: '',
   end_date: '',
-  selected_room_types: [],
-  room_unit_id: '',
-  meal_plan_code: '',
   is_active: true,
-  scenarios: defaultScenarios.map(s => ({ ...s, currentRate: null, overrideRate: '' }))
+  selectedRoomTypeIds: [],
+  roomCategoryRates: []
+};
+
+const emptyRates = {
+  oneNight: { double: '', single: '', extraAdult: '', extraChild: '' },
+  twoNights: { double: '', single: '', extraAdult: '', extraChild: '' }
 };
 
 export function TacticalOverridesTab() {
@@ -63,7 +68,6 @@ export function TacticalOverridesTab() {
   const [editingRule, setEditingRule] = useState<any>(null);
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
   const [formData, setFormData] = useState<FormData>(initialFormData);
-  const [isLoadingRates, setIsLoadingRates] = useState(false);
 
   const { data: rules, isLoading } = useQuery({
     queryKey: ['tactical-overrides'],
@@ -86,15 +90,6 @@ export function TacticalOverridesTab() {
     }
   });
 
-  const { data: roomUnits } = useQuery({
-    queryKey: ['room-units'],
-    queryFn: async () => {
-      const { data, error } = await supabase.from('room_units').select('id, unit_number, room_type_id');
-      if (error) throw error;
-      return data;
-    }
-  });
-
   const { data: mealPlans } = useQuery({
     queryKey: ['meal-plans'],
     queryFn: async () => {
@@ -104,61 +99,16 @@ export function TacticalOverridesTab() {
     }
   });
 
-  const today = startOfDay(new Date());
-
-  // Fetch current calculated rates when room type and dates change
-  useEffect(() => {
-    const fetchCurrentRates = async () => {
-      if (!formData.selected_room_types.length || !formData.start_date) return;
-      
-      setIsLoadingRates(true);
-      try {
-        const roomTypeId = formData.selected_room_types[0];
-        const checkIn = new Date(formData.start_date);
-        
-        const updatedScenarios = await Promise.all(
-          formData.scenarios.map(async (scenario) => {
-            const checkOut = addDays(checkIn, scenario.nights);
-            
-            const { data, error } = await supabase.rpc('calculate_rate_variants', {
-              p_room_type_id: roomTypeId,
-              p_check_in: format(checkIn, 'yyyy-MM-dd'),
-              p_check_out: format(checkOut, 'yyyy-MM-dd'),
-              p_adults_count: scenario.adults,
-              p_children_count: scenario.children,
-              p_infants_count: 0,
-              p_booking_channel: 'direct'
-            });
-            
-            if (error || !data || !Array.isArray(data) || data.length === 0) {
-              return { ...scenario, currentRate: null };
-            }
-            
-            // Find the matching meal plan rate or use first one
-            const variants = data as any[];
-            const matchingVariant = formData.meal_plan_code 
-              ? variants.find(v => v.meal_plan_code === formData.meal_plan_code)
-              : variants[0];
-            
-            return { 
-              ...scenario, 
-              currentRate: matchingVariant ? Math.round(matchingVariant.total_price) : null 
-            };
-          })
-        );
-        
-        setFormData(prev => ({ ...prev, scenarios: updatedScenarios }));
-      } catch (err) {
-        console.error('Error fetching rates:', err);
-      } finally {
-        setIsLoadingRates(false);
-      }
-    };
-    
-    if (formData.selected_room_types.length === 1 && formData.start_date && !editingRule) {
-      fetchCurrentRates();
+  const { data: cancellationPolicies } = useQuery({
+    queryKey: ['cancellation-policies'],
+    queryFn: async () => {
+      const { data, error } = await supabase.from('cancellation_policy_rules').select('policy_code, policy_name').eq('is_active', true);
+      if (error) throw error;
+      return data;
     }
-  }, [formData.selected_room_types[0], formData.start_date, formData.meal_plan_code]);
+  });
+
+  const today = startOfDay(new Date());
 
   const getOverrideStatus = (rule: any): 'active' | 'expired' | 'upcoming' | 'inactive' => {
     if (!rule.is_active) return 'inactive';
@@ -203,19 +153,10 @@ export function TacticalOverridesTab() {
       toast.success('Tactical override(s) created');
       setIsDialogOpen(false);
       resetForm();
-    }
-  });
-
-  const updateMutation = useMutation({
-    mutationFn: async ({ id, data }: { id: string; data: any }) => {
-      const { error } = await supabase.from('tactical_overrides').update(data).eq('id', id);
-      if (error) throw error;
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['tactical-overrides'] });
-      toast.success('Override updated');
-      setIsDialogOpen(false);
-      resetForm();
+    onError: (err) => {
+      toast.error('Failed to create overrides');
+      console.error(err);
     }
   });
 
@@ -246,30 +187,71 @@ export function TacticalOverridesTab() {
     setEditingRule(null);
   };
 
-  const handleRoomTypeToggle = (roomTypeId: string) => {
-    setFormData(prev => ({
-      ...prev,
-      selected_room_types: prev.selected_room_types.includes(roomTypeId)
-        ? prev.selected_room_types.filter(id => id !== roomTypeId)
-        : [...prev.selected_room_types, roomTypeId],
-      room_unit_id: '',
-      scenarios: defaultScenarios.map(s => ({ ...s, currentRate: null, overrideRate: '' }))
-    }));
+  const handleRoomTypeToggle = (roomTypeId: string, roomTypeName: string) => {
+    setFormData(prev => {
+      const isSelected = prev.selectedRoomTypeIds.includes(roomTypeId);
+      if (isSelected) {
+        return {
+          ...prev,
+          selectedRoomTypeIds: prev.selectedRoomTypeIds.filter(id => id !== roomTypeId),
+          roomCategoryRates: prev.roomCategoryRates.filter(r => r.roomTypeId !== roomTypeId)
+        };
+      } else {
+        return {
+          ...prev,
+          selectedRoomTypeIds: [...prev.selectedRoomTypeIds, roomTypeId],
+          roomCategoryRates: [...prev.roomCategoryRates, {
+            roomTypeId,
+            roomTypeName,
+            mealPlanCode: mealPlans?.[0]?.plan_code || '',
+            cancellationPolicyCode: cancellationPolicies?.[0]?.policy_code || '',
+            rates: { ...emptyRates }
+          }]
+        };
+      }
+    });
   };
 
   const handleSelectAllRoomTypes = () => {
-    if (formData.selected_room_types.length === roomTypes?.length) {
-      setFormData(prev => ({ ...prev, selected_room_types: [], room_unit_id: '' }));
+    if (!roomTypes) return;
+    if (formData.selectedRoomTypeIds.length === roomTypes.length) {
+      setFormData(prev => ({ ...prev, selectedRoomTypeIds: [], roomCategoryRates: [] }));
     } else {
-      setFormData(prev => ({ ...prev, selected_room_types: roomTypes?.map(t => t.id) || [], room_unit_id: '' }));
+      setFormData(prev => ({
+        ...prev,
+        selectedRoomTypeIds: roomTypes.map(t => t.id),
+        roomCategoryRates: roomTypes.map(t => ({
+          roomTypeId: t.id,
+          roomTypeName: t.name,
+          mealPlanCode: mealPlans?.[0]?.plan_code || '',
+          cancellationPolicyCode: cancellationPolicies?.[0]?.policy_code || '',
+          rates: { ...emptyRates }
+        }))
+      }));
     }
   };
 
-  const handleScenarioRateChange = (key: string, value: string) => {
+  const updateRoomCategoryRate = (roomTypeId: string, field: string, value: string) => {
     setFormData(prev => ({
       ...prev,
-      scenarios: prev.scenarios.map(s => 
-        s.key === key ? { ...s, overrideRate: value } : s
+      roomCategoryRates: prev.roomCategoryRates.map(r => 
+        r.roomTypeId === roomTypeId ? { ...r, [field]: value } : r
+      )
+    }));
+  };
+
+  const updateRoomCategoryRateValue = (
+    roomTypeId: string, 
+    duration: 'oneNight' | 'twoNights', 
+    field: 'double' | 'single' | 'extraAdult' | 'extraChild', 
+    value: string
+  ) => {
+    setFormData(prev => ({
+      ...prev,
+      roomCategoryRates: prev.roomCategoryRates.map(r => 
+        r.roomTypeId === roomTypeId 
+          ? { ...r, rates: { ...r.rates, [duration]: { ...r.rates[duration], [field]: value } } }
+          : r
       )
     }));
   };
@@ -277,104 +259,180 @@ export function TacticalOverridesTab() {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Get scenarios with override rates filled in
-    const scenariosWithRates = formData.scenarios.filter(s => s.overrideRate);
-    
-    if (scenariosWithRates.length === 0) {
-      toast.error('Please enter at least one override rate');
+    if (formData.roomCategoryRates.length === 0) {
+      toast.error('Please select at least one room category');
       return;
     }
 
-    if (editingRule) {
-      // For editing, use the first scenario's rate
-      const scenario = scenariosWithRates[0];
-      updateMutation.mutate({ 
-        id: editingRule.id, 
-        data: {
+    const payloads: any[] = [];
+    
+    for (const categoryRate of formData.roomCategoryRates) {
+      const { rates, roomTypeId, mealPlanCode, cancellationPolicyCode } = categoryRate;
+      
+      // 1 Night - Double Occupancy
+      if (rates.oneNight.double) {
+        payloads.push({
           reason: formData.reason,
           start_date: formData.start_date,
           end_date: formData.end_date,
-          room_type_id: formData.selected_room_types[0] || null,
-          room_unit_id: formData.room_unit_id || null,
-          meal_plan_code: formData.meal_plan_code || null,
-          override_price: parseFloat(scenario.overrideRate),
-          min_nights: scenario.nights,
-          max_nights: scenario.nights,
-          min_adults: scenario.adults,
-          max_adults: scenario.adults,
-          min_children: scenario.children > 0 ? scenario.children : null,
-          max_children: scenario.children > 0 ? scenario.children : null,
+          room_type_id: roomTypeId,
+          meal_plan_code: mealPlanCode || null,
+          override_price: parseFloat(rates.oneNight.double),
+          min_nights: 1,
+          max_nights: 1,
+          min_adults: 2,
+          max_adults: 2,
+          occupancy_type: 'double',
           is_active: formData.is_active
-        }
-      });
-    } else {
-      // Create one override per scenario per room type
-      const payloads: any[] = [];
-      const roomTypeIds = formData.selected_room_types.length > 0 
-        ? formData.selected_room_types 
-        : [null];
-
-      for (const roomTypeId of roomTypeIds) {
-        for (const scenario of scenariosWithRates) {
-          payloads.push({
-            reason: `${formData.reason} (${scenario.label})`,
-            start_date: formData.start_date,
-            end_date: formData.end_date,
-            room_type_id: roomTypeId,
-            room_unit_id: formData.room_unit_id || null,
-            meal_plan_code: formData.meal_plan_code || null,
-            override_price: parseFloat(scenario.overrideRate),
-            min_nights: scenario.nights,
-            max_nights: scenario.nights,
-            min_adults: scenario.adults,
-            max_adults: scenario.adults,
-            min_children: scenario.children > 0 ? scenario.children : null,
-            max_children: scenario.children > 0 ? scenario.children : null,
-            is_active: formData.is_active
-          });
-        }
+        });
       }
       
-      createMutation.mutate(payloads);
+      // 1 Night - Single Occupancy
+      if (rates.oneNight.single) {
+        payloads.push({
+          reason: formData.reason,
+          start_date: formData.start_date,
+          end_date: formData.end_date,
+          room_type_id: roomTypeId,
+          meal_plan_code: mealPlanCode || null,
+          override_price: parseFloat(rates.oneNight.single),
+          min_nights: 1,
+          max_nights: 1,
+          min_adults: 1,
+          max_adults: 1,
+          occupancy_type: 'single',
+          is_active: formData.is_active
+        });
+      }
+      
+      // 2 Nights - Double Occupancy
+      if (rates.twoNights.double) {
+        payloads.push({
+          reason: formData.reason,
+          start_date: formData.start_date,
+          end_date: formData.end_date,
+          room_type_id: roomTypeId,
+          meal_plan_code: mealPlanCode || null,
+          override_price: parseFloat(rates.twoNights.double),
+          min_nights: 2,
+          max_nights: 2,
+          min_adults: 2,
+          max_adults: 2,
+          occupancy_type: 'double',
+          is_active: formData.is_active
+        });
+      }
+      
+      // 2 Nights - Single Occupancy
+      if (rates.twoNights.single) {
+        payloads.push({
+          reason: formData.reason,
+          start_date: formData.start_date,
+          end_date: formData.end_date,
+          room_type_id: roomTypeId,
+          meal_plan_code: mealPlanCode || null,
+          override_price: parseFloat(rates.twoNights.single),
+          min_nights: 2,
+          max_nights: 2,
+          min_adults: 1,
+          max_adults: 1,
+          occupancy_type: 'single',
+          is_active: formData.is_active
+        });
+      }
+      
+      // Extra Adult charges (stored as adjustment)
+      if (rates.oneNight.extraAdult) {
+        payloads.push({
+          reason: `${formData.reason} - Extra Adult`,
+          start_date: formData.start_date,
+          end_date: formData.end_date,
+          room_type_id: roomTypeId,
+          meal_plan_code: mealPlanCode || null,
+          adjustment_type: 'fixed',
+          adjustment_value: parseFloat(rates.oneNight.extraAdult),
+          min_nights: 1,
+          max_nights: 1,
+          min_adults: 3,
+          occupancy_type: 'extra_adult',
+          is_active: formData.is_active
+        });
+      }
+      
+      if (rates.twoNights.extraAdult) {
+        payloads.push({
+          reason: `${formData.reason} - Extra Adult`,
+          start_date: formData.start_date,
+          end_date: formData.end_date,
+          room_type_id: roomTypeId,
+          meal_plan_code: mealPlanCode || null,
+          adjustment_type: 'fixed',
+          adjustment_value: parseFloat(rates.twoNights.extraAdult),
+          min_nights: 2,
+          max_nights: 2,
+          min_adults: 3,
+          occupancy_type: 'extra_adult',
+          is_active: formData.is_active
+        });
+      }
+      
+      // Extra Child charges
+      if (rates.oneNight.extraChild) {
+        payloads.push({
+          reason: `${formData.reason} - Extra Child`,
+          start_date: formData.start_date,
+          end_date: formData.end_date,
+          room_type_id: roomTypeId,
+          meal_plan_code: mealPlanCode || null,
+          adjustment_type: 'fixed',
+          adjustment_value: parseFloat(rates.oneNight.extraChild),
+          min_nights: 1,
+          max_nights: 1,
+          min_children: 1,
+          occupancy_type: 'extra_child',
+          is_active: formData.is_active
+        });
+      }
+      
+      if (rates.twoNights.extraChild) {
+        payloads.push({
+          reason: `${formData.reason} - Extra Child`,
+          start_date: formData.start_date,
+          end_date: formData.end_date,
+          room_type_id: roomTypeId,
+          meal_plan_code: mealPlanCode || null,
+          adjustment_type: 'fixed',
+          adjustment_value: parseFloat(rates.twoNights.extraChild),
+          min_nights: 2,
+          max_nights: 2,
+          min_children: 1,
+          occupancy_type: 'extra_child',
+          is_active: formData.is_active
+        });
+      }
     }
-  };
-
-  const handleEdit = (rule: any) => {
-    setEditingRule(rule);
-    // Find matching scenario or use first one
-    const matchingScenario = defaultScenarios.find(s => 
-      s.nights === rule.min_nights && s.adults === rule.min_adults
-    ) || defaultScenarios[0];
     
-    setFormData({
-      reason: rule.reason.replace(/ \([^)]+\)$/, ''), // Remove scenario suffix
-      start_date: rule.start_date,
-      end_date: rule.end_date,
-      selected_room_types: rule.room_type_id ? [rule.room_type_id] : [],
-      room_unit_id: rule.room_unit_id || '',
-      meal_plan_code: rule.meal_plan_code || '',
-      is_active: rule.is_active,
-      scenarios: defaultScenarios.map(s => ({
-        ...s,
-        currentRate: null,
-        overrideRate: s.key === matchingScenario.key ? rule.override_price?.toString() || '' : ''
-      }))
-    });
-    setIsDialogOpen(true);
+    if (payloads.length === 0) {
+      toast.error('Please enter at least one rate');
+      return;
+    }
+
+    createMutation.mutate(payloads);
   };
 
   const getConditionsSummary = (rule: any) => {
     const conditions: string[] = [];
+    if (rule.occupancy_type) {
+      const labels: Record<string, string> = {
+        single: '1A',
+        double: '2A',
+        extra_adult: '+Adult',
+        extra_child: '+Child'
+      };
+      conditions.push(labels[rule.occupancy_type] || rule.occupancy_type);
+    }
     if (rule.min_nights && rule.max_nights && rule.min_nights === rule.max_nights) {
       conditions.push(`${rule.min_nights}N`);
-    } else if (rule.min_nights || rule.max_nights) {
-      conditions.push(`${rule.min_nights || 1}-${rule.max_nights || '∞'}N`);
-    }
-    if (rule.min_adults) {
-      conditions.push(`${rule.min_adults}A`);
-    }
-    if (rule.min_children) {
-      conditions.push(`${rule.min_children}C`);
     }
     if (rule.meal_plan_code) {
       const labels: Record<string, string> = {
@@ -412,17 +470,17 @@ export function TacticalOverridesTab() {
           <DialogTrigger asChild>
             <Button size="sm"><Plus className="h-4 w-4 mr-1" />Add Override</Button>
           </DialogTrigger>
-          <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+          <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
-              <DialogTitle>{editingRule ? 'Edit' : 'Add'} Tactical Override</DialogTitle>
+              <DialogTitle>Add Rate Overrides</DialogTitle>
             </DialogHeader>
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="space-y-2">
-                <Label>Reason / Event Name</Label>
-                <Input placeholder="e.g., Diwali Special, New Year Package" value={formData.reason} onChange={(e) => setFormData({ ...formData, reason: e.target.value })} required />
-              </div>
-              
-              <div className="grid grid-cols-2 gap-4">
+            <form onSubmit={handleSubmit} className="space-y-6">
+              {/* Basic Info */}
+              <div className="grid grid-cols-3 gap-4">
+                <div className="space-y-2">
+                  <Label>Reason / Event Name</Label>
+                  <Input placeholder="e.g., Diwali Special" value={formData.reason} onChange={(e) => setFormData({ ...formData, reason: e.target.value })} required />
+                </div>
                 <div className="space-y-2">
                   <Label>Start Date</Label>
                   <Input type="date" value={formData.start_date} onChange={(e) => setFormData({ ...formData, start_date: e.target.value })} required />
@@ -433,111 +491,185 @@ export function TacticalOverridesTab() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
-                {/* Room Type Selection */}
-                <div className="space-y-2">
-                  <Label>Room Category</Label>
-                  {editingRule ? (
-                    <Select 
-                      value={formData.selected_room_types[0] || '__all__'} 
-                      onValueChange={(value) => setFormData({ ...formData, selected_room_types: value === '__all__' ? [] : [value], room_unit_id: '' })}
-                    >
-                      <SelectTrigger><SelectValue placeholder="All categories" /></SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="__all__">All Categories</SelectItem>
-                        {roomTypes?.map((type) => <SelectItem key={type.id} value={type.id}>{type.name}</SelectItem>)}
-                      </SelectContent>
-                    </Select>
-                  ) : (
-                    <Select 
-                      value={formData.selected_room_types.length === 1 ? formData.selected_room_types[0] : '__all__'} 
-                      onValueChange={(value) => setFormData({ 
-                        ...formData, 
-                        selected_room_types: value === '__all__' ? [] : [value], 
-                        room_unit_id: '',
-                        scenarios: defaultScenarios.map(s => ({ ...s, currentRate: null, overrideRate: '' }))
-                      })}
-                    >
-                      <SelectTrigger><SelectValue placeholder="Select room category" /></SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="__all__">All Categories</SelectItem>
-                        {roomTypes?.map((type) => <SelectItem key={type.id} value={type.id}>{type.name}</SelectItem>)}
-                      </SelectContent>
-                    </Select>
-                  )}
+              {/* Room Category Selection */}
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <Label>Select Room Categories</Label>
+                  <Button type="button" variant="ghost" size="sm" onClick={handleSelectAllRoomTypes}>
+                    {formData.selectedRoomTypeIds.length === roomTypes?.length ? 'Deselect All' : 'Select All'}
+                  </Button>
                 </div>
-
-                {/* Meal Plan Selection */}
-                <div className="space-y-2">
-                  <Label>Meal Plan</Label>
-                  <Select value={formData.meal_plan_code || '__all__'} onValueChange={(value) => setFormData({ ...formData, meal_plan_code: value === '__all__' ? '' : value })}>
-                    <SelectTrigger><SelectValue placeholder="All meal plans" /></SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="__all__">All Meal Plans</SelectItem>
-                      {mealPlans?.map((plan) => (
-                        <SelectItem key={plan.plan_code} value={plan.plan_code}>{plan.plan_name}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                <div className="flex flex-wrap gap-2 p-3 border rounded-md bg-muted/30">
+                  {roomTypes?.map((type) => (
+                    <label key={type.id} className="flex items-center gap-2 px-3 py-1.5 border rounded-md bg-background cursor-pointer hover:bg-muted/50">
+                      <Checkbox
+                        checked={formData.selectedRoomTypeIds.includes(type.id)}
+                        onCheckedChange={() => handleRoomTypeToggle(type.id, type.name)}
+                      />
+                      <span className="text-sm">{type.name}</span>
+                    </label>
+                  ))}
                 </div>
               </div>
 
-              {/* Rate Entry Table */}
-              <div className="space-y-2">
-                <Label>Override Rates</Label>
-                <p className="text-xs text-muted-foreground">Enter override prices. Leave blank for scenarios you don't want to override.</p>
-                <div className="border rounded-md overflow-hidden">
-                  <Table>
-                    <TableHeader>
-                      <TableRow className="bg-muted/50">
-                        <TableHead className="h-9">Scenario</TableHead>
-                        <TableHead className="h-9 text-right w-32">Current Rate</TableHead>
-                        <TableHead className="h-9 text-right w-36">Override Rate (₹)</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {formData.scenarios.map((scenario) => (
-                        <TableRow key={scenario.key}>
-                          <TableCell className="py-2 font-medium text-sm">{scenario.label}</TableCell>
-                          <TableCell className="py-2 text-right">
-                            {isLoadingRates ? (
-                              <Loader2 className="h-4 w-4 animate-spin ml-auto" />
-                            ) : scenario.currentRate !== null ? (
-                              <span className="text-muted-foreground">₹{scenario.currentRate.toLocaleString()}</span>
-                            ) : (
-                              <span className="text-muted-foreground text-xs">—</span>
-                            )}
+              {/* Rate Cards for each selected room category */}
+              {formData.roomCategoryRates.map((categoryRate) => (
+                <Card key={categoryRate.roomTypeId} className="border-2">
+                  <CardHeader className="pb-3">
+                    <div className="flex items-center justify-between">
+                      <CardTitle className="text-base">{categoryRate.roomTypeName}</CardTitle>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        className="h-6 w-6"
+                        onClick={() => handleRoomTypeToggle(categoryRate.roomTypeId, categoryRate.roomTypeName)}
+                      >
+                        <X className="h-4 w-4" />
+                      </Button>
+                    </div>
+                    <div className="grid grid-cols-2 gap-4 pt-2">
+                      <div className="space-y-1">
+                        <Label className="text-xs">Meal Plan</Label>
+                        <Select 
+                          value={categoryRate.mealPlanCode || '__none__'} 
+                          onValueChange={(v) => updateRoomCategoryRate(categoryRate.roomTypeId, 'mealPlanCode', v === '__none__' ? '' : v)}
+                        >
+                          <SelectTrigger className="h-8"><SelectValue /></SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="__none__">All Plans</SelectItem>
+                            {mealPlans?.map(p => <SelectItem key={p.plan_code} value={p.plan_code}>{p.plan_name}</SelectItem>)}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div className="space-y-1">
+                        <Label className="text-xs">Cancellation Policy</Label>
+                        <Select 
+                          value={categoryRate.cancellationPolicyCode || '__none__'} 
+                          onValueChange={(v) => updateRoomCategoryRate(categoryRate.roomTypeId, 'cancellationPolicyCode', v === '__none__' ? '' : v)}
+                        >
+                          <SelectTrigger className="h-8"><SelectValue /></SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="__none__">All Policies</SelectItem>
+                            {cancellationPolicies?.map(p => <SelectItem key={p.policy_code} value={p.policy_code}>{p.policy_name}</SelectItem>)}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
+                  </CardHeader>
+                  <CardContent className="pt-0">
+                    <Table>
+                      <TableHeader>
+                        <TableRow className="bg-muted/50">
+                          <TableHead className="h-8 text-xs w-24">Duration</TableHead>
+                          <TableHead className="h-8 text-xs text-center">Double Occ (₹)</TableHead>
+                          <TableHead className="h-8 text-xs text-center">Single Occ (₹)</TableHead>
+                          <TableHead className="h-8 text-xs text-center">+Adult/night (₹)</TableHead>
+                          <TableHead className="h-8 text-xs text-center">+Child/night (₹)</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        <TableRow>
+                          <TableCell className="py-2 font-medium text-sm">1 Night</TableCell>
+                          <TableCell className="py-2">
+                            <Input 
+                              type="number" 
+                              placeholder="—" 
+                              className="h-8 text-center"
+                              value={categoryRate.rates.oneNight.double}
+                              onChange={(e) => updateRoomCategoryRateValue(categoryRate.roomTypeId, 'oneNight', 'double', e.target.value)}
+                            />
                           </TableCell>
                           <TableCell className="py-2">
                             <Input 
                               type="number" 
-                              step="1"
-                              placeholder="Enter rate"
-                              className="h-8 text-right"
-                              value={scenario.overrideRate}
-                              onChange={(e) => handleScenarioRateChange(scenario.key, e.target.value)}
+                              placeholder="—" 
+                              className="h-8 text-center"
+                              value={categoryRate.rates.oneNight.single}
+                              onChange={(e) => updateRoomCategoryRateValue(categoryRate.roomTypeId, 'oneNight', 'single', e.target.value)}
+                            />
+                          </TableCell>
+                          <TableCell className="py-2">
+                            <Input 
+                              type="number" 
+                              placeholder="—" 
+                              className="h-8 text-center"
+                              value={categoryRate.rates.oneNight.extraAdult}
+                              onChange={(e) => updateRoomCategoryRateValue(categoryRate.roomTypeId, 'oneNight', 'extraAdult', e.target.value)}
+                            />
+                          </TableCell>
+                          <TableCell className="py-2">
+                            <Input 
+                              type="number" 
+                              placeholder="—" 
+                              className="h-8 text-center"
+                              value={categoryRate.rates.oneNight.extraChild}
+                              onChange={(e) => updateRoomCategoryRateValue(categoryRate.roomTypeId, 'oneNight', 'extraChild', e.target.value)}
                             />
                           </TableCell>
                         </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                </div>
-                {formData.selected_room_types.length !== 1 && (
-                  <p className="text-xs text-amber-600">Select a specific room category to see current calculated rates</p>
-                )}
-              </div>
+                        <TableRow>
+                          <TableCell className="py-2 font-medium text-sm">2 Nights</TableCell>
+                          <TableCell className="py-2">
+                            <Input 
+                              type="number" 
+                              placeholder="—" 
+                              className="h-8 text-center"
+                              value={categoryRate.rates.twoNights.double}
+                              onChange={(e) => updateRoomCategoryRateValue(categoryRate.roomTypeId, 'twoNights', 'double', e.target.value)}
+                            />
+                          </TableCell>
+                          <TableCell className="py-2">
+                            <Input 
+                              type="number" 
+                              placeholder="—" 
+                              className="h-8 text-center"
+                              value={categoryRate.rates.twoNights.single}
+                              onChange={(e) => updateRoomCategoryRateValue(categoryRate.roomTypeId, 'twoNights', 'single', e.target.value)}
+                            />
+                          </TableCell>
+                          <TableCell className="py-2">
+                            <Input 
+                              type="number" 
+                              placeholder="—" 
+                              className="h-8 text-center"
+                              value={categoryRate.rates.twoNights.extraAdult}
+                              onChange={(e) => updateRoomCategoryRateValue(categoryRate.roomTypeId, 'twoNights', 'extraAdult', e.target.value)}
+                            />
+                          </TableCell>
+                          <TableCell className="py-2">
+                            <Input 
+                              type="number" 
+                              placeholder="—" 
+                              className="h-8 text-center"
+                              value={categoryRate.rates.twoNights.extraChild}
+                              onChange={(e) => updateRoomCategoryRateValue(categoryRate.roomTypeId, 'twoNights', 'extraChild', e.target.value)}
+                            />
+                          </TableCell>
+                        </TableRow>
+                      </TableBody>
+                    </Table>
+                  </CardContent>
+                </Card>
+              ))}
 
-              <div className="flex items-center space-x-2">
-                <Switch checked={formData.is_active} onCheckedChange={(checked) => setFormData({ ...formData, is_active: checked })} />
-                <Label>Active</Label>
-              </div>
-              
-              <div className="flex justify-end gap-2">
-                <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>Cancel</Button>
-                <Button type="submit">
-                  {editingRule ? 'Update' : 'Create Overrides'}
-                </Button>
+              {formData.selectedRoomTypeIds.length === 0 && (
+                <div className="text-center py-8 text-muted-foreground border-2 border-dashed rounded-lg">
+                  Select room categories above to enter override rates
+                </div>
+              )}
+
+              <div className="flex items-center justify-between pt-4 border-t">
+                <div className="flex items-center space-x-2">
+                  <Switch checked={formData.is_active} onCheckedChange={(checked) => setFormData({ ...formData, is_active: checked })} />
+                  <Label>Active</Label>
+                </div>
+                <div className="flex gap-2">
+                  <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>Cancel</Button>
+                  <Button type="submit" disabled={createMutation.isPending}>
+                    {createMutation.isPending ? 'Creating...' : 'Create Overrides'}
+                  </Button>
+                </div>
               </div>
             </form>
           </DialogContent>
@@ -550,9 +682,9 @@ export function TacticalOverridesTab() {
           <TableRow className="hover:bg-transparent">
             <TableHead className="h-9">Reason</TableHead>
             <TableHead className="h-9">Period</TableHead>
-            <TableHead className="h-9">Scope</TableHead>
+            <TableHead className="h-9">Room</TableHead>
             <TableHead className="h-9">Conditions</TableHead>
-            <TableHead className="h-9">Override</TableHead>
+            <TableHead className="h-9">Rate</TableHead>
             <TableHead className="h-9">Status</TableHead>
             <TableHead className="h-9 text-right">Actions</TableHead>
           </TableRow>
@@ -572,12 +704,12 @@ export function TacticalOverridesTab() {
                 <TableCell colSpan={7} className="p-0">
                   <EmptyRuleState
                     icon={Zap}
-                    title="No Tactical Overrides Defined"
-                    description="Create manual price overrides for special situations like events, maintenance, or flash sales."
+                    title="No Rate Overrides Defined"
+                    description="Create manual price overrides for special events or promotions."
                     examples={[
-                      "Premium pricing for festival weekends",
-                      "Discounts during renovation periods",
-                      "Special event packages with fixed rates"
+                      "Festival weekend rates",
+                      "Promotional discounts",
+                      "Special package pricing"
                     ]}
                     onAddClick={() => setIsDialogOpen(true)}
                   />
@@ -594,12 +726,12 @@ export function TacticalOverridesTab() {
                   key={rule.id} 
                   className={isExpired ? 'opacity-50 bg-muted/30' : ''}
                 >
-                  <TableCell className="py-2.5 font-medium">{rule.reason}</TableCell>
-                  <TableCell className="py-2.5 text-sm text-muted-foreground">
+                  <TableCell className="py-2.5 font-medium text-sm">{rule.reason}</TableCell>
+                  <TableCell className="py-2.5 text-xs text-muted-foreground">
                     {format(new Date(rule.start_date), 'MMM dd')} - {format(new Date(rule.end_date), 'MMM dd, yy')}
                   </TableCell>
                   <TableCell className="py-2.5 text-sm">
-                    {rule.room_units?.unit_number || rule.room_types?.name || 'All'}
+                    {rule.room_types?.name || 'All'}
                   </TableCell>
                   <TableCell className="py-2.5">
                     {conditions.length > 0 ? (
@@ -613,8 +745,13 @@ export function TacticalOverridesTab() {
                     )}
                   </TableCell>
                   <TableCell className="py-2.5">
-                    <Badge variant="outline" className="font-mono">
-                      {rule.override_price ? `₹${rule.override_price.toLocaleString()}` : `${rule.adjustment_value > 0 ? '+' : ''}${rule.adjustment_type === 'percentage' ? `${rule.adjustment_value}%` : `₹${rule.adjustment_value}`}`}
+                    <Badge variant="outline" className="font-mono text-xs">
+                      {rule.override_price 
+                        ? `₹${rule.override_price.toLocaleString()}` 
+                        : rule.adjustment_value 
+                          ? `${rule.adjustment_value > 0 ? '+' : ''}₹${rule.adjustment_value}`
+                          : '—'
+                      }
                     </Badge>
                   </TableCell>
                   <TableCell className="py-2.5">
@@ -635,9 +772,6 @@ export function TacticalOverridesTab() {
                     </div>
                   </TableCell>
                   <TableCell className="py-2.5 text-right">
-                    <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleEdit(rule)}>
-                      <Pencil className="h-4 w-4" />
-                    </Button>
                     <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => deleteMutation.mutate(rule.id)}>
                       <Trash2 className="h-4 w-4" />
                     </Button>
