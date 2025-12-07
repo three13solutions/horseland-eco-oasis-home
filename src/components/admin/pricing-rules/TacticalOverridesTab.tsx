@@ -10,30 +10,64 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Plus, Pencil, Trash2, Zap } from 'lucide-react';
+import { Plus, Pencil, Trash2, Zap, Users, Calendar } from 'lucide-react';
 import { toast } from 'sonner';
 import { format, isBefore, startOfDay } from 'date-fns';
 import { EmptyRuleState } from './EmptyRuleState';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 
 type StatusFilter = 'all' | 'active' | 'expired' | 'upcoming';
+
+interface FormData {
+  reason: string;
+  start_date: string;
+  end_date: string;
+  selected_room_types: string[];
+  room_unit_id: string;
+  override_type: string;
+  override_price: string;
+  adjustment_type: string;
+  adjustment_value: string;
+  is_active: boolean;
+  // Occupancy conditions
+  occupancy_type: string;
+  min_adults: string;
+  max_adults: string;
+  min_children: string;
+  max_children: string;
+  // Length of stay conditions
+  min_nights: string;
+  max_nights: string;
+}
+
+const initialFormData: FormData = {
+  reason: '',
+  start_date: '',
+  end_date: '',
+  selected_room_types: [],
+  room_unit_id: '',
+  override_type: 'fixed_price',
+  override_price: '',
+  adjustment_type: 'percentage',
+  adjustment_value: '',
+  is_active: true,
+  occupancy_type: '',
+  min_adults: '',
+  max_adults: '',
+  min_children: '',
+  max_children: '',
+  min_nights: '',
+  max_nights: ''
+};
 
 export function TacticalOverridesTab() {
   const queryClient = useQueryClient();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingRule, setEditingRule] = useState<any>(null);
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
-  const [formData, setFormData] = useState({
-    reason: '',
-    start_date: '',
-    end_date: '',
-    selected_room_types: [] as string[],
-    room_unit_id: '',
-    override_type: 'fixed_price',
-    override_price: '',
-    adjustment_type: 'percentage',
-    adjustment_value: '',
-    is_active: true
-  });
+  const [showOccupancyOptions, setShowOccupancyOptions] = useState(false);
+  const [showStayOptions, setShowStayOptions] = useState(false);
+  const [formData, setFormData] = useState<FormData>(initialFormData);
 
   const { data: rules, isLoading } = useQuery({
     queryKey: ['tactical-overrides'],
@@ -149,19 +183,10 @@ export function TacticalOverridesTab() {
   });
 
   const resetForm = () => {
-    setFormData({
-      reason: '',
-      start_date: '',
-      end_date: '',
-      selected_room_types: [],
-      room_unit_id: '',
-      override_type: 'fixed_price',
-      override_price: '',
-      adjustment_type: 'percentage',
-      adjustment_value: '',
-      is_active: true
-    });
+    setFormData(initialFormData);
     setEditingRule(null);
+    setShowOccupancyOptions(false);
+    setShowStayOptions(false);
   };
 
   const handleRoomTypeToggle = (roomTypeId: string) => {
@@ -193,7 +218,16 @@ export function TacticalOverridesTab() {
       override_price: formData.override_type === 'fixed_price' ? parseFloat(formData.override_price) : null,
       adjustment_type: formData.override_type === 'adjustment' ? formData.adjustment_type : null,
       adjustment_value: formData.override_type === 'adjustment' ? parseFloat(formData.adjustment_value) : null,
-      is_active: formData.is_active
+      is_active: formData.is_active,
+      // Occupancy conditions
+      occupancy_type: formData.occupancy_type || null,
+      min_adults: formData.min_adults ? parseInt(formData.min_adults) : null,
+      max_adults: formData.max_adults ? parseInt(formData.max_adults) : null,
+      min_children: formData.min_children ? parseInt(formData.min_children) : null,
+      max_children: formData.max_children ? parseInt(formData.max_children) : null,
+      // Length of stay conditions
+      min_nights: formData.min_nights ? parseInt(formData.min_nights) : null,
+      max_nights: formData.max_nights ? parseInt(formData.max_nights) : null
     };
 
     if (editingRule) {
@@ -216,6 +250,10 @@ export function TacticalOverridesTab() {
 
   const handleEdit = (rule: any) => {
     setEditingRule(rule);
+    const hasOccupancyConditions = rule.occupancy_type || rule.min_adults || rule.max_adults || rule.min_children || rule.max_children;
+    const hasStayConditions = rule.min_nights || rule.max_nights;
+    setShowOccupancyOptions(hasOccupancyConditions);
+    setShowStayOptions(hasStayConditions);
     setFormData({
       reason: rule.reason,
       start_date: rule.start_date,
@@ -226,9 +264,39 @@ export function TacticalOverridesTab() {
       override_price: rule.override_price?.toString() || '',
       adjustment_type: rule.adjustment_type || 'percentage',
       adjustment_value: rule.adjustment_value?.toString() || '',
-      is_active: rule.is_active
+      is_active: rule.is_active,
+      occupancy_type: rule.occupancy_type || '',
+      min_adults: rule.min_adults?.toString() || '',
+      max_adults: rule.max_adults?.toString() || '',
+      min_children: rule.min_children?.toString() || '',
+      max_children: rule.max_children?.toString() || '',
+      min_nights: rule.min_nights?.toString() || '',
+      max_nights: rule.max_nights?.toString() || ''
     });
     setIsDialogOpen(true);
+  };
+
+  const getConditionsSummary = (rule: any) => {
+    const conditions: string[] = [];
+    if (rule.occupancy_type) {
+      const labels: Record<string, string> = {
+        single: 'Single',
+        double: 'Double',
+        extra_adult: '+Adult',
+        extra_child: '+Child'
+      };
+      conditions.push(labels[rule.occupancy_type] || rule.occupancy_type);
+    }
+    if (rule.min_nights || rule.max_nights) {
+      if (rule.min_nights && rule.max_nights) {
+        conditions.push(`${rule.min_nights}-${rule.max_nights}N`);
+      } else if (rule.min_nights) {
+        conditions.push(`${rule.min_nights}+N`);
+      } else if (rule.max_nights) {
+        conditions.push(`≤${rule.max_nights}N`);
+      }
+    }
+    return conditions;
   };
 
   return (
@@ -256,7 +324,7 @@ export function TacticalOverridesTab() {
           <DialogTrigger asChild>
             <Button size="sm"><Plus className="h-4 w-4 mr-1" />Add Override</Button>
           </DialogTrigger>
-          <DialogContent className="max-w-2xl">
+          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>{editingRule ? 'Edit' : 'Add'} Tactical Override</DialogTitle>
             </DialogHeader>
@@ -298,7 +366,7 @@ export function TacticalOverridesTab() {
                     </SelectContent>
                   </Select>
                 ) : (
-                  <div className="grid grid-cols-2 gap-2 p-3 border rounded-md bg-muted/30 max-h-40 overflow-y-auto">
+                  <div className="grid grid-cols-2 gap-2 p-3 border rounded-md bg-muted/30 max-h-32 overflow-y-auto">
                     {roomTypes?.map((type) => (
                       <div key={type.id} className="flex items-center gap-2">
                         <Checkbox
@@ -334,6 +402,75 @@ export function TacticalOverridesTab() {
                   </Select>
                 </div>
               )}
+
+              {/* Occupancy Conditions */}
+              <Collapsible open={showOccupancyOptions} onOpenChange={setShowOccupancyOptions}>
+                <CollapsibleTrigger asChild>
+                  <Button type="button" variant="outline" size="sm" className="w-full justify-start gap-2">
+                    <Users className="h-4 w-4" />
+                    Occupancy Conditions
+                    <Badge variant="secondary" className="ml-auto">{showOccupancyOptions ? 'Collapse' : 'Expand'}</Badge>
+                  </Button>
+                </CollapsibleTrigger>
+                <CollapsibleContent className="pt-3 space-y-3">
+                  <div className="space-y-2">
+                    <Label>Occupancy Type</Label>
+                    <Select value={formData.occupancy_type || '__any__'} onValueChange={(value) => setFormData({ ...formData, occupancy_type: value === '__any__' ? '' : value })}>
+                      <SelectTrigger><SelectValue placeholder="Any occupancy" /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="__any__">Any Occupancy</SelectItem>
+                        <SelectItem value="single">Single (1 adult)</SelectItem>
+                        <SelectItem value="double">Double (2 adults)</SelectItem>
+                        <SelectItem value="extra_adult">With Extra Adult (3+ adults)</SelectItem>
+                        <SelectItem value="extra_child">With Children</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="space-y-2">
+                      <Label className="text-xs">Min Adults</Label>
+                      <Input type="number" min="0" placeholder="Any" value={formData.min_adults} onChange={(e) => setFormData({ ...formData, min_adults: e.target.value })} />
+                    </div>
+                    <div className="space-y-2">
+                      <Label className="text-xs">Max Adults</Label>
+                      <Input type="number" min="0" placeholder="Any" value={formData.max_adults} onChange={(e) => setFormData({ ...formData, max_adults: e.target.value })} />
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="space-y-2">
+                      <Label className="text-xs">Min Children</Label>
+                      <Input type="number" min="0" placeholder="Any" value={formData.min_children} onChange={(e) => setFormData({ ...formData, min_children: e.target.value })} />
+                    </div>
+                    <div className="space-y-2">
+                      <Label className="text-xs">Max Children</Label>
+                      <Input type="number" min="0" placeholder="Any" value={formData.max_children} onChange={(e) => setFormData({ ...formData, max_children: e.target.value })} />
+                    </div>
+                  </div>
+                </CollapsibleContent>
+              </Collapsible>
+
+              {/* Length of Stay Conditions */}
+              <Collapsible open={showStayOptions} onOpenChange={setShowStayOptions}>
+                <CollapsibleTrigger asChild>
+                  <Button type="button" variant="outline" size="sm" className="w-full justify-start gap-2">
+                    <Calendar className="h-4 w-4" />
+                    Length of Stay Conditions
+                    <Badge variant="secondary" className="ml-auto">{showStayOptions ? 'Collapse' : 'Expand'}</Badge>
+                  </Button>
+                </CollapsibleTrigger>
+                <CollapsibleContent className="pt-3">
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="space-y-2">
+                      <Label className="text-xs">Minimum Nights</Label>
+                      <Input type="number" min="1" placeholder="Any" value={formData.min_nights} onChange={(e) => setFormData({ ...formData, min_nights: e.target.value })} />
+                    </div>
+                    <div className="space-y-2">
+                      <Label className="text-xs">Maximum Nights</Label>
+                      <Input type="number" min="1" placeholder="Any" value={formData.max_nights} onChange={(e) => setFormData({ ...formData, max_nights: e.target.value })} />
+                    </div>
+                  </div>
+                </CollapsibleContent>
+              </Collapsible>
 
               <div className="space-y-2">
                 <Label>Override Type</Label>
@@ -390,6 +527,7 @@ export function TacticalOverridesTab() {
             <TableHead className="h-9">Reason</TableHead>
             <TableHead className="h-9">Period</TableHead>
             <TableHead className="h-9">Scope</TableHead>
+            <TableHead className="h-9">Conditions</TableHead>
             <TableHead className="h-9">Override</TableHead>
             <TableHead className="h-9">Status</TableHead>
             <TableHead className="h-9 text-right">Actions</TableHead>
@@ -397,17 +535,17 @@ export function TacticalOverridesTab() {
         </TableHeader>
         <TableBody>
           {isLoading ? (
-            <TableRow><TableCell colSpan={6} className="text-center py-8">Loading...</TableCell></TableRow>
+            <TableRow><TableCell colSpan={7} className="text-center py-8">Loading...</TableCell></TableRow>
           ) : filteredRules.length === 0 ? (
             statusFilter !== 'all' && rules && rules.length > 0 ? (
               <TableRow>
-                <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
+                <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
                   No {statusFilter} overrides found
                 </TableCell>
               </TableRow>
             ) : (
               <TableRow>
-                <TableCell colSpan={6} className="p-0">
+                <TableCell colSpan={7} className="p-0">
                   <EmptyRuleState
                     icon={Zap}
                     title="No Tactical Overrides Defined"
@@ -426,6 +564,7 @@ export function TacticalOverridesTab() {
             filteredRules.map((rule) => {
               const status = getOverrideStatus(rule);
               const isExpired = status === 'expired';
+              const conditions = getConditionsSummary(rule);
               return (
                 <TableRow 
                   key={rule.id} 
@@ -437,6 +576,17 @@ export function TacticalOverridesTab() {
                   </TableCell>
                   <TableCell className="py-2.5 text-sm">
                     {rule.room_units?.unit_number || rule.room_types?.name || 'All'}
+                  </TableCell>
+                  <TableCell className="py-2.5">
+                    {conditions.length > 0 ? (
+                      <div className="flex gap-1 flex-wrap">
+                        {conditions.map((c, i) => (
+                          <Badge key={i} variant="secondary" className="text-xs">{c}</Badge>
+                        ))}
+                      </div>
+                    ) : (
+                      <span className="text-xs text-muted-foreground">—</span>
+                    )}
                   </TableCell>
                   <TableCell className="py-2.5">
                     <Badge variant="outline" className="font-mono">

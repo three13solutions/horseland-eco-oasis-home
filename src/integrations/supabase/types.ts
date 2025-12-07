@@ -2543,6 +2543,13 @@ export type Database = {
           end_date: string
           id: string
           is_active: boolean | null
+          max_adults: number | null
+          max_children: number | null
+          max_nights: number | null
+          min_adults: number | null
+          min_children: number | null
+          min_nights: number | null
+          occupancy_type: string | null
           override_price: number | null
           override_type: string
           reason: string
@@ -2559,6 +2566,13 @@ export type Database = {
           end_date: string
           id?: string
           is_active?: boolean | null
+          max_adults?: number | null
+          max_children?: number | null
+          max_nights?: number | null
+          min_adults?: number | null
+          min_children?: number | null
+          min_nights?: number | null
+          occupancy_type?: string | null
           override_price?: number | null
           override_type: string
           reason: string
@@ -2575,6 +2589,13 @@ export type Database = {
           end_date?: string
           id?: string
           is_active?: boolean | null
+          max_adults?: number | null
+          max_children?: number | null
+          max_nights?: number | null
+          min_adults?: number | null
+          min_children?: number | null
+          min_nights?: number | null
+          occupancy_type?: string | null
           override_price?: number | null
           override_type?: string
           reason?: string
