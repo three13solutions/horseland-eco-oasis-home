@@ -35,7 +35,6 @@ export default function LiveRateCard() {
       const { data, error } = await (supabase as any)
         .from('room_types')
         .select('id, name, base_price')
-        .eq('is_active', true)
         .order('name');
       if (error) throw error;
       return data || [];
