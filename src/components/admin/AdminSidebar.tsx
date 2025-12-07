@@ -124,6 +124,12 @@ const pricingMenuItems = [
     description: 'Tiered GST rates' 
   },
   { 
+    icon: Zap, 
+    label: 'Rate Overrides', 
+    path: '/admin/pricing/overrides', 
+    description: 'Manual price overrides' 
+  },
+  { 
     icon: Calendar, 
     label: 'Live Rate Card', 
     path: '/admin/pricing/rate-card', 
