@@ -2310,6 +2310,7 @@ export type Database = {
         Row: {
           area_sqft: number | null
           bed_configuration: Json | null
+          category_id: string | null
           created_at: string
           custom_pricing: Json | null
           floor_number: number | null
@@ -2327,6 +2328,7 @@ export type Database = {
         Insert: {
           area_sqft?: number | null
           bed_configuration?: Json | null
+          category_id?: string | null
           created_at?: string
           custom_pricing?: Json | null
           floor_number?: number | null
@@ -2344,6 +2346,7 @@ export type Database = {
         Update: {
           area_sqft?: number | null
           bed_configuration?: Json | null
+          category_id?: string | null
           created_at?: string
           custom_pricing?: Json | null
           floor_number?: number | null
@@ -2359,6 +2362,13 @@ export type Database = {
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "room_units_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "room_categories"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "room_units_room_type_id_fkey"
             columns: ["room_type_id"]
