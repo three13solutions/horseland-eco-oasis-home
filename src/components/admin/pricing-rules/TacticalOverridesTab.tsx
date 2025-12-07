@@ -353,7 +353,7 @@ export function TacticalOverridesTab() {
         max_nights: maxNights,
         day_type: dayType,
         is_active: formData.is_active,
-        override_type: formData.overrideLevel === 'category' ? 'category' : formData.overrideLevel === 'room_type' ? 'room_type' : 'room_unit'
+        override_type: 'date_range'
       };
 
       // Set the correct ID based on override level
