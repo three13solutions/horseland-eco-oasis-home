@@ -448,131 +448,64 @@ export function TacticalOverridesTab() {
                     <Table>
                       <TableHeader>
                         <TableRow className="bg-muted/50">
-                          <TableHead className="h-8 text-xs w-32">Duration</TableHead>
-                          <TableHead className="h-8 text-xs text-center">Double Occ (₹)</TableHead>
-                          <TableHead className="h-8 text-xs text-center">+Adult/night (₹)</TableHead>
-                          <TableHead className="h-8 text-xs text-center">+Child/night (₹)</TableHead>
+                          <TableHead className="h-8 text-xs w-24" rowSpan={2}>Duration</TableHead>
+                          <TableHead className="h-8 text-xs text-center border-l" colSpan={3}>
+                            <Badge variant="secondary" className="text-xs">Weekday</Badge>
+                          </TableHead>
+                          <TableHead className="h-8 text-xs text-center border-l" colSpan={3}>
+                            <Badge variant="outline" className="text-xs">Weekend</Badge>
+                          </TableHead>
+                        </TableRow>
+                        <TableRow className="bg-muted/30">
+                          <TableHead className="h-7 text-xs text-center border-l px-1">Double</TableHead>
+                          <TableHead className="h-7 text-xs text-center px-1">+Adult</TableHead>
+                          <TableHead className="h-7 text-xs text-center px-1">+Child</TableHead>
+                          <TableHead className="h-7 text-xs text-center border-l px-1">Double</TableHead>
+                          <TableHead className="h-7 text-xs text-center px-1">+Adult</TableHead>
+                          <TableHead className="h-7 text-xs text-center px-1">+Child</TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
                         <TableRow>
-                          <TableCell className="py-2 font-medium text-sm">1 Night <Badge variant="secondary" className="ml-1 text-xs">Weekday</Badge></TableCell>
-                          <TableCell className="py-2">
-                            <Input 
-                              type="number" 
-                              placeholder="—" 
-                              className="h-8 text-center"
-                              value={categoryRate.rates.oneNightWeekday.double}
-                              onChange={(e) => updateRoomCategoryRateValue(categoryRate.roomTypeId, 'oneNightWeekday', 'double', e.target.value)}
-                            />
+                          <TableCell className="py-2 font-medium text-sm">1 Night</TableCell>
+                          <TableCell className="py-1 px-1 border-l">
+                            <Input type="number" placeholder="—" className="h-8 text-center text-sm" value={categoryRate.rates.oneNightWeekday.double} onChange={(e) => updateRoomCategoryRateValue(categoryRate.roomTypeId, 'oneNightWeekday', 'double', e.target.value)} />
                           </TableCell>
-                          <TableCell className="py-2">
-                            <Input 
-                              type="number" 
-                              placeholder="—" 
-                              className="h-8 text-center"
-                              value={categoryRate.rates.oneNightWeekday.extraAdult}
-                              onChange={(e) => updateRoomCategoryRateValue(categoryRate.roomTypeId, 'oneNightWeekday', 'extraAdult', e.target.value)}
-                            />
+                          <TableCell className="py-1 px-1">
+                            <Input type="number" placeholder="—" className="h-8 text-center text-sm" value={categoryRate.rates.oneNightWeekday.extraAdult} onChange={(e) => updateRoomCategoryRateValue(categoryRate.roomTypeId, 'oneNightWeekday', 'extraAdult', e.target.value)} />
                           </TableCell>
-                          <TableCell className="py-2">
-                            <Input 
-                              type="number" 
-                              placeholder="—" 
-                              className="h-8 text-center"
-                              value={categoryRate.rates.oneNightWeekday.extraChild}
-                              onChange={(e) => updateRoomCategoryRateValue(categoryRate.roomTypeId, 'oneNightWeekday', 'extraChild', e.target.value)}
-                            />
+                          <TableCell className="py-1 px-1">
+                            <Input type="number" placeholder="—" className="h-8 text-center text-sm" value={categoryRate.rates.oneNightWeekday.extraChild} onChange={(e) => updateRoomCategoryRateValue(categoryRate.roomTypeId, 'oneNightWeekday', 'extraChild', e.target.value)} />
+                          </TableCell>
+                          <TableCell className="py-1 px-1 border-l">
+                            <Input type="number" placeholder="—" className="h-8 text-center text-sm" value={categoryRate.rates.oneNightWeekend.double} onChange={(e) => updateRoomCategoryRateValue(categoryRate.roomTypeId, 'oneNightWeekend', 'double', e.target.value)} />
+                          </TableCell>
+                          <TableCell className="py-1 px-1">
+                            <Input type="number" placeholder="—" className="h-8 text-center text-sm" value={categoryRate.rates.oneNightWeekend.extraAdult} onChange={(e) => updateRoomCategoryRateValue(categoryRate.roomTypeId, 'oneNightWeekend', 'extraAdult', e.target.value)} />
+                          </TableCell>
+                          <TableCell className="py-1 px-1">
+                            <Input type="number" placeholder="—" className="h-8 text-center text-sm" value={categoryRate.rates.oneNightWeekend.extraChild} onChange={(e) => updateRoomCategoryRateValue(categoryRate.roomTypeId, 'oneNightWeekend', 'extraChild', e.target.value)} />
                           </TableCell>
                         </TableRow>
                         <TableRow>
-                          <TableCell className="py-2 font-medium text-sm">1 Night <Badge variant="outline" className="ml-1 text-xs">Weekend</Badge></TableCell>
-                          <TableCell className="py-2">
-                            <Input 
-                              type="number" 
-                              placeholder="—" 
-                              className="h-8 text-center"
-                              value={categoryRate.rates.oneNightWeekend.double}
-                              onChange={(e) => updateRoomCategoryRateValue(categoryRate.roomTypeId, 'oneNightWeekend', 'double', e.target.value)}
-                            />
+                          <TableCell className="py-2 font-medium text-sm">2+ Nights</TableCell>
+                          <TableCell className="py-1 px-1 border-l">
+                            <Input type="number" placeholder="—" className="h-8 text-center text-sm" value={categoryRate.rates.twoNightsWeekday.double} onChange={(e) => updateRoomCategoryRateValue(categoryRate.roomTypeId, 'twoNightsWeekday', 'double', e.target.value)} />
                           </TableCell>
-                          <TableCell className="py-2">
-                            <Input 
-                              type="number" 
-                              placeholder="—" 
-                              className="h-8 text-center"
-                              value={categoryRate.rates.oneNightWeekend.extraAdult}
-                              onChange={(e) => updateRoomCategoryRateValue(categoryRate.roomTypeId, 'oneNightWeekend', 'extraAdult', e.target.value)}
-                            />
+                          <TableCell className="py-1 px-1">
+                            <Input type="number" placeholder="—" className="h-8 text-center text-sm" value={categoryRate.rates.twoNightsWeekday.extraAdult} onChange={(e) => updateRoomCategoryRateValue(categoryRate.roomTypeId, 'twoNightsWeekday', 'extraAdult', e.target.value)} />
                           </TableCell>
-                          <TableCell className="py-2">
-                            <Input 
-                              type="number" 
-                              placeholder="—" 
-                              className="h-8 text-center"
-                              value={categoryRate.rates.oneNightWeekend.extraChild}
-                              onChange={(e) => updateRoomCategoryRateValue(categoryRate.roomTypeId, 'oneNightWeekend', 'extraChild', e.target.value)}
-                            />
+                          <TableCell className="py-1 px-1">
+                            <Input type="number" placeholder="—" className="h-8 text-center text-sm" value={categoryRate.rates.twoNightsWeekday.extraChild} onChange={(e) => updateRoomCategoryRateValue(categoryRate.roomTypeId, 'twoNightsWeekday', 'extraChild', e.target.value)} />
                           </TableCell>
-                        </TableRow>
-                        <TableRow>
-                          <TableCell className="py-2 font-medium text-sm">2+ Nights <Badge variant="secondary" className="ml-1 text-xs">Weekday</Badge></TableCell>
-                          <TableCell className="py-2">
-                            <Input 
-                              type="number" 
-                              placeholder="—" 
-                              className="h-8 text-center"
-                              value={categoryRate.rates.twoNightsWeekday.double}
-                              onChange={(e) => updateRoomCategoryRateValue(categoryRate.roomTypeId, 'twoNightsWeekday', 'double', e.target.value)}
-                            />
+                          <TableCell className="py-1 px-1 border-l">
+                            <Input type="number" placeholder="—" className="h-8 text-center text-sm" value={categoryRate.rates.twoNightsWeekend.double} onChange={(e) => updateRoomCategoryRateValue(categoryRate.roomTypeId, 'twoNightsWeekend', 'double', e.target.value)} />
                           </TableCell>
-                          <TableCell className="py-2">
-                            <Input 
-                              type="number" 
-                              placeholder="—" 
-                              className="h-8 text-center"
-                              value={categoryRate.rates.twoNightsWeekday.extraAdult}
-                              onChange={(e) => updateRoomCategoryRateValue(categoryRate.roomTypeId, 'twoNightsWeekday', 'extraAdult', e.target.value)}
-                            />
+                          <TableCell className="py-1 px-1">
+                            <Input type="number" placeholder="—" className="h-8 text-center text-sm" value={categoryRate.rates.twoNightsWeekend.extraAdult} onChange={(e) => updateRoomCategoryRateValue(categoryRate.roomTypeId, 'twoNightsWeekend', 'extraAdult', e.target.value)} />
                           </TableCell>
-                          <TableCell className="py-2">
-                            <Input 
-                              type="number" 
-                              placeholder="—" 
-                              className="h-8 text-center"
-                              value={categoryRate.rates.twoNightsWeekday.extraChild}
-                              onChange={(e) => updateRoomCategoryRateValue(categoryRate.roomTypeId, 'twoNightsWeekday', 'extraChild', e.target.value)}
-                            />
-                          </TableCell>
-                        </TableRow>
-                        <TableRow>
-                          <TableCell className="py-2 font-medium text-sm">2+ Nights <Badge variant="outline" className="ml-1 text-xs">Weekend</Badge></TableCell>
-                          <TableCell className="py-2">
-                            <Input 
-                              type="number" 
-                              placeholder="—" 
-                              className="h-8 text-center"
-                              value={categoryRate.rates.twoNightsWeekend.double}
-                              onChange={(e) => updateRoomCategoryRateValue(categoryRate.roomTypeId, 'twoNightsWeekend', 'double', e.target.value)}
-                            />
-                          </TableCell>
-                          <TableCell className="py-2">
-                            <Input 
-                              type="number" 
-                              placeholder="—" 
-                              className="h-8 text-center"
-                              value={categoryRate.rates.twoNightsWeekend.extraAdult}
-                              onChange={(e) => updateRoomCategoryRateValue(categoryRate.roomTypeId, 'twoNightsWeekend', 'extraAdult', e.target.value)}
-                            />
-                          </TableCell>
-                          <TableCell className="py-2">
-                            <Input 
-                              type="number" 
-                              placeholder="—" 
-                              className="h-8 text-center"
-                              value={categoryRate.rates.twoNightsWeekend.extraChild}
-                              onChange={(e) => updateRoomCategoryRateValue(categoryRate.roomTypeId, 'twoNightsWeekend', 'extraChild', e.target.value)}
-                            />
+                          <TableCell className="py-1 px-1">
+                            <Input type="number" placeholder="—" className="h-8 text-center text-sm" value={categoryRate.rates.twoNightsWeekend.extraChild} onChange={(e) => updateRoomCategoryRateValue(categoryRate.roomTypeId, 'twoNightsWeekend', 'extraChild', e.target.value)} />
                           </TableCell>
                         </TableRow>
                       </TableBody>
