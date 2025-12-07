@@ -40,6 +40,7 @@ interface FormData {
   start_date: string;
   end_date: string;
   is_active: boolean;
+  sameRateForAllDays: boolean;
   selectedRoomTypeIds: string[];
   roomCategoryRates: RoomCategoryRates[];
 }
@@ -49,6 +50,7 @@ const initialFormData: FormData = {
   start_date: '',
   end_date: '',
   is_active: true,
+  sameRateForAllDays: true,
   selectedRoomTypeIds: [],
   roomCategoryRates: []
 };
@@ -308,17 +310,19 @@ export function TacticalOverridesTab() {
     for (const categoryRate of formData.roomCategoryRates) {
       const { rates, roomTypeId } = categoryRate;
       
-      // 1 Night Weekday
-      createPayload(roomTypeId, rates.oneNightWeekday, 1, 1, 'weekday', formData.reason);
-      
-      // 1 Night Weekend
-      createPayload(roomTypeId, rates.oneNightWeekend, 1, 1, 'weekend', formData.reason);
-      
-      // 2+ Nights Weekday (per-night rate, null max_nights for unlimited)
-      createPayload(roomTypeId, rates.twoNightsWeekday, 2, null, 'weekday', formData.reason);
-      
-      // 2+ Nights Weekend (per-night rate, null max_nights for unlimited)
-      createPayload(roomTypeId, rates.twoNightsWeekend, 2, null, 'weekend', formData.reason);
+      if (formData.sameRateForAllDays) {
+        // Use weekday rates for both weekday and weekend
+        createPayload(roomTypeId, rates.oneNightWeekday, 1, 1, 'weekday', formData.reason);
+        createPayload(roomTypeId, rates.oneNightWeekday, 1, 1, 'weekend', formData.reason);
+        createPayload(roomTypeId, rates.twoNightsWeekday, 2, null, 'weekday', formData.reason);
+        createPayload(roomTypeId, rates.twoNightsWeekday, 2, null, 'weekend', formData.reason);
+      } else {
+        // Separate rates for weekday and weekend
+        createPayload(roomTypeId, rates.oneNightWeekday, 1, 1, 'weekday', formData.reason);
+        createPayload(roomTypeId, rates.oneNightWeekend, 1, 1, 'weekend', formData.reason);
+        createPayload(roomTypeId, rates.twoNightsWeekday, 2, null, 'weekday', formData.reason);
+        createPayload(roomTypeId, rates.twoNightsWeekend, 2, null, 'weekend', formData.reason);
+      }
     }
     
     if (payloads.length === 0) {
@@ -421,7 +425,17 @@ export function TacticalOverridesTab() {
                 </div>
               </div>
 
-              {/* Rate Cards for each selected room category */}
+              {/* Same rate toggle */}
+              <div className="flex items-center space-x-2">
+                <Checkbox 
+                  id="sameRateForAllDays"
+                  checked={formData.sameRateForAllDays} 
+                  onCheckedChange={(checked) => setFormData({ ...formData, sameRateForAllDays: checked as boolean })} 
+                />
+                <Label htmlFor="sameRateForAllDays" className="text-sm font-normal cursor-pointer">
+                  Same rate for weekdays and weekends
+                </Label>
+              </div>
               {formData.roomCategoryRates.length > 0 && (
                 <div className="rounded-lg border bg-muted/30 p-3 text-sm text-muted-foreground">
                   <span className="font-medium text-foreground">Note:</span> All override rates are for <span className="font-medium text-foreground">Full Board (All Meals Inclusive)</span> meal plan with <span className="font-medium text-foreground">Refundable as Credit Voucher</span> cancellation policy. Extra adult/child charges apply from the 3rd guest onwards.
@@ -445,6 +459,44 @@ export function TacticalOverridesTab() {
                     </div>
                   </CardHeader>
                   <CardContent className="pt-0">
+                    {formData.sameRateForAllDays ? (
+                      <Table>
+                        <TableHeader>
+                          <TableRow className="bg-muted/50">
+                            <TableHead className="h-8 text-xs w-24">Duration</TableHead>
+                            <TableHead className="h-8 text-xs text-center">Double Occ (₹)</TableHead>
+                            <TableHead className="h-8 text-xs text-center">+Adult/night (₹)</TableHead>
+                            <TableHead className="h-8 text-xs text-center">+Child/night (₹)</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          <TableRow>
+                            <TableCell className="py-2 font-medium text-sm">1 Night</TableCell>
+                            <TableCell className="py-1 px-2">
+                              <Input type="number" placeholder="—" className="h-8 text-center text-sm" value={categoryRate.rates.oneNightWeekday.double} onChange={(e) => updateRoomCategoryRateValue(categoryRate.roomTypeId, 'oneNightWeekday', 'double', e.target.value)} />
+                            </TableCell>
+                            <TableCell className="py-1 px-2">
+                              <Input type="number" placeholder="—" className="h-8 text-center text-sm" value={categoryRate.rates.oneNightWeekday.extraAdult} onChange={(e) => updateRoomCategoryRateValue(categoryRate.roomTypeId, 'oneNightWeekday', 'extraAdult', e.target.value)} />
+                            </TableCell>
+                            <TableCell className="py-1 px-2">
+                              <Input type="number" placeholder="—" className="h-8 text-center text-sm" value={categoryRate.rates.oneNightWeekday.extraChild} onChange={(e) => updateRoomCategoryRateValue(categoryRate.roomTypeId, 'oneNightWeekday', 'extraChild', e.target.value)} />
+                            </TableCell>
+                          </TableRow>
+                          <TableRow>
+                            <TableCell className="py-2 font-medium text-sm">2+ Nights</TableCell>
+                            <TableCell className="py-1 px-2">
+                              <Input type="number" placeholder="—" className="h-8 text-center text-sm" value={categoryRate.rates.twoNightsWeekday.double} onChange={(e) => updateRoomCategoryRateValue(categoryRate.roomTypeId, 'twoNightsWeekday', 'double', e.target.value)} />
+                            </TableCell>
+                            <TableCell className="py-1 px-2">
+                              <Input type="number" placeholder="—" className="h-8 text-center text-sm" value={categoryRate.rates.twoNightsWeekday.extraAdult} onChange={(e) => updateRoomCategoryRateValue(categoryRate.roomTypeId, 'twoNightsWeekday', 'extraAdult', e.target.value)} />
+                            </TableCell>
+                            <TableCell className="py-1 px-2">
+                              <Input type="number" placeholder="—" className="h-8 text-center text-sm" value={categoryRate.rates.twoNightsWeekday.extraChild} onChange={(e) => updateRoomCategoryRateValue(categoryRate.roomTypeId, 'twoNightsWeekday', 'extraChild', e.target.value)} />
+                            </TableCell>
+                          </TableRow>
+                        </TableBody>
+                      </Table>
+                    ) : (
                     <Table>
                       <TableHeader>
                         <TableRow className="bg-muted/50">
@@ -510,6 +562,7 @@ export function TacticalOverridesTab() {
                         </TableRow>
                       </TableBody>
                     </Table>
+                    )}
                   </CardContent>
                 </Card>
               ))}
