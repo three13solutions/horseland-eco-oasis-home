@@ -2540,6 +2540,7 @@ export type Database = {
           adjustment_value: number | null
           created_at: string | null
           created_by: string | null
+          day_type: string | null
           end_date: string
           id: string
           is_active: boolean | null
@@ -2564,6 +2565,7 @@ export type Database = {
           adjustment_value?: number | null
           created_at?: string | null
           created_by?: string | null
+          day_type?: string | null
           end_date: string
           id?: string
           is_active?: boolean | null
@@ -2588,6 +2590,7 @@ export type Database = {
           adjustment_value?: number | null
           created_at?: string | null
           created_by?: string | null
+          day_type?: string | null
           end_date?: string
           id?: string
           is_active?: boolean | null
