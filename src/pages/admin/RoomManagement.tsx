@@ -63,11 +63,15 @@ interface RoomUnit {
   special_features: any;
   notes?: string | null;
   is_active: boolean;
+  category_id?: string | null;
   created_at: string;
   updated_at: string;
   room_types?: {
     name: string;
+    category_id?: string | null;
+    room_categories?: RoomCategory | null;
   };
+  room_categories?: RoomCategory | null;
 }
 
 export default function RoomManagement() {
@@ -110,7 +114,8 @@ export default function RoomManagement() {
     area_sqft: '',
     status: 'available',
     special_features: '',
-    notes: ''
+    notes: '',
+    category_id: '',
   });
   
   const [unitMaxOccupancy, setUnitMaxOccupancy] = useState(2);
@@ -182,7 +187,8 @@ export default function RoomManagement() {
         .from('room_units')
         .select(`
           *,
-          room_types(name)
+          room_types(name, category_id, room_categories(id, name, slug)),
+          room_categories(id, name, slug)
         `)
         .order('unit_number');
 
@@ -229,7 +235,8 @@ export default function RoomManagement() {
       area_sqft: '',
       status: 'available',
       special_features: '',
-      notes: ''
+      notes: '',
+      category_id: '',
     });
     setUnitMaxOccupancy(2);
     setUnitBedConfigs([]);
@@ -291,7 +298,8 @@ export default function RoomManagement() {
       area_sqft: unit.area_sqft?.toString() || '',
       status: unit.status,
       special_features: unit.special_features.join(', '),
-      notes: unit.notes || ''
+      notes: unit.notes || '',
+      category_id: unit.category_id || '',
     });
     
     // Load existing bed configuration and max occupancy if available
@@ -373,6 +381,7 @@ export default function RoomManagement() {
       notes: unitFormData.notes || null,
       max_occupancy: unitMaxOccupancy,
       bed_configuration: unitBedConfigs,
+      category_id: unitFormData.category_id || null,
     };
 
     try {
@@ -618,6 +627,17 @@ export default function RoomManagement() {
     const matchesStatus = statusFilter === 'all' || unit.status === statusFilter;
     return matchesSearch && matchesStatus;
   });
+
+  // Helper to get effective category for a unit (unit override or inherited from room type)
+  const getEffectiveCategory = (unit: RoomUnit) => {
+    if (unit.category_id && unit.room_categories) {
+      return { name: unit.room_categories.name, isOverride: true };
+    }
+    if (unit.room_types?.room_categories) {
+      return { name: unit.room_types.room_categories.name, isOverride: false };
+    }
+    return null;
+  };
 
   if (loading) {
     return <div className="flex items-center justify-center h-64">Loading...</div>;
@@ -957,6 +977,28 @@ export default function RoomManagement() {
                       <SelectItem value="out_of_order">Out of Order</SelectItem>
                     </SelectContent>
                   </Select>
+                </div>
+                <div>
+                  <Label htmlFor="category_override">Category Override</Label>
+                  <Select 
+                    value={unitFormData.category_id} 
+                    onValueChange={(value) => setUnitFormData({...unitFormData, category_id: value === 'inherit' ? '' : value})}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Inherit from room type" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="inherit">Inherit from room type</SelectItem>
+                      {roomCategories.map((cat) => (
+                        <SelectItem key={cat.id} value={cat.id}>
+                          {cat.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Override the category inherited from room type
+                  </p>
                 </div>
               </div>
 
@@ -1374,6 +1416,18 @@ export default function RoomManagement() {
                     <p className="text-xs text-muted-foreground">
                       {unit.room_types?.name}
                     </p>
+                    {(() => {
+                      const effectiveCategory = getEffectiveCategory(unit);
+                      if (effectiveCategory) {
+                        return (
+                          <Badge variant={effectiveCategory.isOverride ? "default" : "outline"} className="text-xs w-fit">
+                            {effectiveCategory.name}
+                            {effectiveCategory.isOverride && " (Override)"}
+                          </Badge>
+                        );
+                      }
+                      return null;
+                    })()}
                   </CardHeader>
                   <CardContent className="space-y-3">
                     <div className="grid grid-cols-2 gap-2 text-sm">
@@ -1453,6 +1507,7 @@ export default function RoomManagement() {
                     <TableHead>Unit Number</TableHead>
                     <TableHead>Unit Name</TableHead>
                     <TableHead>Room Type</TableHead>
+                    <TableHead>Category</TableHead>
                     <TableHead>Floor</TableHead>
                     <TableHead>Area</TableHead>
                     <TableHead>Status</TableHead>
@@ -1460,10 +1515,25 @@ export default function RoomManagement() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {filteredUnits.map((unit) => (
+                  {filteredUnits.map((unit) => {
+                    const effectiveCategory = getEffectiveCategory(unit);
+                    return (
                     <TableRow key={unit.id}>
                       <TableCell className="font-medium">{unit.unit_number}</TableCell>
                       <TableCell>{unit.unit_name || '-'}</TableCell>
+                      <TableCell>{unit.room_types?.name}</TableCell>
+                      <TableCell>
+                        {effectiveCategory ? (
+                          <Badge variant={effectiveCategory.isOverride ? "default" : "outline"} className="text-xs">
+                            {effectiveCategory.name}
+                            {effectiveCategory.isOverride && " *"}
+                          </Badge>
+                        ) : (
+                          <span className="text-muted-foreground">-</span>
+                        )}
+                      </TableCell>
+                      <TableCell>{unit.floor_number || '-'}</TableCell>
+                      <TableCell>{unit.area_sqft ? `${unit.area_sqft} sq ft` : '-'}</TableCell>
                       <TableCell>{unit.room_types?.name}</TableCell>
                       <TableCell>{unit.floor_number || '-'}</TableCell>
                       <TableCell>{unit.area_sqft ? `${unit.area_sqft} sq ft` : '-'}</TableCell>
@@ -1505,7 +1575,7 @@ export default function RoomManagement() {
                         </div>
                       </TableCell>
                     </TableRow>
-                  ))}
+                  )})}
                 </TableBody>
               </Table>
             </div>
