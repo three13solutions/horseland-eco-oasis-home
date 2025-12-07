@@ -203,20 +203,20 @@ export function TacticalOverridesTab() {
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label>Room Category (Optional)</Label>
-                    <Select value={formData.room_type_id} onValueChange={(value) => setFormData({ ...formData, room_type_id: value })}>
+                    <Select value={formData.room_type_id || '__all__'} onValueChange={(value) => setFormData({ ...formData, room_type_id: value === '__all__' ? '' : value, room_unit_id: '' })}>
                       <SelectTrigger><SelectValue placeholder="All categories" /></SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="">All Categories</SelectItem>
+                        <SelectItem value="__all__">All Categories</SelectItem>
                         {roomTypes?.map((type) => <SelectItem key={type.id} value={type.id}>{type.name}</SelectItem>)}
                       </SelectContent>
                     </Select>
                   </div>
                   <div className="space-y-2">
                     <Label>Specific Unit (Optional)</Label>
-                    <Select value={formData.room_unit_id} onValueChange={(value) => setFormData({ ...formData, room_unit_id: value })} disabled={!formData.room_type_id}>
+                    <Select value={formData.room_unit_id || '__all__'} onValueChange={(value) => setFormData({ ...formData, room_unit_id: value === '__all__' ? '' : value })} disabled={!formData.room_type_id}>
                       <SelectTrigger><SelectValue placeholder="All units" /></SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="">All Units</SelectItem>
+                        <SelectItem value="__all__">All Units</SelectItem>
                         {roomUnits?.filter(u => !formData.room_type_id || u.room_type_id === formData.room_type_id).map((unit) => <SelectItem key={unit.id} value={unit.id}>{unit.unit_number}</SelectItem>)}
                       </SelectContent>
                     </Select>
