@@ -2827,39 +2827,23 @@ export type Database = {
         Args: { original_booking_date: string }
         Returns: string
       }
-      calculate_dynamic_price:
-        | {
-            Args: {
-              p_booking_channel?: string
-              p_current_occupancy?: number
-              p_date?: string
-              p_guests_count?: number
-              p_room_type_id: string
-              p_room_unit_id?: string
-            }
-            Returns: {
-              adjustments: Json
-              base_price: number
-              final_price: number
-            }[]
-          }
-        | {
-            Args: {
-              p_adults_count?: number
-              p_booking_channel?: string
-              p_children_count?: number
-              p_current_occupancy?: number
-              p_date?: string
-              p_infants_count?: number
-              p_room_type_id: string
-              p_room_unit_id?: string
-            }
-            Returns: {
-              adjustments: Json
-              base_price: number
-              final_price: number
-            }[]
-          }
+      calculate_dynamic_price: {
+        Args: {
+          p_adults_count?: number
+          p_booking_channel?: string
+          p_children_count?: number
+          p_current_occupancy?: number
+          p_date?: string
+          p_infants_count?: number
+          p_room_type_id: string
+          p_room_unit_id?: string
+        }
+        Returns: {
+          adjustments: Json
+          base_price: number
+          final_price: number
+        }[]
+      }
       calculate_invoice_totals:
         | {
             Args: { p_per_night_rate?: number; p_subtotal: number }
