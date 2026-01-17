@@ -2793,10 +2793,12 @@ export type Database = {
       calculate_booking_total:
         | {
             Args: {
+              p_adults_count?: number
               p_booking_channel?: string
               p_check_in?: string
               p_check_out?: string
-              p_guests_count?: number
+              p_children_count?: number
+              p_infants_count?: number
               p_room_type_id: string
               p_room_unit_id?: string
             }
@@ -2808,12 +2810,10 @@ export type Database = {
           }
         | {
             Args: {
-              p_adults_count?: number
               p_booking_channel?: string
               p_check_in?: string
               p_check_out?: string
-              p_children_count?: number
-              p_infants_count?: number
+              p_guests_count?: number
               p_room_type_id: string
               p_room_unit_id?: string
             }
@@ -2846,18 +2846,18 @@ export type Database = {
       }
       calculate_invoice_totals:
         | {
-            Args: { p_per_night_rate?: number; p_subtotal: number }
+            Args: { p_subtotal: number }
             Returns: {
               gst_amount: number
-              gst_rate: number
               subtotal: number
               total_amount: number
             }[]
           }
         | {
-            Args: { p_subtotal: number }
+            Args: { p_per_night_rate?: number; p_subtotal: number }
             Returns: {
               gst_amount: number
+              gst_rate: number
               subtotal: number
               total_amount: number
             }[]
