@@ -6,7 +6,6 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { I18nextProvider } from 'react-i18next';
 import i18n from '@/lib/i18n';
 import ScrollToTop from './components/ScrollToTop';
-import VersionSwitcher from './components/VersionSwitcher';
 import { TranslationProvider } from './components/admin/TranslationProvider';
 import { useFavicon } from './hooks/useFavicon';
 
@@ -33,7 +32,6 @@ import PackageDetail from "./pages/PackageDetail";
 import Policies from "./pages/Policies";
 import BookingConfirmation from "./pages/BookingConfirmation";
 import STAAHBooking from "./pages/STAAHBooking";
-import { v2Routes } from "./v2/routes";
 
 // Admin imports
 import AdminLogin from "./pages/AdminLogin";
@@ -91,7 +89,6 @@ function App() {
             <ShadcnToaster />
             <BrowserRouter>
               <ScrollToTop />
-              <VersionSwitcher />
               <Routes>
               {/* General Routes */}
               <Route path="/" element={<Index />} />
@@ -116,9 +113,6 @@ function App() {
               <Route path="/faq" element={<FAQ />} />
               <Route path="/policies" element={<Policies />} />
               
-              {/* Version 2 (static, CMS-independent) */}
-              {v2Routes}
-
               {/* Dynamic Pages Route */}
               <Route path="/:slug" element={<DynamicPage />} />
 
