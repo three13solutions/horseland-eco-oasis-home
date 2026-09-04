@@ -108,11 +108,15 @@ export default function SeasonRules() {
     }
   };
 
-  const handleUpdatePeriod = async (periodId: string, field: string, value: number) => {
+  const handleUpdatePeriod = async (
+    periodId: string,
+    field: 'start_day' | 'start_month' | 'end_day' | 'end_month' | 'year',
+    value: number
+  ) => {
     try {
       const { error } = await supabase
         .from('season_periods')
-        .update({ [field]: value } as Record<string, any>)
+        .update({ [field]: value })
         .eq('id', periodId);
 
       if (error) throw error;
