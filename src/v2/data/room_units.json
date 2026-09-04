@@ -254,7 +254,7 @@
   },
   {
     "id": "f09ca493-5ed8-4713-8725-24c0f14915c1",
-    "room_type_id": "74c89770-8f04-4a4b-b061-b85743725b88",
+    "room_type_id": "bf4ddd1f-82a9-4e6a-ae04-fd99d5e74443",
     "unit_number": "F1",
     "unit_name": "Hidalgo's Haven",
     "floor_number": 0,
@@ -277,7 +277,7 @@
   },
   {
     "id": "a01f99e0-1180-4235-a6d2-c1348948071b",
-    "room_type_id": "74c89770-8f04-4a4b-b061-b85743725b88",
+    "room_type_id": "bf4ddd1f-82a9-4e6a-ae04-fd99d5e74443",
     "unit_number": "F2",
     "unit_name": "Red Rum Retreat",
     "floor_number": 0,
@@ -300,7 +300,7 @@
   },
   {
     "id": "d3fa6062-38e2-4184-a2e2-945d366f08f4",
-    "room_type_id": "74c89770-8f04-4a4b-b061-b85743725b88",
+    "room_type_id": "bf4ddd1f-82a9-4e6a-ae04-fd99d5e74443",
     "unit_number": "F3",
     "unit_name": "Man o' War Lodge",
     "floor_number": 0,
@@ -323,7 +323,7 @@
   },
   {
     "id": "2b1dce09-3c1c-442a-b8d0-bb63a9483c4a",
-    "room_type_id": "74c89770-8f04-4a4b-b061-b85743725b88",
+    "room_type_id": "bf4ddd1f-82a9-4e6a-ae04-fd99d5e74443",
     "unit_number": "F4",
     "unit_name": "Phar Lap Pavilion",
     "floor_number": 0,
@@ -976,7 +976,7 @@
   },
   {
     "id": "710bffdc-2adf-457f-b7ee-ee503849c461",
-    "room_type_id": "74c89770-8f04-4a4b-b061-b85743725b88",
+    "room_type_id": "bf4ddd1f-82a9-4e6a-ae04-fd99d5e74443",
     "unit_number": "F5",
     "unit_name": "Zenyatta Nook",
     "floor_number": 0,
@@ -999,7 +999,7 @@
   },
   {
     "id": "efa18e41-1a74-4809-9fb5-dac81919414b",
-    "room_type_id": "74c89770-8f04-4a4b-b061-b85743725b88",
+    "room_type_id": "bf4ddd1f-82a9-4e6a-ae04-fd99d5e74443",
     "unit_number": "F6",
     "unit_name": "Seabiscuit Suite",
     "floor_number": 0,
@@ -1166,7 +1166,7 @@
   },
   {
     "id": "483aade9-7bfb-4071-9e53-016a34c2878e",
-    "room_type_id": "47bdf1a3-751f-4ce9-afaa-7cb337151c16",
+    "room_type_id": "bf4ddd1f-82a9-4e6a-ae04-fd99d5e74443",
     "unit_number": "G1",
     "unit_name": "Northern Light Quarters",
     "floor_number": 0,
@@ -1197,7 +1197,7 @@
   },
   {
     "id": "78187e57-ab5f-47b4-a248-41f69c8ef189",
-    "room_type_id": "47bdf1a3-751f-4ce9-afaa-7cb337151c16",
+    "room_type_id": "bf4ddd1f-82a9-4e6a-ae04-fd99d5e74443",
     "unit_number": "G2",
     "unit_name": "Beau Regard Quarters",
     "floor_number": 0,
@@ -1224,7 +1224,7 @@
   },
   {
     "id": "c8048a72-25f7-4704-9272-bdd3974de5d6",
-    "room_type_id": "47bdf1a3-751f-4ce9-afaa-7cb337151c16",
+    "room_type_id": "bf4ddd1f-82a9-4e6a-ae04-fd99d5e74443",
     "unit_number": "G3",
     "unit_name": "Sir Barton Quarters",
     "floor_number": 0,
@@ -1251,7 +1251,7 @@
   },
   {
     "id": "d1d304f2-7339-49f2-9a9b-0aa6cf9d3d06",
-    "room_type_id": "47bdf1a3-751f-4ce9-afaa-7cb337151c16",
+    "room_type_id": "bf4ddd1f-82a9-4e6a-ae04-fd99d5e74443",
     "unit_number": "G4",
     "unit_name": "Bayardo Quarters",
     "floor_number": 0,
@@ -1278,7 +1278,7 @@
   },
   {
     "id": "13819c01-b68a-4d08-8c7e-9eaab5e93b86",
-    "room_type_id": "47bdf1a3-751f-4ce9-afaa-7cb337151c16",
+    "room_type_id": "bf4ddd1f-82a9-4e6a-ae04-fd99d5e74443",
     "unit_number": "G5",
     "unit_name": "Ormonde Quarters",
     "floor_number": 0,
@@ -1305,7 +1305,7 @@
   },
   {
     "id": "2a16787c-2715-4d97-9739-c17ee32d0e14",
-    "room_type_id": "47bdf1a3-751f-4ce9-afaa-7cb337151c16",
+    "room_type_id": "bf4ddd1f-82a9-4e6a-ae04-fd99d5e74443",
     "unit_number": "G6",
     "unit_name": "Moifaa Quarters",
     "floor_number": 0,
@@ -1332,7 +1332,7 @@
   },
   {
     "id": "10befe75-0522-42da-a1bc-e82f010ab51d",
-    "room_type_id": "47bdf1a3-751f-4ce9-afaa-7cb337151c16",
+    "room_type_id": "bf4ddd1f-82a9-4e6a-ae04-fd99d5e74443",
     "unit_number": "G7",
     "unit_name": "Glencoe Quarters",
     "floor_number": 0,
@@ -1359,7 +1359,7 @@
   },
   {
     "id": "cc95bbbe-31d5-4d71-bfe2-c3bb453282a2",
-    "room_type_id": "c5391431-7bdf-4cf1-977e-c696480fcdda",
+    "room_type_id": "bf4ddd1f-82a9-4e6a-ae04-fd99d5e74443",
     "unit_number": "008",
     "unit_name": "Ruffian Nook",
     "floor_number": 0,
@@ -1562,7 +1562,7 @@
   },
   {
     "id": "ba3f67e1-04c7-4d31-9f46-d4842204a2d5",
-    "room_type_id": "674b9511-7240-48ba-83bd-b16f50e148e1",
+    "room_type_id": "bf4ddd1f-82a9-4e6a-ae04-fd99d5e74443",
     "unit_number": "216",
     "unit_name": "Bucephalus Nook",
     "floor_number": 2,
@@ -1598,7 +1598,7 @@
   },
   {
     "id": "5ee05d89-0198-4a99-a8c5-818e9511ec15",
-    "room_type_id": "c5391431-7bdf-4cf1-977e-c696480fcdda",
+    "room_type_id": "bf4ddd1f-82a9-4e6a-ae04-fd99d5e74443",
     "unit_number": "007",
     "unit_name": "Comanche Nook",
     "floor_number": 0,
@@ -1625,7 +1625,7 @@
   },
   {
     "id": "0a5c3745-8bfc-4b81-9747-2cb889298065",
-    "room_type_id": "674b9511-7240-48ba-83bd-b16f50e148e1",
+    "room_type_id": "bf4ddd1f-82a9-4e6a-ae04-fd99d5e74443",
     "unit_number": "302",
     "unit_name": "Snowman Snug",
     "floor_number": 2,
@@ -1661,7 +1661,7 @@
   },
   {
     "id": "b3f724d6-5b97-410c-a1f9-4cb48d63483a",
-    "room_type_id": "674b9511-7240-48ba-83bd-b16f50e148e1",
+    "room_type_id": "bf4ddd1f-82a9-4e6a-ae04-fd99d5e74443",
     "unit_number": "307",
     "unit_name": "Trigger Retreat",
     "floor_number": 2,
@@ -1697,7 +1697,7 @@
   },
   {
     "id": "68544036-372f-4235-ba58-0a64e7729d29",
-    "room_type_id": "674b9511-7240-48ba-83bd-b16f50e148e1",
+    "room_type_id": "bf4ddd1f-82a9-4e6a-ae04-fd99d5e74443",
     "unit_number": "308",
     "unit_name": "Misty Nest",
     "floor_number": 2,
@@ -1733,7 +1733,7 @@
   },
   {
     "id": "bd9e7ea6-1d00-4093-8732-b3b42f29432f",
-    "room_type_id": "674b9511-7240-48ba-83bd-b16f50e148e1",
+    "room_type_id": "bf4ddd1f-82a9-4e6a-ae04-fd99d5e74443",
     "unit_number": "G.View",
     "unit_name": "Copenhagen Corner",
     "floor_number": 2,
@@ -1908,7 +1908,7 @@
   },
   {
     "id": "6adf637c-ecd1-41c1-8973-4d0c781d2a6c",
-    "room_type_id": "c5391431-7bdf-4cf1-977e-c696480fcdda",
+    "room_type_id": "bf4ddd1f-82a9-4e6a-ae04-fd99d5e74443",
     "unit_number": "009",
     "unit_name": "Hidalgo Nook",
     "floor_number": 0,
@@ -1935,7 +1935,7 @@
   },
   {
     "id": "8b229e18-e3af-4a08-b9a6-3b789dda7e05",
-    "room_type_id": "674b9511-7240-48ba-83bd-b16f50e148e1",
+    "room_type_id": "bf4ddd1f-82a9-4e6a-ae04-fd99d5e74443",
     "unit_number": "200",
     "unit_name": "Smoky Sanctuary",
     "floor_number": 1,
@@ -1971,7 +1971,7 @@
   },
   {
     "id": "0f03bebc-26c2-4d2b-bea7-f9abd3d57fa2",
-    "room_type_id": "674b9511-7240-48ba-83bd-b16f50e148e1",
+    "room_type_id": "bf4ddd1f-82a9-4e6a-ae04-fd99d5e74443",
     "unit_number": "217",
     "unit_name": "Man o’ Peace Hideaway",
     "floor_number": 1,
@@ -2007,7 +2007,7 @@
   },
   {
     "id": "a4b7344c-469c-422d-a7cf-f2808a39a363",
-    "room_type_id": "674b9511-7240-48ba-83bd-b16f50e148e1",
+    "room_type_id": "bf4ddd1f-82a9-4e6a-ae04-fd99d5e74443",
     "unit_number": "309",
     "unit_name": "Buoyant Boy Alcove",
     "floor_number": 2,
