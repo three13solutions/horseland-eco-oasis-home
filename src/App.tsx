@@ -31,6 +31,7 @@ import Packages from "./pages/Packages";
 import PackageDetail from "./pages/PackageDetail";
 import Policies from "./pages/Policies";
 import BookingConfirmation from "./pages/BookingConfirmation";
+import STAAHBooking from "./pages/STAAHBooking";
 
 // Admin imports
 import AdminLogin from "./pages/AdminLogin";
