@@ -1,0 +1,1452 @@
+[
+  {
+    "id": "f002e3f1-ccd4-4e8b-b6cd-bda16ae28283",
+    "title": "Sunrise Viewing",
+    "image": "https://mmmogqappdtnwqkvzxih.supabase.co/storage/v1/object/public/uploads/activity-media/1760766622214-9nsctfocn25.png",
+    "description": "Embark on an early-morning hike to Panorama Point and watch the first light spill over the Sahyadris. The tranquil walk and golden horizon make it one of Matheran’s most peaceful moments.",
+    "distance": "60-90 min walk (Arrive 20-30 min before sunrise)",
+    "tags": [],
+    "booking_required": false,
+    "is_active": true,
+    "created_at": "2025-10-16T16:36:28.430965+00:00",
+    "updated_at": "2025-10-18T05:50:30.07741+00:00",
+    "audience_tags": [
+      "adults",
+      "couples",
+      "solo"
+    ],
+    "location_name": "Panorama Point, Matheran",
+    "is_on_property": false,
+    "price_type": "free",
+    "price_amount": null,
+    "price_range_min": null,
+    "price_range_max": null,
+    "duration_hours": 2,
+    "duration_minutes": null,
+    "timings": {
+      "type": "specific",
+      "times": [
+        "5:30-6:30"
+      ]
+    },
+    "available_days": [
+      "monday",
+      "tuesday",
+      "wednesday",
+      "thursday",
+      "friday",
+      "saturday",
+      "sunday"
+    ],
+    "available_seasons": [
+      "winter",
+      "spring",
+      "summer"
+    ],
+    "disclaimer": "Uneven terrain and fog possible; weather-dependent. Participants hike at their own risk.",
+    "rules_regulations": "Begin hike 30 minutes before sunrise; Carry a torch and drinking water; Wear trekking shoes with good grip.",
+    "activity_tags": [
+      "nature",
+      "outdoor",
+      "relaxing",
+      "adventure"
+    ],
+    "media_urls": [],
+    "booking_type": "reception",
+    "image_key": null,
+    "media_keys": []
+  },
+  {
+    "id": "5a2e718c-490a-46ea-bafd-926505ddd16c",
+    "title": "Board Games",
+    "image": "https://mmmogqappdtnwqkvzxih.supabase.co/storage/v1/object/public/uploads/activity-media/1761579022186-tkkqyvtukp8.png",
+    "description": "Challenge your loved ones to classic board games like Ludo, Scrabble, or Chess from our in-house games library.",
+    "distance": "",
+    "tags": [],
+    "booking_required": false,
+    "is_active": true,
+    "created_at": "2025-10-16T16:36:28.430965+00:00",
+    "updated_at": "2025-10-27T15:31:38.163289+00:00",
+    "audience_tags": [
+      "families",
+      "kids",
+      "groups",
+      "seniors"
+    ],
+    "location_name": "Indoor Lounge",
+    "is_on_property": true,
+    "price_type": "free",
+    "price_amount": null,
+    "price_range_min": null,
+    "price_range_max": null,
+    "duration_hours": null,
+    "duration_minutes": null,
+    "timings": {
+      "type": "24_7"
+    },
+    "available_days": [
+      "monday",
+      "tuesday",
+      "wednesday",
+      "thursday",
+      "friday",
+      "saturday",
+      "sunday"
+    ],
+    "available_seasons": [
+      "all season"
+    ],
+    "disclaimer": "Games available on a first-come basis. Lost pieces may result in replacement charge.",
+    "rules_regulations": "Return all pieces intact; Choose age-appropriate games; Keep volume moderate.",
+    "activity_tags": [
+      "indoor",
+      "relaxing",
+      "educational"
+    ],
+    "media_urls": [],
+    "booking_type": "reception",
+    "image_key": null,
+    "media_keys": []
+  },
+  {
+    "id": "15c261d7-962c-43c3-912d-21d0a987230c",
+    "title": "Nature Walks",
+    "image": "https://mmmogqappdtnwqkvzxih.supabase.co/storage/v1/object/public/uploads/spa-media/1760739515343-fr71lqt87bb.png",
+    "description": "A gentle walk through the forest paths where you can spot birds, hear rustling leaves and immerse in Matheran’s calm.",
+    "distance": "30-60 min",
+    "tags": [],
+    "booking_required": false,
+    "is_active": true,
+    "created_at": "2025-10-16T16:36:28.430965+00:00",
+    "updated_at": "2025-10-18T06:59:49.566783+00:00",
+    "audience_tags": [
+      "families",
+      "solo",
+      "seniors"
+    ],
+    "location_name": "Forested Trails Around Matheran",
+    "is_on_property": false,
+    "price_type": "free",
+    "price_amount": null,
+    "price_range_min": null,
+    "price_range_max": null,
+    "duration_hours": 2,
+    "duration_minutes": null,
+    "timings": {
+      "type": "specific",
+      "times": [
+        "6:00-17:00"
+      ]
+    },
+    "available_days": [
+      "monday",
+      "tuesday",
+      "wednesday",
+      "thursday",
+      "friday",
+      "saturday",
+      "sunday"
+    ],
+    "available_seasons": [
+      "winter",
+      "spring",
+      "summer"
+    ],
+    "disclaimer": "Trail conditions change with season; follow guide if accompanied.",
+    "rules_regulations": "Inform reception before leaving; Stick to main trails; Avoid night walks alone.",
+    "activity_tags": [
+      "nature",
+      "outdoor",
+      "relaxing",
+      "educational"
+    ],
+    "media_urls": [],
+    "booking_type": "reception",
+    "image_key": null,
+    "media_keys": []
+  },
+  {
+    "id": "15efb91a-4d1c-4739-90d8-2d5230f2b78a",
+    "title": "Trekking",
+    "image": "https://mmmogqappdtnwqkvzxih.supabase.co/storage/v1/object/public/uploads/activity-media/1761578062812-k147vyp2v9.png",
+    "description": "Explore Matheran’s forest trails ranging from easy walks to steep climbs. Perfect for adventure seekers and nature photographers.",
+    "distance": "2-5 hours (round trip)",
+    "tags": [],
+    "booking_required": false,
+    "is_active": true,
+    "created_at": "2025-10-16T16:36:28.430965+00:00",
+    "updated_at": "2025-10-27T15:14:34.291223+00:00",
+    "audience_tags": [
+      "adults",
+      "groups"
+    ],
+    "location_name": "Various Forest Trails Across Matheran",
+    "is_on_property": false,
+    "price_type": "free",
+    "price_amount": null,
+    "price_range_min": null,
+    "price_range_max": null,
+    "duration_hours": 4,
+    "duration_minutes": null,
+    "timings": {
+      "type": "specific",
+      "times": [
+        "6:00-12:00"
+      ]
+    },
+    "available_days": [
+      "monday",
+      "tuesday",
+      "wednesday",
+      "thursday",
+      "friday",
+      "saturday",
+      "sunday"
+    ],
+    "available_seasons": [
+      "winter",
+      "spring",
+      "summer"
+    ],
+    "disclaimer": "Avoid trekking during heavy rain; proceed at your own risk.",
+    "rules_regulations": "Inform front desk of route; Carry water and first aid kit; Wear trekking shoes.",
+    "activity_tags": [
+      "adventure",
+      "nature",
+      "outdoor",
+      "sports"
+    ],
+    "media_urls": [],
+    "booking_type": "reception",
+    "image_key": null,
+    "media_keys": []
+  },
+  {
+    "id": "7867cc46-aca2-4f39-9bb2-f6702b5d9aec",
+    "title": "Cloud Walks",
+    "image": "https://mmmogqappdtnwqkvzxih.supabase.co/storage/v1/object/public/uploads/activity-media/1761578859072-2x0sfmro9l3.png",
+    "description": "Walk along mist-covered ridges where clouds roll over the plateau and the wind whispers through trees. A meditative experience best enjoyed in silence.",
+    "distance": "45-75 min walk",
+    "tags": [],
+    "booking_required": false,
+    "is_active": true,
+    "created_at": "2025-10-16T16:36:28.430965+00:00",
+    "updated_at": "2025-10-27T15:27:45.961755+00:00",
+    "audience_tags": [
+      "couples",
+      "adults",
+      "solo"
+    ],
+    "location_name": "Various Ridge Trails Around Matheran",
+    "is_on_property": false,
+    "price_type": "free",
+    "price_amount": null,
+    "price_range_min": null,
+    "price_range_max": null,
+    "duration_hours": 1,
+    "duration_minutes": 30,
+    "timings": {
+      "type": "specific",
+      "times": [
+        "6:00-16:00"
+      ]
+    },
+    "available_days": [
+      "monday",
+      "tuesday",
+      "wednesday",
+      "thursday",
+      "friday",
+      "saturday",
+      "sunday"
+    ],
+    "available_seasons": [
+      "monsoon",
+      "spring"
+    ],
+    "disclaimer": "Visibility changes rapidly in monsoon; subject to weather safety clearance.",
+    "rules_regulations": "Stay on marked paths; Avoid edges in low visibility.",
+    "activity_tags": [
+      "nature",
+      "outdoor",
+      "relaxing"
+    ],
+    "media_urls": [],
+    "booking_type": "reception",
+    "image_key": null,
+    "media_keys": []
+  },
+  {
+    "id": "880e1df0-213a-4747-a5ec-e729e032b0d7",
+    "title": "Birdwatching Trail",
+    "image": "https://mmmogqappdtnwqkvzxih.supabase.co/storage/v1/object/public/uploads/activity-media/1760771232554-84i85xc7gfd.png",
+    "description": "Stroll through forest paths and lakesides guided by experts who help you identify local and migratory species. Capture the charm of Matheran’s birdlife in peaceful surroundings.",
+    "distance": "60-120 min",
+    "tags": [],
+    "booking_required": false,
+    "is_active": true,
+    "created_at": "2025-10-16T16:36:28.430965+00:00",
+    "updated_at": "2025-10-18T07:22:10.654057+00:00",
+    "audience_tags": [
+      "families",
+      "seniors",
+      "solo"
+    ],
+    "location_name": "Forest Edges & Lakeside Areas",
+    "is_on_property": false,
+    "price_type": "fixed",
+    "price_amount": 5600,
+    "price_range_min": null,
+    "price_range_max": null,
+    "duration_hours": 2,
+    "duration_minutes": null,
+    "timings": {
+      "type": "specific",
+      "times": [
+        "6:30-7:30"
+      ]
+    },
+    "available_days": [
+      "monday",
+      "tuesday",
+      "wednesday",
+      "thursday",
+      "friday",
+      "saturday",
+      "sunday"
+    ],
+    "available_seasons": [
+      "winter",
+      "spring"
+    ],
+    "disclaimer": "Sightings vary by season and weather. Environmental conservation guidelines apply.",
+    "rules_regulations": "Silence required throughout; No flash photography; Do not feed or disturb birds.",
+    "activity_tags": [
+      "educational",
+      "nature",
+      "outdoor",
+      "relaxing"
+    ],
+    "media_urls": [],
+    "booking_type": "reception",
+    "image_key": null,
+    "media_keys": []
+  },
+  {
+    "id": "3915dff5-070a-48f0-8364-6d02077719fe",
+    "title": "Puppet Show",
+    "image": "https://mmmogqappdtnwqkvzxih.supabase.co/storage/v1/object/public/uploads/activity-media/1761577939103-pcm60ib6lpf.png",
+    "description": "Enjoy a colorful folk puppet show featuring traditional music and storytelling—a treat for kids and grown-ups alike.",
+    "distance": "",
+    "tags": [],
+    "booking_required": false,
+    "is_active": true,
+    "created_at": "2025-10-16T16:36:28.430965+00:00",
+    "updated_at": "2025-10-27T15:12:29.517825+00:00",
+    "audience_tags": [
+      "families",
+      "kids",
+      "groups",
+      "seniors"
+    ],
+    "location_name": "Lawn Stage / Banquet Area",
+    "is_on_property": true,
+    "price_type": "free",
+    "price_amount": null,
+    "price_range_min": null,
+    "price_range_max": null,
+    "duration_hours": null,
+    "duration_minutes": 40,
+    "timings": {
+      "type": "specific",
+      "times": [
+        "18:00-19:00"
+      ]
+    },
+    "available_days": [
+      "saturday",
+      "sunday"
+    ],
+    "available_seasons": [
+      "all season"
+    ],
+    "disclaimer": "Performance subject to troupe availability and weather conditions.",
+    "rules_regulations": "Be seated before the show begins; Avoid blocking stage view.",
+    "activity_tags": [
+      "cultural",
+      "educational",
+      "outdoor",
+      "relaxing"
+    ],
+    "media_urls": [],
+    "booking_type": "reception",
+    "image_key": null,
+    "media_keys": []
+  },
+  {
+    "id": "d642cdf7-da6b-4b97-9b23-745f9b086625",
+    "title": "Heritage Toy Train Ride",
+    "image": "https://mmmogqappdtnwqkvzxih.supabase.co/storage/v1/object/public/uploads/activity-media/1761579206418-gqojmqpwzu9.png",
+    "description": "Hop aboard the historic narrow-gauge toy train connecting Aman Lodge and Matheran Station. The journey through forested slopes offers nostalgia, scenic beauty, and a glimpse into India’s railway heritage.",
+    "distance": "20-30 min one-way",
+    "tags": [],
+    "booking_required": false,
+    "is_active": true,
+    "created_at": "2025-10-16T16:36:28.430965+00:00",
+    "updated_at": "2025-10-27T15:33:42.360459+00:00",
+    "audience_tags": [
+      "families",
+      "kids",
+      "seniors",
+      "couples"
+    ],
+    "location_name": "Aman Lodge ↔ Matheran Station",
+    "is_on_property": false,
+    "price_type": "fixed",
+    "price_amount": 5600,
+    "price_range_min": null,
+    "price_range_max": null,
+    "duration_hours": null,
+    "duration_minutes": 45,
+    "timings": {
+      "type": "specific",
+      "times": [
+        "10:00-12:00",
+        "16:00-18:00"
+      ]
+    },
+    "available_days": [
+      "monday",
+      "tuesday",
+      "wednesday",
+      "thursday",
+      "friday",
+      "saturday",
+      "sunday"
+    ],
+    "available_seasons": [
+      "all season"
+    ],
+    "disclaimer": "Schedules may vary seasonally. Train services can be suspended during monsoon months.",
+    "rules_regulations": "Follow Indian Railways instructions; Remain seated during the ride; Do not lean out of windows.",
+    "activity_tags": [
+      "cultural",
+      "educational",
+      "relaxing"
+    ],
+    "media_urls": [],
+    "booking_type": "reception",
+    "image_key": null,
+    "media_keys": []
+  },
+  {
+    "id": "e766f089-211f-4592-a69c-0ca82a25360e",
+    "title": "Local Bazaar Shopping",
+    "image": "https://mmmogqappdtnwqkvzxih.supabase.co/storage/v1/object/public/uploads/activity-media/1760767945945-2yqxvfajn97.jpg",
+    "description": "Stroll through Matheran’s colorful bazaar lined with local leather goods, handcrafted cane items, wooden toys, and the famous chikki sweets — a perfect souvenir hunt after a day of sightseeing.",
+    "distance": "45-90 min",
+    "tags": [],
+    "booking_required": false,
+    "is_active": true,
+    "created_at": "2025-10-16T16:36:28.430965+00:00",
+    "updated_at": "2025-10-18T06:12:42.997251+00:00",
+    "audience_tags": [
+      "families",
+      "couples",
+      "adults",
+      "seniors"
+    ],
+    "location_name": "Matheran Market",
+    "is_on_property": false,
+    "price_type": "range",
+    "price_amount": null,
+    "price_range_min": 500,
+    "price_range_max": 5550,
+    "duration_hours": 2,
+    "duration_minutes": null,
+    "timings": {
+      "type": "specific",
+      "times": [
+        "10:00-21:00"
+      ]
+    },
+    "available_days": [
+      "monday",
+      "tuesday",
+      "wednesday",
+      "thursday",
+      "friday",
+      "saturday",
+      "sunday"
+    ],
+    "available_seasons": [
+      "all season"
+    ],
+    "disclaimer": "Prices fluctuate by season and shop. Horseland Hotel is not responsible for third-party transactions.",
+    "rules_regulations": "Keep valuables secure; Handle goods carefully; Respect local vendors and customs.",
+    "activity_tags": [
+      "cultural",
+      "educational",
+      "relaxing"
+    ],
+    "media_urls": [],
+    "booking_type": "reception",
+    "image_key": null,
+    "media_keys": []
+  },
+  {
+    "id": "a5f213d7-371f-4612-b4b0-c51f14aa2d46",
+    "title": "Swimming",
+    "image": "https://mmmogqappdtnwqkvzxih.supabase.co/storage/v1/object/public/uploads/gallery/1760780907218-6gp5qtrkkig.jpg",
+    "description": "Cool off with a refreshing swim in our outdoor pool, featuring a separate kids’ section and lifeguard supervision during active hours.",
+    "distance": "",
+    "tags": [],
+    "booking_required": false,
+    "is_active": true,
+    "created_at": "2025-10-16T16:36:28.430965+00:00",
+    "updated_at": "2025-11-07T13:08:25.590621+00:00",
+    "audience_tags": [
+      "families",
+      "kids",
+      "adults",
+      "groups"
+    ],
+    "location_name": "Horseland Pool",
+    "is_on_property": true,
+    "price_type": "free",
+    "price_amount": null,
+    "price_range_min": null,
+    "price_range_max": null,
+    "duration_hours": 1,
+    "duration_minutes": null,
+    "timings": {
+      "type": "specific",
+      "times": [
+        "8:00-19:00"
+      ]
+    },
+    "available_days": [
+      "monday",
+      "tuesday",
+      "wednesday",
+      "thursday",
+      "friday",
+      "saturday",
+      "sunday"
+    ],
+    "available_seasons": [
+      "summer",
+      "spring",
+      "winter"
+    ],
+    "disclaimer": "Follow all pool safety notices. The hotel is not responsible for injuries caused by negligence or unsafe behavior.",
+    "rules_regulations": "Proper swimwear mandatory; Kids must be accompanied by guardians; Shower before entering pool.",
+    "activity_tags": [
+      "sports",
+      "outdoor",
+      "relaxing"
+    ],
+    "media_urls": [],
+    "booking_type": "reception",
+    "image_key": null,
+    "media_keys": []
+  },
+  {
+    "id": "9c965780-d728-42b2-97e1-4fce6997a27e",
+    "title": "Pool Table",
+    "image": "https://mmmogqappdtnwqkvzxih.supabase.co/storage/v1/object/public/uploads/activity-media/1760773524487-c38rlwb2o7t.jpg",
+    "description": "Enjoy a friendly game of billiards in our indoor games room — an ideal retreat after a day of outdoor exploration.",
+    "distance": "",
+    "tags": [],
+    "booking_required": false,
+    "is_active": true,
+    "created_at": "2025-10-16T16:36:28.430965+00:00",
+    "updated_at": "2025-10-18T07:45:33.066906+00:00",
+    "audience_tags": [
+      "teens",
+      "adults",
+      "groups"
+    ],
+    "location_name": "Indoor Games Room",
+    "is_on_property": true,
+    "price_type": "free",
+    "price_amount": null,
+    "price_range_min": null,
+    "price_range_max": null,
+    "duration_hours": null,
+    "duration_minutes": 45,
+    "timings": {
+      "type": "specific",
+      "times": [
+        "10:00-22:00"
+      ]
+    },
+    "available_days": [
+      "monday",
+      "tuesday",
+      "wednesday",
+      "thursday",
+      "friday",
+      "saturday",
+      "sunday"
+    ],
+    "available_seasons": [
+      "all season"
+    ],
+    "disclaimer": "Guests are responsible for any damage to equipment during use.",
+    "rules_regulations": "Handle cues and balls carefully; No food or drinks on the table; Maintain queue order during peak hours.",
+    "activity_tags": [
+      "indoor",
+      "relaxing",
+      "sports"
+    ],
+    "media_urls": [],
+    "booking_type": "reception",
+    "image_key": null,
+    "media_keys": []
+  },
+  {
+    "id": "12c93377-dbbd-4055-a73e-7f14eb871410",
+    "title": "Hammock Relaxation",
+    "image": "https://mmmogqappdtnwqkvzxih.supabase.co/storage/v1/object/public/uploads/activity-media/1761576981221-qh8cgt2ha2.png",
+    "description": "Take a break and sway in one of our garden hammocks under soothing shade — perfect for reading, napping, or simply doing nothing.",
+    "distance": "",
+    "tags": [],
+    "booking_required": false,
+    "is_active": true,
+    "created_at": "2025-10-16T16:36:28.430965+00:00",
+    "updated_at": "2025-10-27T14:56:28.118074+00:00",
+    "audience_tags": [
+      "couples",
+      "families",
+      "solo",
+      "seniors"
+    ],
+    "location_name": "Garden Hammocks (Shaded Areas)",
+    "is_on_property": true,
+    "price_type": "free",
+    "price_amount": null,
+    "price_range_min": null,
+    "price_range_max": null,
+    "duration_hours": 1,
+    "duration_minutes": null,
+    "timings": {
+      "type": "24_7"
+    },
+    "available_days": [
+      "monday",
+      "tuesday",
+      "wednesday",
+      "thursday",
+      "friday",
+      "saturday",
+      "sunday"
+    ],
+    "available_seasons": [
+      "all season"
+    ],
+    "disclaimer": "Availability limited; respect turn-taking. Not suitable for infants without supervision.",
+    "rules_regulations": "One person per hammock at a time; No standing or jumping on hammocks; Keep belongings nearby to avoid tripping hazards.",
+    "activity_tags": [
+      "relaxing",
+      "outdoor",
+      "nature"
+    ],
+    "media_urls": [],
+    "booking_type": "reception",
+    "image_key": null,
+    "media_keys": []
+  },
+  {
+    "id": "f7478405-da98-4366-aac1-1cfa5febe051",
+    "title": "Badminton",
+    "image": "https://mmmogqappdtnwqkvzxih.supabase.co/storage/v1/object/public/uploads/activity-media/1761578882839-z6rtmfuedff.png",
+    "description": "Enjoy a friendly singles or doubles badminton match in the fresh Matheran air. Our outdoor court offers a lighthearted yet energizing break for players of all ages.",
+    "distance": "",
+    "tags": [],
+    "booking_required": false,
+    "is_active": true,
+    "created_at": "2025-10-16T16:36:28.430965+00:00",
+    "updated_at": "2025-10-27T15:28:09.658861+00:00",
+    "audience_tags": [
+      "families",
+      "groups",
+      "teens",
+      "adults"
+    ],
+    "location_name": "Outdoor Court",
+    "is_on_property": true,
+    "price_type": "free",
+    "price_amount": null,
+    "price_range_min": null,
+    "price_range_max": null,
+    "duration_hours": 1,
+    "duration_minutes": null,
+    "timings": {
+      "type": "specific",
+      "times": [
+        "7:00-11:00",
+        "16:00-19:00"
+      ]
+    },
+    "available_days": [
+      "monday",
+      "tuesday",
+      "wednesday",
+      "thursday",
+      "friday",
+      "saturday",
+      "sunday"
+    ],
+    "available_seasons": [
+      "all season"
+    ],
+    "disclaimer": "Outdoor wind may affect play quality. Hotel not responsible for damage to personal rackets or shuttlecocks.",
+    "rules_regulations": "Equipment available at reception; return after use; Non-marking shoes recommended; Maintain decorum and take turns.",
+    "activity_tags": [
+      "sports",
+      "outdoor",
+      "relaxing"
+    ],
+    "media_urls": [],
+    "booking_type": "reception",
+    "image_key": null,
+    "media_keys": []
+  },
+  {
+    "id": "42b369a4-e498-4ed1-a670-87cb247a3613",
+    "title": "Pony Ride for Kids",
+    "image": "https://mmmogqappdtnwqkvzxih.supabase.co/storage/v1/object/public/uploads/activity-media/1761579269777-av3c93hzqq8.png",
+    "description": "A delightful short pony ride for children, supervised by experienced handlers along Matheran’s scenic tracks.",
+    "distance": "10-20 min ride",
+    "tags": [],
+    "booking_required": false,
+    "is_active": true,
+    "created_at": "2025-10-16T16:36:28.430965+00:00",
+    "updated_at": "2025-10-27T15:34:38.474913+00:00",
+    "audience_tags": [
+      "kids",
+      "families",
+      "adults"
+    ],
+    "location_name": "Pony Tracks (Market to Viewpoints)",
+    "is_on_property": false,
+    "price_type": "fixed",
+    "price_amount": 5600,
+    "price_range_min": null,
+    "price_range_max": null,
+    "duration_hours": null,
+    "duration_minutes": 20,
+    "timings": {
+      "type": "specific",
+      "times": [
+        "9:00-18:00"
+      ]
+    },
+    "available_days": [
+      "monday",
+      "tuesday",
+      "wednesday",
+      "thursday",
+      "friday",
+      "saturday",
+      "sunday"
+    ],
+    "available_seasons": [
+      "all season"
+    ],
+    "disclaimer": "Ride availability depends on weather and pony health. Weight limit may apply.",
+    "rules_regulations": "Parent or guardian must accompany; Helmet recommended; Follow guide’s lead; no sudden movements near the pony.",
+    "activity_tags": [
+      "adventure",
+      "outdoor",
+      "nature"
+    ],
+    "media_urls": [],
+    "booking_type": "reception",
+    "image_key": null,
+    "media_keys": []
+  },
+  {
+    "id": "481e2fd7-3e09-4e41-b113-aab2173ec196",
+    "title": "Walk Along Toy Train Track",
+    "image": "https://mmmogqappdtnwqkvzxih.supabase.co/storage/v1/object/public/uploads/activity-media/1761739261461-k1ykiau4xf.png",
+    "description": "Walk beside Matheran’s heritage toy-train track through tranquil woods and vintage bridges. A serene way to absorb the charm of the hill station and enjoy its colonial-era ambience.",
+    "distance": "30-60 min",
+    "tags": [],
+    "booking_required": false,
+    "is_active": true,
+    "created_at": "2025-10-16T16:36:28.430965+00:00",
+    "updated_at": "2025-10-29T12:01:13.308472+00:00",
+    "audience_tags": [
+      "couples",
+      "solo",
+      "families",
+      "seniors"
+    ],
+    "location_name": "Designated Safe Sections Beside the Toy Train Line",
+    "is_on_property": false,
+    "price_type": "free",
+    "price_amount": null,
+    "price_range_min": null,
+    "price_range_max": null,
+    "duration_hours": 1,
+    "duration_minutes": null,
+    "timings": {
+      "type": "specific",
+      "times": [
+        "6:00-17:00"
+      ]
+    },
+    "available_days": [
+      "monday",
+      "tuesday",
+      "wednesday",
+      "thursday",
+      "friday",
+      "saturday",
+      "sunday"
+    ],
+    "available_seasons": [
+      "winter",
+      "summer",
+      "spring"
+    ],
+    "disclaimer": "The track may be slippery during monsoon. Stay alert for approaching trains.",
+    "rules_regulations": "Stay on permitted walking paths; Keep distance from active rails; Pets must be leashed.",
+    "activity_tags": [
+      "nature",
+      "outdoor",
+      "relaxing"
+    ],
+    "media_urls": [],
+    "booking_type": "reception",
+    "image_key": null,
+    "media_keys": []
+  },
+  {
+    "id": "105121df-6a9d-49f6-801d-c8093a0c0570",
+    "title": "Chess",
+    "image": "https://mmmogqappdtnwqkvzxih.supabase.co/storage/v1/object/public/uploads/activity-media/1760772287852-wg9k1p3kcu.jpg",
+    "description": "Slow down and enjoy a quiet game of chess in our indoor lounge — strategy, focus, and leisure all in one timeless pastime.",
+    "distance": "",
+    "tags": [],
+    "booking_required": false,
+    "is_active": true,
+    "created_at": "2025-10-16T16:36:28.430965+00:00",
+    "updated_at": "2025-10-18T07:24:58.809244+00:00",
+    "audience_tags": [
+      "couples",
+      "adults",
+      "seniors",
+      "kids"
+    ],
+    "location_name": "Indoor Lounge",
+    "is_on_property": true,
+    "price_type": "free",
+    "price_amount": null,
+    "price_range_min": null,
+    "price_range_max": null,
+    "duration_hours": 1,
+    "duration_minutes": null,
+    "timings": {
+      "type": "24_7"
+    },
+    "available_days": [
+      "monday",
+      "tuesday",
+      "wednesday",
+      "thursday",
+      "friday",
+      "saturday",
+      "sunday"
+    ],
+    "available_seasons": [
+      "all season"
+    ],
+    "disclaimer": "Available on request; subject to table availability.",
+    "rules_regulations": "Handle pieces gently; Maintain silence in the lounge area; Return board and pieces complete.",
+    "activity_tags": [
+      "indoor",
+      "relaxing",
+      "educational"
+    ],
+    "media_urls": [],
+    "booking_type": "reception",
+    "image_key": null,
+    "media_keys": []
+  },
+  {
+    "id": "375c6e1b-4eb6-422b-b04a-61f77b3bc939",
+    "title": "Carrom",
+    "image": "https://mmmogqappdtnwqkvzxih.supabase.co/storage/v1/object/public/uploads/activity-media/1760773202920-kpyly9gd2dj.jpg",
+    "description": "Enjoy the classic strike-and-pocket game that has entertained generations. Carrom boards are available in our games room for friendly matches or quiet pastime.",
+    "distance": "",
+    "tags": [],
+    "booking_required": false,
+    "is_active": true,
+    "created_at": "2025-10-16T16:36:28.430965+00:00",
+    "updated_at": "2025-10-18T07:40:11.854646+00:00",
+    "audience_tags": [
+      "families",
+      "kids",
+      "seniors",
+      "groups"
+    ],
+    "location_name": "Indoor Games Room",
+    "is_on_property": true,
+    "price_type": "free",
+    "price_amount": null,
+    "price_range_min": null,
+    "price_range_max": null,
+    "duration_hours": 1,
+    "duration_minutes": null,
+    "timings": {
+      "type": "24_7"
+    },
+    "available_days": [
+      "monday",
+      "tuesday",
+      "wednesday",
+      "thursday",
+      "friday",
+      "saturday",
+      "sunday"
+    ],
+    "available_seasons": [
+      "all season"
+    ],
+    "disclaimer": "Handle equipment gently; replacement cost may apply for damaged boards.",
+    "rules_regulations": "Powder use only under staff supervision; Keep board surface clean and level; Return striker and coins after play.",
+    "activity_tags": [
+      "indoor",
+      "relaxing",
+      "educational"
+    ],
+    "media_urls": [],
+    "booking_type": "reception",
+    "image_key": null,
+    "media_keys": []
+  },
+  {
+    "id": "303aa8b4-5f5b-4a30-b24c-923895a6dc84",
+    "title": "Table Tennis",
+    "image": "https://mmmogqappdtnwqkvzxih.supabase.co/storage/v1/object/public/uploads/activity-media/1760773286367-rvd0uh6tvr.jpg",
+    "description": "Fast-paced ping-pong fun awaits in our games room — perfect for guests seeking quick bursts of competition and laughter.",
+    "distance": "",
+    "tags": [],
+    "booking_required": false,
+    "is_active": true,
+    "created_at": "2025-10-16T16:36:28.430965+00:00",
+    "updated_at": "2025-10-18T07:41:35.337829+00:00",
+    "audience_tags": [
+      "teens",
+      "adults",
+      "groups",
+      "families"
+    ],
+    "location_name": "Indoor Games Room",
+    "is_on_property": true,
+    "price_type": "free",
+    "price_amount": null,
+    "price_range_min": null,
+    "price_range_max": null,
+    "duration_hours": null,
+    "duration_minutes": 40,
+    "timings": {
+      "type": "specific",
+      "times": [
+        "10:00-22:00"
+      ]
+    },
+    "available_days": [
+      "monday",
+      "tuesday",
+      "wednesday",
+      "thursday",
+      "friday",
+      "saturday",
+      "sunday"
+    ],
+    "available_seasons": [
+      "all season"
+    ],
+    "disclaimer": "Avoid leaning or sitting on the table surface. The hotel is not liable for equipment damage.",
+    "rules_regulations": "Use non-marking shoes; Maximum four players at a time; Return rackets and balls after play.",
+    "activity_tags": [
+      "indoor",
+      "sports",
+      "relaxing"
+    ],
+    "media_urls": [],
+    "booking_type": "reception",
+    "image_key": null,
+    "media_keys": []
+  },
+  {
+    "id": "a90191e5-51e8-48e4-aab8-42ee75fcb1aa",
+    "title": "Musical Chairs",
+    "image": "https://mmmogqappdtnwqkvzxih.supabase.co/storage/v1/object/public/uploads/activity-media/1761577902835-4bdbemjlqzq.png",
+    "description": "Relive childhood fun with our lively musical-chairs sessions hosted during group events or evening parties.",
+    "distance": "",
+    "tags": [],
+    "booking_required": false,
+    "is_active": true,
+    "created_at": "2025-10-16T16:36:28.430965+00:00",
+    "updated_at": "2025-10-27T15:11:50.755954+00:00",
+    "audience_tags": [
+      "families",
+      "kids",
+      "groups"
+    ],
+    "location_name": "Lawn or Banquet Area",
+    "is_on_property": true,
+    "price_type": "free",
+    "price_amount": null,
+    "price_range_min": null,
+    "price_range_max": null,
+    "duration_hours": null,
+    "duration_minutes": 30,
+    "timings": {
+      "type": "specific",
+      "times": [
+        "17:00-19:00"
+      ]
+    },
+    "available_days": [
+      "saturday",
+      "sunday"
+    ],
+    "available_seasons": [
+      "all season"
+    ],
+    "disclaimer": "Participation at your own risk; watch your step during quick turns.",
+    "rules_regulations": "Follow host’s music cues; Do not push or run aggressively.",
+    "activity_tags": [
+      "indoor",
+      "outdoor",
+      "relaxing"
+    ],
+    "media_urls": [],
+    "booking_type": "reception",
+    "image_key": null,
+    "media_keys": []
+  },
+  {
+    "id": "feeecc9e-46c0-44bf-8c18-921a0332cb19",
+    "title": "DJ Nights",
+    "image": "https://mmmogqappdtnwqkvzxih.supabase.co/storage/v1/object/public/uploads/activity-media/1762876416096-bltse4f4vk.jpg",
+    "description": "Dance the night away with our resident DJ spinning popular tracks and taking guest requests for an energetic evening indoors.",
+    "distance": "",
+    "tags": [],
+    "booking_required": false,
+    "is_active": true,
+    "created_at": "2025-10-16T16:36:28.430965+00:00",
+    "updated_at": "2025-11-11T15:53:43.003995+00:00",
+    "audience_tags": [
+      "couples",
+      "groups",
+      "adults"
+    ],
+    "location_name": "Discotheque",
+    "is_on_property": true,
+    "price_type": "free",
+    "price_amount": null,
+    "price_range_min": null,
+    "price_range_max": null,
+    "duration_hours": 2,
+    "duration_minutes": 30,
+    "timings": {
+      "type": "specific",
+      "times": [
+        "20:00-22:30"
+      ]
+    },
+    "available_days": [
+      "saturday",
+      "sunday"
+    ],
+    "available_seasons": [
+      "all season"
+    ],
+    "disclaimer": "Strobe lights and loud music used; not recommended for sensitive guests or children.",
+    "rules_regulations": "No outside DJs without management approval; Respect others on the dance floor.",
+    "activity_tags": [
+      "indoor",
+      "cultural",
+      "relaxing"
+    ],
+    "media_urls": [],
+    "booking_type": "reception",
+    "image_key": null,
+    "media_keys": []
+  },
+  {
+    "id": "6fe06882-999d-4550-bc72-ed6fa55b336a",
+    "title": "Magic Show",
+    "image": "https://mmmogqappdtnwqkvzxih.supabase.co/storage/v1/object/public/uploads/activity-media/1761576906936-vvu4wi9tgv.png",
+    "description": "Be captivated by sleight-of-hand tricks and family-friendly illusions performed by talented magicians during evening entertainment hours.",
+    "distance": "",
+    "tags": [],
+    "booking_required": false,
+    "is_active": true,
+    "created_at": "2025-10-16T16:36:28.430965+00:00",
+    "updated_at": "2025-10-27T14:55:14.494326+00:00",
+    "audience_tags": [
+      "families",
+      "kids",
+      "groups"
+    ],
+    "location_name": "Banquet / Restaurant",
+    "is_on_property": true,
+    "price_type": "free",
+    "price_amount": null,
+    "price_range_min": null,
+    "price_range_max": null,
+    "duration_hours": null,
+    "duration_minutes": 45,
+    "timings": {
+      "type": "specific",
+      "times": [
+        "19:30-20:15"
+      ]
+    },
+    "available_days": [
+      "saturday",
+      "sunday"
+    ],
+    "available_seasons": [
+      "all season"
+    ],
+    "disclaimer": "Audience participation is optional. Show times may vary by event schedule.",
+    "rules_regulations": "Children must remain seated during acts; Refrain from touching stage props.",
+    "activity_tags": [
+      "cultural",
+      "indoor",
+      "educational"
+    ],
+    "media_urls": [],
+    "booking_type": "reception",
+    "image_key": null,
+    "media_keys": []
+  },
+  {
+    "id": "428c97a3-62c7-4e13-8435-c835986151ba",
+    "title": "Hand-Pulled Rickshaw Ride",
+    "image": "https://mmmogqappdtnwqkvzxih.supabase.co/storage/v1/object/public/uploads/activity-media/1761576944103-vhzh9bh77h.png",
+    "description": "Experience Matheran’s heritage mode of transport with a nostalgic hand-pulled rickshaw ride through its serene, vehicle-free pathways.",
+    "distance": "10-30 min",
+    "tags": [],
+    "booking_required": false,
+    "is_active": true,
+    "created_at": "2025-10-16T16:36:28.430965+00:00",
+    "updated_at": "2025-10-27T14:55:50.91713+00:00",
+    "audience_tags": [
+      "families",
+      "couples",
+      "seniors",
+      "solo"
+    ],
+    "location_name": "Market / Point-to-Point Routes",
+    "is_on_property": false,
+    "price_type": "range",
+    "price_amount": null,
+    "price_range_min": 500,
+    "price_range_max": 5550,
+    "duration_hours": null,
+    "duration_minutes": 30,
+    "timings": {
+      "type": "specific",
+      "times": [
+        "8:00-18:00"
+      ]
+    },
+    "available_days": [
+      "monday",
+      "tuesday",
+      "wednesday",
+      "thursday",
+      "friday",
+      "saturday",
+      "sunday"
+    ],
+    "available_seasons": [
+      "all season"
+    ],
+    "disclaimer": "Tariffs follow union-approved rates; rides subject to availability.",
+    "rules_regulations": "Respect pullers and avoid overloading; Negotiate fare politely before boarding.",
+    "activity_tags": [
+      "cultural",
+      "outdoor",
+      "relaxing",
+      "nature"
+    ],
+    "media_urls": [],
+    "booking_type": "reception",
+    "image_key": null,
+    "media_keys": []
+  },
+  {
+    "id": "77290495-c8ae-45a7-b6c4-63597f39ae19",
+    "title": "Dance Music in Discotheque",
+    "image": "https://mmmogqappdtnwqkvzxih.supabase.co/storage/v1/object/public/uploads/activity-media/1761578088724-upxmwak6lmj.png",
+    "description": "Hit the dance floor under vibrant lighting and immersive sound for a lively, music-filled evening at Horseland’s discotheque.",
+    "distance": "",
+    "tags": [],
+    "booking_required": false,
+    "is_active": true,
+    "created_at": "2025-10-16T16:36:28.430965+00:00",
+    "updated_at": "2025-10-27T15:14:57.959933+00:00",
+    "audience_tags": [
+      "adults",
+      "couples",
+      "groups"
+    ],
+    "location_name": "Discotheque",
+    "is_on_property": true,
+    "price_type": "free",
+    "price_amount": null,
+    "price_range_min": null,
+    "price_range_max": null,
+    "duration_hours": 2,
+    "duration_minutes": null,
+    "timings": {
+      "type": "specific",
+      "times": [
+        "20:00-22:30"
+      ]
+    },
+    "available_days": [
+      "saturday",
+      "sunday"
+    ],
+    "available_seasons": [
+      "all season"
+    ],
+    "disclaimer": "Limited capacity; entry may close once full.",
+    "rules_regulations": "Dress code: smart casual or party wear; No outside drinks or DJs; Maintain decorum inside the club area.",
+    "activity_tags": [
+      "cultural",
+      "indoor",
+      "relaxing"
+    ],
+    "media_urls": [],
+    "booking_type": "reception",
+    "image_key": null,
+    "media_keys": []
+  },
+  {
+    "id": "aaaa926a-ead2-4532-8acd-2848a092064e",
+    "title": "Drawing Competition for Kids",
+    "image": "https://mmmogqappdtnwqkvzxih.supabase.co/storage/v1/object/public/uploads/activity-media/1763196275943-te9bxbq0n9c.png",
+    "description": "Let young artists express their imagination in our themed drawing contests with small prizes and cheerful applause.",
+    "distance": "",
+    "tags": [],
+    "booking_required": false,
+    "is_active": true,
+    "created_at": "2025-10-16T16:36:28.430965+00:00",
+    "updated_at": "2025-11-15T08:44:45.508264+00:00",
+    "audience_tags": [
+      "kids",
+      "families"
+    ],
+    "location_name": "Banquet / Lawn",
+    "is_on_property": true,
+    "price_type": "free",
+    "price_amount": null,
+    "price_range_min": null,
+    "price_range_max": null,
+    "duration_hours": null,
+    "duration_minutes": 45,
+    "timings": {
+      "type": "specific",
+      "times": [
+        "16:00-17:00"
+      ]
+    },
+    "available_days": [
+      "saturday",
+      "sunday"
+    ],
+    "available_seasons": [
+      "all season"
+    ],
+    "disclaimer": "Submitted artwork becomes hotel property for display.",
+    "rules_regulations": "Art supplies provided on-site; Parents must sign consent form.",
+    "activity_tags": [
+      "educational",
+      "indoor",
+      "cultural"
+    ],
+    "media_urls": [],
+    "booking_type": "reception",
+    "image_key": null,
+    "media_keys": []
+  },
+  {
+    "id": "8cf21b32-b0cd-4a0c-9616-b65a1d4a4d28",
+    "title": "Feed the Rabbits",
+    "image": "https://mmmogqappdtnwqkvzxih.supabase.co/storage/v1/object/public/uploads/activity-media/1760766419895-d3wtv3uswk4.jpg",
+    "description": "Enjoy a gentle and joyful experience feeding rabbits in a supervised zone using approved feed provided by our staff.",
+    "distance": "",
+    "tags": [],
+    "booking_required": false,
+    "is_active": true,
+    "created_at": "2025-10-16T16:36:28.430965+00:00",
+    "updated_at": "2025-10-18T05:47:29.928801+00:00",
+    "audience_tags": [
+      "kids",
+      "families",
+      "couples"
+    ],
+    "location_name": "Pond Area / Designated Animal Zone",
+    "is_on_property": true,
+    "price_type": "free",
+    "price_amount": null,
+    "price_range_min": null,
+    "price_range_max": null,
+    "duration_hours": null,
+    "duration_minutes": 30,
+    "timings": {
+      "type": "specific",
+      "times": [
+        "10:00-12:00",
+        "16:00-18:00"
+      ]
+    },
+    "available_days": [
+      "monday",
+      "tuesday",
+      "wednesday",
+      "thursday",
+      "friday",
+      "saturday",
+      "sunday"
+    ],
+    "available_seasons": [
+      "all season"
+    ],
+    "disclaimer": "Subject to animal availability. Feeding or petting without supervision is not permitted.",
+    "rules_regulations": "Use only feed provided by staff; Do not chase, lift, or handle animals; Maintain cleanliness in the area.",
+    "activity_tags": [
+      "nature",
+      "educational",
+      "outdoor",
+      "relaxing"
+    ],
+    "media_urls": [],
+    "booking_type": "reception",
+    "image_key": null,
+    "media_keys": []
+  },
+  {
+    "id": "044eed71-60e6-47fc-863e-1b842f99ab24",
+    "title": "Monkey Point Visit",
+    "image": "https://mmmogqappdtnwqkvzxih.supabase.co/storage/v1/object/public/uploads/activity-media/1760766491293-k3j1uxadyrd.png",
+    "description": "A short scenic walk to a cliff-edge viewpoint famous for its playful monkeys and stunning vistas.",
+    "distance": "45-60 min walk",
+    "tags": [],
+    "booking_required": false,
+    "is_active": true,
+    "created_at": "2025-10-16T16:36:28.430965+00:00",
+    "updated_at": "2025-10-18T05:49:43.302176+00:00",
+    "audience_tags": [
+      "families",
+      "kids",
+      "adults"
+    ],
+    "location_name": "Monkey Point, Matheran",
+    "is_on_property": false,
+    "price_type": "free",
+    "price_amount": null,
+    "price_range_min": null,
+    "price_range_max": null,
+    "duration_hours": 1,
+    "duration_minutes": null,
+    "timings": {
+      "type": "specific",
+      "times": [
+        "8:00-17:00"
+      ]
+    },
+    "available_days": [
+      "monday",
+      "tuesday",
+      "wednesday",
+      "thursday",
+      "friday",
+      "saturday",
+      "sunday"
+    ],
+    "available_seasons": [
+      "all season"
+    ],
+    "disclaimer": "Wildlife behavior is unpredictable; exercise caution and follow signage.",
+    "rules_regulations": "Do not feed monkeys; Secure food and bags; Maintain safe distance from animals.",
+    "activity_tags": [
+      "nature",
+      "outdoor",
+      "educational"
+    ],
+    "media_urls": [],
+    "booking_type": "reception",
+    "image_key": null,
+    "media_keys": []
+  },
+  {
+    "id": "33857974-0935-47af-9ac7-008925480e92",
+    "title": "Sunset Viewing",
+    "image": "https://mmmogqappdtnwqkvzxih.supabase.co/storage/v1/object/public/uploads/activity-media/1760766654564-kv5sjda2b4b.png",
+    "description": "Witness the sun dip below Matheran’s valleys as the sky turns amber and violet. Ask our team for a curated picnic setup to make it a magical evening.",
+    "distance": "60-90 min walk",
+    "tags": [],
+    "booking_required": false,
+    "is_active": true,
+    "created_at": "2025-10-16T16:36:28.430965+00:00",
+    "updated_at": "2025-10-18T05:51:18.389238+00:00",
+    "audience_tags": [
+      "couples",
+      "families",
+      "groups"
+    ],
+    "location_name": "Porcupine Point / Sunset Point",
+    "is_on_property": false,
+    "price_type": "free",
+    "price_amount": null,
+    "price_range_min": null,
+    "price_range_max": null,
+    "duration_hours": 2,
+    "duration_minutes": null,
+    "timings": {
+      "type": "specific",
+      "times": [
+        "16:30-18:30"
+      ]
+    },
+    "available_days": [
+      "monday",
+      "tuesday",
+      "wednesday",
+      "thursday",
+      "friday",
+      "saturday",
+      "sunday"
+    ],
+    "available_seasons": [
+      "winter",
+      "spring",
+      "summer"
+    ],
+    "disclaimer": "Wind and weather conditions may affect visibility or setup availability.",
+    "rules_regulations": "Keep the area clean; Stay within designated viewing zones; Picnic setup available by prior booking.",
+    "activity_tags": [
+      "nature",
+      "outdoor",
+      "relaxing"
+    ],
+    "media_urls": [],
+    "booking_type": "reception",
+    "image_key": null,
+    "media_keys": []
+  }
+]

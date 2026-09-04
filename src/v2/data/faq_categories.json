@@ -1,0 +1,242 @@
+[
+  {
+    "id": "0568d9fb-758c-4b9d-9943-f48b48c46a52",
+    "title": "Planning Your Trip",
+    "icon": "HelpCircle",
+    "sort_order": 1,
+    "is_active": true,
+    "created_at": "2025-11-21T12:49:30.851315+00:00",
+    "updated_at": "2025-11-21T12:49:30.851315+00:00",
+    "parent_id": null
+  },
+  {
+    "id": "54864d84-fb87-4aa8-ab59-894fcf414636",
+    "title": "Booking & Reservations",
+    "icon": "HelpCircle",
+    "sort_order": 2,
+    "is_active": true,
+    "created_at": "2025-11-21T12:53:16.408681+00:00",
+    "updated_at": "2025-11-21T12:53:16.408681+00:00",
+    "parent_id": null
+  },
+  {
+    "id": "c0db9786-d6f4-44d7-ac46-7bb2f855e079",
+    "title": "Payments & Invoicing",
+    "icon": "HelpCircle",
+    "sort_order": 3,
+    "is_active": true,
+    "created_at": "2025-11-21T12:53:31.586295+00:00",
+    "updated_at": "2025-11-21T12:53:31.586295+00:00",
+    "parent_id": null
+  },
+  {
+    "id": "26405012-6b10-4c4e-a8a3-8f6397bc3db3",
+    "title": "Transportation & Accessibility",
+    "icon": "HelpCircle",
+    "sort_order": 4,
+    "is_active": true,
+    "created_at": "2025-11-21T12:53:40.514284+00:00",
+    "updated_at": "2025-11-21T12:53:40.514284+00:00",
+    "parent_id": null
+  },
+  {
+    "id": "94fb4fc7-65d1-4bea-9c27-16f8e0509e0d",
+    "title": "Loyalty & Offers",
+    "icon": "HelpCircle",
+    "sort_order": 5,
+    "is_active": true,
+    "created_at": "2025-11-21T12:53:48.960336+00:00",
+    "updated_at": "2025-11-21T12:53:48.960336+00:00",
+    "parent_id": null
+  },
+  {
+    "id": "40b4c884-3786-4985-8b95-cd39a3d75240",
+    "title": "Arrival & Check-in",
+    "icon": "HelpCircle",
+    "sort_order": 6,
+    "is_active": true,
+    "created_at": "2025-11-21T12:54:02.304069+00:00",
+    "updated_at": "2025-11-21T12:54:02.304069+00:00",
+    "parent_id": null
+  },
+  {
+    "id": "37542f80-8739-401e-bb78-d729df1ee405",
+    "title": "Stay & Accommodation",
+    "icon": "HelpCircle",
+    "sort_order": 7,
+    "is_active": true,
+    "created_at": "2025-11-21T12:54:53.893522+00:00",
+    "updated_at": "2025-11-21T12:54:53.893522+00:00",
+    "parent_id": null
+  },
+  {
+    "id": "dcc3731f-2932-4854-be61-45c2511f5162",
+    "title": "Dining & Cuisine",
+    "icon": "HelpCircle",
+    "sort_order": 8,
+    "is_active": true,
+    "created_at": "2025-11-21T12:55:02.926942+00:00",
+    "updated_at": "2025-11-21T12:55:02.926942+00:00",
+    "parent_id": null
+  },
+  {
+    "id": "0e9eec00-f30d-45aa-aca6-696a10912441",
+    "title": "Spa & Wellness",
+    "icon": "HelpCircle",
+    "sort_order": 9,
+    "is_active": true,
+    "created_at": "2025-11-21T12:55:10.946799+00:00",
+    "updated_at": "2025-11-21T12:55:10.946799+00:00",
+    "parent_id": null
+  },
+  {
+    "id": "8fe08c58-56e9-4d53-aae2-2955ef4a6385",
+    "title": "Health & Safety",
+    "icon": "HelpCircle",
+    "sort_order": 10,
+    "is_active": true,
+    "created_at": "2025-11-21T12:55:20.236268+00:00",
+    "updated_at": "2025-11-21T12:55:20.236268+00:00",
+    "parent_id": null
+  },
+  {
+    "id": "bc5239b6-ae68-446b-b009-2a2114fd977a",
+    "title": "Activities & Adventures",
+    "icon": "HelpCircle",
+    "sort_order": 11,
+    "is_active": true,
+    "created_at": "2025-11-21T12:56:27.60674+00:00",
+    "updated_at": "2025-11-21T12:56:27.60674+00:00",
+    "parent_id": null
+  },
+  {
+    "id": "dfba673c-96cd-4d96-b429-bd43980fdc0a",
+    "title": "Family & Kids",
+    "icon": "HelpCircle",
+    "sort_order": 12,
+    "is_active": true,
+    "created_at": "2025-11-21T12:56:34.714687+00:00",
+    "updated_at": "2025-11-21T12:56:34.714687+00:00",
+    "parent_id": null
+  },
+  {
+    "id": "5354627e-c977-4927-8490-e56de262b0cc",
+    "title": "Business & Events",
+    "icon": "HelpCircle",
+    "sort_order": 13,
+    "is_active": true,
+    "created_at": "2025-11-21T12:56:46.40041+00:00",
+    "updated_at": "2025-11-21T12:56:46.40041+00:00",
+    "parent_id": null
+  },
+  {
+    "id": "edaca1c9-a112-4c82-854a-ba1fed87a81f",
+    "title": "Photography & Drones",
+    "icon": "HelpCircle",
+    "sort_order": 14,
+    "is_active": true,
+    "created_at": "2025-11-21T12:56:53.016283+00:00",
+    "updated_at": "2025-11-21T12:56:53.016283+00:00",
+    "parent_id": null
+  },
+  {
+    "id": "7cbe1e07-42a5-48cf-acae-2df24c2333ef",
+    "title": "Nearby Attractions",
+    "icon": "HelpCircle",
+    "sort_order": 15,
+    "is_active": true,
+    "created_at": "2025-11-21T12:57:11.56274+00:00",
+    "updated_at": "2025-11-21T12:57:11.56274+00:00",
+    "parent_id": null
+  },
+  {
+    "id": "145fef0e-2dd3-461d-8193-fce5029730e6",
+    "title": "Policies & Guidelines",
+    "icon": "HelpCircle",
+    "sort_order": 16,
+    "is_active": true,
+    "created_at": "2025-11-21T12:57:18.088655+00:00",
+    "updated_at": "2025-11-21T12:57:18.088655+00:00",
+    "parent_id": null
+  },
+  {
+    "id": "0ad32afa-fe3a-4255-9f70-c31b417cd2ff",
+    "title": "Emergency & Medical Services",
+    "icon": "HelpCircle",
+    "sort_order": 17,
+    "is_active": true,
+    "created_at": "2025-11-21T12:57:28.795784+00:00",
+    "updated_at": "2025-11-21T12:57:28.795784+00:00",
+    "parent_id": null
+  },
+  {
+    "id": "a3912798-2b1d-460f-a2ff-5f52f3fe6b20",
+    "title": "Lost & Found",
+    "icon": "HelpCircle",
+    "sort_order": 18,
+    "is_active": true,
+    "created_at": "2025-11-21T12:57:38.742112+00:00",
+    "updated_at": "2025-11-21T12:57:38.742112+00:00",
+    "parent_id": null
+  },
+  {
+    "id": "192eae38-995b-49e8-8e98-28e0863e10b9",
+    "title": "Local Insights & Cultural Etiquette",
+    "icon": "HelpCircle",
+    "sort_order": 19,
+    "is_active": true,
+    "created_at": "2025-11-21T12:57:45.82404+00:00",
+    "updated_at": "2025-11-21T12:57:45.82404+00:00",
+    "parent_id": null
+  },
+  {
+    "id": "494e2c4b-3cc1-4f91-9fff-95e060136a44",
+    "title": "Contact & Assistance",
+    "icon": "HelpCircle",
+    "sort_order": 20,
+    "is_active": true,
+    "created_at": "2025-11-21T12:57:52.434727+00:00",
+    "updated_at": "2025-11-21T12:57:52.434727+00:00",
+    "parent_id": null
+  },
+  {
+    "id": "00000000-0000-0000-0000-000000000002",
+    "title": "During Your Stay",
+    "icon": "Hotel",
+    "sort_order": 2,
+    "is_active": true,
+    "created_at": "2025-11-22T08:25:37.284256+00:00",
+    "updated_at": "2025-11-22T08:25:37.284256+00:00",
+    "parent_id": null
+  },
+  {
+    "id": "00000000-0000-0000-0000-000000000003",
+    "title": "Experiences & Activities",
+    "icon": "TreePine",
+    "sort_order": 3,
+    "is_active": true,
+    "created_at": "2025-11-22T08:25:37.284256+00:00",
+    "updated_at": "2025-11-22T08:25:37.284256+00:00",
+    "parent_id": null
+  },
+  {
+    "id": "00000000-0000-0000-0000-000000000004",
+    "title": "Policies & Guest Support",
+    "icon": "Shield",
+    "sort_order": 4,
+    "is_active": true,
+    "created_at": "2025-11-22T08:25:37.284256+00:00",
+    "updated_at": "2025-11-22T08:25:37.284256+00:00",
+    "parent_id": null
+  },
+  {
+    "id": "2956f681-8d72-4903-95d6-e265a1b2f858",
+    "title": "Before You Book",
+    "icon": "HelpCircle",
+    "sort_order": 1,
+    "is_active": true,
+    "created_at": "2025-11-22T08:42:19.08668+00:00",
+    "updated_at": "2025-11-22T08:42:19.08668+00:00",
+    "parent_id": "0fa081f2-1984-4b27-9996-09f60cd62269"
+  }
+]

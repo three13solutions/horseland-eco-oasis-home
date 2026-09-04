@@ -1,0 +1,338 @@
+[
+  {
+    "id": "9311a08b-8d6f-43c0-93d2-fe4562550a0b",
+    "section_key": "booking",
+    "title": "Booking Policy",
+    "description": "Information about making reservations and booking procedures",
+    "content": {
+      "sections": [
+        {
+          "items": [
+            "All reservations require advance booking with confirmation",
+            "A 100% advance payment is required at the time of reservation",
+            "Valid photo ID required at check-in for all guests",
+            "The hotel reserves the right to deny admission without prior notice or reason"
+          ],
+          "title": "Reservation Requirements"
+        },
+        {
+          "items": [
+            "Indian nationals: Passport, Aadhaar Card, Driving License, Voter ID, or PAN Card",
+            "Foreign nationals: Passport and a valid visa"
+          ],
+          "title": "Identification Documents"
+        },
+        {
+          "items": [
+            "Standard check-in: 12:00 noon",
+            "Standard check-out: 10:00 AM",
+            "Early check-in/late check-out subject to availability and charges"
+          ],
+          "title": "Check-in / Check-out"
+        },
+        {
+          "items": [
+            "Children below 4 years stay free",
+            "Children 4–9 years charged at half rate",
+            "Guests 9 years and above are charged as adults"
+          ],
+          "title": "Children & Age Policy"
+        },
+        {
+          "items": [
+            "Group bookings (8+ guests) require special arrangements"
+          ],
+          "title": "Group Bookings"
+        },
+        {
+          "items": [
+            "All rates are exclusive of GST",
+            "Applicable GST: 5%, 12%, 18%, or 28% depending on service",
+            "Taxes are subject to change as per government regulations"
+          ],
+          "title": "GST & Taxes"
+        }
+      ]
+    },
+    "icon": "Clock",
+    "sort_order": 1,
+    "is_active": true,
+    "created_at": "2025-09-02T13:01:03.959236+00:00",
+    "updated_at": "2025-09-02T13:01:03.959236+00:00"
+  },
+  {
+    "id": "d61ccaf0-038b-4024-88e5-3d5079f51433",
+    "section_key": "cancellation",
+    "title": "Cancellation Policy",
+    "description": "Terms and conditions for booking modifications and cancellations",
+    "content": {
+      "sections": [
+        {
+          "items": [
+            "Free – 15 days prior to check-in",
+            "25% – 7 to 3 days before check-in",
+            "50% – 2 days to 24 hours before check-in",
+            "100% – Within 24 hours or no-show"
+          ],
+          "title": "Standard Cancellation"
+        },
+        {
+          "items": [
+            "75% – 7 to 3 days before check-in (instead of 25%/50%)",
+            "100% – Within 24 hours or no-show"
+          ],
+          "title": "Peak Seasons, Weekends & Festivals"
+        },
+        {
+          "items": [
+            "No cash refunds in any case",
+            "Credit notes issued for all cancellations",
+            "Valid for 6 months from issue date",
+            "Redeemable at prevailing rates, subject to availability",
+            "Bookings under privileged/promotional offers are non-cancellable, non-refundable, and non-changeable. Please check applicable promotion terms."
+          ],
+          "title": "Refunds & Credit Notes"
+        },
+        {
+          "items": [
+            "Guest count or room type changes allowed if available, with rate difference",
+            "One-time modification allowed up to 24 hours before check-in, subject to availability",
+            "Date changes are treated as cancellations and rebooked via credit note as per policy."
+          ],
+          "title": "Modifications"
+        },
+        {
+          "items": [
+            "For cancellations or changes, please contact our Reservations Desk:",
+            "Email: info@horeselandhotel.com",
+            "Mahesh: 9404224600",
+            "Sachin: 9004424567"
+          ],
+          "title": "Contact for Cancellations"
+        }
+      ]
+    },
+    "icon": "FileText",
+    "sort_order": 2,
+    "is_active": true,
+    "created_at": "2025-09-02T13:01:03.959236+00:00",
+    "updated_at": "2025-09-02T13:01:03.959236+00:00"
+  },
+  {
+    "id": "1f32e673-6f2f-4a4d-aa3b-180738add6f6",
+    "section_key": "payment",
+    "title": "Payment Policy",
+    "description": "Payment methods, billing information, and refund procedures",
+    "content": {
+      "sections": [
+        {
+          "items": [
+            "Credit/Debit Cards (Visa, MasterCard, AmEx)",
+            "Digital payments (UPI, Google Pay, PhonePe)",
+            "Bank transfers / NEFT",
+            "Cash accepted only for walk-in bookings, subject to availability and prevailing rates"
+          ],
+          "title": "Accepted Payment Methods"
+        },
+        {
+          "items": [
+            "A 100% advance payment is required at the time of reservation",
+            "Booking confirmed only after receipt of full payment",
+            "Additional services billed at check-out",
+            "Guests are liable for charges relating to lost keys or damage to property (settled in the final billing)",
+            "All dues, including extras, must be cleared before departure"
+          ],
+          "title": "Payment Schedule"
+        },
+        {
+          "items": [
+            "All rates are exclusive of GST",
+            "GST is applied separately at the time of invoicing/booking",
+            "Applicable rates: 5%, 12%, 18%, or 28% depending on service",
+            "Taxes are subject to change as per government regulation"
+          ],
+          "title": "Rates & Taxes"
+        }
+      ]
+    },
+    "icon": "CreditCard",
+    "sort_order": 3,
+    "is_active": true,
+    "created_at": "2025-09-02T13:01:03.959236+00:00",
+    "updated_at": "2025-09-02T13:01:03.959236+00:00"
+  },
+  {
+    "id": "8f62bb61-1dc2-450a-80d0-6637db4c4d34",
+    "section_key": "privacy",
+    "title": "Privacy Policy",
+    "description": "How we collect, use, and protect your personal information",
+    "content": {
+      "sections": [
+        {
+          "items": [
+            "Government-issued ID details as required by law",
+            "Personal details for reservation and check-in",
+            "Contact information for booking and communication",
+            "Transaction details such as booking dates, amount, and services",
+            "Payment details processed securely by our payment gateway (not stored by us)",
+            "Guest details, including room preferences, dietary needs, family size, and travel purpose"
+          ],
+          "title": "Information We Collect"
+        },
+        {
+          "items": [
+            "Process reservations and provide hotel services",
+            "Share important updates about your stay",
+            "Maintain records for service history and accounting",
+            "Meet compliance and legal obligations",
+            "Improve services and guest experience",
+            "Personalize services based on guest needs",
+            "Send marketing communications (with your consent)"
+          ],
+          "title": "How We Use Your Information"
+        },
+        {
+          "items": [
+            "Secure encryption for sensitive data",
+            "Access is limited to authorized staff",
+            "Regular audits and security updates",
+            "Physical, electronic, and managerial safeguards",
+            "Compliance with data protection and legal requirements"
+          ],
+          "title": "Data Protection & Security"
+        },
+        {
+          "items": [
+            "Store preferences and session information",
+            "Some features may not work if cookies are disabled",
+            "Cookie data is confidential and not shared outside the company"
+          ],
+          "title": "Cookies and Preferences"
+        },
+        {
+          "items": [
+            "Our site may contain links to third-party websites",
+            "We are not responsible for their privacy practices",
+            "Review their policies before sharing information"
+          ],
+          "title": "Links to Other Websites"
+        },
+        {
+          "items": [
+            "We do not sell or lease your data without consent, unless required by law",
+            "You may request details of the personal data we hold",
+            "You may request corrections if your data is inaccurate or incomplete",
+            "Verified corrections will be updated promptly"
+          ],
+          "title": "Your Rights & Control Over Personal Information"
+        }
+      ]
+    },
+    "icon": "Eye",
+    "sort_order": 4,
+    "is_active": true,
+    "created_at": "2025-09-02T13:01:03.959236+00:00",
+    "updated_at": "2025-09-02T13:01:03.959236+00:00"
+  },
+  {
+    "id": "30b59bac-48f2-4346-a9f3-8d76a3499ed2",
+    "section_key": "terms",
+    "title": "Terms of Service",
+    "description": "Legal terms and conditions for using our services",
+    "content": {
+      "sections": [
+        {
+          "items": [
+            "Applies to all guests and services",
+            "The hotel may modify terms with notice",
+            "Disputes are subject to local jurisdiction",
+            "Force majeure events may affect service availability"
+          ],
+          "title": "General Terms"
+        },
+        {
+          "items": [
+            "Hotel liability limited to direct damages only",
+            "Guests are responsible for their belongings",
+            "Valuables must be deposited at reception for safekeeping",
+            "Insurance recommended for personal items"
+          ],
+          "title": "Liability"
+        },
+        {
+          "items": [
+            "Hotel content is proprietary and protected",
+            "Guests may not reproduce or distribute hotel materials",
+            "Photography for commercial use requires permission"
+          ],
+          "title": "Intellectual Property"
+        },
+        {
+          "items": [
+            "We strive to provide excellent service",
+            "Service levels may vary during peak seasons",
+            "Feedback and complaints handled promptly",
+            "Quality standards maintained through regular training"
+          ],
+          "title": "Service Standards"
+        }
+      ]
+    },
+    "icon": "Shield",
+    "sort_order": 5,
+    "is_active": true,
+    "created_at": "2025-09-02T13:01:03.959236+00:00",
+    "updated_at": "2025-09-02T13:01:03.959236+00:00"
+  },
+  {
+    "id": "f028e0b3-d904-4484-b32d-ad39d0e47661",
+    "section_key": "guest",
+    "title": "Guest Conduct",
+    "description": "Guidelines for guest behavior and hotel rules",
+    "content": {
+      "sections": [
+        {
+          "items": [
+            "Respectful behavior towards staff and other guests",
+            "Compliance with hotel rules and local laws",
+            "No smoking in non-designated areas",
+            "Quiet hours: 10 PM to 7 AM"
+          ],
+          "title": "General Conduct"
+        },
+        {
+          "items": [
+            "Care for hotel property and facilities",
+            "Report damages or maintenance issues promptly",
+            "Additional charges for damages beyond normal wear",
+            "Lost room keys incur replacement charges"
+          ],
+          "title": "Property Care"
+        },
+        {
+          "items": [
+            "Follow safety instructions and emergency procedures",
+            "Keep valuables secured or deposited at reception",
+            "Report suspicious activities to hotel security",
+            "Comply with fire safety and evacuation procedures"
+          ],
+          "title": "Safety & Security"
+        },
+        {
+          "items": [
+            "No illegal substances or activities",
+            "No pets unless pre-approved",
+            "No outside food in dining areas",
+            "No loud music or disturbances during quiet hours"
+          ],
+          "title": "Prohibited Activities"
+        }
+      ]
+    },
+    "icon": "Users",
+    "sort_order": 6,
+    "is_active": true,
+    "created_at": "2025-09-02T13:01:03.959236+00:00",
+    "updated_at": "2025-09-02T13:01:03.959236+00:00"
+  }
+]

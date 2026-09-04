@@ -1,0 +1,92 @@
+[
+  {
+    "id": "cc2b459e-e1bc-47db-a2d2-da010e1758be",
+    "title": "About",
+    "href": "/about",
+    "parent_id": null,
+    "sort_order": 1,
+    "is_active": true,
+    "created_at": "2025-09-02T14:29:44.200791+00:00",
+    "updated_at": "2025-09-02T14:29:44.200791+00:00"
+  },
+  {
+    "id": "889a8d86-5000-41ba-be34-b259d8b6466e",
+    "title": "Stay",
+    "href": "/stay",
+    "parent_id": null,
+    "sort_order": 2,
+    "is_active": true,
+    "created_at": "2025-09-02T14:29:44.200791+00:00",
+    "updated_at": "2025-09-02T14:29:44.200791+00:00"
+  },
+  {
+    "id": "9adaba2f-32e7-40a6-a08e-dd9c622bc60c",
+    "title": "Experiences",
+    "href": "/experiences",
+    "parent_id": null,
+    "sort_order": 3,
+    "is_active": true,
+    "created_at": "2025-09-02T14:29:44.200791+00:00",
+    "updated_at": "2025-09-02T14:29:44.200791+00:00"
+  },
+  {
+    "id": "30cf11f5-4cf4-44ed-8bff-e0c63093675a",
+    "title": "Journal",
+    "href": "/journal",
+    "parent_id": null,
+    "sort_order": 8,
+    "is_active": true,
+    "created_at": "2025-09-02T14:29:44.200791+00:00",
+    "updated_at": "2025-09-02T14:29:44.200791+00:00"
+  },
+  {
+    "id": "3886b9a7-21bf-4d27-a17a-31dcbac52d69",
+    "title": "FAQ",
+    "href": "/faq",
+    "parent_id": null,
+    "sort_order": 9,
+    "is_active": true,
+    "created_at": "2025-09-02T14:29:44.200791+00:00",
+    "updated_at": "2025-09-02T14:29:44.200791+00:00"
+  },
+  {
+    "id": "fec9092b-ba3c-4720-91f1-aee2829c673b",
+    "title": "Contact",
+    "href": "/contact",
+    "parent_id": null,
+    "sort_order": 10,
+    "is_active": true,
+    "created_at": "2025-09-02T14:29:44.200791+00:00",
+    "updated_at": "2025-09-02T14:29:44.200791+00:00"
+  },
+  {
+    "id": "8df481fe-b0a5-4484-9de5-360f40f5ccb8",
+    "title": "Activities",
+    "href": "/activities",
+    "parent_id": "9adaba2f-32e7-40a6-a08e-dd9c622bc60c",
+    "sort_order": 10,
+    "is_active": true,
+    "created_at": "2025-09-02T14:29:44.398488+00:00",
+    "updated_at": "2025-09-02T14:29:44.398488+00:00"
+  },
+  {
+    "id": "92523301-cc5e-4a58-9227-3727ea54e18d",
+    "title": "Dining",
+    "href": "/dining",
+    "parent_id": "9adaba2f-32e7-40a6-a08e-dd9c622bc60c",
+    "sort_order": 11,
+    "is_active": true,
+    "created_at": "2025-09-02T14:29:44.398488+00:00",
+    "updated_at": "2025-09-02T14:29:44.398488+00:00"
+  },
+  {
+    "id": "1dde1cae-853b-42cd-9167-3f90bb91d443",
+    "title": "Spa & Wellness",
+    "href": "/spa",
+    "parent_id": "9adaba2f-32e7-40a6-a08e-dd9c622bc60c",
+    "sort_order": 12,
+    "is_active": true,
+    "created_at": "2025-09-02T14:29:44.398488+00:00",
+    "updated_at": "2025-09-02T14:29:44.398488+00:00"
+  }
+]

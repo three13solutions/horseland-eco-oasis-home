@@ -32,6 +32,7 @@ import PackageDetail from "./pages/PackageDetail";
 import Policies from "./pages/Policies";
 import BookingConfirmation from "./pages/BookingConfirmation";
 import STAAHBooking from "./pages/STAAHBooking";
+import { v2Routes } from "./v2/routes";
 
 // Admin imports
 import AdminLogin from "./pages/AdminLogin";
@@ -113,6 +114,9 @@ function App() {
               <Route path="/faq" element={<FAQ />} />
               <Route path="/policies" element={<Policies />} />
               
+              {/* Version 2 (static, CMS-independent) */}
+              {v2Routes}
+
               {/* Dynamic Pages Route */}
               <Route path="/:slug" element={<DynamicPage />} />
 

@@ -1,0 +1,682 @@
+[
+  {
+    "id": "0dfaa836-6c36-430f-aabd-2ceb2179de73",
+    "category_id": "0568d9fb-758c-4b9d-9943-f48b48c46a52",
+    "question": "What is the best time of year to visit Matheran?",
+    "answer": "Matheran is pleasant year-round, but October to May offers the clearest skies and most outdoor activities. Monsoon (June–September) is lush and scenic, but some activities may be limited.\n",
+    "sort_order": 1,
+    "is_active": true,
+    "created_at": "2025-11-21T12:59:25.568701+00:00",
+    "updated_at": "2025-11-21T12:59:25.568701+00:00"
+  },
+  {
+    "id": "08436ba3-4b49-4fb8-9ddc-5bc8d5877636",
+    "category_id": "0568d9fb-758c-4b9d-9943-f48b48c46a52",
+    "question": "What kind of weather can I expect during my stay?",
+    "answer": "Summers are mild (20–32°C), winters are cool (12–25°C), and monsoons are lush with heavy rainfall. Pack light layers and comfortable footwear.\n",
+    "sort_order": 2,
+    "is_active": true,
+    "created_at": "2025-11-21T12:59:49.458771+00:00",
+    "updated_at": "2025-11-21T12:59:49.458771+00:00"
+  },
+  {
+    "id": "a2af3945-e21d-4f8b-b5f3-6e507966d256",
+    "category_id": "0568d9fb-758c-4b9d-9943-f48b48c46a52",
+    "question": "What sustainability practices does Horseland follow?",
+    "answer": "We follow eco-friendly practices, including minimal plastic use, rainwater harvesting, waste segregation, and supporting local suppliers.\n",
+    "sort_order": 3,
+    "is_active": true,
+    "created_at": "2025-11-21T13:00:03.222609+00:00",
+    "updated_at": "2025-11-21T13:00:03.222609+00:00"
+  },
+  {
+    "id": "d6592178-5967-4051-9005-4e7aa0b25b34",
+    "category_id": "0568d9fb-758c-4b9d-9943-f48b48c46a52",
+    "question": "What are some must-visit attractions near the hotel?",
+    "answer": "Popular spots include Echo Point, Charlotte Lake, Panorama Point, and the heritage market area—all within walking or short horseback distance\n",
+    "sort_order": 4,
+    "is_active": true,
+    "created_at": "2025-11-21T13:00:17.444041+00:00",
+    "updated_at": "2025-11-21T13:00:17.444041+00:00"
+  },
+  {
+    "id": "34108421-79c3-455b-a37e-6fc4402bee47",
+    "category_id": "54864d84-fb87-4aa8-ab59-894fcf414636",
+    "question": "How far in advance should I book my stay?",
+    "answer": "Weekends and holidays fill up quickly, so we recommend booking at least 2–4 weeks in advance for your preferred room type.",
+    "sort_order": 1,
+    "is_active": true,
+    "created_at": "2025-11-21T13:03:10.539293+00:00",
+    "updated_at": "2025-11-21T13:03:10.539293+00:00"
+  },
+  {
+    "id": "0786f362-51af-468d-98f1-5093ac53c371",
+    "category_id": "54864d84-fb87-4aa8-ab59-894fcf414636",
+    "question": "What is your cancellation policy?",
+    "answer": "We do not offer refunds. Instead, cancellations made 7 days prior to check-in will receive a credit note for future use. Please note that if you are not traveling, kindly inform our reservations team at the earliest for assistance with rescheduling",
+    "sort_order": 2,
+    "is_active": true,
+    "created_at": "2025-11-21T13:03:28.671914+00:00",
+    "updated_at": "2025-11-21T13:03:28.671914+00:00"
+  },
+  {
+    "id": "f375c59b-bb9c-45e2-9251-b002ae196715",
+    "category_id": "54864d84-fb87-4aa8-ab59-894fcf414636",
+    "question": "Do you accept group bookings?",
+    "answer": "Yes, we welcome group bookings for families, friends, and corporate retreats. Special rates and arrangements are available.\n",
+    "sort_order": 3,
+    "is_active": true,
+    "created_at": "2025-11-21T13:03:43.112006+00:00",
+    "updated_at": "2025-11-21T13:03:43.112006+00:00"
+  },
+  {
+    "id": "13f226de-bacf-4f9a-a719-44e8082bc522",
+    "category_id": "54864d84-fb87-4aa8-ab59-894fcf414636",
+    "question": "Can I modify my booking dates?",
+    "answer": "Date changes are allowed based on availability. Please contact our reservations team as early as possible.\n",
+    "sort_order": 4,
+    "is_active": true,
+    "created_at": "2025-11-21T13:03:58.229192+00:00",
+    "updated_at": "2025-11-21T13:03:58.229192+00:00"
+  },
+  {
+    "id": "28246e5e-4657-45e2-ad66-88968e5ccdee",
+    "category_id": "c0db9786-d6f4-44d7-ac46-7bb2f855e079",
+    "question": "What payment methods do you accept?",
+    "answer": "We accept major credit/debit cards, UPI, net banking, and select mobile wallets.\n",
+    "sort_order": 1,
+    "is_active": true,
+    "created_at": "2025-11-21T13:14:46.003397+00:00",
+    "updated_at": "2025-11-21T13:14:46.003397+00:00"
+  },
+  {
+    "id": "110bc09f-1f05-4998-a7c8-fdfdc5e98549",
+    "category_id": "c0db9786-d6f4-44d7-ac46-7bb2f855e079",
+    "question": "Is a deposit required to confirm my booking?",
+    "answer": "Yes, a small advance payment secures your reservation, with the balance payable at check-in.",
+    "sort_order": 2,
+    "is_active": true,
+    "created_at": "2025-11-21T13:15:03.918236+00:00",
+    "updated_at": "2025-11-21T13:15:03.918236+00:00"
+  },
+  {
+    "id": "857c826c-f394-4bc2-b850-e32ac582da19",
+    "category_id": "c0db9786-d6f4-44d7-ac46-7bb2f855e079",
+    "question": "Can I receive a GST invoice for my stay?",
+    "answer": "Yes, GST-compliant invoices are provided on request at the time of booking or checkout.",
+    "sort_order": 3,
+    "is_active": true,
+    "created_at": "2025-11-21T13:15:31.555874+00:00",
+    "updated_at": "2025-11-21T13:15:31.555874+00:00"
+  },
+  {
+    "id": "f8f5b1e2-2b1a-4810-8b21-00d59bfc9c14",
+    "category_id": "c0db9786-d6f4-44d7-ac46-7bb2f855e079",
+    "question": "Do you offer flexible payment options?",
+    "answer": "Yes, for large group bookings, we may offer split or milestone payments. We also provide convenient options such as EMI and Pay Later facilities. Please speak with our team for details.",
+    "sort_order": 4,
+    "is_active": true,
+    "created_at": "2025-11-21T13:15:46.383779+00:00",
+    "updated_at": "2025-11-21T13:15:46.383779+00:00"
+  },
+  {
+    "id": "2119ded3-49aa-4d26-ac11-065f76c647b1",
+    "category_id": "26405012-6b10-4c4e-a8a3-8f6397bc3db3",
+    "question": "How do I get to the hotel from Mumbai or Pune?",
+    "answer": "Travel to Neral by train or car, then proceed to Dasturi Car Point. From there, you can take a short walk, horse ride, or hand-pulled rickshaw to Matheran.\n",
+    "sort_order": 1,
+    "is_active": true,
+    "created_at": "2025-11-21T13:16:11.109692+00:00",
+    "updated_at": "2025-11-21T13:16:11.109692+00:00"
+  },
+  {
+    "id": "5f6e84ed-0854-4b67-b4a6-e0214a53d1bd",
+    "category_id": "26405012-6b10-4c4e-a8a3-8f6397bc3db3",
+    "question": "Do you provide transportation from the nearest railway station?",
+    "answer": "Yes, transfers from Neral Junction or Aman Lodge can be arranged at an additional charge.\n",
+    "sort_order": 2,
+    "is_active": true,
+    "created_at": "2025-11-21T13:16:24.254276+00:00",
+    "updated_at": "2025-11-21T13:16:24.254276+00:00"
+  },
+  {
+    "id": "d5e66f55-0da7-40b8-879e-7abb40f31bd5",
+    "category_id": "26405012-6b10-4c4e-a8a3-8f6397bc3db3",
+    "question": "Is parking available near the property?",
+    "answer": "Vehicles must be parked at Dasturi Car Point as Matheran is vehicle-free. Paid parking is available there.\n",
+    "sort_order": 3,
+    "is_active": true,
+    "created_at": "2025-11-21T13:16:41.840729+00:00",
+    "updated_at": "2025-11-21T13:16:41.840729+00:00"
+  },
+  {
+    "id": "d951bc77-680c-4cba-a001-887accb9f00e",
+    "category_id": "26405012-6b10-4c4e-a8a3-8f6397bc3db3",
+    "question": "Is the hotel wheelchair-accessible?",
+    "answer": "Due to Matheran’s terrain and heritage pathways, full wheelchair access is limited, but we can assist with special arrangements.",
+    "sort_order": 4,
+    "is_active": true,
+    "created_at": "2025-11-21T13:17:00.346503+00:00",
+    "updated_at": "2025-11-21T13:17:00.346503+00:00"
+  },
+  {
+    "id": "457f380c-1aa8-4166-bb66-d7000e730dfe",
+    "category_id": "26405012-6b10-4c4e-a8a3-8f6397bc3db3",
+    "question": "Are there services for guests with special needs?",
+    "answer": "Please inform us in advance so we can prepare assistance such as ground-floor rooms and guided access.\n",
+    "sort_order": 5,
+    "is_active": true,
+    "created_at": "2025-11-21T13:17:15.880567+00:00",
+    "updated_at": "2025-11-21T13:17:15.880567+00:00"
+  },
+  {
+    "id": "7a430a10-cff7-4816-a362-6f811f7ed25c",
+    "category_id": "94fb4fc7-65d1-4bea-9c27-16f8e0509e0d",
+    "question": "Do you have a loyalty program?",
+    "answer": "Currently, we offer repeat guest discounts and seasonal packages. A full loyalty program is in development.",
+    "sort_order": 1,
+    "is_active": true,
+    "created_at": "2025-11-21T13:17:48.862767+00:00",
+    "updated_at": "2025-11-21T13:17:48.862767+00:00"
+  },
+  {
+    "id": "60f57b90-69c7-4066-9298-5e59562c2372",
+    "category_id": "94fb4fc7-65d1-4bea-9c27-16f8e0509e0d",
+    "question": "Are there any seasonal packages or special offers available?",
+    "answer": "Yes, keep an eye on our website or subscribe to our newsletter for exclusive deals.",
+    "sort_order": 2,
+    "is_active": true,
+    "created_at": "2025-11-21T13:18:06.159158+00:00",
+    "updated_at": "2025-11-21T13:18:06.159158+00:00"
+  },
+  {
+    "id": "6bb980bc-35ed-4af5-85b0-cdcefd74e37b",
+    "category_id": "40b4c884-3786-4985-8b95-cd39a3d75240",
+    "question": "What time is check-in and check-out?",
+    "answer": "Check-in is from 1:00 PM, and check-out is by 11:00 AM. Early check-in or late check-out may be available on request and subject to availability.",
+    "sort_order": 1,
+    "is_active": true,
+    "created_at": "2025-11-21T13:19:47.803131+00:00",
+    "updated_at": "2025-11-21T13:19:47.803131+00:00"
+  },
+  {
+    "id": "bf0ed54c-5cb9-4ed0-8000-252f12a1be3c",
+    "category_id": "40b4c884-3786-4985-8b95-cd39a3d75240",
+    "question": "Do you offer early check-in or late check-out?",
+    "answer": "Yes, on request and subject to room availability. Additional charges may apply.",
+    "sort_order": 2,
+    "is_active": true,
+    "created_at": "2025-11-21T13:20:24.694459+00:00",
+    "updated_at": "2025-11-21T13:20:24.694459+00:00"
+  },
+  {
+    "id": "6cfd69d0-83e5-4c8f-acef-d691042155b1",
+    "category_id": "37542f80-8739-401e-bb78-d729df1ee405",
+    "question": "What amenities are included in the rooms?",
+    "answer": "All rooms feature comfortable bedding, ensuite bathrooms, hot water, TV, air-conditioning or fans, and basic toiletries. Select rooms have private balconies with forest or swimming pool views.\n",
+    "sort_order": 1,
+    "is_active": true,
+    "created_at": "2025-11-21T13:21:19.645193+00:00",
+    "updated_at": "2025-11-21T13:21:19.645193+00:00"
+  },
+  {
+    "id": "83b1aece-d685-4c2a-b56c-8926368a5934",
+    "category_id": "37542f80-8739-401e-bb78-d729df1ee405",
+    "question": "Is Wi-Fi available throughout the property?",
+    "answer": "Yes, complimentary Wi-Fi is available in common areas and most rooms, though signal strength may vary due to Matheran’s eco-sensitive location.\n",
+    "sort_order": 2,
+    "is_active": true,
+    "created_at": "2025-11-21T13:21:38.427956+00:00",
+    "updated_at": "2025-11-21T13:21:38.427956+00:00"
+  },
+  {
+    "id": "ab68237e-3280-4ba0-81bf-f9fba2a258f5",
+    "category_id": "37542f80-8739-401e-bb78-d729df1ee405",
+    "question": "Do you offer room service?",
+    "answer": "Yes, room service is available during restaurant operating hours. During non-dining hours, guests can order from our Snack Bar Store.\n",
+    "sort_order": 3,
+    "is_active": true,
+    "created_at": "2025-11-21T13:21:54.128355+00:00",
+    "updated_at": "2025-11-21T13:21:54.128355+00:00"
+  },
+  {
+    "id": "a509d536-9989-4172-af82-4017a13923d8",
+    "category_id": "37542f80-8739-401e-bb78-d729df1ee405",
+    "question": "Is laundry service available?",
+    "answer": "Yes, laundry and pressing services are available on request. Turnaround time is 24–48 hours, and rate cards are provided in rooms for your convenience.\n",
+    "sort_order": 4,
+    "is_active": true,
+    "created_at": "2025-11-21T13:22:08.797519+00:00",
+    "updated_at": "2025-11-21T13:22:08.797519+00:00"
+  },
+  {
+    "id": "f98599f9-e533-496d-88a5-204a4729dfc9",
+    "category_id": "37542f80-8739-401e-bb78-d729df1ee405",
+    "question": "Are there interconnecting rooms for families?",
+    "answer": "Yes, we have interconnecting rooms ideal for families and small groups. Please request at the time of booking.",
+    "sort_order": 5,
+    "is_active": true,
+    "created_at": "2025-11-21T13:22:23.029707+00:00",
+    "updated_at": "2025-11-21T13:22:23.029707+00:00"
+  },
+  {
+    "id": "9513ac97-9a4e-4df5-b68d-5416cb8cb7dc",
+    "category_id": "dcc3731f-2932-4854-be61-45c2511f5162",
+    "question": "What dining options are available at the hotel?",
+    "answer": "Our in-house restaurant serves Indian, Continental, and local specialties prepared with fresh seasonal ingredients.",
+    "sort_order": 1,
+    "is_active": true,
+    "created_at": "2025-11-21T15:04:53.457566+00:00",
+    "updated_at": "2025-11-21T15:04:53.457566+00:00"
+  },
+  {
+    "id": "828da460-b48c-4ec9-8463-3c509dcd4f55",
+    "category_id": "dcc3731f-2932-4854-be61-45c2511f5162",
+    "question": "What are the restaurant's opening hours?",
+    "answer": "Breakfast: 8:00 AM – 10:30 AM, Lunch: 12:30 PM – 3:00 PM, Dinner: 7:30 PM – 10:30 PM.",
+    "sort_order": 2,
+    "is_active": true,
+    "created_at": "2025-11-21T15:05:10.0034+00:00",
+    "updated_at": "2025-11-21T15:05:10.0034+00:00"
+  },
+  {
+    "id": "02c70dcf-9da5-4714-bcb9-7c1331b76d43",
+    "category_id": "dcc3731f-2932-4854-be61-45c2511f5162",
+    "question": "Can you accommodate special dietary requirements?",
+    "answer": "Yes, we can cater to vegetarian and select dietary needs. Please inform us in advance so our chefs can prepare accordingly.\n",
+    "sort_order": 3,
+    "is_active": true,
+    "created_at": "2025-11-21T15:05:24.839183+00:00",
+    "updated_at": "2025-11-21T15:05:24.839183+00:00"
+  },
+  {
+    "id": "298659ef-67b2-4cda-a5ec-bb27a50c8a49",
+    "category_id": "dcc3731f-2932-4854-be61-45c2511f5162",
+    "question": "Do you offer room-delivered meals or picnic baskets?",
+    "answer": "Yes, both are available with prior notice and are perfect for early hikes or outdoor excursions.\n",
+    "sort_order": 4,
+    "is_active": true,
+    "created_at": "2025-11-21T15:05:40.177411+00:00",
+    "updated_at": "2025-11-21T15:05:40.177411+00:00"
+  },
+  {
+    "id": "28f9838a-b324-4d19-a1fd-8606a0b0ced0",
+    "category_id": "0e9eec00-f30d-45aa-aca6-696a10912441",
+    "question": "Do I need to book spa treatments in advance?",
+    "answer": "Advance booking is recommended to secure your preferred time slot.",
+    "sort_order": 1,
+    "is_active": true,
+    "created_at": "2025-11-21T15:05:57.053242+00:00",
+    "updated_at": "2025-11-21T15:05:57.053242+00:00"
+  },
+  {
+    "id": "baf5f81b-3ecd-4a4b-865c-65696edecee7",
+    "category_id": "0e9eec00-f30d-45aa-aca6-696a10912441",
+    "question": "What treatments and therapies are offered?",
+    "answer": "We offer massages, facials, body scrubs, and relaxation therapies using natural, skin-friendly products.\n",
+    "sort_order": 2,
+    "is_active": true,
+    "created_at": "2025-11-21T15:06:09.331234+00:00",
+    "updated_at": "2025-11-21T15:06:09.331234+00:00"
+  },
+  {
+    "id": "2649c5eb-a67d-4ed8-83dd-2e205ef2a495",
+    "category_id": "0e9eec00-f30d-45aa-aca6-696a10912441",
+    "question": "What are the spa’s operating hours?",
+    "answer": "The spa operates daily from 9:00 AM to 8:00 PM.",
+    "sort_order": 3,
+    "is_active": true,
+    "created_at": "2025-11-21T15:06:24.870771+00:00",
+    "updated_at": "2025-11-21T15:06:24.870771+00:00"
+  },
+  {
+    "id": "f79068c0-c6a1-487f-ae0b-c35dcb6891ae",
+    "category_id": "0e9eec00-f30d-45aa-aca6-696a10912441",
+    "question": "Are there fitness or yoga sessions available?",
+    "answer": "Yes, seasonal yoga sessions and guided wellness activities are offered—check the schedule at reception.\n",
+    "sort_order": 4,
+    "is_active": true,
+    "created_at": "2025-11-21T15:06:43.50587+00:00",
+    "updated_at": "2025-11-21T15:06:43.50587+00:00"
+  },
+  {
+    "id": "0308ec3f-0358-4530-a332-acd43311cb0a",
+    "category_id": "8fe08c58-56e9-4d53-aae2-2955ef4a6385",
+    "question": "What safety measures are in place at the hotel?",
+    "answer": "We follow strict hygiene protocols, regular sanitization, and have trained staff for guest safety.",
+    "sort_order": 1,
+    "is_active": true,
+    "created_at": "2025-11-21T15:07:03.098451+00:00",
+    "updated_at": "2025-11-21T15:07:03.098451+00:00"
+  },
+  {
+    "id": "8fcfa303-f7ac-440c-9ee2-64df38af8972",
+    "category_id": "8fe08c58-56e9-4d53-aae2-2955ef4a6385",
+    "question": " Is Matheran really vehicle-free?",
+    "answer": "Yes, no motor vehicles are allowed beyond Dasturi Car Point, ensuring a peaceful, pollution-free environment.",
+    "sort_order": 2,
+    "is_active": true,
+    "created_at": "2025-11-21T15:07:30.728861+00:00",
+    "updated_at": "2025-11-21T15:07:30.728861+00:00"
+  },
+  {
+    "id": "0edc45eb-48c6-4ac1-a733-fa388f7e2b4c",
+    "category_id": "8fe08c58-56e9-4d53-aae2-2955ef4a6385",
+    "question": "Do you have fire safety systems?",
+    "answer": "Yes, all rooms and common areas are equipped with fire extinguishers, and staff are trained for emergency procedures.\n",
+    "sort_order": 3,
+    "is_active": true,
+    "created_at": "2025-11-21T15:07:44.637528+00:00",
+    "updated_at": "2025-11-21T15:07:44.637528+00:00"
+  },
+  {
+    "id": "b4a58dbd-089c-43a2-a93e-39bc6c252a3a",
+    "category_id": "8fe08c58-56e9-4d53-aae2-2955ef4a6385",
+    "question": "Is drinking water safe on the property?",
+    "answer": "Yes, we provide filtered and treated drinking water at all times.",
+    "sort_order": 4,
+    "is_active": true,
+    "created_at": "2025-11-21T15:07:58.274488+00:00",
+    "updated_at": "2025-11-21T15:07:58.274488+00:00"
+  },
+  {
+    "id": "80ed2a93-6094-4954-b9b9-f7de06ebb892",
+    "category_id": "8fe08c58-56e9-4d53-aae2-2955ef4a6385",
+    "question": "Are monkeys a problem at the hotel or in Matheran?",
+    "answer": "Matheran is home to curious monkeys that may grab food or shiny items, especially if left uncovered. This applies both within the hotel grounds and when exploring the town. To avoid unwanted attention, keep food covered or stored inside bags, close balcony doors and windows when unattended, enjoy watching monkeys from a safe distance without feeding or provoking them, and avoid sudden movements or direct eye contact which can make them defensive.\n",
+    "sort_order": 5,
+    "is_active": true,
+    "created_at": "2025-11-21T15:08:11.391855+00:00",
+    "updated_at": "2025-11-21T15:08:11.391855+00:00"
+  },
+  {
+    "id": "141c7b87-99c1-4bf7-834f-c541aabee219",
+    "category_id": "8fe08c58-56e9-4d53-aae2-2955ef4a6385",
+    "question": "Are mosquitoes common, and how can I protect myself?",
+    "answer": "Being surrounded by forest, mosquitoes can be present—particularly at dawn and dusk. We provide repellents in all rooms, and additional mosquito-repellent creams are available at our hotel store opposite the front office. For best protection, apply repellent before heading outdoors, wear light long-sleeved clothing in the evenings, and keep doors closed to prevent them from entering your room",
+    "sort_order": 6,
+    "is_active": true,
+    "created_at": "2025-11-21T15:08:25.183161+00:00",
+    "updated_at": "2025-11-21T15:08:25.183161+00:00"
+  },
+  {
+    "id": "9b0927ce-b569-4f0e-80ab-47430b0a1a6d",
+    "category_id": "bc5239b6-ae68-446b-b009-2a2114fd977a",
+    "question": "Are activities suitable for children?",
+    "answer": "Yes, we offer a variety of family-friendly activities, including guided nature walks, horse rides, and games in our recreation areas. Our team can help recommend age-appropriate adventures.\n",
+    "sort_order": 1,
+    "is_active": true,
+    "created_at": "2025-11-21T15:08:56.209934+00:00",
+    "updated_at": "2025-11-21T15:08:56.209934+00:00"
+  },
+  {
+    "id": "201a334c-5332-4199-9aec-683bb60e7273",
+    "category_id": "bc5239b6-ae68-446b-b009-2a2114fd977a",
+    "question": "What should I wear for outdoor activities?",
+    "answer": "Comfortable walking shoes, light breathable clothing, and a hat are ideal. If you’re visiting during the monsoon, carry a rain jacket or poncho. Evenings can be cooler, so light layers are recommended.",
+    "sort_order": 2,
+    "is_active": true,
+    "created_at": "2025-11-21T15:09:12.519918+00:00",
+    "updated_at": "2025-11-21T15:09:12.519918+00:00"
+  },
+  {
+    "id": "4001fb6e-d007-47da-ab76-4646af414d43",
+    "category_id": "bc5239b6-ae68-446b-b009-2a2114fd977a",
+    "question": "Do you offer guided nature walks or treks?",
+    "answer": "Yes, we arrange guided walks and treks that showcase Matheran’s viewpoints, flora, and fauna. Bookings can be made at reception.\n",
+    "sort_order": 3,
+    "is_active": true,
+    "created_at": "2025-11-21T15:09:27.161565+00:00",
+    "updated_at": "2025-11-21T15:09:27.161565+00:00"
+  },
+  {
+    "id": "ece101f8-6c56-4bdf-b74b-a204b3eb0b58",
+    "category_id": "bc5239b6-ae68-446b-b009-2a2114fd977a",
+    "question": "Are horse rides available nearby?",
+    "answer": "Yes, horse rides are a popular way to explore Matheran. We can connect you with trusted local horsemen for safe and enjoyable rides.\n",
+    "sort_order": 4,
+    "is_active": true,
+    "created_at": "2025-11-21T15:09:38.439305+00:00",
+    "updated_at": "2025-11-21T15:09:38.439305+00:00"
+  },
+  {
+    "id": "16531325-d276-40a0-adbc-abc667022818",
+    "category_id": "dfba673c-96cd-4d96-b429-bd43980fdc0a",
+    "question": "What activities do you have for children?",
+    "answer": "We offer indoor games, outdoor play areas, and seasonal kids’ activities to keep young guests engaged.\n",
+    "sort_order": 1,
+    "is_active": true,
+    "created_at": "2025-11-21T15:10:22.245245+00:00",
+    "updated_at": "2025-11-21T15:10:22.245245+00:00"
+  },
+  {
+    "id": "d93dc5a3-099f-4690-8859-e37e0be1e479",
+    "category_id": "dfba673c-96cd-4d96-b429-bd43980fdc0a",
+    "question": " Is babysitting or child care available?",
+    "answer": "Babysitting services can be arranged in advance for an additional charge.\n",
+    "sort_order": 2,
+    "is_active": true,
+    "created_at": "2025-11-21T15:10:35.422809+00:00",
+    "updated_at": "2025-11-21T15:10:35.422809+00:00"
+  },
+  {
+    "id": "bb972072-1162-4a73-9d88-c868836a187f",
+    "category_id": "dfba673c-96cd-4d96-b429-bd43980fdc0a",
+    "question": "Are there play areas or kids’ clubs?",
+    "answer": "Yes, we have a dedicated children’s play area with swings, slides, and space for supervised fun.",
+    "sort_order": 3,
+    "is_active": true,
+    "created_at": "2025-11-21T15:10:47.586934+00:00",
+    "updated_at": "2025-11-21T15:10:47.586934+00:00"
+  },
+  {
+    "id": "5611c8e2-e881-4a88-af80-ca32d0c86fc6",
+    "category_id": "5354627e-c977-4927-8490-e56de262b0cc",
+    "question": "Do you host events or celebrations?",
+    "answer": "Yes, we host birthdays, anniversaries, weddings, and other celebrations. Our team can assist with décor, catering, and entertainment.\n",
+    "sort_order": 1,
+    "is_active": true,
+    "created_at": "2025-11-21T15:11:10.510004+00:00",
+    "updated_at": "2025-11-21T15:11:10.510004+00:00"
+  },
+  {
+    "id": "1f3955a1-4e57-4e6a-95fc-809c5607c25d",
+    "category_id": "5354627e-c977-4927-8490-e56de262b0cc",
+    "question": "What facilities do you have for corporate retreats or meetings?",
+    "answer": "We offer meeting spaces, projector facilities, and team-building activity planning for corporate groups.\n",
+    "sort_order": 2,
+    "is_active": true,
+    "created_at": "2025-11-21T15:11:23.301683+00:00",
+    "updated_at": "2025-11-21T15:11:23.301683+00:00"
+  },
+  {
+    "id": "ec49df9f-d955-48c9-9113-5daf47d2b999",
+    "category_id": "5354627e-c977-4927-8490-e56de262b0cc",
+    "question": "Do you provide event catering?",
+    "answer": "Yes, our culinary team can create customized menus for events of all sizes.\n",
+    "sort_order": 3,
+    "is_active": true,
+    "created_at": "2025-11-21T15:11:35.829048+00:00",
+    "updated_at": "2025-11-21T15:11:35.829048+00:00"
+  },
+  {
+    "id": "b8a56eb5-ab23-4218-b807-9590a215f6a9",
+    "category_id": "edaca1c9-a112-4c82-854a-ba1fed87a81f",
+    "question": "Can I use a drone on the property?",
+    "answer": "Drone use is subject to local regulations and prior hotel approval. Please check with reception before flying.",
+    "sort_order": 1,
+    "is_active": true,
+    "created_at": "2025-11-21T15:11:51.189591+00:00",
+    "updated_at": "2025-11-21T15:11:51.189591+00:00"
+  },
+  {
+    "id": "4d8c3bf6-a97d-49c4-a70c-d50086fb4dd6",
+    "category_id": "edaca1c9-a112-4c82-854a-ba1fed87a81f",
+    "question": "Are there restrictions on professional photography?",
+    "answer": "Professional shoots require prior permission. Casual photography for personal use is welcome.",
+    "sort_order": 2,
+    "is_active": true,
+    "created_at": "2025-11-21T15:12:04.45024+00:00",
+    "updated_at": "2025-11-21T15:12:04.45024+00:00"
+  },
+  {
+    "id": "428ebfd7-aeb9-40d3-aeda-f46f2d58c8d4",
+    "category_id": "7cbe1e07-42a5-48cf-acae-2df24c2333ef",
+    "question": "What are the top attractions within walking distance?",
+    "answer": "Echo Point, Charlotte Lake, Panorama Point, and the heritage market are all easily accessible from the hotel.",
+    "sort_order": 1,
+    "is_active": true,
+    "created_at": "2025-11-21T15:12:19.498311+00:00",
+    "updated_at": "2025-11-21T15:12:19.498311+00:00"
+  },
+  {
+    "id": "c4fc94b0-950e-4aa7-9228-37be07a7deba",
+    "category_id": "7cbe1e07-42a5-48cf-acae-2df24c2333ef",
+    "question": "Do you offer day trips or tour bookings?",
+    "answer": "Yes, we can arrange guided tours, scenic treks, and cultural experiences with trusted local partners\n",
+    "sort_order": 2,
+    "is_active": true,
+    "created_at": "2025-11-21T15:12:32.875531+00:00",
+    "updated_at": "2025-11-21T15:12:32.875531+00:00"
+  },
+  {
+    "id": "b15a0fd7-b84b-4ef5-a0bc-3a9e6cbfb705",
+    "category_id": "145fef0e-2dd3-461d-8193-fce5029730e6",
+    "question": "What is your policy on smoking and alcohol?",
+    "answer": "Smoking is not permitted in any indoor areas or guest rooms. Designated outdoor smoking areas are available. Alcohol consumption is not allowed in rooms and should be enjoyed responsibly in permitted spaces. We request all guests to help maintain a peaceful environment by keeping noise levels low, especially during quiet hours.\n",
+    "sort_order": 1,
+    "is_active": true,
+    "created_at": "2025-11-21T15:12:59.461847+00:00",
+    "updated_at": "2025-11-21T15:12:59.461847+00:00"
+  },
+  {
+    "id": "412bf476-72e2-46f6-ad1a-051aa889eaba",
+    "category_id": "145fef0e-2dd3-461d-8193-fce5029730e6",
+    "question": "Are outside food and beverages allowed?",
+    "answer": "Outside food and beverages are generally not permitted, as we have an in-house kitchen and restaurant to cater to guests' needs. Exceptions can be made for special dietary requirements if arranged in advance.",
+    "sort_order": 2,
+    "is_active": true,
+    "created_at": "2025-11-21T15:13:15.168363+00:00",
+    "updated_at": "2025-11-21T15:13:15.168363+00:00"
+  },
+  {
+    "id": "51d01c1b-a82f-498d-af1f-8a921ffa0c21",
+    "category_id": "145fef0e-2dd3-461d-8193-fce5029730e6",
+    "question": "Do you have a quiet hours policy?",
+    "answer": "Yes, quiet hours are observed from 12:00 AM (midnight) to 7:00 AM to ensure a restful stay for all guests.",
+    "sort_order": 3,
+    "is_active": true,
+    "created_at": "2025-11-21T15:13:39.732597+00:00",
+    "updated_at": "2025-11-21T15:13:39.732597+00:00"
+  },
+  {
+    "id": "c2b77d96-955b-4274-8a97-277823673725",
+    "category_id": "0ad32afa-fe3a-4255-9f70-c31b417cd2ff",
+    "question": "Is there a local doctor on call?",
+    "answer": "Yes, we have access to a local doctor-on-call service for medical assistance.\n",
+    "sort_order": 1,
+    "is_active": true,
+    "created_at": "2025-11-21T15:13:56.844439+00:00",
+    "updated_at": "2025-11-21T15:13:56.844439+00:00"
+  },
+  {
+    "id": "c78db3f2-62ef-49ee-8cc5-e589b0ba1c89",
+    "category_id": "0ad32afa-fe3a-4255-9f70-c31b417cd2ff",
+    "question": "Where is the nearest clinic or hospital?",
+    "answer": "A clinic is located in Matheran town, just a 5-minute walk from the hotel. Larger hospitals are available in Neral, approximately 1 km away.\n",
+    "sort_order": 2,
+    "is_active": true,
+    "created_at": "2025-11-21T15:14:08.139928+00:00",
+    "updated_at": "2025-11-21T15:14:08.139928+00:00"
+  },
+  {
+    "id": "11070212-2efc-495b-b799-5fa2f25228d0",
+    "category_id": "0ad32afa-fe3a-4255-9f70-c31b417cd2ff",
+    "question": "What should I do in case of an emergency during my stay?",
+    "answer": "Contact the front desk immediately. Our staff is trained to assist and coordinate with local authorities or medical professionals as needed.\n",
+    "sort_order": 3,
+    "is_active": true,
+    "created_at": "2025-11-21T15:14:20.628588+00:00",
+    "updated_at": "2025-11-21T15:14:20.628588+00:00"
+  },
+  {
+    "id": "bcbe9e53-f1f1-45f7-9b8b-ad91b96f9990",
+    "category_id": "a3912798-2b1d-460f-a2ff-5f52f3fe6b20",
+    "question": "How can I report a lost item?",
+    "answer": "Please notify the front desk as soon as possible with details of the lost item. We will make a note of it.\n",
+    "sort_order": 1,
+    "is_active": true,
+    "created_at": "2025-11-21T15:14:36.832027+00:00",
+    "updated_at": "2025-11-21T15:14:36.832027+00:00"
+  },
+  {
+    "id": "68fdc5e8-d6da-4dd4-95e6-e145ef8b5cd2",
+    "category_id": "a3912798-2b1d-460f-a2ff-5f52f3fe6b20",
+    "question": "How are lost belongings returned to guests?",
+    "answer": "If found, we will contact you to arrange return to your delivery address at your expense\n",
+    "sort_order": 2,
+    "is_active": true,
+    "created_at": "2025-11-21T15:14:49.412277+00:00",
+    "updated_at": "2025-11-21T15:14:49.412277+00:00"
+  },
+  {
+    "id": "049531e5-ce0c-4673-b017-e636c31bf695",
+    "category_id": "192eae38-995b-49e8-8e98-28e0863e10b9",
+    "question": "What local customs should I be aware of?",
+    "answer": "Matheran is a heritage hill station with a close-knit community. Please respect local traditions, dress modestly when visiting temples, and dispose of waste responsibly.\n",
+    "sort_order": 1,
+    "is_active": true,
+    "created_at": "2025-11-21T15:15:06.201636+00:00",
+    "updated_at": "2025-11-21T15:15:06.201636+00:00"
+  },
+  {
+    "id": "ba2dcccf-a235-4ea7-ad76-d9f196de114a",
+    "category_id": "192eae38-995b-49e8-8e98-28e0863e10b9",
+    "question": "Is tipping customary in Matheran?",
+    "answer": "Tipping is appreciated but not mandatory. Common practice is to tip hotel staff, guides, or horse handlers for good service.\n",
+    "sort_order": 2,
+    "is_active": true,
+    "created_at": "2025-11-21T15:15:21.228746+00:00",
+    "updated_at": "2025-11-21T15:15:21.228746+00:00"
+  },
+  {
+    "id": "7b18b0e2-2067-4381-ac6e-dab08598f2a1",
+    "category_id": "192eae38-995b-49e8-8e98-28e0863e10b9",
+    "question": "What languages are spoken by the staff?",
+    "answer": "Our team speaks English, Hindi, and Marathi.\n",
+    "sort_order": 3,
+    "is_active": true,
+    "created_at": "2025-11-21T15:15:35.405884+00:00",
+    "updated_at": "2025-11-21T15:15:35.405884+00:00"
+  },
+  {
+    "id": "9a3478de-f8f3-4259-81a1-fd3bdc3d5538",
+    "category_id": "494e2c4b-3cc1-4f91-9fff-95e060136a44",
+    "question": "How can I reach the front desk during my stay?",
+    "answer": "Dial the reception number from your in-room phone or visit the front desk directly.",
+    "sort_order": 1,
+    "is_active": true,
+    "created_at": "2025-11-21T15:15:58.51441+00:00",
+    "updated_at": "2025-11-21T15:15:58.51441+00:00"
+  },
+  {
+    "id": "65877a25-1de7-44bf-8d6a-e95c1b5c99de",
+    "category_id": "494e2c4b-3cc1-4f91-9fff-95e060136a44",
+    "question": "Can I contact the hotel via WhatsApp?",
+    "answer": "Yes, our reservations team is available on WhatsApp for queries and assistance.\n",
+    "sort_order": 2,
+    "is_active": true,
+    "created_at": "2025-11-21T15:16:11.24359+00:00",
+    "updated_at": "2025-11-21T15:16:11.24359+00:00"
+  },
+  {
+    "id": "e5734111-f437-4377-a399-419cca9d6fdb",
+    "category_id": "494e2c4b-3cc1-4f91-9fff-95e060136a44",
+    "question": "Is there 24/7 assistance available?",
+    "answer": "Yes, our front desk operates around the clock to ensure guest comfort and support",
+    "sort_order": 3,
+    "is_active": true,
+    "created_at": "2025-11-21T15:16:26.207559+00:00",
+    "updated_at": "2025-11-21T15:16:26.207559+00:00"
+  }
+]

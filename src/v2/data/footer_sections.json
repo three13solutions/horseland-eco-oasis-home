@@ -1,0 +1,249 @@
+[
+  {
+    "id": "09f4118e-6cb4-4175-bdab-3cb24ae443fb",
+    "section_key": "brand",
+    "title": "Horseland Hotel",
+    "content": {
+      "description": "Nestled in the heart of India's only automobile-free hill station, Horseland offers an unparalleled mountain escape where pristine nature meets sophisticated comfort.",
+      "emergencyPhone": "+91 94042 24600"
+    },
+    "is_active": true,
+    "sort_order": 1,
+    "created_at": "2025-07-22T12:19:33.809948+00:00",
+    "updated_at": "2025-10-17T17:00:23.10429+00:00"
+  },
+  {
+    "id": "a38ced87-c2b8-4f12-91f1-0b4428a7ca09",
+    "section_key": "contact",
+    "title": "Contact Information",
+    "content": {
+      "email": "info@horselandhotel.com",
+      "phone": "+91 94042 24600",
+      "address": "Matheran Hill Station, Maharashtra, India"
+    },
+    "is_active": true,
+    "sort_order": 2,
+    "created_at": "2025-07-22T12:19:33.809948+00:00",
+    "updated_at": "2025-10-17T17:00:23.211607+00:00"
+  },
+  {
+    "id": "eba74f91-672c-4ce7-8a30-c2bfefc5a147",
+    "section_key": "policies",
+    "title": "Policies",
+    "content": {
+      "links": [
+        {
+          "href": "/policies#terms",
+          "title": "Terms & Conditions"
+        },
+        {
+          "href": "/policies#privacy",
+          "title": "Privacy Policy"
+        },
+        {
+          "href": "/policies#refund",
+          "title": "Refund Policy"
+        },
+        {
+          "href": "/policies#cancellation",
+          "title": "Cancellation Policy"
+        }
+      ]
+    },
+    "is_active": true,
+    "sort_order": 4,
+    "created_at": "2025-07-22T12:19:33.809948+00:00",
+    "updated_at": "2025-10-17T17:00:23.417353+00:00"
+  },
+  {
+    "id": "95850b35-8588-48d6-9b8f-e3f2b9e318ef",
+    "section_key": "newsletter",
+    "title": "Newsletter",
+    "content": {
+      "title": "Mountain Mailers",
+      "description": "Exclusive mountain stories, seasonal offers, and insider experiences delivered to your inbox"
+    },
+    "is_active": true,
+    "sort_order": 5,
+    "created_at": "2025-07-22T12:19:33.809948+00:00",
+    "updated_at": "2025-10-17T17:00:23.519606+00:00"
+  },
+  {
+    "id": "24e9f584-9754-498c-932c-0ebe9fb7effa",
+    "section_key": "social",
+    "title": "Social Media",
+    "content": {
+      "twitter": "https://twitter.com/HORSELANDHOTEL",
+      "facebook": "https://www.facebook.com/HorselandHotel",
+      "linkedin": "https://www.linkedin.com/in/horseland-matheran-38b5401a1/",
+      "networks": [
+        {
+          "url": "https://www.facebook.com/HorselandHotel",
+          "icon": {
+            "key": null,
+            "ref": null,
+            "type": {},
+            "props": {
+              "className": "w-4 h-4",
+              "data-lov-id": "src/components/admin/SocialMediaManager.tsx:27:51",
+              "data-lov-name": "Facebook",
+              "data-component-file": "SocialMediaManager.tsx",
+              "data-component-line": "27",
+              "data-component-name": "Facebook",
+              "data-component-path": "src/components/admin/SocialMediaManager.tsx",
+              "data-component-content": "%7B%22className%22%3A%22w-4%20h-4%22%7D"
+            },
+            "_owner": null,
+            "_store": {}
+          },
+          "label": "Facebook",
+          "enabled": true,
+          "platform": "facebook"
+        },
+        {
+          "url": "https://www.instagram.com/horseland_matheran/?hl=en",
+          "icon": {
+            "key": null,
+            "ref": null,
+            "type": {},
+            "props": {
+              "className": "w-4 h-4",
+              "data-lov-id": "src/components/admin/SocialMediaManager.tsx:28:53",
+              "data-lov-name": "Instagram",
+              "data-component-file": "SocialMediaManager.tsx",
+              "data-component-line": "28",
+              "data-component-name": "Instagram",
+              "data-component-path": "src/components/admin/SocialMediaManager.tsx",
+              "data-component-content": "%7B%22className%22%3A%22w-4%20h-4%22%7D"
+            },
+            "_owner": null,
+            "_store": {}
+          },
+          "label": "Instagram",
+          "enabled": true,
+          "platform": "instagram"
+        },
+        {
+          "url": "https://twitter.com/HORSELANDHOTEL",
+          "icon": {
+            "key": null,
+            "ref": null,
+            "type": {},
+            "props": {
+              "className": "w-4 h-4",
+              "data-lov-id": "src/components/admin/SocialMediaManager.tsx:29:53",
+              "data-lov-name": "Twitter",
+              "data-component-file": "SocialMediaManager.tsx",
+              "data-component-line": "29",
+              "data-component-name": "Twitter",
+              "data-component-path": "src/components/admin/SocialMediaManager.tsx",
+              "data-component-content": "%7B%22className%22%3A%22w-4%20h-4%22%7D"
+            },
+            "_owner": null,
+            "_store": {}
+          },
+          "label": "Twitter / X",
+          "enabled": true,
+          "platform": "twitter"
+        },
+        {
+          "url": "",
+          "icon": {
+            "key": null,
+            "ref": null,
+            "type": {},
+            "props": {
+              "className": "w-4 h-4",
+              "data-lov-id": "src/components/admin/SocialMediaManager.tsx:30:49",
+              "data-lov-name": "Youtube",
+              "data-component-file": "SocialMediaManager.tsx",
+              "data-component-line": "30",
+              "data-component-name": "Youtube",
+              "data-component-path": "src/components/admin/SocialMediaManager.tsx",
+              "data-component-content": "%7B%22className%22%3A%22w-4%20h-4%22%7D"
+            },
+            "_owner": null,
+            "_store": {}
+          },
+          "label": "YouTube",
+          "enabled": false,
+          "platform": "youtube"
+        },
+        {
+          "url": "https://www.linkedin.com/in/horseland-matheran-38b5401a1/",
+          "icon": {
+            "key": null,
+            "ref": null,
+            "type": {},
+            "props": {
+              "className": "w-4 h-4",
+              "data-lov-id": "src/components/admin/SocialMediaManager.tsx:31:51",
+              "data-lov-name": "Linkedin",
+              "data-component-file": "SocialMediaManager.tsx",
+              "data-component-line": "31",
+              "data-component-name": "Linkedin",
+              "data-component-path": "src/components/admin/SocialMediaManager.tsx",
+              "data-component-content": "%7B%22className%22%3A%22w-4%20h-4%22%7D"
+            },
+            "_owner": null,
+            "_store": {}
+          },
+          "label": "LinkedIn",
+          "enabled": true,
+          "platform": "linkedin"
+        },
+        {
+          "url": "",
+          "icon": {
+            "key": null,
+            "ref": null,
+            "type": {},
+            "props": {
+              "className": "w-4 h-4",
+              "data-lov-id": "src/components/admin/SocialMediaManager.tsx:32:47",
+              "data-lov-name": "Video",
+              "data-component-file": "SocialMediaManager.tsx",
+              "data-component-line": "32",
+              "data-component-name": "Video",
+              "data-component-path": "src/components/admin/SocialMediaManager.tsx",
+              "data-component-content": "%7B%22className%22%3A%22w-4%20h-4%22%7D"
+            },
+            "_owner": null,
+            "_store": {}
+          },
+          "label": "TikTok",
+          "enabled": false,
+          "platform": "tiktok"
+        },
+        {
+          "url": "https://wa.me/+919404224600",
+          "icon": {
+            "key": null,
+            "ref": null,
+            "type": {},
+            "props": {
+              "className": "w-4 h-4",
+              "data-lov-id": "src/components/admin/SocialMediaManager.tsx:33:51",
+              "data-lov-name": "MessageCircle",
+              "data-component-file": "SocialMediaManager.tsx",
+              "data-component-line": "33",
+              "data-component-name": "MessageCircle",
+              "data-component-path": "src/components/admin/SocialMediaManager.tsx",
+              "data-component-content": "%7B%22className%22%3A%22w-4%20h-4%22%7D"
+            },
+            "_owner": null,
+            "_store": {}
+          },
+          "label": "WhatsApp",
+          "enabled": true,
+          "platform": "whatsapp"
+        }
+      ],
+      "instagram": "https://www.instagram.com/horseland_matheran/?hl=en"
+    },
+    "is_active": true,
+    "sort_order": 3,
+    "created_at": "2025-07-22T12:19:33.809948+00:00",
+    "updated_at": "2025-10-17T17:00:23.321743+00:00"
+  }
+]

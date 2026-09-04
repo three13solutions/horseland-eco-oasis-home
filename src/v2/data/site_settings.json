@@ -1,0 +1,109 @@
+[
+  {
+    "id": "217a9eaf-f233-4c9a-a4ce-b7e390c34502",
+    "setting_key": "brand_name",
+    "setting_value": "HORSELAND",
+    "updated_at": "2025-10-17T17:11:01.066818+00:00"
+  },
+  {
+    "id": "24378a93-3dde-4fe7-892c-688ed5869d08",
+    "setting_key": "brand_monogram",
+    "setting_value": "https://mmmogqappdtnwqkvzxih.supabase.co/storage/v1/object/public/uploads/logos/1756897304653-4vg4pmkf3oq.png",
+    "updated_at": "2025-10-17T17:11:01.183562+00:00"
+  },
+  {
+    "id": "83301d75-9da0-4868-8f6e-685f1402feca",
+    "setting_key": "brand_descriptor",
+    "setting_value": "Hotel, Matheran",
+    "updated_at": "2025-10-17T17:11:01.274744+00:00"
+  },
+  {
+    "id": "fd8f7692-38f2-4cd2-9552-f5f5f0e1ebee",
+    "setting_key": "favicon",
+    "setting_value": "https://mmmogqappdtnwqkvzxih.supabase.co/storage/v1/object/public/uploads/favicons/1760716187132-21s4xp9yh3c.png",
+    "updated_at": "2025-10-17T17:11:01.399705+00:00"
+  },
+  {
+    "id": "7d9da492-69ac-4dd2-915a-c22f44752fdf",
+    "setting_key": "phone_number",
+    "setting_value": "+919404224600",
+    "updated_at": "2025-10-17T17:11:01.495944+00:00"
+  },
+  {
+    "id": "fd3dae83-c633-494f-a7a9-0455273aa668",
+    "setting_key": "whatsapp_number",
+    "setting_value": "+919404224600",
+    "updated_at": "2025-10-17T17:11:01.586134+00:00"
+  },
+  {
+    "id": "ab36dc3b-608f-4352-9b86-13c5af7b17f9",
+    "setting_key": "copyright_text",
+    "setting_value": "All Rights Reserved ® Horseland Hotel © 2025 ",
+    "updated_at": "2025-10-17T17:11:01.699401+00:00"
+  },
+  {
+    "id": "09245fd2-e389-43bb-ad03-a15729c6bc34",
+    "setting_key": "credits",
+    "setting_value": "Powered by <a href=\"https://313s.com/\" target=\"_blank\">IIIXIII</a>",
+    "updated_at": "2025-10-17T17:11:01.795835+00:00"
+  },
+  {
+    "id": "c8ca0f61-64fe-487d-9a15-1cb929b9ac48",
+    "setting_key": "emergency_contact",
+    "setting_value": {
+      "email": "emergency@horselandhotel.com",
+      "phone": "+91-98765-43210"
+    },
+    "updated_at": "2025-10-17T17:11:01.889568+00:00"
+  },
+  {
+    "id": "0d869c80-e9b7-4378-86b1-b1a8f38a4e32",
+    "setting_key": "newsletter_email",
+    "setting_value": {
+      "email": "newsletter@horselandhotel.com"
+    },
+    "updated_at": "2025-10-17T17:11:02.001327+00:00"
+  },
+  {
+    "id": "a19d78ea-6708-4c2c-9670-4b0f21877e69",
+    "setting_key": "social_links",
+    "setting_value": {
+      "twitter": "",
+      "youtube": "",
+      "facebook": "",
+      "instagram": ""
+    },
+    "updated_at": "2025-10-17T17:11:02.107831+00:00"
+  },
+  {
+    "id": "3a5656db-0aee-4e51-8fec-a7c720e53678",
+    "setting_key": "policy_texts",
+    "setting_value": {
+      "terms": "",
+      "refund": "",
+      "privacy": ""
+    },
+    "updated_at": "2025-10-17T17:11:02.194685+00:00"
+  },
+  {
+    "id": "5041309c-9cd0-405a-8831-324f9b79a45b",
+    "setting_key": "rounding_rule",
+    "setting_value": {
+      "method": "up",
+      "roundTo": 10
+    },
+    "updated_at": "2025-10-17T21:50:38.573961+00:00"
+  },
+  {
+    "id": "3f887595-40d5-49bf-814f-8b11f434dd43",
+    "setting_key": "show_spa_in_booking",
+    "setting_value": false,
+    "updated_at": "2025-11-15T13:14:14.166195+00:00"
+  },
+  {
+    "id": "d172d533-e6cb-4a09-ba40-6634f575637d",
+    "setting_key": "show_activities_in_booking",
+    "setting_value": false,
+    "updated_at": "2025-11-15T13:14:14.166195+00:00"
+  }
+]
