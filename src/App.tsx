@@ -6,6 +6,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { I18nextProvider } from 'react-i18next';
 import i18n from '@/lib/i18n';
 import ScrollToTop from './components/ScrollToTop';
+import VersionSwitcher from './components/VersionSwitcher';
 import { TranslationProvider } from './components/admin/TranslationProvider';
 import { useFavicon } from './hooks/useFavicon';
 
@@ -90,6 +91,7 @@ function App() {
             <ShadcnToaster />
             <BrowserRouter>
               <ScrollToTop />
+              <VersionSwitcher />
               <Routes>
               {/* General Routes */}
               <Route path="/" element={<Index />} />
