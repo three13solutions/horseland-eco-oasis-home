@@ -33,7 +33,9 @@ const STAAHBooking = () => {
         </div>
       </section>
 
-      <DynamicFooter />
+      <div className="relative z-20">
+        <DynamicFooter />
+      </div>
       <CombinedFloating />
     </div>
   );
