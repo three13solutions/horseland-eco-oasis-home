@@ -32,13 +32,13 @@ const STAAHBookingEmbed: React.FC<STAAHBookingEmbedProps> = ({
     let cleanup: (() => void) | undefined;
 
     // Build the exact src as provided by STAAH.
-    const src = `${SWIFTBOOK_SCRIPT_SRC_BASE}?propertyId=842MTd0tZKorVSvgYBtp9JxxXJaAQ0VMQni2sbUt4LNUbZUY2ODg=&scriptId=${scriptId}`;
+    const src = `${SWIFTBOOK_SCRIPT_SRC_BASE}?propertyId=${DEFAULT_PROPERTY_ID}&scriptId=${scriptId}`;
 
-    // The STAAH snippet loads a <script> with id="propInfo". We use our own
-    // unique element id so React Router re-mounts don't collide with a leftover
-    // global node, but we keep the id="propInfo" expectation that the SwiftBook
-    // loader looks for by setting it on the injected script element.
-    const scriptElementId = `propInfo-${scriptId}`;
+    // The STAAH snippet loads a <script> with the exact id="propInfo" that the
+    // SwiftBook loader looks for. We preserve that exact id and remove any
+    // existing element with id="propInfo" before injecting, so React Router
+    // re-mounts never collide with a leftover global node.
+    const scriptElementId = 'propInfo';
 
     const injectWidget = () => {
       const mountNode = mountRef.current;
@@ -53,9 +53,9 @@ const STAAHBookingEmbed: React.FC<STAAHBookingEmbedProps> = ({
       widgetDiv.className = DEFAULT_WIDGET_CLASS;
       mountNode.appendChild(widgetDiv);
 
-      // 2) Prevent duplicate script loading. If a previous script with this id
-      //    exists (e.g. from a prior mount that wasn't cleaned up), remove it
-      //    before injecting a new one so the widget re-initializes cleanly.
+      // 2) Prevent duplicate script loading. Remove any existing element with
+      //    id="propInfo" (e.g. from a prior mount that wasn't cleaned up) before
+      //    injecting a new one so the widget re-initializes cleanly.
       const existing = document.getElementById(scriptElementId);
       if (existing) {
         existing.remove();
@@ -64,10 +64,6 @@ const STAAHBookingEmbed: React.FC<STAAHBookingEmbedProps> = ({
       const script = document.createElement('script');
       script.src = src;
       script.id = scriptElementId;
-      // Keep the id="propInfo" that the SwiftBook loader looks for, while still
-      // being uniquely addressable for cleanup. We set id to scriptElementId
-      // above; also set the legacy id as a data attribute for reference.
-      script.setAttribute('data-propinfo', 'propInfo');
       script.async = true;
 
       script.onload = () => {
