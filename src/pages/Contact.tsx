@@ -10,9 +10,11 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import GoogleMap from "@/components/GoogleMap";
 
+const FALLBACK_GOOGLE_MAPS_API_KEY = "AIzaSyA8704uuYTZC8gKSoovX5Ox5o4SGK9q-W8";
+
 const Contact = () => {
   const [heroImage, setHeroImage] = useState<string>("");
-  const [googleMapsApiKey, setGoogleMapsApiKey] = useState<string>("");
+  const [googleMapsApiKey, setGoogleMapsApiKey] = useState<string>(FALLBACK_GOOGLE_MAPS_API_KEY);
   const [formData, setFormData] = useState({
     name: "",
     email: "",
