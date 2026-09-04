@@ -116,7 +116,7 @@ export default function SeasonRules() {
     try {
       const { error } = await supabase
         .from('season_periods')
-        .update({ [field]: value })
+        .update({ [field]: value } as any)
         .eq('id', periodId);
 
       if (error) throw error;
