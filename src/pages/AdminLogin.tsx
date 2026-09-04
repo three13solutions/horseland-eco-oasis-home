@@ -23,7 +23,7 @@ const AdminLogin = () => {
 
   useEffect(() => {
     let mounted = true;
-    let timeoutId: NodeJS.Timeout;
+    let timeoutId: ReturnType<typeof setTimeout>;
 
     console.debug('[AdminLogin] Setting up auth check');
 
