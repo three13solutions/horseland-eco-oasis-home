@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Calendar as CalendarComponent } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { supabase } from '@/integrations/supabase/client';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
@@ -21,7 +22,8 @@ import {
   Info,
   ChevronDown,
   ChevronUp,
-  Calendar as CalendarIcon
+  Calendar as CalendarIcon,
+  X
 } from 'lucide-react';
 
 const RoomDetail = () => {
