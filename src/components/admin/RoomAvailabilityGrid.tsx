@@ -72,7 +72,7 @@ export const RoomAvailabilityGrid: React.FC<RoomAvailabilityGridProps> = ({
     isActive: boolean;
   } | null>(null);
   const [isBookingDragConfirmOpen, setIsBookingDragConfirmOpen] = useState(false);
-  const [longPressTimer, setLongPressTimer] = useState<NodeJS.Timeout | null>(null);
+  const [longPressTimer, setLongPressTimer] = useState<ReturnType<typeof setTimeout> | null>(null);
   const [longPressStarted, setLongPressStarted] = useState(false);
   const { toast } = useToast();
 

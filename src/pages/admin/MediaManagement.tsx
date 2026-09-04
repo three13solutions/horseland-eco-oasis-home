@@ -234,10 +234,13 @@ const MediaManagement = () => {
       }
 
       if (editingImage) {
-        // Update existing image
+        // Update existing image — strip relation arrays that aren't table columns
+        const { gallery_categories, image_categories, ...updateData } = cleanedData;
+        void gallery_categories;
+        void image_categories;
         const { error: updateError } = await supabase
           .from('gallery_images')
-          .update(cleanedData)
+          .update(updateData)
           .eq('id', editingImage.id);
 
         if (updateError) throw updateError;
