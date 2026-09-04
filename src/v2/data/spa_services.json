@@ -1,0 +1,441 @@
+[
+  {
+    "id": "faee9ade-b1c3-4454-8151-5e2cbd843eec",
+    "title": "Ayurvedic Massage",
+    "image": "https://mmmogqappdtnwqkvzxih.supabase.co/storage/v1/object/public/uploads/spa-media/1760721430748-swyrga9njkg.png",
+    "description": "Discover ancient wisdom and holistic healing with our Ayurvedic Massage. This traditional therapy is a powerful detoxifier, meticulously balancing your body's energies, enhancing skin radiance, and promoting a vibrant, long-lasting sense of well-being and inner harmony. A timeless path to rejuvenation.",
+    "duration": 90,
+    "price": 1380.0,
+    "tags": [
+      "anti-aging",
+      "detoxification",
+      "dosha balance",
+      "skin tone improvement"
+    ],
+    "booking_required": true,
+    "is_active": true,
+    "created_at": "2025-08-12T06:46:31.409134+00:00",
+    "updated_at": "2025-10-18T00:21:45.607137+00:00",
+    "media_urls": [
+      "https://mmmogqappdtnwqkvzxih.supabase.co/storage/v1/object/public/uploads/spa-media/1760721430748-swyrga9njkg.png"
+    ],
+    "image_key": null,
+    "media_keys": [],
+    "category": "massage",
+    "benefits": "Detoxifies the body, balances doshas, improves skin tone, and promotes longevity."
+  },
+  {
+    "id": "543c1f63-2db4-4d63-bbc2-413ade6f746f",
+    "title": "Dr. Brian’s Hot Brick Therapy",
+    "image": "https://mmmogqappdtnwqkvzxih.supabase.co/storage/v1/object/public/uploads/spa-media/1760721447267-lonzlhgwb67.png",
+    "description": "Experience targeted relief with Dr. Brian’s Hot Brick Therapy. Utilizing therapeutic heat, this specialized treatment deeply penetrates to eliminate stubborn back, leg, and shoulder pain, restoring flexibility and profound comfort where you need it most. Feel the warmth melt away discomfort and tension, leaving you renewed.",
+    "duration": 75,
+    "price": 1428.0,
+    "tags": [
+      "flexibility improvement",
+      "heat therapy",
+      "pain relief",
+      "relaxation"
+    ],
+    "booking_required": true,
+    "is_active": true,
+    "created_at": "2025-08-12T06:46:31.409134+00:00",
+    "updated_at": "2025-10-18T00:25:09.300382+00:00",
+    "media_urls": [
+      "https://mmmogqappdtnwqkvzxih.supabase.co/storage/v1/object/public/uploads/spa-media/1760721447267-lonzlhgwb67.png"
+    ],
+    "image_key": null,
+    "media_keys": [],
+    "category": "therapy",
+    "benefits": "Relieves deep-seated muscle pain, improves flexibility, and promotes relaxation through heat therapy."
+  },
+  {
+    "id": "6a6386e0-f3b2-448a-aee4-1ad48b3a6d60",
+    "title": "Jungle Massage",
+    "image": "https://mmmogqappdtnwqkvzxih.supabase.co/storage/v1/object/public/uploads/spa-media/1760721358315-s8uv6crshp.png",
+    "description": "Embark on an exotic journey with our Jungle Massage. This full-body experience reconnects you with nature, melting away stress, invigorating circulation, and promoting a deep, primal sense of relaxation and well-being amidst lush, serene surroundings. A true escape to natural harmony.",
+    "duration": 75,
+    "price": 1350.0,
+    "tags": [
+      "circulation improvement",
+      "deep relaxation",
+      "nature connection",
+      "relaxation",
+      "stress reduction"
+    ],
+    "booking_required": true,
+    "is_active": true,
+    "created_at": "2025-08-12T06:46:31.409134+00:00",
+    "updated_at": "2025-10-17T23:12:18.886229+00:00",
+    "media_urls": [
+      "https://mmmogqappdtnwqkvzxih.supabase.co/storage/v1/object/public/uploads/spa-media/1760721358315-s8uv6crshp.png"
+    ],
+    "image_key": null,
+    "media_keys": [],
+    "category": "massage",
+    "benefits": "Reconnects with nature, relieves stress, boosts circulation, and promotes deep relaxation."
+  },
+  {
+    "id": "5a0f0caa-6a48-4b74-80be-6b4fb762aa27",
+    "title": "Medical Salts - Potli Massage",
+    "image": "https://mmmogqappdtnwqkvzxih.supabase.co/storage/v1/object/public/uploads/spa-media/1760721344206-x63z9b5god9.png",
+    "description": "Rejuvenate your body with our therapeutic Medical Salts Potli Massage. Infused with beneficial salts, this treatment detoxifies your skin, reduces inflammation, and soothes aching muscles and joints, leaving you feeling refreshed, renewed, and deeply invigorated from within. A revitalizing mineral bath.",
+    "duration": 45,
+    "price": 1380.0,
+    "tags": [
+      "inflammation reduction",
+      "joint relief",
+      "skin detoxification",
+      "soreness relief"
+    ],
+    "booking_required": true,
+    "is_active": true,
+    "created_at": "2025-08-12T06:46:31.409134+00:00",
+    "updated_at": "2025-10-18T00:26:15.751553+00:00",
+    "media_urls": [
+      "https://mmmogqappdtnwqkvzxih.supabase.co/storage/v1/object/public/uploads/spa-media/1760721344206-x63z9b5god9.png"
+    ],
+    "image_key": null,
+    "media_keys": [],
+    "category": "massage",
+    "benefits": "Detoxifies skin, reduces inflammation, relieves joint pain, and soothes sore muscles."
+  },
+  {
+    "id": "6ea5b234-6176-4455-af3f-140040f423e6",
+    "title": "Reflexology (Foot Massage)",
+    "image": "https://mmmogqappdtnwqkvzxih.supabase.co/storage/v1/object/public/uploads/spa-media/1760721277381-35qh1h5ic04.jpg",
+    "description": "Reawaken your entire body through the ancient art of Reflexology. Our expert foot massage targets specific reflex points, stimulating vital energy flow to enhance circulation, boost your natural vitality, and promote holistic well-being from the ground up. Feel renewed energy and balance with every step you take.",
+    "duration": 90,
+    "price": 620.0,
+    "tags": [
+      "circulation improvement",
+      "digestion aid",
+      "energy boost",
+      "stress reduction"
+    ],
+    "booking_required": true,
+    "is_active": true,
+    "created_at": "2025-08-12T11:43:53.677969+00:00",
+    "updated_at": "2025-10-18T00:20:47.090337+00:00",
+    "media_urls": [
+      "https://mmmogqappdtnwqkvzxih.supabase.co/storage/v1/object/public/uploads/spa-media/1760721277381-35qh1h5ic04.jpg"
+    ],
+    "image_key": null,
+    "media_keys": [],
+    "category": "massage",
+    "benefits": "Improves blood flow, boosts energy, aids digestion, and relieves stress through pressure point stimulation."
+  },
+  {
+    "id": "a25cb28a-c7ec-417a-a95a-820ac51fba99",
+    "title": "Head Massage",
+    "image": "https://mmmogqappdtnwqkvzxih.supabase.co/storage/v1/object/public/uploads/spa-media/1760721246991-faisi5o6ec7.png",
+    "description": "Unwind and rejuvenate with our signature Head Massage. This blissful treatment is expertly crafted to melt away tension, invigorate your scalp, and promote a profound sense of tranquility. Experience deep relief from daily stressors and emerge with a clear, refreshed mind, ready to face the world anew, feeling completely revitalized.",
+    "duration": 90,
+    "price": 620.0,
+    "tags": [
+      "circulation improvement",
+      "headache relief",
+      "mental clarity",
+      "relaxation"
+    ],
+    "booking_required": true,
+    "is_active": true,
+    "created_at": "2025-08-12T11:43:53.677969+00:00",
+    "updated_at": "2025-10-18T00:20:18.628855+00:00",
+    "media_urls": [
+      "https://mmmogqappdtnwqkvzxih.supabase.co/storage/v1/object/public/uploads/spa-media/1760721246991-faisi5o6ec7.png"
+    ],
+    "image_key": null,
+    "media_keys": [],
+    "category": "massage",
+    "benefits": "Relieves headaches and migraines, improves blood circulation to the scalp, promotes relaxation, and reduces mental fatigue."
+  },
+  {
+    "id": "fb6ced7c-c57e-43a0-b698-f10fb070fd0a",
+    "title": "Aroma Facial",
+    "image": "https://mmmogqappdtnwqkvzxih.supabase.co/storage/v1/object/public/uploads/spa-media/1760721209238-t74yst12u1b.png",
+    "description": "Indulge your skin and senses with our Aroma Facial. Infused with nourishing aromatic oils, this treatment deeply hydrates, refines skin texture, and imparts a serene calming effect, leaving your complexion soft, supple, beautifully refreshed, and glowing with health. A truly aromatic indulgence.",
+    "duration": 60,
+    "price": 980.0,
+    "tags": [
+      "mental calm",
+      "skin nourishment",
+      "skin texture improvement"
+    ],
+    "booking_required": true,
+    "is_active": true,
+    "created_at": "2025-09-15T13:15:45.233787+00:00",
+    "updated_at": "2025-10-17T23:02:56.397264+00:00",
+    "media_urls": [
+      "https://mmmogqappdtnwqkvzxih.supabase.co/storage/v1/object/public/uploads/spa-media/1760721209238-t74yst12u1b.png"
+    ],
+    "image_key": null,
+    "media_keys": [],
+    "category": "facials",
+    "benefits": "Nourishes and hydrates skin, improves texture, and offers a calming effect."
+  },
+  {
+    "id": "71c76d10-a0cb-460a-a1d6-309f9c2952f4",
+    "title": "Morning Yoga Sessions",
+    "image": "https://mmmogqappdtnwqkvzxih.supabase.co/storage/v1/object/public/uploads/spa-media/1760739436302-dzpfhfs135.png",
+    "description": "Greet the day with serenity and strength in our Morning Yoga Sessions. These guided practices enhance flexibility, reduce stress, and boost your energy, cultivating a clear mind and a harmonious start to your day. Find your inner peace and focus, setting a positive tone for your day.",
+    "duration": 60,
+    "price": 0.0,
+    "tags": [
+      "energy boost",
+      "flexibility improvement",
+      "mental clarity",
+      "stress reduction"
+    ],
+    "booking_required": true,
+    "is_active": true,
+    "created_at": "2025-10-17T22:17:29.031985+00:00",
+    "updated_at": "2025-10-17T23:02:16.862311+00:00",
+    "media_urls": [],
+    "image_key": null,
+    "media_keys": [],
+    "category": "workouts",
+    "benefits": "Improves flexibility, reduces stress, boosts energy, and enhances mental clarity."
+  },
+  {
+    "id": "a401e48c-dc65-4753-86b6-8440146e115a",
+    "title": "Stretch Classes",
+    "image": "https://mmmogqappdtnwqkvzxih.supabase.co/storage/v1/object/public/uploads/spa-media/1760739477461-imhe260id5.png",
+    "description": "Improve your body's fluidity and prevent injury with our invigorating Stretch Classes. Designed to enhance muscle elasticity and reduce stiffness, these sessions will boost your mobility and leave you feeling more agile, limber, and ready to take on any challenge with ease and confidence.",
+    "duration": 60,
+    "price": 0.0,
+    "tags": [
+      "flexibility improvement"
+    ],
+    "booking_required": true,
+    "is_active": true,
+    "created_at": "2025-10-17T22:18:04.278733+00:00",
+    "updated_at": "2025-10-17T23:02:12.131338+00:00",
+    "media_urls": [],
+    "image_key": null,
+    "media_keys": [],
+    "category": "workouts",
+    "benefits": "Builds strength, improves stamina, boosts mood, and connects with nature."
+  },
+  {
+    "id": "322fdb99-69a1-4431-9e54-9b711b2d7032",
+    "title": "Poolside Neck & Shoulder Massage",
+    "image": "https://mmmogqappdtnwqkvzxih.supabase.co/storage/v1/object/public/uploads/spa-media/1760721287095-sya373rzkll.png",
+    "description": "Indulge in a serene escape with our exquisite Poolside Neck & Shoulder Massage. Performed in a tranquil setting by the water, this targeted therapy gently soothes away stiffness and muscle tension, restoring comfort and leaving you feeling light, revitalized, and utterly relaxed in a picturesque environment. A perfect poolside pampering.",
+    "duration": 60,
+    "price": 620.0,
+    "tags": [
+      "flexibility improvement",
+      "muscle relief",
+      "posture improvement",
+      "relaxation"
+    ],
+    "booking_required": true,
+    "is_active": true,
+    "created_at": "2025-08-12T11:43:53.677969+00:00",
+    "updated_at": "2025-10-18T00:20:31.728569+00:00",
+    "media_urls": [
+      "https://mmmogqappdtnwqkvzxih.supabase.co/storage/v1/object/public/uploads/spa-media/1760721287095-sya373rzkll.png"
+    ],
+    "image_key": null,
+    "media_keys": [],
+    "category": "massage",
+    "benefits": "Eases muscle tension, reduces stiffness, improves posture, and promotes relaxation in a serene environment."
+  },
+  {
+    "id": "1c3ad806-d1ad-4cbf-aa9b-c91dfb3bb441",
+    "title": "Cupping ",
+    "image": "https://mmmogqappdtnwqkvzxih.supabase.co/storage/v1/object/public/uploads/spa-media/1760721417917-157fg4r7aor.png",
+    "description": "Unlock natural healing with our traditional Cupping therapy. This unique treatment gently draws out tension, improves circulation, and reduces inflammation, offering effective relief from muscle pain and aiding in the body's natural detoxification process for a profound sense of lightness and renewed vitality.",
+    "duration": 30,
+    "price": 350.0,
+    "tags": [
+      "circulation improvement",
+      "detoxification",
+      "inflammation reduction",
+      "pain relief"
+    ],
+    "booking_required": true,
+    "is_active": true,
+    "created_at": "2025-08-12T06:46:31.409134+00:00",
+    "updated_at": "2025-10-17T23:06:34.806949+00:00",
+    "media_urls": [
+      "https://mmmogqappdtnwqkvzxih.supabase.co/storage/v1/object/public/uploads/spa-media/1760721417917-157fg4r7aor.png"
+    ],
+    "image_key": null,
+    "media_keys": [],
+    "category": "therapy",
+    "benefits": "Improves blood circulation, reduces inflammation, eases muscle pain, and aids in toxin removal."
+  },
+  {
+    "id": "a95796ed-b2a0-4755-9f2d-2dd5796d80a4",
+    "title": "Aromatherapy Massage (Abhyangam)",
+    "image": "https://mmmogqappdtnwqkvzxih.supabase.co/storage/v1/object/public/uploads/spa-media/1760721372324-ws34q2zxjkm.png",
+    "description": "Immerse yourself in sensory bliss with our Aromatherapy Massage (Abhyangam). Infused with exquisite essential oils, this treatment calms your mind, uplifts your spirit, and deeply nourishes your skin, creating a profound sense of peace, enhanced immunity, and radiant well-being. A fragrant journey to tranquility.",
+    "duration": 45,
+    "price": 1380.0,
+    "tags": [
+      "immune boost",
+      "mental calm",
+      "mood enhancement",
+      "skin health"
+    ],
+    "booking_required": true,
+    "is_active": true,
+    "created_at": "2025-08-12T06:46:31.409134+00:00",
+    "updated_at": "2025-10-18T00:22:30.7886+00:00",
+    "media_urls": [
+      "https://mmmogqappdtnwqkvzxih.supabase.co/storage/v1/object/public/uploads/spa-media/1760721372324-ws34q2zxjkm.png"
+    ],
+    "image_key": null,
+    "media_keys": [],
+    "category": "massage",
+    "benefits": "Calms the mind, boosts mood, improves skin health, and enhances immunity."
+  },
+  {
+    "id": "7bd1ec19-edf2-4c16-8fc6-920fbe349c46",
+    "title": "Acupressure Massage",
+    "image": "https://mmmogqappdtnwqkvzxih.supabase.co/storage/v1/object/public/uploads/spa-media/1760721219891-wzynl5yvi1m.png",
+    "description": "Experience profound harmony and balance with our Acupressure Massage. This full-body treatment meticulously applies pressure to key points, relieving discomfort, balancing your natural energy, and fostering a deep sense of calm and overall wellness. Discover a renewed sense of inner peace and vitality that lasts.",
+    "duration": 75,
+    "price": 1190.0,
+    "tags": [
+      "energy balance",
+      "holistic wellness",
+      "pain relief",
+      "sleep improvement"
+    ],
+    "booking_required": true,
+    "is_active": true,
+    "created_at": "2025-08-12T11:43:53.677969+00:00",
+    "updated_at": "2025-10-18T00:21:20.562331+00:00",
+    "media_urls": [
+      "https://mmmogqappdtnwqkvzxih.supabase.co/storage/v1/object/public/uploads/spa-media/1760721219891-wzynl5yvi1m.png"
+    ],
+    "image_key": null,
+    "media_keys": [],
+    "category": "massage",
+    "benefits": "Relieves body pain, balances energy flow, improves sleep, and supports overall well-being."
+  },
+  {
+    "id": "ca6006e1-dc72-4e55-8f5a-7c21aec64bc2",
+    "title": "Sport Massage (Muscular Stimulation)",
+    "image": "https://mmmogqappdtnwqkvzxih.supabase.co/storage/v1/object/public/uploads/spa-media/1760721234039-g23mp05etpw.png",
+    "description": "Optimize your performance and accelerate recovery with our dynamic Sport Massage. This deep muscle stimulation is meticulously tailored to alleviate soreness, prevent injury, and enhance flexibility, empowering you to push your limits and achieve peak physical condition with renewed vigor and resilience. Get back in the game faster.",
+    "duration": 45,
+    "price": 980.0,
+    "tags": [
+      "injury prevention",
+      "performance enhancement",
+      "recovery acceleration",
+      "soreness relief"
+    ],
+    "booking_required": true,
+    "is_active": true,
+    "created_at": "2025-08-12T11:43:53.677969+00:00",
+    "updated_at": "2025-10-17T23:11:12.856243+00:00",
+    "media_urls": [
+      "https://mmmogqappdtnwqkvzxih.supabase.co/storage/v1/object/public/uploads/spa-media/1760721234039-g23mp05etpw.png"
+    ],
+    "image_key": null,
+    "media_keys": [],
+    "category": "massage",
+    "benefits": "Enhances athletic performance, reduces muscle soreness, prevents injury, and speeds up recovery."
+  },
+  {
+    "id": "d102081a-06fc-4efa-ab68-60a04b285a56",
+    "title": "Nature Walks",
+    "image": "https://mmmogqappdtnwqkvzxih.supabase.co/storage/v1/object/public/uploads/spa-media/1760739515343-fr71lqt87bb.png",
+    "description": "Reconnect with the tranquility of the outdoors on our Guided Nature Walks. These scenic strolls offer a peaceful escape, enhancing your mood, improving cardiovascular health, and reducing stress amidst breathtaking natural beauty. A perfect way to clear your head and rejuvenate your spirit.",
+    "duration": 120,
+    "price": 0.0,
+    "tags": [
+      "cardiovascular health",
+      "mood enhancement",
+      "stress reduction"
+    ],
+    "booking_required": true,
+    "is_active": true,
+    "created_at": "2025-10-17T22:18:42.593703+00:00",
+    "updated_at": "2025-10-17T23:02:06.447474+00:00",
+    "media_urls": [],
+    "image_key": null,
+    "media_keys": [],
+    "category": "workouts",
+    "benefits": "Enhances mood, improves cardiovascular health, and reduces stress."
+  },
+  {
+    "id": "72c3bfe6-551f-47dd-bbbc-f739cd54def6",
+    "title": "Bridal Facial",
+    "image": "https://mmmogqappdtnwqkvzxih.supabase.co/storage/v1/object/public/uploads/spa-media/1760721197685-okodqxcu0v8.png",
+    "description": "Prepare for your special day with our exquisite Bridal Facial. Choose from diamond, gold, or silver options for a premium treatment that enhances skin radiance, minimizes imperfections, and delivers a lasting, luminous glow, ensuring you look absolutely stunning and picture-perfect for your celebration.",
+    "duration": 90,
+    "price": 1070.0,
+    "tags": [
+      "blemish reduction",
+      "skin radiance"
+    ],
+    "booking_required": true,
+    "is_active": true,
+    "created_at": "2025-09-15T13:16:16.822122+00:00",
+    "updated_at": "2025-10-17T23:02:47.464475+00:00",
+    "media_urls": [
+      "https://mmmogqappdtnwqkvzxih.supabase.co/storage/v1/object/public/uploads/spa-media/1760721197685-okodqxcu0v8.png"
+    ],
+    "image_key": null,
+    "media_keys": [],
+    "category": "facials",
+    "benefits": "Enhances skin radiance, reduces blemishes, and provides a long-lasting glow for special occasions."
+  },
+  {
+    "id": "c844608d-4a55-45ea-995b-22400e8dbc89",
+    "title": "Royal Massage",
+    "image": "https://mmmogqappdtnwqkvzxih.supabase.co/storage/v1/object/public/uploads/spa-media/1760721261027-k3x2vvsq1ng.jpg",
+    "description": "Embrace regal pampering with our luxurious Royal Massage. This head-to-toe indulgence is a journey into deep relaxation, expertly designed to detoxify, rejuvenate muscles, and melt away every trace of stress, leaving you feeling truly magnificent and utterly refreshed, like royalty. A truly majestic experience.",
+    "duration": 30,
+    "price": 1190.0,
+    "tags": [
+      "deep relaxation",
+      "detoxification",
+      "muscle rejuvenation",
+      "relaxation",
+      "stress reduction"
+    ],
+    "booking_required": true,
+    "is_active": true,
+    "created_at": "2025-08-12T11:43:53.677969+00:00",
+    "updated_at": "2025-10-18T00:20:00.828533+00:00",
+    "media_urls": [
+      "https://mmmogqappdtnwqkvzxih.supabase.co/storage/v1/object/public/uploads/spa-media/1760721261027-k3x2vvsq1ng.jpg"
+    ],
+    "image_key": null,
+    "media_keys": [],
+    "category": "massage",
+    "benefits": "Provides deep relaxation, relieves stress, detoxifies the body, and rejuvenates muscles."
+  },
+  {
+    "id": "e266de3b-3834-44fc-a7b8-daf5229af76c",
+    "title": "Sand (Potli) Massage",
+    "image": "https://mmmogqappdtnwqkvzxih.supabase.co/storage/v1/object/public/uploads/spa-media/1760721299336-3joksf8jbt1.png",
+    "description": "Soothe your senses and ease discomfort with our unique Sand Potli Massage. Heated sand pouches gently ease joint pain, improve circulation, and melt away muscle stiffness, enveloping you in warmth and deep relaxation. A truly comforting and restorative experience awaits you, promoting deep healing.",
+    "duration": 120,
+    "price": 1380.0,
+    "tags": [
+      "circulation improvement",
+      "flexibility improvement",
+      "joint relief",
+      "relaxation"
+    ],
+    "booking_required": true,
+    "is_active": true,
+    "created_at": "2025-08-12T06:46:31.409134+00:00",
+    "updated_at": "2025-10-18T00:25:58.983703+00:00",
+    "media_urls": [
+      "https://mmmogqappdtnwqkvzxih.supabase.co/storage/v1/object/public/uploads/spa-media/1760721299336-3joksf8jbt1.png"
+    ],
+    "image_key": null,
+    "media_keys": [],
+    "category": "massage",
+    "benefits": "Eases joint pain, improves blood circulation, reduces muscle stiffness, and relaxes the body."
+  }
+]

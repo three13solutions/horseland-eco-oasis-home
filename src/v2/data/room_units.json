@@ -1,0 +1,2079 @@
+[
+  {
+    "id": "daf08203-7cae-4e87-a345-9d63876152fb",
+    "room_type_id": "bf4ddd1f-82a9-4e6a-ae04-fd99d5e74443",
+    "unit_number": "210",
+    "unit_name": "Nashwan Nook",
+    "floor_number": 1,
+    "area_sqft": null,
+    "status": "available",
+    "special_features": [
+      "Balcony",
+      "Fans",
+      "Sofa",
+      "Linen",
+      "Phone",
+      "FREE WiFi",
+      "Shower",
+      "Towels",
+      "Toiletries",
+      "Hand Soap",
+      "Satellite / Cable TV",
+      "Flat Screen TV"
+    ],
+    "notes": "Located on the first floor with swimming pool view, well furnished with double bed, TV, telephone and air conditioner.\n\nNo In-Room Safes; Generally Safety Deposit is available at Reception with Receipt.",
+    "is_active": true,
+    "created_at": "2025-08-14T08:28:36.633066+00:00",
+    "updated_at": "2025-12-07T13:29:05.909614+00:00",
+    "bed_configuration": [
+      {
+        "type": "Double Bed",
+        "count": 2
+      },
+      {
+        "type": "Mattress",
+        "count": 1
+      }
+    ],
+    "max_occupancy": 5,
+    "custom_pricing": null,
+    "category_id": "6e27f1db-c287-4735-b16b-1e045c291905"
+  },
+  {
+    "id": "8f5fd884-529c-4966-82cf-c035acb85090",
+    "room_type_id": "fc95322a-43f2-46ba-9052-470525b091cf",
+    "unit_number": "102",
+    "unit_name": "Black Caviar Cove",
+    "floor_number": 0,
+    "area_sqft": null,
+    "status": "available",
+    "special_features": [
+      "Balcony",
+      "Fans",
+      "Flat Screen TV",
+      "Linen",
+      "Phone",
+      "FREE WiFi",
+      "Towels",
+      "Toiletries",
+      "Air-conditioning",
+      "Electric Kettle",
+      "Satellite / Cable TV"
+    ],
+    "notes": "Located facing the swimming pool with a veranda for a relaxing sit-out. Well furnished with 2 double beds, equipped with air-conditioning, LCD TV, tea/coffee maker, Refrigerator and telephone.\n\nNo In-Room Safes; Generally Safety Deposit is available at Reception with Receipt.",
+    "is_active": true,
+    "created_at": "2025-08-14T08:27:04.525987+00:00",
+    "updated_at": "2025-10-18T03:01:18.128465+00:00",
+    "bed_configuration": [
+      {
+        "type": "Double Bed",
+        "count": 2
+      },
+      {
+        "type": "Sofa Cum Bed",
+        "count": 1
+      }
+    ],
+    "max_occupancy": 5,
+    "custom_pricing": null,
+    "category_id": null
+  },
+  {
+    "id": "7dceb2e1-1c84-4621-8cf5-56223d9cf312",
+    "room_type_id": "fc95322a-43f2-46ba-9052-470525b091cf",
+    "unit_number": "103",
+    "unit_name": "Frankel Waters",
+    "floor_number": 0,
+    "area_sqft": null,
+    "status": "available",
+    "special_features": [
+      "Balcony",
+      "Fans",
+      "Flat Screen TV",
+      "Linen",
+      "Phone",
+      "FREE WiFi",
+      "Towels",
+      "Toiletries",
+      "Air-conditioning",
+      "Electric Kettle",
+      "Satellite / Cable TV"
+    ],
+    "notes": "Located facing the swimming pool with a veranda for a relaxing sit-out. Well furnished with 2 double beds, equipped with air-conditioning, LCD TV, tea/coffee maker, Refrigerator and telephone.\n\nNo In-Room Safes; Generally Safety Deposit is available at Reception with Receipt.",
+    "is_active": true,
+    "created_at": "2025-08-14T08:27:04.525987+00:00",
+    "updated_at": "2025-10-18T03:01:18.128465+00:00",
+    "bed_configuration": [
+      {
+        "type": "Double Bed",
+        "count": 2
+      }
+    ],
+    "max_occupancy": 4,
+    "custom_pricing": null,
+    "category_id": null
+  },
+  {
+    "id": "f4c8bdc3-e9b6-4cd2-abb3-e84415b00490",
+    "room_type_id": "fc95322a-43f2-46ba-9052-470525b091cf",
+    "unit_number": "104",
+    "unit_name": "Ruffian Springs",
+    "floor_number": 0,
+    "area_sqft": null,
+    "status": "available",
+    "special_features": [
+      "Balcony",
+      "Fans",
+      "Flat Screen TV",
+      "Linen",
+      "Phone",
+      "FREE WiFi",
+      "Towels",
+      "Toiletries",
+      "Air-conditioning",
+      "Electric Kettle",
+      "Satellite / Cable TV"
+    ],
+    "notes": "Located facing the swimming pool with a veranda for a relaxing sit-out. Well furnished with beds, equipped with air-conditioning, LCD TV, tea/coffee maker, Refrigerator and telephone.\n\nNo In-Room Safes; Generally Safety Deposit is available at Reception with Receipt.",
+    "is_active": true,
+    "created_at": "2025-08-14T08:27:04.525987+00:00",
+    "updated_at": "2025-10-18T03:01:18.128465+00:00",
+    "bed_configuration": [
+      {
+        "type": "Double Bed",
+        "count": 1
+      },
+      {
+        "type": "Sofa Cum Bed",
+        "count": 1
+      }
+    ],
+    "max_occupancy": 3,
+    "custom_pricing": null,
+    "category_id": null
+  },
+  {
+    "id": "010104e1-5390-4ab2-a5d9-828d68304e1e",
+    "room_type_id": "8d3f3742-4c4d-4d2e-b25f-a50ed807dbf5",
+    "unit_number": "110",
+    "unit_name": "Comanche’s Den",
+    "floor_number": -1,
+    "area_sqft": null,
+    "status": "available",
+    "special_features": [
+      "Phone",
+      "Air-conditioning",
+      "TV"
+    ],
+    "notes": "These rooms are located in Basement and are well furnished with double bed, TV, telephone and air conditioner. Suitable for couples and for a family up to 4 persons.\r\n\n\nNo In-Room Safes; Generally Safety Deposit is available at Reception with Receipt.",
+    "is_active": true,
+    "created_at": "2025-08-12T10:52:30.245321+00:00",
+    "updated_at": "2025-10-18T03:01:18.128465+00:00",
+    "bed_configuration": [
+      {
+        "id": "1",
+        "type": "double",
+        "category": "fixed",
+        "quantity": 1
+      }
+    ],
+    "max_occupancy": 2,
+    "custom_pricing": null,
+    "category_id": null
+  },
+  {
+    "id": "0a5e602f-0b01-44df-a731-8d93541d04cf",
+    "room_type_id": "bf4ddd1f-82a9-4e6a-ae04-fd99d5e74443",
+    "unit_number": "211",
+    "unit_name": "Affirmed Alcove",
+    "floor_number": 1,
+    "area_sqft": null,
+    "status": "available",
+    "special_features": [
+      "Balcony",
+      "Fans",
+      "Sofa",
+      "Linen",
+      "Phone",
+      "FREE WiFi",
+      "Shower",
+      "Towels",
+      "Toiletries",
+      "Hand Soap",
+      "Satellite / Cable TV",
+      "Flat Screen TV"
+    ],
+    "notes": "Located on the first floor with swimming pool view, well furnished with double bed, TV, telephone and air conditioner.\n\nNo In-Room Safes; Generally Safety Deposit is available at Reception with Receipt.",
+    "is_active": true,
+    "created_at": "2025-08-14T08:28:36.633066+00:00",
+    "updated_at": "2025-12-07T13:29:05.909614+00:00",
+    "bed_configuration": [
+      {
+        "type": "Double Bed",
+        "count": 2
+      },
+      {
+        "type": "Mattress",
+        "count": 1
+      }
+    ],
+    "max_occupancy": 5,
+    "custom_pricing": null,
+    "category_id": "6e27f1db-c287-4735-b16b-1e045c291905"
+  },
+  {
+    "id": "f6bc28c7-5ac7-4695-882f-a8a0d5bc9104",
+    "room_type_id": "696dd24b-eedc-44dc-9907-9f81918abdc3",
+    "unit_number": "107",
+    "unit_name": "Valegro Loftscape",
+    "floor_number": 0,
+    "area_sqft": null,
+    "status": "available",
+    "special_features": [
+      "Flat Screen TV",
+      "Phone",
+      "Shower",
+      "Towels",
+      "Toiletries",
+      "Hand Soap",
+      "Satellite / Cable TV"
+    ],
+    "notes": "Spacious loft-style room with premium amenities and pool views.\n\nNo In-Room Safes; Generally Safety Deposit is available at Reception with Receipt.",
+    "is_active": true,
+    "created_at": "2025-08-14T08:27:04.525987+00:00",
+    "updated_at": "2025-10-18T03:01:18.128465+00:00",
+    "bed_configuration": [
+      {
+        "type": "Double Bed",
+        "count": 3
+      }
+    ],
+    "max_occupancy": 6,
+    "custom_pricing": null,
+    "category_id": null
+  },
+  {
+    "id": "f09ca493-5ed8-4713-8725-24c0f14915c1",
+    "room_type_id": "74c89770-8f04-4a4b-b061-b85743725b88",
+    "unit_number": "F1",
+    "unit_name": "Hidalgo's Haven",
+    "floor_number": 0,
+    "area_sqft": null,
+    "status": "available",
+    "special_features": [],
+    "notes": "Located around the activity area, well furnished with double bed, TV, telephone and air conditioner.\n\nNo In-Room Safes; Generally Safety Deposit is available at Reception with Receipt.",
+    "is_active": true,
+    "created_at": "2025-08-14T08:30:01.65349+00:00",
+    "updated_at": "2025-10-18T03:01:18.128465+00:00",
+    "bed_configuration": [
+      {
+        "type": "Double Bed",
+        "count": 1
+      }
+    ],
+    "max_occupancy": 2,
+    "custom_pricing": null,
+    "category_id": null
+  },
+  {
+    "id": "a01f99e0-1180-4235-a6d2-c1348948071b",
+    "room_type_id": "74c89770-8f04-4a4b-b061-b85743725b88",
+    "unit_number": "F2",
+    "unit_name": "Red Rum Retreat",
+    "floor_number": 0,
+    "area_sqft": null,
+    "status": "available",
+    "special_features": [],
+    "notes": "Located around the activity area, well furnished with double bed, TV, telephone and air conditioner.\n\nNo In-Room Safes; Generally Safety Deposit is available at Reception with Receipt.",
+    "is_active": true,
+    "created_at": "2025-08-14T08:30:01.65349+00:00",
+    "updated_at": "2025-10-18T03:01:18.128465+00:00",
+    "bed_configuration": [
+      {
+        "type": "Double Bed",
+        "count": 1
+      }
+    ],
+    "max_occupancy": 2,
+    "custom_pricing": null,
+    "category_id": null
+  },
+  {
+    "id": "d3fa6062-38e2-4184-a2e2-945d366f08f4",
+    "room_type_id": "74c89770-8f04-4a4b-b061-b85743725b88",
+    "unit_number": "F3",
+    "unit_name": "Man o' War Lodge",
+    "floor_number": 0,
+    "area_sqft": null,
+    "status": "available",
+    "special_features": [],
+    "notes": "Located around the activity area, well furnished with double bed, TV, telephone and air conditioner.\n\nNo In-Room Safes; Generally Safety Deposit is available at Reception with Receipt.",
+    "is_active": true,
+    "created_at": "2025-08-14T08:30:01.65349+00:00",
+    "updated_at": "2025-10-18T03:01:18.128465+00:00",
+    "bed_configuration": [
+      {
+        "type": "Double Bed",
+        "count": 1
+      }
+    ],
+    "max_occupancy": 2,
+    "custom_pricing": null,
+    "category_id": null
+  },
+  {
+    "id": "2b1dce09-3c1c-442a-b8d0-bb63a9483c4a",
+    "room_type_id": "74c89770-8f04-4a4b-b061-b85743725b88",
+    "unit_number": "F4",
+    "unit_name": "Phar Lap Pavilion",
+    "floor_number": 0,
+    "area_sqft": null,
+    "status": "available",
+    "special_features": [],
+    "notes": "Tent accommodation with double beds.\n\nNo In-Room Safes; Generally Safety Deposit is available at Reception with Receipt.",
+    "is_active": true,
+    "created_at": "2025-08-14T08:30:01.65349+00:00",
+    "updated_at": "2025-10-18T03:01:18.128465+00:00",
+    "bed_configuration": [
+      {
+        "type": "Double Bed",
+        "count": 2
+      }
+    ],
+    "max_occupancy": 4,
+    "custom_pricing": null,
+    "category_id": null
+  },
+  {
+    "id": "d4997c84-cb8e-4b0a-9424-64ed59e7fdaa",
+    "room_type_id": "8d3f3742-4c4d-4d2e-b25f-a50ed807dbf5",
+    "unit_number": "111 A/B",
+    "unit_name": "Bucephalus Barracks",
+    "floor_number": -1,
+    "area_sqft": null,
+    "status": "available",
+    "special_features": [
+      "Phone",
+      "Air-conditioning",
+      "TV"
+    ],
+    "notes": "These rooms are located in Basement and are well furnished with double bed, TV, telephone and air conditioner. Suitable for couples and for a family up to 4 persons.\r\n\n\nNo In-Room Safes; Generally Safety Deposit is available at Reception with Receipt.",
+    "is_active": true,
+    "created_at": "2025-08-12T10:53:12.173543+00:00",
+    "updated_at": "2025-10-18T03:01:18.128465+00:00",
+    "bed_configuration": [
+      {
+        "id": "1",
+        "type": "",
+        "category": "fixed",
+        "quantity": 1
+      }
+    ],
+    "max_occupancy": 0,
+    "custom_pricing": null,
+    "category_id": null
+  },
+  {
+    "id": "8aa236fc-af55-41cf-9ce3-9918e5fad3a9",
+    "room_type_id": "8d3f3742-4c4d-4d2e-b25f-a50ed807dbf5",
+    "unit_number": "112",
+    "unit_name": "Marengo’s Rest",
+    "floor_number": -1,
+    "area_sqft": null,
+    "status": "available",
+    "special_features": [
+      "Phone",
+      "Air-conditioning",
+      "TV"
+    ],
+    "notes": "These rooms are located in Basement and are well furnished with double bed, TV, telephone and air conditioner. Suitable for couples and for a family up to 4 persons.\r\n\n\nNo In-Room Safes; Generally Safety Deposit is available at Reception with Receipt.",
+    "is_active": true,
+    "created_at": "2025-08-12T10:53:35.195836+00:00",
+    "updated_at": "2025-10-18T03:01:18.128465+00:00",
+    "bed_configuration": [
+      {
+        "id": "1",
+        "type": "",
+        "category": "fixed",
+        "quantity": 1
+      }
+    ],
+    "max_occupancy": 0,
+    "custom_pricing": null,
+    "category_id": null
+  },
+  {
+    "id": "68110ef8-c32b-4e81-b860-ccf072c7c95c",
+    "room_type_id": "8d3f3742-4c4d-4d2e-b25f-a50ed807dbf5",
+    "unit_number": "113",
+    "unit_name": "Traveller",
+    "floor_number": -1,
+    "area_sqft": null,
+    "status": "available",
+    "special_features": [
+      "Phone",
+      "Air-conditioning",
+      "TV"
+    ],
+    "notes": "These rooms are located in Basement and are well furnished with double bed, TV, telephone and air conditioner. Suitable for couples and for a family up to 4 persons.\r\n\n\nNo In-Room Safes; Generally Safety Deposit is available at Reception with Receipt.",
+    "is_active": true,
+    "created_at": "2025-08-12T10:56:05.588158+00:00",
+    "updated_at": "2025-10-18T03:01:18.128465+00:00",
+    "bed_configuration": [
+      {
+        "id": "1",
+        "type": "double",
+        "category": "fixed",
+        "quantity": 2
+      },
+      {
+        "id": "1754996123398",
+        "type": "mattress",
+        "category": "optional",
+        "quantity": 1,
+        "maxAllowed": 1
+      }
+    ],
+    "max_occupancy": 4,
+    "custom_pricing": null,
+    "category_id": null
+  },
+  {
+    "id": "49bd4ed6-0577-482b-a017-f6e22b83613a",
+    "room_type_id": "fc95322a-43f2-46ba-9052-470525b091cf",
+    "unit_number": "101 A/B",
+    "unit_name": "Eclipse Bay",
+    "floor_number": 0,
+    "area_sqft": null,
+    "status": "available",
+    "special_features": [
+      "Balcony",
+      "Fans",
+      "Flat Screen TV",
+      "Linen",
+      "Phone",
+      "FREE WiFi",
+      "Towels",
+      "Toiletries",
+      "Air-conditioning",
+      "Electric Kettle",
+      "Satellite / Cable TV"
+    ],
+    "notes": "Located facing the swimming pool with a veranda for a relaxing sit-out. Well furnished with 2 double beds, equipped with air-conditioning, LCD TV, tea/coffee maker, Refrigerator and telephone.\n\nNo In-Room Safes; Generally Safety Deposit is available at Reception with Receipt.",
+    "is_active": true,
+    "created_at": "2025-08-14T08:27:04.525987+00:00",
+    "updated_at": "2025-10-18T03:01:18.128465+00:00",
+    "bed_configuration": [
+      {
+        "type": "Double Bed",
+        "count": 2
+      },
+      {
+        "type": "Sofa Cum Bed",
+        "count": 1
+      }
+    ],
+    "max_occupancy": 5,
+    "custom_pricing": null,
+    "category_id": null
+  },
+  {
+    "id": "3a613767-d8b6-4af0-9d7d-d9f8ba765586",
+    "room_type_id": "dd402abc-04b8-473c-aa0f-de571cf4e68c",
+    "unit_number": "202",
+    "unit_name": "Secretariat Horizon",
+    "floor_number": 1,
+    "area_sqft": null,
+    "status": "available",
+    "special_features": [
+      "Balcony",
+      "Fans",
+      "Sofa",
+      "Linen",
+      "Phone",
+      "FREE WiFi",
+      "Shower",
+      "Towels",
+      "Toiletries",
+      "Hand Soap",
+      "Satellite / Cable TV",
+      "Flat Screen TV"
+    ],
+    "notes": "Located on the first floor with swimming pool view, well furnished with double bed, TV, telephone and air conditioner.\n\nNo In-Room Safes; Generally Safety Deposit is available at Reception with Receipt.",
+    "is_active": true,
+    "created_at": "2025-08-14T08:28:36.633066+00:00",
+    "updated_at": "2025-10-18T03:01:18.128465+00:00",
+    "bed_configuration": [
+      {
+        "type": "Double Bed",
+        "count": 1
+      },
+      {
+        "type": "Sofa Cum Bed",
+        "count": 1
+      },
+      {
+        "type": "Mattress",
+        "count": 1
+      }
+    ],
+    "max_occupancy": 4,
+    "custom_pricing": null,
+    "category_id": null
+  },
+  {
+    "id": "d74347ef-f185-4027-9cab-d2c4314e861a",
+    "room_type_id": "dd402abc-04b8-473c-aa0f-de571cf4e68c",
+    "unit_number": "204",
+    "unit_name": "Northern Dancer Terrace",
+    "floor_number": 1,
+    "area_sqft": null,
+    "status": "available",
+    "special_features": [
+      "Balcony",
+      "Fans",
+      "Sofa",
+      "Linen",
+      "Phone",
+      "FREE WiFi",
+      "Shower",
+      "Towels",
+      "Toiletries",
+      "Hand Soap",
+      "Satellite / Cable TV",
+      "Flat Screen TV"
+    ],
+    "notes": "Located on the first floor with swimming pool view, well furnished with double bed, TV, telephone and air conditioner.\n\nNo In-Room Safes; Generally Safety Deposit is available at Reception with Receipt.",
+    "is_active": true,
+    "created_at": "2025-08-14T08:28:36.633066+00:00",
+    "updated_at": "2025-10-18T03:01:18.128465+00:00",
+    "bed_configuration": [
+      {
+        "type": "Double Bed",
+        "count": 1
+      },
+      {
+        "type": "Sofa Cum Bed",
+        "count": 1
+      },
+      {
+        "type": "Mattress",
+        "count": 1
+      }
+    ],
+    "max_occupancy": 4,
+    "custom_pricing": null,
+    "category_id": null
+  },
+  {
+    "id": "640b97ff-8465-4978-a6e0-9c3fc654a1ef",
+    "room_type_id": "dd402abc-04b8-473c-aa0f-de571cf4e68c",
+    "unit_number": "205",
+    "unit_name": "Barbaro Overlook",
+    "floor_number": 1,
+    "area_sqft": null,
+    "status": "available",
+    "special_features": [
+      "Balcony",
+      "Fans",
+      "Sofa",
+      "Linen",
+      "Phone",
+      "FREE WiFi",
+      "Shower",
+      "Towels",
+      "Toiletries",
+      "Hand Soap",
+      "Satellite / Cable TV",
+      "Flat Screen TV"
+    ],
+    "notes": "Located on the first floor with swimming pool view, well furnished with double bed, TV, telephone and air conditioner.\n\nNo In-Room Safes; Generally Safety Deposit is available at Reception with Receipt.",
+    "is_active": true,
+    "created_at": "2025-08-14T08:28:36.633066+00:00",
+    "updated_at": "2025-10-18T03:01:18.128465+00:00",
+    "bed_configuration": [
+      {
+        "type": "Double Bed",
+        "count": 1
+      },
+      {
+        "type": "Sofa Cum Bed",
+        "count": 1
+      },
+      {
+        "type": "Mattress",
+        "count": 1
+      }
+    ],
+    "max_occupancy": 4,
+    "custom_pricing": null,
+    "category_id": null
+  },
+  {
+    "id": "d7d50d77-4f1c-4178-88c2-60d31e04b8dc",
+    "room_type_id": "dd402abc-04b8-473c-aa0f-de571cf4e68c",
+    "unit_number": "206",
+    "unit_name": "Whirlaway Skyview",
+    "floor_number": 1,
+    "area_sqft": null,
+    "status": "available",
+    "special_features": [
+      "Balcony",
+      "Fans",
+      "Sofa",
+      "Linen",
+      "Phone",
+      "FREE WiFi",
+      "Shower",
+      "Towels",
+      "Toiletries",
+      "Hand Soap",
+      "Satellite / Cable TV",
+      "Flat Screen TV"
+    ],
+    "notes": "Located on the first floor with swimming pool view, well furnished with double bed, TV, telephone and air conditioner.\n\nNo In-Room Safes; Generally Safety Deposit is available at Reception with Receipt.",
+    "is_active": true,
+    "created_at": "2025-08-14T08:28:36.633066+00:00",
+    "updated_at": "2025-10-18T03:01:18.128465+00:00",
+    "bed_configuration": [
+      {
+        "type": "Double Bed",
+        "count": 1
+      },
+      {
+        "type": "Sofa Cum Bed",
+        "count": 1
+      },
+      {
+        "type": "Mattress",
+        "count": 1
+      }
+    ],
+    "max_occupancy": 4,
+    "custom_pricing": null,
+    "category_id": null
+  },
+  {
+    "id": "a0fad76d-c7a4-44d6-8088-65264721a46f",
+    "room_type_id": "dd402abc-04b8-473c-aa0f-de571cf4e68c",
+    "unit_number": "208",
+    "unit_name": "Mill Reef Horizon",
+    "floor_number": 1,
+    "area_sqft": null,
+    "status": "available",
+    "special_features": [
+      "Balcony",
+      "Fans",
+      "Sofa",
+      "Linen",
+      "Phone",
+      "FREE WiFi",
+      "Shower",
+      "Towels",
+      "Toiletries",
+      "Hand Soap",
+      "Satellite / Cable TV",
+      "Flat Screen TV"
+    ],
+    "notes": "Located on the first floor with swimming pool view, well furnished with double bed, TV, telephone and air conditioner.\n\nNo In-Room Safes; Generally Safety Deposit is available at Reception with Receipt.",
+    "is_active": true,
+    "created_at": "2025-08-14T08:28:36.633066+00:00",
+    "updated_at": "2025-10-18T03:01:18.128465+00:00",
+    "bed_configuration": [
+      {
+        "type": "Double Bed",
+        "count": 1
+      },
+      {
+        "type": "Single Bed",
+        "count": 1
+      },
+      {
+        "type": "Mattress",
+        "count": 1
+      }
+    ],
+    "max_occupancy": 4,
+    "custom_pricing": null,
+    "category_id": null
+  },
+  {
+    "id": "f102569f-7229-40fa-9bfa-69c5d4e58a12",
+    "room_type_id": "dd402abc-04b8-473c-aa0f-de571cf4e68c",
+    "unit_number": "209",
+    "unit_name": "Galileo Vista",
+    "floor_number": 1,
+    "area_sqft": null,
+    "status": "available",
+    "special_features": [
+      "Balcony",
+      "Fans",
+      "Sofa",
+      "Linen",
+      "Phone",
+      "FREE WiFi",
+      "Shower",
+      "Towels",
+      "Toiletries",
+      "Hand Soap",
+      "Satellite / Cable TV",
+      "Flat Screen TV"
+    ],
+    "notes": "Located on the first floor with swimming pool view, well furnished with double bed, TV, telephone and air conditioner.\n\nNo In-Room Safes; Generally Safety Deposit is available at Reception with Receipt.",
+    "is_active": true,
+    "created_at": "2025-08-14T08:28:36.633066+00:00",
+    "updated_at": "2025-10-18T03:01:18.128465+00:00",
+    "bed_configuration": [
+      {
+        "type": "Double Bed",
+        "count": 1
+      },
+      {
+        "type": "Sofa Cum Bed",
+        "count": 1
+      },
+      {
+        "type": "Mattress",
+        "count": 1
+      }
+    ],
+    "max_occupancy": 4,
+    "custom_pricing": null,
+    "category_id": null
+  },
+  {
+    "id": "c1c4016c-3fd1-402c-8eea-9f91537abee7",
+    "room_type_id": "dd402abc-04b8-473c-aa0f-de571cf4e68c",
+    "unit_number": "213",
+    "unit_name": "Enable Skyview",
+    "floor_number": 1,
+    "area_sqft": null,
+    "status": "available",
+    "special_features": [
+      "Balcony",
+      "Fans",
+      "Sofa",
+      "Linen",
+      "Phone",
+      "FREE WiFi",
+      "Shower",
+      "Towels",
+      "Toiletries",
+      "Hand Soap",
+      "Satellite / Cable TV",
+      "Flat Screen TV"
+    ],
+    "notes": "Located on the first floor with swimming pool view, well furnished with double bed, TV, telephone and air conditioner.\n\nNo In-Room Safes; Generally Safety Deposit is available at Reception with Receipt.",
+    "is_active": true,
+    "created_at": "2025-08-14T08:28:36.633066+00:00",
+    "updated_at": "2025-10-18T03:01:18.128465+00:00",
+    "bed_configuration": [
+      {
+        "type": "Double Bed",
+        "count": 1
+      },
+      {
+        "type": "Sofa Cum Bed",
+        "count": 1
+      },
+      {
+        "type": "Mattress",
+        "count": 1
+      }
+    ],
+    "max_occupancy": 4,
+    "custom_pricing": null,
+    "category_id": null
+  },
+  {
+    "id": "c45c9cec-10ec-4f77-9793-26c8ca78b6cb",
+    "room_type_id": "dd402abc-04b8-473c-aa0f-de571cf4e68c",
+    "unit_number": "214",
+    "unit_name": "Sunday Silence Balcony",
+    "floor_number": 1,
+    "area_sqft": null,
+    "status": "available",
+    "special_features": [
+      "Balcony",
+      "Fans",
+      "Sofa",
+      "Linen",
+      "Phone",
+      "FREE WiFi",
+      "Shower",
+      "Towels",
+      "Toiletries",
+      "Hand Soap",
+      "Satellite / Cable TV",
+      "Flat Screen TV"
+    ],
+    "notes": "Located on the first floor with swimming pool view, well furnished with double bed, TV, telephone and air conditioner.\n\nNo In-Room Safes; Generally Safety Deposit is available at Reception with Receipt.",
+    "is_active": true,
+    "created_at": "2025-08-14T08:28:36.633066+00:00",
+    "updated_at": "2025-10-18T03:01:18.128465+00:00",
+    "bed_configuration": [
+      {
+        "type": "Double Bed",
+        "count": 2
+      },
+      {
+        "type": "Mattress",
+        "count": 1
+      }
+    ],
+    "max_occupancy": 5,
+    "custom_pricing": null,
+    "category_id": null
+  },
+  {
+    "id": "ec8a110d-4c5b-4b15-898d-a9d23e66872e",
+    "room_type_id": "dd402abc-04b8-473c-aa0f-de571cf4e68c",
+    "unit_number": "215 A/B",
+    "unit_name": "Dancing Brave Horizon",
+    "floor_number": 1,
+    "area_sqft": null,
+    "status": "available",
+    "special_features": [
+      "Balcony",
+      "Fans",
+      "Sofa",
+      "Linen",
+      "Phone",
+      "FREE WiFi",
+      "Shower",
+      "Towels",
+      "Toiletries",
+      "Hand Soap",
+      "Satellite / Cable TV",
+      "Flat Screen TV"
+    ],
+    "notes": "Located on the first floor with swimming pool view, well furnished with double bed, TV, telephone and air conditioner.\n\nNo In-Room Safes; Generally Safety Deposit is available at Reception with Receipt.",
+    "is_active": true,
+    "created_at": "2025-08-14T08:28:36.633066+00:00",
+    "updated_at": "2025-10-18T03:01:18.128465+00:00",
+    "bed_configuration": [
+      {
+        "type": "Double Bed",
+        "count": 2
+      },
+      {
+        "type": "Roll on Bed",
+        "count": 1
+      },
+      {
+        "type": "Mattress",
+        "count": 1
+      }
+    ],
+    "max_occupancy": 6,
+    "custom_pricing": null,
+    "category_id": null
+  },
+  {
+    "id": "d5a938c8-fd22-40a4-81b7-a92b1982cf98",
+    "room_type_id": "696dd24b-eedc-44dc-9907-9f81918abdc3",
+    "unit_number": "108",
+    "unit_name": "Totilas Loftscape",
+    "floor_number": 0,
+    "area_sqft": null,
+    "status": "available",
+    "special_features": [
+      "Flat Screen TV",
+      "Phone",
+      "Shower",
+      "Towels",
+      "Toiletries",
+      "Hand Soap",
+      "Satellite / Cable TV"
+    ],
+    "notes": "Spacious loft-style room with premium amenities and pool views.\n\nNo In-Room Safes; Generally Safety Deposit is available at Reception with Receipt.",
+    "is_active": true,
+    "created_at": "2025-08-14T08:27:04.525987+00:00",
+    "updated_at": "2025-10-18T03:01:18.128465+00:00",
+    "bed_configuration": [
+      {
+        "type": "Double Bed",
+        "count": 3
+      }
+    ],
+    "max_occupancy": 6,
+    "custom_pricing": null,
+    "category_id": null
+  },
+  {
+    "id": "eeb5bdb4-63fd-4b91-9035-1f724ecbfe3a",
+    "room_type_id": "fc95322a-43f2-46ba-9052-470525b091cf",
+    "unit_number": "106",
+    "unit_name": "Kelso Tide",
+    "floor_number": 0,
+    "area_sqft": null,
+    "status": "available",
+    "special_features": [
+      "Balcony",
+      "Fans",
+      "Flat Screen TV",
+      "Linen",
+      "Phone",
+      "FREE WiFi",
+      "Towels",
+      "Toiletries",
+      "Air-conditioning",
+      "Electric Kettle",
+      "Satellite / Cable TV"
+    ],
+    "notes": "Located facing the swimming pool with a veranda for a relaxing sit-out. Well furnished with 2 double beds, equipped with air-conditioning, LCD TV, tea/coffee maker, Refrigerator and telephone.\n\nNo In-Room Safes; Generally Safety Deposit is available at Reception with Receipt.",
+    "is_active": true,
+    "created_at": "2025-08-14T08:27:04.525987+00:00",
+    "updated_at": "2025-10-18T03:01:18.128465+00:00",
+    "bed_configuration": [
+      {
+        "type": "Double Bed",
+        "count": 2
+      }
+    ],
+    "max_occupancy": 4,
+    "custom_pricing": null,
+    "category_id": null
+  },
+  {
+    "id": "c21a3d90-63f8-4590-a7cc-980b5d62063d",
+    "room_type_id": "fc95322a-43f2-46ba-9052-470525b091cf",
+    "unit_number": "109",
+    "unit_name": "Arkle Reef",
+    "floor_number": 0,
+    "area_sqft": null,
+    "status": "available",
+    "special_features": [
+      "Balcony",
+      "Fans",
+      "Flat Screen TV",
+      "Linen",
+      "Phone",
+      "FREE WiFi",
+      "Towels",
+      "Toiletries",
+      "Air-conditioning",
+      "Electric Kettle",
+      "Satellite / Cable TV"
+    ],
+    "notes": "Located facing the swimming pool with a veranda for a relaxing sit-out. Well furnished with 2 double beds, equipped with air-conditioning, LCD TV, tea/coffee maker, Refrigerator and telephone.\n\nNo In-Room Safes; Generally Safety Deposit is available at Reception with Receipt.",
+    "is_active": true,
+    "created_at": "2025-08-14T08:27:04.525987+00:00",
+    "updated_at": "2025-10-18T03:01:18.128465+00:00",
+    "bed_configuration": [
+      {
+        "type": "Double Bed",
+        "count": 2
+      },
+      {
+        "type": "Roll on Bed",
+        "count": 1
+      }
+    ],
+    "max_occupancy": 5,
+    "custom_pricing": null,
+    "category_id": null
+  },
+  {
+    "id": "710bffdc-2adf-457f-b7ee-ee503849c461",
+    "room_type_id": "74c89770-8f04-4a4b-b061-b85743725b88",
+    "unit_number": "F5",
+    "unit_name": "Zenyatta Nook",
+    "floor_number": 0,
+    "area_sqft": null,
+    "status": "available",
+    "special_features": [],
+    "notes": "Tent accommodation with double beds.\n\nNo In-Room Safes; Generally Safety Deposit is available at Reception with Receipt.",
+    "is_active": true,
+    "created_at": "2025-08-14T08:30:01.65349+00:00",
+    "updated_at": "2025-10-18T03:01:18.128465+00:00",
+    "bed_configuration": [
+      {
+        "type": "Double Bed",
+        "count": 2
+      }
+    ],
+    "max_occupancy": 4,
+    "custom_pricing": null,
+    "category_id": null
+  },
+  {
+    "id": "efa18e41-1a74-4809-9fb5-dac81919414b",
+    "room_type_id": "74c89770-8f04-4a4b-b061-b85743725b88",
+    "unit_number": "F6",
+    "unit_name": "Seabiscuit Suite",
+    "floor_number": 0,
+    "area_sqft": null,
+    "status": "available",
+    "special_features": [],
+    "notes": "Tent accommodation with double beds.\n\nNo In-Room Safes; Generally Safety Deposit is available at Reception with Receipt.",
+    "is_active": true,
+    "created_at": "2025-08-14T08:30:01.65349+00:00",
+    "updated_at": "2025-10-18T03:01:18.128465+00:00",
+    "bed_configuration": [
+      {
+        "type": "Double Bed",
+        "count": 2
+      }
+    ],
+    "max_occupancy": 4,
+    "custom_pricing": null,
+    "category_id": null
+  },
+  {
+    "id": "ca053671-2b1b-4b9c-b9e3-9a1bb7588011",
+    "room_type_id": "bf4ddd1f-82a9-4e6a-ae04-fd99d5e74443",
+    "unit_number": "303 A/B",
+    "unit_name": "Lammtarra Lookout",
+    "floor_number": 2,
+    "area_sqft": null,
+    "status": "available",
+    "special_features": [
+      "Fans",
+      "Flat Screen TV",
+      "Linen",
+      "Bedside Lights",
+      "Phone",
+      "FREE WiFi",
+      "Shower",
+      "Private Bathroom",
+      "Towels",
+      "Toiletries",
+      "Air-conditioning",
+      "TV"
+    ],
+    "notes": "Located around the activity area, well furnished with double bed, TV, telephone and air conditioner.\n\nNo In-Room Safes; Generally Safety Deposit is available at Reception with Receipt.",
+    "is_active": true,
+    "created_at": "2025-08-14T08:28:36.633066+00:00",
+    "updated_at": "2025-10-18T03:01:18.128465+00:00",
+    "bed_configuration": [
+      {
+        "type": "Double Bed",
+        "count": 4
+      }
+    ],
+    "max_occupancy": 8,
+    "custom_pricing": null,
+    "category_id": null
+  },
+  {
+    "id": "77566299-1026-4ab5-b0bd-77627d11bbd1",
+    "room_type_id": "bf4ddd1f-82a9-4e6a-ae04-fd99d5e74443",
+    "unit_number": "304 A/B",
+    "unit_name": "Sunline Suite",
+    "floor_number": 2,
+    "area_sqft": null,
+    "status": "available",
+    "special_features": [
+      "Fans",
+      "Flat Screen TV",
+      "Linen",
+      "Bedside Lights",
+      "Phone",
+      "FREE WiFi",
+      "Shower",
+      "Private Bathroom",
+      "Towels",
+      "Toiletries",
+      "Air-conditioning",
+      "TV"
+    ],
+    "notes": "Located around the activity area, well furnished with double bed, TV, telephone and air conditioner.\n\nNo In-Room Safes; Generally Safety Deposit is available at Reception with Receipt.",
+    "is_active": true,
+    "created_at": "2025-08-14T08:28:36.633066+00:00",
+    "updated_at": "2025-10-18T03:01:18.128465+00:00",
+    "bed_configuration": [
+      {
+        "type": "Double Bed",
+        "count": 4
+      }
+    ],
+    "max_occupancy": 8,
+    "custom_pricing": null,
+    "category_id": null
+  },
+  {
+    "id": "77332300-18a0-494c-b125-9baae313dc90",
+    "room_type_id": "bf4ddd1f-82a9-4e6a-ae04-fd99d5e74443",
+    "unit_number": "305",
+    "unit_name": "Silvano Spot",
+    "floor_number": 2,
+    "area_sqft": null,
+    "status": "available",
+    "special_features": [
+      "Fans",
+      "Flat Screen TV",
+      "Linen",
+      "Bedside Lights",
+      "Phone",
+      "FREE WiFi",
+      "Shower",
+      "Private Bathroom",
+      "Towels",
+      "Toiletries",
+      "Air-conditioning",
+      "TV"
+    ],
+    "notes": "Located around the activity area, well furnished with double bed, TV, telephone and air conditioner.\n\nNo In-Room Safes; Generally Safety Deposit is available at Reception with Receipt.",
+    "is_active": true,
+    "created_at": "2025-08-14T08:28:36.633066+00:00",
+    "updated_at": "2025-10-18T03:01:18.128465+00:00",
+    "bed_configuration": [
+      {
+        "type": "Double Bed",
+        "count": 1
+      }
+    ],
+    "max_occupancy": 2,
+    "custom_pricing": null,
+    "category_id": null
+  },
+  {
+    "id": "e74ceb2f-8d1d-4f18-8ef5-1589c78fc574",
+    "room_type_id": "bf4ddd1f-82a9-4e6a-ae04-fd99d5e74443",
+    "unit_number": "306",
+    "unit_name": "Fiorente Frame",
+    "floor_number": 2,
+    "area_sqft": null,
+    "status": "available",
+    "special_features": [
+      "Fans",
+      "Flat Screen TV",
+      "Linen",
+      "Bedside Lights",
+      "Phone",
+      "FREE WiFi",
+      "Shower",
+      "Private Bathroom",
+      "Towels",
+      "Toiletries",
+      "Air-conditioning",
+      "TV"
+    ],
+    "notes": "Located around the activity area, well furnished with double bed, TV, telephone and air conditioner.\n\nNo In-Room Safes; Generally Safety Deposit is available at Reception with Receipt.",
+    "is_active": true,
+    "created_at": "2025-08-14T08:28:36.633066+00:00",
+    "updated_at": "2025-10-18T03:01:18.128465+00:00",
+    "bed_configuration": [
+      {
+        "type": "Double Bed",
+        "count": 1
+      }
+    ],
+    "max_occupancy": 2,
+    "custom_pricing": null,
+    "category_id": null
+  },
+  {
+    "id": "483aade9-7bfb-4071-9e53-016a34c2878e",
+    "room_type_id": "47bdf1a3-751f-4ce9-afaa-7cb337151c16",
+    "unit_number": "G1",
+    "unit_name": "Northern Light Quarters",
+    "floor_number": 0,
+    "area_sqft": null,
+    "status": "available",
+    "special_features": [
+      "Phone",
+      "Air-conditioning",
+      "TV"
+    ],
+    "notes": "Located near recreational areas, well furnished with double bed, TV, telephone and air conditioner.\n\nNo In-Room Safes; Generally Safety Deposit is available at Reception with Receipt.",
+    "is_active": true,
+    "created_at": "2025-08-14T08:30:01.65349+00:00",
+    "updated_at": "2025-10-18T03:01:18.128465+00:00",
+    "bed_configuration": [
+      {
+        "type": "Double Bed",
+        "count": 1
+      },
+      {
+        "type": "Sofa Cum Bed",
+        "count": 1
+      }
+    ],
+    "max_occupancy": 3,
+    "custom_pricing": null,
+    "category_id": null
+  },
+  {
+    "id": "78187e57-ab5f-47b4-a248-41f69c8ef189",
+    "room_type_id": "47bdf1a3-751f-4ce9-afaa-7cb337151c16",
+    "unit_number": "G2",
+    "unit_name": "Beau Regard Quarters",
+    "floor_number": 0,
+    "area_sqft": null,
+    "status": "available",
+    "special_features": [
+      "Phone",
+      "Air-conditioning",
+      "TV"
+    ],
+    "notes": "Located near recreational areas, well furnished with double bed, TV, telephone and air conditioner.\n\nNo In-Room Safes; Generally Safety Deposit is available at Reception with Receipt.",
+    "is_active": true,
+    "created_at": "2025-08-14T08:30:01.65349+00:00",
+    "updated_at": "2025-10-18T03:01:18.128465+00:00",
+    "bed_configuration": [
+      {
+        "type": "Double Bed",
+        "count": 1
+      }
+    ],
+    "max_occupancy": 2,
+    "custom_pricing": null,
+    "category_id": null
+  },
+  {
+    "id": "c8048a72-25f7-4704-9272-bdd3974de5d6",
+    "room_type_id": "47bdf1a3-751f-4ce9-afaa-7cb337151c16",
+    "unit_number": "G3",
+    "unit_name": "Sir Barton Quarters",
+    "floor_number": 0,
+    "area_sqft": null,
+    "status": "available",
+    "special_features": [
+      "Phone",
+      "Air-conditioning",
+      "TV"
+    ],
+    "notes": "Located near recreational areas, well furnished with double bed, TV, telephone and air conditioner.\n\nNo In-Room Safes; Generally Safety Deposit is available at Reception with Receipt.",
+    "is_active": true,
+    "created_at": "2025-08-14T08:30:01.65349+00:00",
+    "updated_at": "2025-10-18T03:01:18.128465+00:00",
+    "bed_configuration": [
+      {
+        "type": "Double Bed",
+        "count": 1
+      }
+    ],
+    "max_occupancy": 2,
+    "custom_pricing": null,
+    "category_id": null
+  },
+  {
+    "id": "d1d304f2-7339-49f2-9a9b-0aa6cf9d3d06",
+    "room_type_id": "47bdf1a3-751f-4ce9-afaa-7cb337151c16",
+    "unit_number": "G4",
+    "unit_name": "Bayardo Quarters",
+    "floor_number": 0,
+    "area_sqft": null,
+    "status": "available",
+    "special_features": [
+      "Phone",
+      "Air-conditioning",
+      "TV"
+    ],
+    "notes": "Located near recreational areas, well furnished with double bed, TV, telephone and air conditioner.\n\nNo In-Room Safes; Generally Safety Deposit is available at Reception with Receipt.",
+    "is_active": true,
+    "created_at": "2025-08-14T08:30:01.65349+00:00",
+    "updated_at": "2025-10-18T03:01:18.128465+00:00",
+    "bed_configuration": [
+      {
+        "type": "Double Bed",
+        "count": 2
+      }
+    ],
+    "max_occupancy": 4,
+    "custom_pricing": null,
+    "category_id": null
+  },
+  {
+    "id": "13819c01-b68a-4d08-8c7e-9eaab5e93b86",
+    "room_type_id": "47bdf1a3-751f-4ce9-afaa-7cb337151c16",
+    "unit_number": "G5",
+    "unit_name": "Ormonde Quarters",
+    "floor_number": 0,
+    "area_sqft": null,
+    "status": "available",
+    "special_features": [
+      "Phone",
+      "Air-conditioning",
+      "TV"
+    ],
+    "notes": "Located near recreational areas, well furnished with double bed, TV, telephone and air conditioner.\n\nNo In-Room Safes; Generally Safety Deposit is available at Reception with Receipt.",
+    "is_active": true,
+    "created_at": "2025-08-14T08:30:01.65349+00:00",
+    "updated_at": "2025-10-18T03:01:18.128465+00:00",
+    "bed_configuration": [
+      {
+        "type": "Double Bed",
+        "count": 1
+      }
+    ],
+    "max_occupancy": 2,
+    "custom_pricing": null,
+    "category_id": null
+  },
+  {
+    "id": "2a16787c-2715-4d97-9739-c17ee32d0e14",
+    "room_type_id": "47bdf1a3-751f-4ce9-afaa-7cb337151c16",
+    "unit_number": "G6",
+    "unit_name": "Moifaa Quarters",
+    "floor_number": 0,
+    "area_sqft": null,
+    "status": "available",
+    "special_features": [
+      "Phone",
+      "Air-conditioning",
+      "TV"
+    ],
+    "notes": "Located near recreational areas, well furnished with double bed, TV, telephone and air conditioner.\n\nNo In-Room Safes; Generally Safety Deposit is available at Reception with Receipt.",
+    "is_active": true,
+    "created_at": "2025-08-14T08:30:01.65349+00:00",
+    "updated_at": "2025-10-18T03:01:18.128465+00:00",
+    "bed_configuration": [
+      {
+        "type": "Double Bed",
+        "count": 1
+      }
+    ],
+    "max_occupancy": 2,
+    "custom_pricing": null,
+    "category_id": null
+  },
+  {
+    "id": "10befe75-0522-42da-a1bc-e82f010ab51d",
+    "room_type_id": "47bdf1a3-751f-4ce9-afaa-7cb337151c16",
+    "unit_number": "G7",
+    "unit_name": "Glencoe Quarters",
+    "floor_number": 0,
+    "area_sqft": null,
+    "status": "available",
+    "special_features": [
+      "Phone",
+      "Air-conditioning",
+      "TV"
+    ],
+    "notes": "Located near recreational areas, well furnished with double bed, TV, telephone and air conditioner.\n\nNo In-Room Safes; Generally Safety Deposit is available at Reception with Receipt.",
+    "is_active": true,
+    "created_at": "2025-08-14T08:30:01.65349+00:00",
+    "updated_at": "2025-10-18T03:01:18.128465+00:00",
+    "bed_configuration": [
+      {
+        "type": "Double Bed",
+        "count": 1
+      }
+    ],
+    "max_occupancy": 2,
+    "custom_pricing": null,
+    "category_id": null
+  },
+  {
+    "id": "cc95bbbe-31d5-4d71-bfe2-c3bb453282a2",
+    "room_type_id": "c5391431-7bdf-4cf1-977e-c696480fcdda",
+    "unit_number": "008",
+    "unit_name": "Ruffian Nook",
+    "floor_number": 0,
+    "area_sqft": null,
+    "status": "available",
+    "special_features": [
+      "Phone",
+      "Air-conditioning",
+      "TV"
+    ],
+    "notes": "Located near play areas, well furnished with double bed, TV, telephone and air conditioner.\n\nNo In-Room Safes; Generally Safety Deposit is available at Reception with Receipt.",
+    "is_active": true,
+    "created_at": "2025-08-14T08:30:01.65349+00:00",
+    "updated_at": "2025-10-18T03:01:18.128465+00:00",
+    "bed_configuration": [
+      {
+        "type": "Double Bed",
+        "count": 1
+      }
+    ],
+    "max_occupancy": 2,
+    "custom_pricing": null,
+    "category_id": null
+  },
+  {
+    "id": "40676076-7b56-40dc-a8de-3922edffd8fa",
+    "room_type_id": "dd402abc-04b8-473c-aa0f-de571cf4e68c",
+    "unit_number": "201",
+    "unit_name": "Shergar Vista",
+    "floor_number": 1,
+    "area_sqft": null,
+    "status": "available",
+    "special_features": [
+      "Balcony",
+      "Fans",
+      "Sofa",
+      "Linen",
+      "Phone",
+      "FREE WiFi",
+      "Shower",
+      "Towels",
+      "Toiletries",
+      "Hand Soap",
+      "Satellite / Cable TV",
+      "Flat Screen TV"
+    ],
+    "notes": "Located on the first floor with swimming pool view, well furnished with double bed, TV, telephone and air conditioner.\n\nNo In-Room Safes; Generally Safety Deposit is available at Reception with Receipt.",
+    "is_active": true,
+    "created_at": "2025-08-14T08:28:36.633066+00:00",
+    "updated_at": "2025-10-18T03:01:18.128465+00:00",
+    "bed_configuration": [
+      {
+        "type": "Double Bed",
+        "count": 1
+      },
+      {
+        "type": "Sofa Cum Bed",
+        "count": 1
+      },
+      {
+        "type": "Mattress",
+        "count": 1
+      }
+    ],
+    "max_occupancy": 4,
+    "custom_pricing": null,
+    "category_id": null
+  },
+  {
+    "id": "a6fe1f7f-86a7-40b8-83ba-0740ae6eff46",
+    "room_type_id": "dd402abc-04b8-473c-aa0f-de571cf4e68c",
+    "unit_number": "203",
+    "unit_name": "Desert Orchid Lookout",
+    "floor_number": 1,
+    "area_sqft": null,
+    "status": "available",
+    "special_features": [
+      "Balcony",
+      "Fans",
+      "Sofa",
+      "Linen",
+      "Phone",
+      "FREE WiFi",
+      "Shower",
+      "Towels",
+      "Toiletries",
+      "Hand Soap",
+      "Satellite / Cable TV",
+      "Flat Screen TV"
+    ],
+    "notes": "Located on the first floor with swimming pool view, well furnished with double bed, TV, telephone and air conditioner.\n\nNo In-Room Safes; Generally Safety Deposit is available at Reception with Receipt.",
+    "is_active": true,
+    "created_at": "2025-08-14T08:28:36.633066+00:00",
+    "updated_at": "2025-10-18T03:01:18.128465+00:00",
+    "bed_configuration": [
+      {
+        "type": "Double Bed",
+        "count": 1
+      },
+      {
+        "type": "Sofa Cum Bed",
+        "count": 1
+      },
+      {
+        "type": "Mattress",
+        "count": 1
+      }
+    ],
+    "max_occupancy": 4,
+    "custom_pricing": null,
+    "category_id": null
+  },
+  {
+    "id": "916919b5-41d6-457d-abda-756265fe8e93",
+    "room_type_id": "dd402abc-04b8-473c-aa0f-de571cf4e68c",
+    "unit_number": "207",
+    "unit_name": "Brigadier Gerard Balcony",
+    "floor_number": 1,
+    "area_sqft": null,
+    "status": "available",
+    "special_features": [
+      "Balcony",
+      "Fans",
+      "Sofa",
+      "Linen",
+      "Phone",
+      "FREE WiFi",
+      "Shower",
+      "Towels",
+      "Toiletries",
+      "Hand Soap",
+      "Satellite / Cable TV",
+      "Flat Screen TV"
+    ],
+    "notes": "Located on the first floor with swimming pool view, well furnished with double bed, TV, telephone and air conditioner.\n\nNo In-Room Safes; Generally Safety Deposit is available at Reception with Receipt.",
+    "is_active": true,
+    "created_at": "2025-08-14T08:28:36.633066+00:00",
+    "updated_at": "2025-10-18T03:01:18.128465+00:00",
+    "bed_configuration": [
+      {
+        "type": "Double Bed",
+        "count": 1
+      },
+      {
+        "type": "Sofa Cum Bed",
+        "count": 1
+      },
+      {
+        "type": "Mattress",
+        "count": 1
+      }
+    ],
+    "max_occupancy": 4,
+    "custom_pricing": null,
+    "category_id": null
+  },
+  {
+    "id": "4f010d07-5210-45d7-8a3b-2379395dbbbd",
+    "room_type_id": "dd402abc-04b8-473c-aa0f-de571cf4e68c",
+    "unit_number": "212",
+    "unit_name": "Alleged Overlook",
+    "floor_number": 1,
+    "area_sqft": null,
+    "status": "available",
+    "special_features": [
+      "Balcony",
+      "Fans",
+      "Sofa",
+      "Linen",
+      "Phone",
+      "FREE WiFi",
+      "Shower",
+      "Towels",
+      "Toiletries",
+      "Hand Soap",
+      "Satellite / Cable TV",
+      "Flat Screen TV"
+    ],
+    "notes": "Located on the first floor with swimming pool view, well furnished with double bed, TV, telephone and air conditioner.\n\nNo In-Room Safes; Generally Safety Deposit is available at Reception with Receipt.",
+    "is_active": true,
+    "created_at": "2025-08-14T08:28:36.633066+00:00",
+    "updated_at": "2025-10-18T03:01:18.128465+00:00",
+    "bed_configuration": [
+      {
+        "type": "Double Bed",
+        "count": 1
+      },
+      {
+        "type": "Sofa Cum Bed",
+        "count": 1
+      },
+      {
+        "type": "Mattress",
+        "count": 1
+      }
+    ],
+    "max_occupancy": 4,
+    "custom_pricing": null,
+    "category_id": null
+  },
+  {
+    "id": "ba3f67e1-04c7-4d31-9f46-d4842204a2d5",
+    "room_type_id": "674b9511-7240-48ba-83bd-b16f50e148e1",
+    "unit_number": "216",
+    "unit_name": "Bucephalus Nook",
+    "floor_number": 2,
+    "area_sqft": null,
+    "status": "available",
+    "special_features": [
+      "Fans",
+      "Flat Screen TV",
+      "Linen",
+      "Bedside Lights",
+      "Phone",
+      "FREE WiFi",
+      "Shower",
+      "Private Bathroom",
+      "Towels",
+      "Toiletries",
+      "Air-conditioning",
+      "TV"
+    ],
+    "notes": "These rooms are located around the activity Area and are well furnished with double bed, TV, telephone and air conditioner. Suitable for couples and for a family up to 4 persons.\n\nNo In-Room Safes; Generally Safety Deposit is available at Reception with Receipt.",
+    "is_active": true,
+    "created_at": "2025-08-14T09:33:49.181318+00:00",
+    "updated_at": "2025-10-18T03:01:18.128465+00:00",
+    "bed_configuration": [
+      {
+        "type": "Double Bed",
+        "count": 1
+      }
+    ],
+    "max_occupancy": 2,
+    "custom_pricing": null,
+    "category_id": null
+  },
+  {
+    "id": "5ee05d89-0198-4a99-a8c5-818e9511ec15",
+    "room_type_id": "c5391431-7bdf-4cf1-977e-c696480fcdda",
+    "unit_number": "007",
+    "unit_name": "Comanche Nook",
+    "floor_number": 0,
+    "area_sqft": null,
+    "status": "available",
+    "special_features": [
+      "Phone",
+      "Air-conditioning",
+      "TV"
+    ],
+    "notes": "Located near play areas, well furnished with double bed, TV, telephone and air conditioner.\n\nNo In-Room Safes; Generally Safety Deposit is available at Reception with Receipt.",
+    "is_active": true,
+    "created_at": "2025-08-14T08:30:01.65349+00:00",
+    "updated_at": "2025-12-07T13:32:18.228841+00:00",
+    "bed_configuration": [
+      {
+        "type": "Double Bed",
+        "count": 1
+      }
+    ],
+    "max_occupancy": 2,
+    "custom_pricing": null,
+    "category_id": null
+  },
+  {
+    "id": "0a5c3745-8bfc-4b81-9747-2cb889298065",
+    "room_type_id": "674b9511-7240-48ba-83bd-b16f50e148e1",
+    "unit_number": "302",
+    "unit_name": "Snowman Snug",
+    "floor_number": 2,
+    "area_sqft": null,
+    "status": "available",
+    "special_features": [
+      "Fans",
+      "Flat Screen TV",
+      "Linen",
+      "Bedside Lights",
+      "Phone",
+      "FREE WiFi",
+      "Shower",
+      "Private Bathroom",
+      "Towels",
+      "Toiletries",
+      "Air-conditioning",
+      "TV"
+    ],
+    "notes": "These rooms are located around the activity Area and are well furnished with double bed, TV, telephone and air conditioner. Suitable for couples and for a family up to 4 persons.\n\nNo In-Room Safes; Generally Safety Deposit is available at Reception with Receipt.",
+    "is_active": true,
+    "created_at": "2025-08-14T09:33:49.181318+00:00",
+    "updated_at": "2025-10-18T03:01:18.128465+00:00",
+    "bed_configuration": [
+      {
+        "type": "Double Bed",
+        "count": 1
+      }
+    ],
+    "max_occupancy": 2,
+    "custom_pricing": null,
+    "category_id": null
+  },
+  {
+    "id": "b3f724d6-5b97-410c-a1f9-4cb48d63483a",
+    "room_type_id": "674b9511-7240-48ba-83bd-b16f50e148e1",
+    "unit_number": "307",
+    "unit_name": "Trigger Retreat",
+    "floor_number": 2,
+    "area_sqft": null,
+    "status": "available",
+    "special_features": [
+      "Fans",
+      "Flat Screen TV",
+      "Linen",
+      "Bedside Lights",
+      "Phone",
+      "FREE WiFi",
+      "Shower",
+      "Private Bathroom",
+      "Towels",
+      "Toiletries",
+      "Air-conditioning",
+      "TV"
+    ],
+    "notes": "These rooms are located around the activity Area and are well furnished with double bed, TV, telephone and air conditioner. Suitable for couples and for a family up to 4 persons.\n\nNo In-Room Safes; Generally Safety Deposit is available at Reception with Receipt.",
+    "is_active": true,
+    "created_at": "2025-08-14T09:33:49.181318+00:00",
+    "updated_at": "2025-10-18T03:01:18.128465+00:00",
+    "bed_configuration": [
+      {
+        "type": "Double Bed",
+        "count": 1
+      }
+    ],
+    "max_occupancy": 2,
+    "custom_pricing": null,
+    "category_id": null
+  },
+  {
+    "id": "68544036-372f-4235-ba58-0a64e7729d29",
+    "room_type_id": "674b9511-7240-48ba-83bd-b16f50e148e1",
+    "unit_number": "308",
+    "unit_name": "Misty Nest",
+    "floor_number": 2,
+    "area_sqft": null,
+    "status": "available",
+    "special_features": [
+      "Fans",
+      "Flat Screen TV",
+      "Linen",
+      "Bedside Lights",
+      "Phone",
+      "FREE WiFi",
+      "Shower",
+      "Private Bathroom",
+      "Towels",
+      "Toiletries",
+      "Air-conditioning",
+      "TV"
+    ],
+    "notes": "These rooms are located around the activity Area and are well furnished with double bed, TV, telephone and air conditioner. Suitable for couples and for a family up to 4 persons.\n\nNo In-Room Safes; Generally Safety Deposit is available at Reception with Receipt.",
+    "is_active": true,
+    "created_at": "2025-08-14T09:33:49.181318+00:00",
+    "updated_at": "2025-10-18T03:01:18.128465+00:00",
+    "bed_configuration": [
+      {
+        "type": "Double Bed",
+        "count": 1
+      }
+    ],
+    "max_occupancy": 2,
+    "custom_pricing": null,
+    "category_id": null
+  },
+  {
+    "id": "bd9e7ea6-1d00-4093-8732-b3b42f29432f",
+    "room_type_id": "674b9511-7240-48ba-83bd-b16f50e148e1",
+    "unit_number": "G.View",
+    "unit_name": "Copenhagen Corner",
+    "floor_number": 2,
+    "area_sqft": null,
+    "status": "available",
+    "special_features": [
+      "Fans",
+      "Flat Screen TV",
+      "Linen",
+      "Bedside Lights",
+      "Phone",
+      "FREE WiFi",
+      "Shower",
+      "Private Bathroom",
+      "Towels",
+      "Toiletries",
+      "Air-conditioning",
+      "TV"
+    ],
+    "notes": "These rooms are located around the activity Area and are well furnished with double bed, TV, telephone and air conditioner. Suitable for couples and for a family up to 4 persons.\n\nNo In-Room Safes; Generally Safety Deposit is available at Reception with Receipt.",
+    "is_active": true,
+    "created_at": "2025-08-14T09:33:49.181318+00:00",
+    "updated_at": "2025-10-18T03:01:18.128465+00:00",
+    "bed_configuration": [
+      {
+        "type": "Double Bed",
+        "count": 1
+      }
+    ],
+    "max_occupancy": 2,
+    "custom_pricing": null,
+    "category_id": null
+  },
+  {
+    "id": "f9048c86-4640-4b35-8c22-30de6a7defd9",
+    "room_type_id": "8d3f3742-4c4d-4d2e-b25f-a50ed807dbf5",
+    "unit_number": "114",
+    "unit_name": "Chetak’s Stronghold",
+    "floor_number": -1,
+    "area_sqft": null,
+    "status": "available",
+    "special_features": [
+      "Phone",
+      "Air-conditioning",
+      "TV"
+    ],
+    "notes": "These rooms are located in Basement and are well furnished with double bed, TV, telephone and air conditioner. Suitable for couples and for a family up to 4 persons.\r\n\nNo In-Room Safes; Generally Safety Deposit is available at Reception with Receipt.",
+    "is_active": true,
+    "created_at": "2025-08-14T09:33:49.181318+00:00",
+    "updated_at": "2025-10-18T03:01:18.128465+00:00",
+    "bed_configuration": [
+      {
+        "type": "Double Bed",
+        "count": 3
+      }
+    ],
+    "max_occupancy": 6,
+    "custom_pricing": null,
+    "category_id": null
+  },
+  {
+    "id": "42e87a72-7cc0-4a12-9101-992d28c3d4c1",
+    "room_type_id": "8d3f3742-4c4d-4d2e-b25f-a50ed807dbf5",
+    "unit_number": "115",
+    "unit_name": "Reckless Quarters",
+    "floor_number": -1,
+    "area_sqft": null,
+    "status": "available",
+    "special_features": [
+      "Phone",
+      "Air-conditioning",
+      "TV"
+    ],
+    "notes": "These rooms are located in Basement and are well furnished with double bed, TV, telephone and air conditioner. Suitable for couples and for a family up to 4 persons.\r\n\nNo In-Room Safes; Generally Safety Deposit is available at Reception with Receipt.",
+    "is_active": true,
+    "created_at": "2025-08-14T09:33:49.181318+00:00",
+    "updated_at": "2025-10-18T03:01:18.128465+00:00",
+    "bed_configuration": [
+      {
+        "type": "Double Bed",
+        "count": 1
+      }
+    ],
+    "max_occupancy": 2,
+    "custom_pricing": null,
+    "category_id": null
+  },
+  {
+    "id": "3390041d-9836-476a-ae39-a78eca7305d7",
+    "room_type_id": "8d3f3742-4c4d-4d2e-b25f-a50ed807dbf5",
+    "unit_number": "116",
+    "unit_name": "Kasztanka Haven",
+    "floor_number": -1,
+    "area_sqft": null,
+    "status": "available",
+    "special_features": [
+      "Phone",
+      "Air-conditioning",
+      "TV"
+    ],
+    "notes": "These rooms are located in Basement and are well furnished with double bed, TV, telephone and air conditioner. Suitable for couples and for a family up to 4 persons.\r\n\nNo In-Room Safes; Generally Safety Deposit is available at Reception with Receipt.",
+    "is_active": true,
+    "created_at": "2025-08-14T09:33:49.181318+00:00",
+    "updated_at": "2025-10-18T03:01:18.128465+00:00",
+    "bed_configuration": [
+      {
+        "type": "Double Bed",
+        "count": 2
+      }
+    ],
+    "max_occupancy": 4,
+    "custom_pricing": null,
+    "category_id": null
+  },
+  {
+    "id": "35312438-03c9-4390-8934-e59c7ca707aa",
+    "room_type_id": "8d3f3742-4c4d-4d2e-b25f-a50ed807dbf5",
+    "unit_number": "117",
+    "unit_name": "Warrior’s Retreat",
+    "floor_number": -1,
+    "area_sqft": null,
+    "status": "available",
+    "special_features": [
+      "Phone",
+      "Air-conditioning",
+      "TV"
+    ],
+    "notes": "These rooms are located in Basement and are well furnished with double bed, TV, telephone and air conditioner. Suitable for couples and for a family up to 4 persons.\r\n\nNo In-Room Safes; Generally Safety Deposit is available at Reception with Receipt.",
+    "is_active": true,
+    "created_at": "2025-08-14T09:33:49.181318+00:00",
+    "updated_at": "2025-10-18T03:01:18.128465+00:00",
+    "bed_configuration": [
+      {
+        "type": "Double Bed",
+        "count": 1
+      },
+      {
+        "type": "Sofa Cum Bed",
+        "count": 1
+      }
+    ],
+    "max_occupancy": 3,
+    "custom_pricing": null,
+    "category_id": null
+  },
+  {
+    "id": "0425af8d-6175-48b0-9032-8ef06e317ba8",
+    "room_type_id": "8d3f3742-4c4d-4d2e-b25f-a50ed807dbf5",
+    "unit_number": "C-Hall",
+    "unit_name": "The Battle Herd Hall",
+    "floor_number": -1,
+    "area_sqft": null,
+    "status": "available",
+    "special_features": [
+      "Phone",
+      "Air-conditioning",
+      "TV"
+    ],
+    "notes": "These rooms are located in Basement and are well furnished with double bed, TV, telephone and air conditioner. Suitable for couples and for a family up to 4 persons.\r\n\nNo In-Room Safes; Generally Safety Deposit is available at Reception with Receipt.",
+    "is_active": true,
+    "created_at": "2025-08-14T09:33:49.181318+00:00",
+    "updated_at": "2025-10-18T03:01:18.128465+00:00",
+    "bed_configuration": [
+      {
+        "type": "Double Bed",
+        "count": 4
+      }
+    ],
+    "max_occupancy": 12,
+    "custom_pricing": null,
+    "category_id": null
+  },
+  {
+    "id": "6adf637c-ecd1-41c1-8973-4d0c781d2a6c",
+    "room_type_id": "c5391431-7bdf-4cf1-977e-c696480fcdda",
+    "unit_number": "009",
+    "unit_name": "Hidalgo Nook",
+    "floor_number": 0,
+    "area_sqft": null,
+    "status": "available",
+    "special_features": [
+      "Phone",
+      "Air-conditioning",
+      "TV"
+    ],
+    "notes": "Located near play areas, well furnished with double bed, TV, telephone and air conditioner.\n\nNo In-Room Safes; Generally Safety Deposit is available at Reception with Receipt.",
+    "is_active": true,
+    "created_at": "2025-08-14T08:30:01.65349+00:00",
+    "updated_at": "2025-10-18T03:01:18.128465+00:00",
+    "bed_configuration": [
+      {
+        "type": "Double Bed",
+        "count": 1
+      }
+    ],
+    "max_occupancy": 2,
+    "custom_pricing": null,
+    "category_id": null
+  },
+  {
+    "id": "8b229e18-e3af-4a08-b9a6-3b789dda7e05",
+    "room_type_id": "674b9511-7240-48ba-83bd-b16f50e148e1",
+    "unit_number": "200",
+    "unit_name": "Smoky Sanctuary",
+    "floor_number": 1,
+    "area_sqft": null,
+    "status": "available",
+    "special_features": [
+      "Fans",
+      "Flat Screen TV",
+      "Linen",
+      "Bedside Lights",
+      "Phone",
+      "FREE WiFi",
+      "Shower",
+      "Private Bathroom",
+      "Towels",
+      "Toiletries",
+      "Air-conditioning",
+      "TV"
+    ],
+    "notes": "These rooms are located around the activity Area and are well furnished with double bed, TV, telephone and air conditioner. Suitable for couples and for a family up to 4 persons.\n\nNo In-Room Safes; Generally Safety Deposit is available at Reception with Receipt.",
+    "is_active": true,
+    "created_at": "2025-08-14T09:33:49.181318+00:00",
+    "updated_at": "2025-10-18T03:01:18.128465+00:00",
+    "bed_configuration": [
+      {
+        "type": "Double Bed",
+        "count": 1
+      }
+    ],
+    "max_occupancy": 2,
+    "custom_pricing": null,
+    "category_id": null
+  },
+  {
+    "id": "0f03bebc-26c2-4d2b-bea7-f9abd3d57fa2",
+    "room_type_id": "674b9511-7240-48ba-83bd-b16f50e148e1",
+    "unit_number": "217",
+    "unit_name": "Man o’ Peace Hideaway",
+    "floor_number": 1,
+    "area_sqft": null,
+    "status": "available",
+    "special_features": [
+      "Fans",
+      "Flat Screen TV",
+      "Linen",
+      "Bedside Lights",
+      "Phone",
+      "FREE WiFi",
+      "Shower",
+      "Private Bathroom",
+      "Towels",
+      "Toiletries",
+      "Air-conditioning",
+      "TV"
+    ],
+    "notes": "These rooms are located around the activity Area and are well furnished with double bed, TV, telephone and air conditioner. Suitable for couples and for a family up to 4 persons.\n\nNo In-Room Safes; Generally Safety Deposit is available at Reception with Receipt.",
+    "is_active": true,
+    "created_at": "2025-08-14T09:33:49.181318+00:00",
+    "updated_at": "2025-10-18T03:01:18.128465+00:00",
+    "bed_configuration": [
+      {
+        "type": "Double Bed",
+        "count": 1
+      }
+    ],
+    "max_occupancy": 2,
+    "custom_pricing": null,
+    "category_id": null
+  },
+  {
+    "id": "a4b7344c-469c-422d-a7cf-f2808a39a363",
+    "room_type_id": "674b9511-7240-48ba-83bd-b16f50e148e1",
+    "unit_number": "309",
+    "unit_name": "Buoyant Boy Alcove",
+    "floor_number": 2,
+    "area_sqft": null,
+    "status": "available",
+    "special_features": [
+      "Fans",
+      "Flat Screen TV",
+      "Linen",
+      "Bedside Lights",
+      "Phone",
+      "FREE WiFi",
+      "Shower",
+      "Private Bathroom",
+      "Towels",
+      "Toiletries",
+      "Air-conditioning",
+      "TV"
+    ],
+    "notes": "These rooms are located around the activity Area and are well furnished with double bed, TV, telephone and air conditioner. Suitable for couples and for a family up to 4 persons.\n\nNo In-Room Safes; Generally Safety Deposit is available at Reception with Receipt.",
+    "is_active": true,
+    "created_at": "2025-08-14T09:33:49.181318+00:00",
+    "updated_at": "2025-10-18T03:01:18.128465+00:00",
+    "bed_configuration": [
+      {
+        "type": "Double Bed",
+        "count": 1
+      }
+    ],
+    "max_occupancy": 2,
+    "custom_pricing": null,
+    "category_id": null
+  },
+  {
+    "id": "bcd27976-ebc5-4021-8c24-17373dfadd1a",
+    "room_type_id": "fc95322a-43f2-46ba-9052-470525b091cf",
+    "unit_number": "105",
+    "unit_name": "Citation Lagoon",
+    "floor_number": 0,
+    "area_sqft": null,
+    "status": "available",
+    "special_features": [
+      "Balcony",
+      "Fans",
+      "Flat Screen TV",
+      "Linen",
+      "Phone",
+      "FREE WiFi",
+      "Towels",
+      "Toiletries",
+      "Air-conditioning",
+      "Electric Kettle",
+      "Satellite / Cable TV"
+    ],
+    "notes": "Located facing the swimming pool with a veranda for a relaxing sit-out. Well furnished with 2 double beds, equipped with air-conditioning, LCD TV, tea/coffee maker, Refrigerator and telephone.\n\nNo In-Room Safes; Generally Safety Deposit is available at Reception with Receipt.",
+    "is_active": true,
+    "created_at": "2025-08-14T08:27:04.525987+00:00",
+    "updated_at": "2025-10-18T03:01:18.128465+00:00",
+    "bed_configuration": [
+      {
+        "type": "Double Bed",
+        "count": 2
+      }
+    ],
+    "max_occupancy": 4,
+    "custom_pricing": null,
+    "category_id": null
+  }
+]
