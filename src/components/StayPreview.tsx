@@ -76,7 +76,7 @@ const StayPreviewV5 = () => {
                 )}
 
                 {/* Image */}
-                <div className="aspect-[4/3] overflow-hidden relative">
+                <Link to={`/stay/${room.id}`} className="aspect-[4/3] overflow-hidden relative block cursor-pointer">
                   <img
                     src={heroImage}
                     alt={room.name}
@@ -90,14 +90,16 @@ const StayPreviewV5 = () => {
                     <span className="text-2xl font-bold text-foreground">₹{room.base_price?.toLocaleString()}</span>
                     <span className="text-sm text-muted-foreground">{getTranslation('stay.perNight', '/night')}</span>
                   </div>
-                </div>
+                </Link>
 
                 {/* Content */}
                 <div className="p-8">
                   <div className="mb-6">
-                    <h3 className="text-2xl font-bold text-foreground mb-3">
-                      {room.name}
-                    </h3>
+                    <Link to={`/stay/${room.id}`}>
+                      <h3 className="text-2xl font-bold text-foreground mb-3 hover:text-primary transition-colors cursor-pointer">
+                        {room.name}
+                      </h3>
+                    </Link>
                     <p className="text-muted-foreground leading-relaxed line-clamp-3">
                       {room.description || 'Experience comfort and luxury in this beautifully designed accommodation.'}
                     </p>
