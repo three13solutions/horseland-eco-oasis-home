@@ -90,6 +90,7 @@ function App() {
             <ShadcnToaster />
             <BrowserRouter>
               <ScrollToTop />
+              <VersionSwitcher />
               <Routes>
               {/* General Routes */}
               <Route path="/" element={<Index />} />
