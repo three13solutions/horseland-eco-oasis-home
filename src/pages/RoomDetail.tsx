@@ -344,7 +344,7 @@ const RoomDetail = () => {
                       <div 
                         key={index} 
                         className="relative aspect-[4/3] rounded-lg overflow-hidden cursor-pointer group"
-                        onClick={() => setCurrentImageIndex(index)}
+                        onClick={() => openLightbox(index)}
                       >
                         {image.key ? (
                           <MediaAsset
@@ -369,8 +369,97 @@ const RoomDetail = () => {
                     ))}
                   </div>
                   <p className="text-sm text-muted-foreground mt-4 font-body">
-                    Click any image to view it in the hero gallery above
+                    Click any image to view it full-size in the lightbox
                   </p>
+
+                  {/* Lightbox Modal */}
+                  <Dialog open={lightboxOpen} onOpenChange={setLightboxOpen}>
+                    <DialogContent className="max-w-6xl w-full p-0 bg-background">
+                      <button
+                        onClick={() => setLightboxOpen(false)}
+                        className="absolute right-4 top-4 z-50 rounded-full bg-background/80 p-2 hover:bg-background transition-colors"
+                      >
+                        <X className="h-5 w-5" />
+                      </button>
+
+                      <div className="p-6">
+                        {/* Main Image */}
+                        <div className="relative aspect-video mb-6 bg-muted rounded-lg overflow-hidden">
+                          {images[lightboxIndex]?.key ? (
+                            <MediaAsset
+                              hardcodedKey={images[lightboxIndex].key}
+                              fallbackUrl={images[lightboxIndex].url}
+                              alt={`${roomData.name} - Image ${lightboxIndex + 1}`}
+                              className="w-full h-full object-contain"
+                            />
+                          ) : (
+                            <img
+                              src={images[lightboxIndex]?.url}
+                              alt={`${roomData.name} - Image ${lightboxIndex + 1}`}
+                              className="w-full h-full object-contain"
+                            />
+                          )}
+
+                          {/* Navigation Arrows */}
+                          {images.length > 1 && (
+                            <>
+                              <button
+                                onClick={() => navigateLightbox('prev')}
+                                className="absolute left-4 top-1/2 -translate-y-1/2 rounded-full bg-background/80 p-3 hover:bg-background transition-colors"
+                              >
+                                <ChevronLeft className="h-6 w-6" />
+                              </button>
+                              <button
+                                onClick={() => navigateLightbox('next')}
+                                className="absolute right-4 top-1/2 -translate-y-1/2 rounded-full bg-background/80 p-3 hover:bg-background transition-colors"
+                              >
+                                <ChevronRight className="h-6 w-6" />
+                              </button>
+                            </>
+                          )}
+                        </div>
+
+                        {/* Thumbnail Slider */}
+                        {images.length > 1 && (
+                          <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-thin">
+                            {images.map((image, index) => (
+                              <button
+                                key={index}
+                                onClick={() => setLightboxIndex(index)}
+                                className={`flex-shrink-0 w-20 h-20 rounded-lg overflow-hidden border-2 transition-all ${
+                                  index === lightboxIndex
+                                    ? 'border-primary scale-105'
+                                    : 'border-transparent hover:border-muted-foreground/50'
+                                }`}
+                              >
+                                {image.key ? (
+                                  <MediaAsset
+                                    hardcodedKey={image.key}
+                                    fallbackUrl={image.url}
+                                    alt={`${roomData.name} - Thumbnail ${index + 1}`}
+                                    className="w-full h-full object-cover"
+                                  />
+                                ) : (
+                                  <img
+                                    src={image.url}
+                                    alt={`${roomData.name} - Thumbnail ${index + 1}`}
+                                    className="w-full h-full object-cover"
+                                  />
+                                )}
+                              </button>
+                            ))}
+                          </div>
+                        )}
+
+                        {/* Image Info */}
+                        <div className="mt-4 text-center">
+                          <p className="text-sm text-muted-foreground font-body">
+                            {roomData.name} · Image {lightboxIndex + 1} of {images.length}
+                          </p>
+                        </div>
+                      </div>
+                    </DialogContent>
+                  </Dialog>
                 </div>
               )}
 
