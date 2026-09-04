@@ -25,7 +25,7 @@ const STAAHBooking = () => {
       {/* STAAH SwiftBook Widget */}
       <section className="py-12">
         <div className="max-w-6xl mx-auto px-4">
-          <div className="bg-card border border-border/20 rounded-2xl shadow-sm overflow-hidden">
+          <div className="bg-card border border-border/20 rounded-2xl shadow-sm overflow-visible relative z-10">
             <div className="p-4 md:p-8">
               <STAAHBookingEmbed />
             </div>
