@@ -231,7 +231,7 @@ const CategoryCard: React.FC<Props> = ({ category, onViewDetails, onBookNow, vie
     return (
       <div className="bg-card border rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-all duration-300">
         <div className="flex flex-col md:flex-row">
-          <div className="relative md:w-80 flex-shrink-0">
+          <Link to={`/stay/${category.id}`} className="relative md:w-80 flex-shrink-0 block cursor-pointer">
             <MediaAsset
               hardcodedKey={category.imageKey || ''}
               fallbackUrl={category.image || 'https://images.unsplash.com/photo-1571896349842-33c89424de2d?auto=format&fit=crop&w=800&q=80'}
@@ -241,11 +241,13 @@ const CategoryCard: React.FC<Props> = ({ category, onViewDetails, onBookNow, vie
             <Badge className="absolute top-3 right-3 bg-white/90 text-foreground">
               {category.budget}
             </Badge>
-          </div>
+          </Link>
           
           <div className="p-6 flex-1 flex flex-col">
             <div className="flex-1">
-              <h3 className="text-2xl font-heading font-semibold mb-2">{category.name}</h3>
+              <Link to={`/stay/${category.id}`}>
+                <h3 className="text-2xl font-heading font-semibold mb-2 hover:text-primary transition-colors cursor-pointer">{category.name}</h3>
+              </Link>
               <p className="text-muted-foreground mb-4">{category.tagline}</p>
               
               <div className="flex items-center gap-4 mb-4 text-sm text-muted-foreground">
@@ -374,7 +376,7 @@ const CategoryCard: React.FC<Props> = ({ category, onViewDetails, onBookNow, vie
   // Grid view (default)
   return (
     <div className="bg-card border rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-all duration-300">
-      <div className="relative">
+      <Link to={`/stay/${category.id}`} className="relative block cursor-pointer">
         <MediaAsset
           hardcodedKey={category.imageKey || ''}
           fallbackUrl={category.image || 'https://images.unsplash.com/photo-1571896349842-33c89424de2d?auto=format&fit=crop&w=800&q=80'}
@@ -384,10 +386,12 @@ const CategoryCard: React.FC<Props> = ({ category, onViewDetails, onBookNow, vie
         <Badge className="absolute top-3 right-3 bg-white/90 text-foreground">
           {category.budget}
         </Badge>
-      </div>
+      </Link>
       
       <div className="p-6">
-        <h3 className="text-xl font-heading font-semibold mb-2">{category.name}</h3>
+        <Link to={`/stay/${category.id}`}>
+          <h3 className="text-xl font-heading font-semibold mb-2 hover:text-primary transition-colors cursor-pointer">{category.name}</h3>
+        </Link>
         <p className="text-muted-foreground mb-4 text-sm">{category.tagline}</p>
         
         <div className="flex items-center gap-4 mb-4 text-sm text-muted-foreground">
