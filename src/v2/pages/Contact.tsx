@@ -11,7 +11,7 @@ import { useToast } from "@/hooks/use-toast";
 import GoogleMap from "@/v2/components/GoogleMap";
 import { getPageBySlug, contact } from "@/v2/data";
 
-const GOOGLE_MAPS_API_KEY = (import.meta.env.VITE_GOOGLE_MAPS_API_KEY as string) || "";
+const GOOGLE_MAPS_API_KEY = (import.meta.env.VITE_GOOGLE_MAPS_API_KEY as string) || "AIzaSyA8704uuYTZC8gKSoovX5Ox5o4SGK9q-W8";
 
 const Contact = () => {
   const pageData = getPageBySlug("contact");
