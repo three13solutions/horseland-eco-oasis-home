@@ -48,6 +48,24 @@ const RoomDetail = () => {
   const [checkOutOpen, setCheckOutOpen] = useState(false);
   const [guestSelectorOpen, setGuestSelectorOpen] = useState(false);
 
+  // Lightbox state
+  const [lightboxOpen, setLightboxOpen] = useState(false);
+  const [lightboxIndex, setLightboxIndex] = useState(0);
+
+  const openLightbox = (index: number) => {
+    setLightboxIndex(index);
+    setLightboxOpen(true);
+  };
+
+  const navigateLightbox = (direction: 'prev' | 'next') => {
+    setLightboxIndex((prev) => {
+      if (direction === 'prev') {
+        return prev === 0 ? images.length - 1 : prev - 1;
+      }
+      return prev === images.length - 1 ? 0 : prev + 1;
+    });
+  };
+
   // Fetch room data from database
   useEffect(() => {
     const fetchRoomData = async () => {
