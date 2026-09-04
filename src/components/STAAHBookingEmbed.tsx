@@ -7,9 +7,10 @@ interface STAAHBookingEmbedProps {
 }
 
 const DEFAULT_WIDGET_ID =
-  'quickbook-widget-842MTd0tZKorVSvgYBtp9JxxXJaAQ0VMQni2sbUt4LNUbZUY2ODg=-178844330380028';
+  'quickbook-widget-482MTv5ZTzTU3ACF7KZccPUf71sDoY2ODg=-178844330380028';
 const DEFAULT_SCRIPT_ID = '178844330380028';
 const DEFAULT_WIDGET_CLASS = 'Configure-quickBook-Widget';
+const DEFAULT_PROPERTY_ID = '482MTv5ZTzTU3ACF7KZccPUf71sDoY2ODg=';
 const SWIFTBOOK_SCRIPT_SRC_BASE =
   'https://www.swiftbook.io/cwplugin/displaywidget/preview/booking-service.min.js';
 
