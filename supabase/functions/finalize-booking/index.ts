@@ -169,7 +169,7 @@ serve(async (req) => {
     const bookingRecord = {
       ...booking,
       guest_id: guestId,
-      payment_status: 'completed',
+      payment_status: 'confirmed',
       payment_method: 'razorpay',
       payment_id: razorpay_payment_id,
       payment_order_id: razorpay_order_id,
