@@ -88,6 +88,7 @@ export default function RoomManagement() {
   const [viewMode, setViewMode] = useState<'card' | 'list'>('card');
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
+  const [roomTypeFilter, setRoomTypeFilter] = useState<string>('all');
   const [roomCategories, setRoomCategories] = useState<RoomCategory[]>([]);
   const { toast } = useToast();
   const navigate = useNavigate();
@@ -625,7 +626,8 @@ export default function RoomManagement() {
       (unit.unit_name && unit.unit_name.toLowerCase().includes(searchTerm.toLowerCase())) ||
       (unit.room_types?.name && unit.room_types.name.toLowerCase().includes(searchTerm.toLowerCase()));
     const matchesStatus = statusFilter === 'all' || unit.status === statusFilter;
-    return matchesSearch && matchesStatus;
+    const matchesRoomType = roomTypeFilter === 'all' || unit.room_type_id === roomTypeFilter;
+    return matchesSearch && matchesStatus && matchesRoomType;
   });
 
   // Helper to get effective category for a unit (unit override or inherited from room type)
@@ -1202,6 +1204,21 @@ export default function RoomManagement() {
                   </>
                 )}
               </select>
+
+              {activeTab === 'units' && (
+                <select
+                  value={roomTypeFilter}
+                  onChange={(e) => setRoomTypeFilter(e.target.value)}
+                  className="px-3 py-2 border border-input bg-background rounded-md text-sm"
+                >
+                  <option value="all">All Room Types</option>
+                  {rooms.map((room) => (
+                    <option key={room.id} value={room.id}>
+                      {room.name}{!room.is_published ? ' (Unpublished)' : ''}
+                    </option>
+                  ))}
+                </select>
+              )}
             </div>
           )}
         </div>
