@@ -73,3 +73,9 @@ verify_jwt = true
 
 [functions.send-booking-confirmation]
 verify_jwt = true
+
+[functions.finalize-booking]
+verify_jwt = false
+
+[functions.get-booking-confirmation]
+verify_jwt = false
