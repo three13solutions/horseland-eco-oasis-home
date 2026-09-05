@@ -119,6 +119,7 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
         description: `${bookingDetails.roomName} - ${bookingDetails.nights} night(s)`,
         order_id: orderData.id,
         handler: async function (response: any) {
+          setRazorpayOpen(false);
           try {
             // Step 4: Verify payment through secure edge function
             const { data: verifyData, error: verifyError } = await supabase.functions.invoke('verify-razorpay-payment', {
