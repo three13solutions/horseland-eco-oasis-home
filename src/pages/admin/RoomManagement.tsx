@@ -88,6 +88,7 @@ export default function RoomManagement() {
   const [viewMode, setViewMode] = useState<'card' | 'list'>('card');
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
+  const [roomTypeFilter, setRoomTypeFilter] = useState<string>('all');
   const [roomCategories, setRoomCategories] = useState<RoomCategory[]>([]);
   const { toast } = useToast();
   const navigate = useNavigate();
