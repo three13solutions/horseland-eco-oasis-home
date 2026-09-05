@@ -94,7 +94,18 @@ serve(async (req) => {
       })
     }
 
-    const { secret } = await getRazorpayCredentials(supabase)
+    const { keyId, secret } = await getRazorpayCredentials(supabase)
+
+    // Toggle: set ALLOW_TEST_BOOKINGS=false to stop test-mode payments from
+    // creating confirmed bookings once the account goes live.
+    const isTestMode = keyId.startsWith('rzp_test')
+    const allowTestBookings = (Deno.env.get('ALLOW_TEST_BOOKINGS') ?? 'true') !== 'false'
+    if (isTestMode && !allowTestBookings) {
+      return new Response(JSON.stringify({ error: 'Test-mode payments are not accepted' }), {
+        status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      })
+    }
+
     const valid = await isSignatureValid(secret, razorpay_order_id, razorpay_payment_id, razorpay_signature)
     if (!valid) {
       return new Response(JSON.stringify({ error: 'Invalid payment signature' }), {
@@ -105,12 +116,12 @@ serve(async (req) => {
     // Idempotency: if this payment was already recorded, return existing booking
     const { data: existingBooking } = await supabase
       .from('bookings')
-      .select('booking_id')
+      .select('booking_id, room_unit_id')
       .eq('payment_id', razorpay_payment_id)
       .maybeSingle()
 
     if (existingBooking) {
-      return new Response(JSON.stringify({ success: true, booking_id: existingBooking.booking_id }), {
+      return new Response(JSON.stringify({ success: true, booking_id: existingBooking.booking_id, room_unit_id: existingBooking.room_unit_id }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       })
     }
@@ -166,8 +177,43 @@ serve(async (req) => {
       }])
     }
 
+    // --- Room inventory allocation -------------------------------------
+    // Pick a concrete room unit so the booking blocks inventory and shows up
+    // on the backend calendar. Only runs for successfully paid bookings.
+    let assignedUnitId: string | null = booking.room_unit_id ?? null
+
+    if (!assignedUnitId && booking.room_type_id && booking.check_in && booking.check_out) {
+      const { data: units } = await supabase
+        .from('room_units')
+        .select('id, unit_number')
+        .eq('room_type_id', booking.room_type_id)
+        .eq('is_active', true)
+        .neq('status', 'maintenance')
+        .order('unit_number', { ascending: true })
+
+      if (units && units.length > 0) {
+        const { data: overlapping } = await supabase
+          .from('bookings')
+          .select('room_unit_id')
+          .in('room_unit_id', units.map((u: any) => u.id))
+          .neq('payment_status', 'cancelled')
+          .lt('check_in', booking.check_out)
+          .gt('check_out', booking.check_in)
+
+        const taken = new Set((overlapping ?? []).map((b: any) => b.room_unit_id))
+        const free = units.find((u: any) => !taken.has(u.id))
+        assignedUnitId = free ? free.id : null
+        if (!assignedUnitId) {
+          console.error('No free room unit for paid booking', {
+            room_type_id: booking.room_type_id, check_in: booking.check_in, check_out: booking.check_out
+          })
+        }
+      }
+    }
+
     const bookingRecord = {
       ...booking,
+      room_unit_id: assignedUnitId,
       guest_id: guestId,
       payment_status: 'confirmed',
       payment_method: 'razorpay',
@@ -187,6 +233,15 @@ serve(async (req) => {
         status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       })
     }
+
+    // Mark the unit occupied if the stay has already started (today's arrivals).
+    if (assignedUnitId) {
+      const today = new Date().toISOString().slice(0, 10)
+      if (booking.check_in <= today && booking.check_out > today) {
+        await supabase.from('room_units').update({ status: 'occupied' }).eq('id', assignedUnitId)
+      }
+    }
+
 
     const { error: paymentError } = await supabase.from('payments').insert({
       booking_id: bookingResult.id,
@@ -209,7 +264,7 @@ serve(async (req) => {
       console.error('Confirmation email failed:', emailError)
     }
 
-    return new Response(JSON.stringify({ success: true, booking_id: bookingResult.booking_id }), {
+    return new Response(JSON.stringify({ success: true, booking_id: bookingResult.booking_id, room_unit_id: assignedUnitId, is_test_payment: isTestMode }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' }
     })
   } catch (error) {
