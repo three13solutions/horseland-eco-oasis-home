@@ -21,7 +21,7 @@ import { AvailableRoomCard } from '@/components/booking/AvailableRoomCard';
 import GuestSelector from '@/components/GuestSelector';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { calculateBookingAmount, RAZORPAY_CONFIG } from '@/lib/razorpay';
+
 import { useQuery } from '@tanstack/react-query';
 import { RateVariant } from '@/hooks/useDynamicPricing';
 import { format } from 'date-fns';
