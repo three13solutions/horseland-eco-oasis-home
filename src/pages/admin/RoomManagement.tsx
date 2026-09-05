@@ -1212,9 +1212,9 @@ export default function RoomManagement() {
                   className="px-3 py-2 border border-input bg-background rounded-md text-sm"
                 >
                   <option value="all">All Room Types</option>
-                  {rooms.map((room) => (
+                  {rooms.filter((room) => room.is_published).map((room) => (
                     <option key={room.id} value={room.id}>
-                      {room.name}{!room.is_published ? ' (Unpublished)' : ''}
+                      {room.name}
                     </option>
                   ))}
                 </select>
