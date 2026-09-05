@@ -21,9 +21,10 @@ interface PaymentModalProps {
 
   bookingDetails: {
     roomName: string;
-    roomPrice: number;
+    roomPrice: number; // per-night rate; multiplied by nights
     nights: number;
     addonTotal?: number;
+    gstRate?: number; // optional GST rate override (e.g. from DB tiers)
     guestName: string;
     guestEmail: string;
     guestPhone: string;
