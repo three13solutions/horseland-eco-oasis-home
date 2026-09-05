@@ -94,7 +94,18 @@ serve(async (req) => {
       })
     }
 
-    const { secret } = await getRazorpayCredentials(supabase)
+    const { keyId, secret } = await getRazorpayCredentials(supabase)
+
+    // Toggle: set ALLOW_TEST_BOOKINGS=false to stop test-mode payments from
+    // creating confirmed bookings once the account goes live.
+    const isTestMode = keyId.startsWith('rzp_test')
+    const allowTestBookings = (Deno.env.get('ALLOW_TEST_BOOKINGS') ?? 'true') !== 'false'
+    if (isTestMode && !allowTestBookings) {
+      return new Response(JSON.stringify({ error: 'Test-mode payments are not accepted' }), {
+        status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      })
+    }
+
     const valid = await isSignatureValid(secret, razorpay_order_id, razorpay_payment_id, razorpay_signature)
     if (!valid) {
       return new Response(JSON.stringify({ error: 'Invalid payment signature' }), {
@@ -105,12 +116,12 @@ serve(async (req) => {
     // Idempotency: if this payment was already recorded, return existing booking
     const { data: existingBooking } = await supabase
       .from('bookings')
-      .select('booking_id')
+      .select('booking_id, room_unit_id')
       .eq('payment_id', razorpay_payment_id)
       .maybeSingle()
 
     if (existingBooking) {
-      return new Response(JSON.stringify({ success: true, booking_id: existingBooking.booking_id }), {
+      return new Response(JSON.stringify({ success: true, booking_id: existingBooking.booking_id, room_unit_id: existingBooking.room_unit_id }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       })
     }
@@ -253,7 +264,7 @@ serve(async (req) => {
       console.error('Confirmation email failed:', emailError)
     }
 
-    return new Response(JSON.stringify({ success: true, booking_id: bookingResult.booking_id }), {
+    return new Response(JSON.stringify({ success: true, booking_id: bookingResult.booking_id, room_unit_id: assignedUnitId, is_test_payment: isTestMode }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' }
     })
   } catch (error) {
