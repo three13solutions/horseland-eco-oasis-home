@@ -17,7 +17,8 @@ import {
 interface PaymentModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSuccess: (paymentId: string, orderId: string) => void;
+  onSuccess: (paymentId: string, orderId: string, signature: string) => void | Promise<void>;
+
   bookingDetails: {
     roomName: string;
     roomPrice: number;
