@@ -1581,6 +1581,35 @@ export default function RoomManagement() {
             </div>
           ) : null}
 
+          {filteredUnits.length > 0 && (
+            <div className="mt-6 sticky bottom-0 bg-background/95 backdrop-blur border-t py-3 px-4 rounded-lg shadow-sm">
+              <div className="flex flex-wrap items-center justify-between gap-3 text-sm">
+                <div className="flex items-center gap-2 font-medium">
+                  <Home className="h-4 w-4" />
+                  Total Room Units: <span className="text-lg font-bold">{filteredUnits.length}</span>
+                </div>
+                <div className="flex flex-wrap items-center gap-3 text-xs">
+                  <span className="flex items-center gap-1">
+                    <span className="w-2.5 h-2.5 rounded-full bg-green-500" />
+                    Available: <strong>{filteredUnits.filter(u => u.status === 'available').length}</strong>
+                  </span>
+                  <span className="flex items-center gap-1">
+                    <span className="w-2.5 h-2.5 rounded-full bg-yellow-500" />
+                    Maintenance: <strong>{filteredUnits.filter(u => u.status === 'maintenance').length}</strong>
+                  </span>
+                  <span className="flex items-center gap-1">
+                    <span className="w-2.5 h-2.5 rounded-full bg-red-500" />
+                    Out of Order: <strong>{filteredUnits.filter(u => u.status === 'out_of_order').length}</strong>
+                  </span>
+                  <span className="flex items-center gap-1">
+                    <span className="w-2.5 h-2.5 rounded-full bg-blue-500" />
+                    Occupied: <strong>{filteredUnits.filter(u => u.status === 'occupied').length}</strong>
+                  </span>
+                </div>
+              </div>
+            </div>
+          )}
+
           {filteredUnits.length === 0 && !showUnitForm && !showBulkForm && (
             <Card className="py-12">
               <CardContent className="text-center">
