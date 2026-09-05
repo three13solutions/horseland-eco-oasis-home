@@ -626,7 +626,8 @@ export default function RoomManagement() {
       (unit.unit_name && unit.unit_name.toLowerCase().includes(searchTerm.toLowerCase())) ||
       (unit.room_types?.name && unit.room_types.name.toLowerCase().includes(searchTerm.toLowerCase()));
     const matchesStatus = statusFilter === 'all' || unit.status === statusFilter;
-    return matchesSearch && matchesStatus;
+    const matchesRoomType = roomTypeFilter === 'all' || unit.room_type_id === roomTypeFilter;
+    return matchesSearch && matchesStatus && matchesRoomType;
   });
 
   // Helper to get effective category for a unit (unit override or inherited from room type)
