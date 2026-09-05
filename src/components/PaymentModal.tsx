@@ -49,10 +49,12 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
   const [razorpayOpen, setRazorpayOpen] = useState(false);
   const { toast } = useToast();
 
+  const gstRate = bookingDetails.gstRate ?? RAZORPAY_CONFIG.GST_RATE;
   const paymentBreakdown: BookingPaymentDetails = calculateBookingAmount(
     bookingDetails.roomPrice,
     bookingDetails.nights,
-    bookingDetails.addonTotal || 0
+    bookingDetails.addonTotal || 0,
+    gstRate
   );
 
   const loadRazorpayScript = (): Promise<boolean> => {
@@ -250,7 +252,7 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
             </div>
 
             <div className="flex justify-between text-sm">
-              <span>GST (18%)</span>
+              <span>GST ({Math.round(gstRate * 100)}%)</span>
               <span>{formatCurrency(paymentBreakdown.gstAmount)}</span>
             </div>
 
