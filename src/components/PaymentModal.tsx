@@ -45,6 +45,7 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
   bookingDetails,
 }) => {
   const [isProcessing, setIsProcessing] = useState(false);
+  const [razorpayOpen, setRazorpayOpen] = useState(false);
   const { toast } = useToast();
 
   const paymentBreakdown: BookingPaymentDetails = calculateBookingAmount(
@@ -118,6 +119,7 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
         description: `${bookingDetails.roomName} - ${bookingDetails.nights} night(s)`,
         order_id: orderData.id,
         handler: async function (response: any) {
+          setRazorpayOpen(false);
           try {
             // Step 4: Verify payment through secure edge function
             const { data: verifyData, error: verifyError } = await supabase.functions.invoke('verify-razorpay-payment', {
@@ -165,6 +167,7 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
         },
         modal: {
           ondismiss: () => {
+            setRazorpayOpen(false);
             setIsProcessing(false);
             toast({
               title: "Payment Cancelled",
@@ -177,6 +180,7 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
       const razorpay = new window.Razorpay(options);
       razorpay.on('payment.failed', function (response: any) {
         console.error('Razorpay payment failed:', response?.error);
+        setRazorpayOpen(false);
         setIsProcessing(false);
         toast({
           title: "Payment Failed",
@@ -184,6 +188,9 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
           variant: "destructive",
         });
       });
+      // Hide our dialog before opening Razorpay so its iframe/overlay
+      // becomes the top interactive layer (no overlay/focus-trap conflicts).
+      setRazorpayOpen(true);
       razorpay.open();
 
     } catch (error) {
@@ -196,6 +203,11 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
       setIsProcessing(false);
     }
   };
+
+  // While Razorpay checkout is open, don't render our dialog at all —
+  // Radix's overlay, focus trap and body pointer-events lock would otherwise
+  // sit above the Razorpay iframe and make it unclickable.
+  if (razorpayOpen) return null;
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
