@@ -204,6 +204,11 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
     }
   };
 
+  // While Razorpay checkout is open, don't render our dialog at all —
+  // Radix's overlay, focus trap and body pointer-events lock would otherwise
+  // sit above the Razorpay iframe and make it unclickable.
+  if (razorpayOpen) return null;
+
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-md">
