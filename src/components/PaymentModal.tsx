@@ -180,6 +180,7 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
       const razorpay = new window.Razorpay(options);
       razorpay.on('payment.failed', function (response: any) {
         console.error('Razorpay payment failed:', response?.error);
+        setRazorpayOpen(false);
         setIsProcessing(false);
         toast({
           title: "Payment Failed",
