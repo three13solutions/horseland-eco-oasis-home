@@ -1290,11 +1290,9 @@ const Booking = () => {
       const firstName = nameParts[0];
       const lastName = nameParts.slice(1).join(' ') || '';
 
-      const roomPrice = selectedVariant?.total_price || 0;
-      const addonTotal = selectedAddons.reduce((total, addon) => total + (addon.price * addon.quantity), 0) +
-                        (selectedPickup ? selectedPickup.price : 0) +
-                        selectedBedding.reduce((total, bed) => total + bed.price, 0);
-      const paymentBreakdown = calculateBookingAmount(roomPrice, 1, addonTotal);
+      // Use the exact same totals shown in the booking summary so the stored
+      // payment amount always matches what the guest agreed to pay.
+      const finalTotalAmount = calculateTotal() || 0;
 
       const bookingData = {
         booking_id: `BOOK_${Date.now()}`,
@@ -2518,11 +2516,12 @@ const Booking = () => {
             onSuccess={handlePaymentSuccess}
             bookingDetails={{
               roomName: selectedRoomType.name,
-              roomPrice: selectedVariant?.total_price || 0,
+              roomPrice: selectedVariant?.price_per_night || 0,
               nights: nights,
               addonTotal: selectedAddons.reduce((total, addon) => total + (addon.price * addon.quantity), 0) + 
                          (selectedPickup ? selectedPickup.price : 0) + 
                          selectedBedding.reduce((total, bed) => total + bed.price, 0),
+              gstRate: getGSTRate(),
               guestName: guestDetails.name,
               guestEmail: guestDetails.email,
               guestPhone: guestDetails.phone,
