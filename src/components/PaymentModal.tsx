@@ -167,6 +167,7 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
         },
         modal: {
           ondismiss: () => {
+            setRazorpayOpen(false);
             setIsProcessing(false);
             toast({
               title: "Payment Cancelled",
