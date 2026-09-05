@@ -188,6 +188,9 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
           variant: "destructive",
         });
       });
+      // Hide our dialog before opening Razorpay so its iframe/overlay
+      // becomes the top interactive layer (no overlay/focus-trap conflicts).
+      setRazorpayOpen(true);
       razorpay.open();
 
     } catch (error) {
