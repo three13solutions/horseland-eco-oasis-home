@@ -47,11 +47,12 @@ export interface BookingPaymentDetails {
 export const calculateBookingAmount = (
   roomPrice: number,
   nights: number,
-  addonTotal: number = 0
+  addonTotal: number = 0,
+  gstRate: number = RAZORPAY_CONFIG.GST_RATE
 ): BookingPaymentDetails => {
   const baseAmount = roomPrice * nights;
   const subtotal = baseAmount + addonTotal;
-  const gstAmount = subtotal * RAZORPAY_CONFIG.GST_RATE;
+  const gstAmount = subtotal * gstRate;
   const totalAmount = subtotal + gstAmount;
 
   return {
