@@ -1349,7 +1349,7 @@ const Booking = () => {
           razorpay_order_id: orderId,
           razorpay_payment_id: paymentId,
           razorpay_signature: signature,
-          payment_amount: paymentBreakdown.totalAmount,
+          payment_amount: finalTotalAmount,
           guest: {
             first_name: firstName,
             last_name: lastName,
