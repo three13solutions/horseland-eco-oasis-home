@@ -17,7 +17,8 @@ import {
 interface PaymentModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSuccess: (paymentId: string, orderId: string) => void;
+  onSuccess: (paymentId: string, orderId: string, signature: string) => void | Promise<void>;
+
   bookingDetails: {
     roomName: string;
     roomPrice: number;
@@ -136,8 +137,13 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
               throw new Error('Payment verification failed');
             }
 
-            // Payment verified successfully - call success handler
-            onSuccess(response.razorpay_payment_id, orderData.id);
+            // Payment verified successfully - hand over to the success handler
+            // (which persists the booking) BEFORE closing the modal.
+            await onSuccess(
+              response.razorpay_payment_id,
+              orderData.id,
+              response.razorpay_signature
+            );
             onClose();
           } catch (verificationError) {
             console.error('Payment verification error:', verificationError);
@@ -160,12 +166,26 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
         modal: {
           ondismiss: () => {
             setIsProcessing(false);
+            toast({
+              title: "Payment Cancelled",
+              description: "You closed the payment window before completing the payment.",
+            });
           },
         },
       };
 
       const razorpay = new window.Razorpay(options);
+      razorpay.on('payment.failed', function (response: any) {
+        console.error('Razorpay payment failed:', response?.error);
+        setIsProcessing(false);
+        toast({
+          title: "Payment Failed",
+          description: response?.error?.description || "Your payment could not be completed. Please try again.",
+          variant: "destructive",
+        });
+      });
       razorpay.open();
+
     } catch (error) {
       console.error('Payment error:', error);
       toast({

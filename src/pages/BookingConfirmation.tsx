@@ -57,6 +57,8 @@ export default function BookingConfirmation() {
 
   const fetchBookingDetails = async () => {
     try {
+      // Try a direct read first (works for admins / signed-in owners),
+      // then fall back to the public confirmation lookup for guest bookings.
       const { data, error } = await supabase
         .from("bookings")
         .select(`
@@ -64,11 +66,21 @@ export default function BookingConfirmation() {
           room_type:room_types(name, description)
         `)
         .eq("booking_id", bookingId)
-        .single();
+        .maybeSingle();
 
-      if (error) throw error;
+      if (!error && data) {
+        setBooking(data as BookingDetails);
+        return;
+      }
 
-      setBooking(data);
+      const { data: fnData, error: fnError } = await supabase.functions.invoke(
+        "get-booking-confirmation",
+        { body: { booking_id: bookingId } }
+      );
+
+      if (fnError || !fnData?.booking) throw fnError || new Error("Booking not found");
+
+      setBooking(fnData.booking as BookingDetails);
     } catch (error) {
       console.error("Error fetching booking:", error);
       toast({
@@ -81,6 +93,7 @@ export default function BookingConfirmation() {
       setLoading(false);
     }
   };
+
 
   const handlePrint = () => {
     window.print();

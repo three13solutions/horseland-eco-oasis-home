@@ -1283,75 +1283,21 @@ const Booking = () => {
     }, 100);
   };
 
-  const handlePaymentSuccess = async (paymentId: string, orderId: string) => {
+  const handlePaymentSuccess = async (paymentId: string, orderId: string, signature: string) => {
     try {
       // Split name into first and last name
       const nameParts = guestDetails.name.trim().split(' ');
       const firstName = nameParts[0];
       const lastName = nameParts.slice(1).join(' ') || '';
 
-      // First, create or find the guest
-      let guestId: string | null = null;
-      
-      // Try to find existing guest by email or phone
-      const { data: existingGuests } = await supabase
-        .from('guests')
-        .select('id')
-        .or(`email.eq.${guestDetails.email},phone.eq.${guestDetails.phone}`)
-        .limit(1);
+      const roomPrice = selectedVariant?.total_price || 0;
+      const addonTotal = selectedAddons.reduce((total, addon) => total + (addon.price * addon.quantity), 0) +
+                        (selectedPickup ? selectedPickup.price : 0) +
+                        selectedBedding.reduce((total, bed) => total + bed.price, 0);
+      const paymentBreakdown = calculateBookingAmount(roomPrice, 1, addonTotal);
 
-      if (existingGuests && existingGuests.length > 0) {
-        guestId = existingGuests[0].id;
-        
-        // Update existing guest with new information
-        await supabase
-          .from('guests')
-          .update({
-            first_name: firstName,
-            last_name: lastName,
-            email: guestDetails.email,
-            phone: guestDetails.phone,
-            gender: guestDetails.gender || null,
-          })
-          .eq('id', guestId);
-      } else {
-        // Create new guest
-        const { data: newGuest, error: guestError } = await supabase
-          .from('guests')
-          .insert([{
-            first_name: firstName,
-            last_name: lastName,
-            email: guestDetails.email,
-            phone: guestDetails.phone,
-            gender: guestDetails.gender || null,
-          }])
-          .select()
-          .single();
-
-        if (guestError) {
-          console.error('Error creating guest:', guestError);
-          throw guestError;
-        }
-        
-        guestId = newGuest.id;
-      }
-
-      // If ID details are provided, save identity document
-      if (guestId && guestDetails.idType && guestDetails.idNumber) {
-        await supabase
-          .from('guest_identity_documents')
-          .insert([{
-            guest_id: guestId,
-            document_type: guestDetails.idType,
-            document_number: guestDetails.idNumber,
-            is_verified: false
-          }]);
-      }
-
-      // Save booking to database with meal plan information
       const bookingData = {
         booking_id: `BOOK_${Date.now()}`,
-        guest_id: guestId,
         guest_name: guestDetails.name,
         guest_email: guestDetails.email,
         guest_phone: guestDetails.phone,
@@ -1360,10 +1306,6 @@ const Booking = () => {
         check_out: checkOut || null,
         guests_count: (adultsCount || 0) + (childrenCount || 0), // Total paying guests (infants free)
         total_amount: calculateTotal() || 0,
-        payment_status: 'completed',
-        payment_id: paymentId,
-        payment_order_id: orderId,
-        payment_method: 'razorpay',
         // Store meal plan information
         meal_plan_code: selectedMealPlan || 'room_only',
         meal_cost: selectedVariant?.meal_cost || 0,
@@ -1402,64 +1344,36 @@ const Booking = () => {
         notes: guestDetails.specialRequests || null
       };
 
-      console.log('Creating booking with data:', bookingData);
+      // Persist guest + booking + payment securely on the server (verifies the
+      // Razorpay signature again before writing anything).
+      const { data: result, error } = await supabase.functions.invoke('finalize-booking', {
+        body: {
+          razorpay_order_id: orderId,
+          razorpay_payment_id: paymentId,
+          razorpay_signature: signature,
+          payment_amount: paymentBreakdown.totalAmount,
+          guest: {
+            first_name: firstName,
+            last_name: lastName,
+            email: guestDetails.email,
+            phone: guestDetails.phone,
+            gender: guestDetails.gender || null,
+            id_type: guestDetails.idType || null,
+            id_number: guestDetails.idNumber || null,
+          },
+          booking: bookingData,
+        }
+      });
 
-      const { data: bookingResult, error } = await supabase
-        .from('bookings')
-        .insert([bookingData])
-        .select()
-        .single();
-
-      if (error) {
-        console.error('Error saving booking:', error);
-        console.error('Booking data that failed:', bookingData);
+      if (error || !result?.booking_id) {
+        console.error('Error finalizing booking:', error, result);
         toast({
           title: "Booking Error",
-          description: `Payment successful but booking couldn't be saved: ${error.message}. Please contact support with payment ID: ${paymentId}`,
+          description: `Payment successful but the booking couldn't be saved. Please contact support with payment ID: ${paymentId}`,
           variant: "destructive",
+          duration: 10000,
         });
         return;
-      }
-
-      // Create payment record
-      const roomPrice = selectedVariant?.total_price || 0;
-      const addonTotal = selectedAddons.reduce((total, addon) => total + (addon.price * addon.quantity), 0) + 
-                        (selectedPickup ? selectedPickup.price : 0) + 
-                        selectedBedding.reduce((total, bed) => total + bed.price, 0);
-      
-      const paymentBreakdown = calculateBookingAmount(
-        roomPrice,
-        1, // Already calculated in variant total_price
-        addonTotal
-      );
-
-      const { error: paymentError } = await supabase
-        .from('payments')
-        .insert({
-          booking_id: bookingResult.id,
-          invoice_id: null,
-          amount: paymentBreakdown.totalAmount,
-          payment_method: 'razorpay',
-          razorpay_payment_id: paymentId,
-          razorpay_order_id: orderId,
-          status: 'completed',
-          payment_date: new Date().toISOString(),
-          transaction_reference: paymentId
-        });
-
-      if (paymentError) {
-        console.error('Error creating payment record:', paymentError);
-        // Continue anyway - booking was successful
-      }
-
-      // Send confirmation email
-      try {
-        await supabase.functions.invoke('send-booking-confirmation', {
-          body: { booking_id: bookingResult.booking_id }
-        });
-      } catch (emailError) {
-        console.error('Error sending confirmation email:', emailError);
-        // Don't fail the booking if email fails
       }
 
       toast({
@@ -1471,16 +1385,18 @@ const Booking = () => {
       localStorage.removeItem('currentBooking');
 
       // Redirect to confirmation page
-      navigate(`/booking/confirmation?booking_id=${bookingResult.booking_id}`);
+      navigate(`/booking/confirmation?booking_id=${result.booking_id}`);
     } catch (error) {
       console.error('Error processing booking:', error);
       toast({
         title: "Booking Error",
-        description: "An error occurred while processing your booking. Please contact support.",
+        description: `An error occurred while saving your booking. Please contact support with payment ID: ${paymentId}`,
         variant: "destructive",
+        duration: 10000,
       });
     }
   };
+
 
   const handleSearchCriteriaUpdate = async () => {
     if (!tempCheckIn || !tempCheckOut) {
