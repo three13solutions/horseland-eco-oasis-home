@@ -102,6 +102,7 @@ const ActivitiesManagement = () => {
       distance: '',
       location_name: '',
       is_on_property: true,
+      is_active: true,
       price_type: 'free',
       timings_type: '24_7',
       available_days: [],
