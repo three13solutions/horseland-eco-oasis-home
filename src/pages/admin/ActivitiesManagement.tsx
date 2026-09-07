@@ -1096,11 +1096,6 @@ const ActivitiesManagement = () => {
                           </CardDescription>
                         )}
                       </div>
-                      <div className="flex flex-col gap-1 items-end">
-                        <Badge variant={activity.is_active ? "default" : "secondary"}>
-                          {activity.is_active ? 'Published' : 'Unpublished'}
-                        </Badge>
-                      </div>
                     </div>
                   </CardHeader>
                   
