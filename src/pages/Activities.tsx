@@ -211,6 +211,15 @@ const Activities = () => {
   });
 
   const handleAddToStay = (activity: Activity) => {
+    if (activity.availability_status === 'unavailable') {
+      toast({
+        title: "Currently Not Available",
+        description: "This activity is currently not available for booking.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     const bookingData = localStorage.getItem('currentBooking');
     
     if (!bookingData) {
