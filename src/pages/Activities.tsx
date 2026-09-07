@@ -1517,12 +1517,18 @@ const Activities = () => {
                             <div className="flex-1">
                               <div className="flex items-start justify-between mb-2">
                                 <h3 className="text-2xl font-heading font-semibold">{activity.title}</h3>
-                                <Badge 
-                                  className="ml-2 bg-primary text-primary-foreground whitespace-nowrap cursor-pointer hover:bg-primary/90 transition-colors"
-                                  onClick={() => navigate(`/activities/${activity.id}`)}
-                                >
-                                  Learn More
-                                </Badge>
+                                {activity.availability_status === 'unavailable' ? (
+                                  <Badge className="ml-2 bg-destructive text-destructive-foreground whitespace-nowrap">
+                                    Currently Not Available
+                                  </Badge>
+                                ) : (
+                                  <Badge 
+                                    className="ml-2 bg-primary text-primary-foreground whitespace-nowrap cursor-pointer hover:bg-primary/90 transition-colors"
+                                    onClick={() => navigate(`/activities/${activity.id}`)}
+                                  >
+                                    Available · Learn More
+                                  </Badge>
+                                )}
                               </div>
                               
                               <p className="text-muted-foreground font-body text-sm mb-4 leading-relaxed line-clamp-2">
