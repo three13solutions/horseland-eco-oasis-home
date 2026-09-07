@@ -55,6 +55,7 @@ interface FormData {
   distance: string;
   location_name: string;
   is_on_property: boolean;
+  is_active: boolean;
   price_type: 'free' | 'fixed' | 'range';
   price_amount?: number;
   price_range_min?: number;
