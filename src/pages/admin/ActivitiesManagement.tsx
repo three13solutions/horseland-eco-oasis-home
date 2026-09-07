@@ -1136,6 +1136,7 @@ const ActivitiesManagement = () => {
                   <TableHead>Description</TableHead>
                   <TableHead>Distance</TableHead>
                   <TableHead>Status</TableHead>
+                  <TableHead>Availability</TableHead>
                   <TableHead>Actions</TableHead>
                 </TableRow>
               </TableHeader>
