@@ -155,6 +155,7 @@ const ActivitiesManagement = () => {
         image_key: data.image_key || null,
         location_name: data.location_name,
         is_on_property: data.is_on_property,
+        is_active: data.is_active,
         price_type: data.price_type,
         price_amount: data.price_amount || null,
         price_range_min: data.price_range_min || null,
@@ -171,7 +172,6 @@ const ActivitiesManagement = () => {
         activity_tags: data.activity_tags,
         media_keys: data.media_keys,
         availability_status: data.availability_status,
-        ...(editingActivity ? {} : { is_active: true })
       };
 
       if (editingActivity) {
