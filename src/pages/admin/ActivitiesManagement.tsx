@@ -169,7 +169,7 @@ const ActivitiesManagement = () => {
         activity_tags: data.activity_tags,
         media_keys: data.media_keys,
         availability_status: data.availability_status,
-        is_active: true
+        ...(editingActivity ? {} : { is_active: true })
       };
 
       if (editingActivity) {
