@@ -21,6 +21,7 @@ interface Activity {
   image?: string;
   image_key?: string;
   is_active: boolean;
+  availability_status?: string;
   is_on_property?: boolean;
   booking_required: boolean;
   tags?: any;
@@ -1447,12 +1448,18 @@ const Activities = () => {
                           <Star className="w-3 h-3 mr-1 fill-current" />
                           4.5
                         </Badge>
-                        <Badge 
-                          className="absolute top-3 left-3 bg-primary text-primary-foreground cursor-pointer hover:bg-primary/90 transition-colors"
-                          onClick={() => navigate(`/activities/${activity.id}`)}
-                        >
-                          Learn More
-                        </Badge>
+                        {activity.availability_status === 'unavailable' ? (
+                          <Badge className="absolute top-3 left-3 bg-destructive text-destructive-foreground">
+                            Currently Not Available
+                          </Badge>
+                        ) : (
+                          <Badge 
+                            className="absolute top-3 left-3 bg-primary text-primary-foreground cursor-pointer hover:bg-primary/90 transition-colors"
+                            onClick={() => navigate(`/activities/${activity.id}`)}
+                          >
+                            Available · Learn More
+                          </Badge>
+                        )}
                       </div>
                       
                       <div className="p-6">
