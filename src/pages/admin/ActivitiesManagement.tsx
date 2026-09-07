@@ -974,6 +974,32 @@ const ActivitiesManagement = () => {
                   />
                 </div>
 
+                {/* Status */}
+                <div className="space-y-4">
+                  <h3 className="text-lg font-semibold">Status</h3>
+                  <FormField
+                    control={form.control}
+                    name="is_active"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Status</FormLabel>
+                        <Select onValueChange={(v) => field.onChange(v === 'published')} value={field.value ? 'published' : 'unpublished'}>
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select status" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            <SelectItem value="published">Published</SelectItem>
+                            <SelectItem value="unpublished">Unpublished</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+
                 <div className="flex gap-2 pt-4">
                   <Button type="submit">{editingActivity ? 'Update' : 'Create'} Activity</Button>
                   <Button 
