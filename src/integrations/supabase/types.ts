@@ -18,6 +18,7 @@ export type Database = {
         Row: {
           activity_tags: Json | null
           audience_tags: Json | null
+          availability_status: string
           available_days: Json | null
           available_seasons: Json | null
           booking_required: boolean
@@ -49,6 +50,7 @@ export type Database = {
         Insert: {
           activity_tags?: Json | null
           audience_tags?: Json | null
+          availability_status?: string
           available_days?: Json | null
           available_seasons?: Json | null
           booking_required?: boolean
@@ -80,6 +82,7 @@ export type Database = {
         Update: {
           activity_tags?: Json | null
           audience_tags?: Json | null
+          availability_status?: string
           available_days?: Json | null
           available_seasons?: Json | null
           booking_required?: boolean
