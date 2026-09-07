@@ -34,6 +34,7 @@ interface Activity {
   rules_regulations: string | null;
   disclaimer: string | null;
   is_active: boolean;
+  availability_status: string | null;
 }
 
 const ActivityDetail = () => {
@@ -65,6 +66,7 @@ const ActivityDetail = () => {
         .select('*')
         .eq('id', activityId)
         .eq('is_active', true)
+        .neq('availability_status', 'unavailable')
         .maybeSingle();
 
       if (error) throw error;

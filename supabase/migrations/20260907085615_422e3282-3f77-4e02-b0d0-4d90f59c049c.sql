@@ -1,0 +1,1 @@
+ALTER TABLE public.activities ADD COLUMN IF NOT EXISTS availability_status text NOT NULL DEFAULT 'available';

@@ -21,6 +21,7 @@ interface Activity {
   image?: string;
   image_key?: string;
   is_active: boolean;
+  availability_status?: string;
   is_on_property?: boolean;
   booking_required: boolean;
   tags?: any;
@@ -210,6 +211,15 @@ const Activities = () => {
   });
 
   const handleAddToStay = (activity: Activity) => {
+    if (activity.availability_status === 'unavailable') {
+      toast({
+        title: "Currently Not Available",
+        description: "This activity is currently not available for booking.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     const bookingData = localStorage.getItem('currentBooking');
     
     if (!bookingData) {
@@ -1447,12 +1457,18 @@ const Activities = () => {
                           <Star className="w-3 h-3 mr-1 fill-current" />
                           4.5
                         </Badge>
-                        <Badge 
-                          className="absolute top-3 left-3 bg-primary text-primary-foreground cursor-pointer hover:bg-primary/90 transition-colors"
-                          onClick={() => navigate(`/activities/${activity.id}`)}
-                        >
-                          Learn More
-                        </Badge>
+                        {activity.availability_status === 'unavailable' ? (
+                          <Badge className="absolute top-3 left-3 bg-destructive text-destructive-foreground">
+                            Currently Not Available
+                          </Badge>
+                        ) : (
+                          <Badge 
+                            className="absolute top-3 left-3 bg-primary text-primary-foreground cursor-pointer hover:bg-primary/90 transition-colors"
+                            onClick={() => navigate(`/activities/${activity.id}`)}
+                          >
+                            Available · Learn More
+                          </Badge>
+                        )}
                       </div>
                       
                       <div className="p-6">
@@ -1510,12 +1526,18 @@ const Activities = () => {
                             <div className="flex-1">
                               <div className="flex items-start justify-between mb-2">
                                 <h3 className="text-2xl font-heading font-semibold">{activity.title}</h3>
-                                <Badge 
-                                  className="ml-2 bg-primary text-primary-foreground whitespace-nowrap cursor-pointer hover:bg-primary/90 transition-colors"
-                                  onClick={() => navigate(`/activities/${activity.id}`)}
-                                >
-                                  Learn More
-                                </Badge>
+                                {activity.availability_status === 'unavailable' ? (
+                                  <Badge className="ml-2 bg-destructive text-destructive-foreground whitespace-nowrap">
+                                    Currently Not Available
+                                  </Badge>
+                                ) : (
+                                  <Badge 
+                                    className="ml-2 bg-primary text-primary-foreground whitespace-nowrap cursor-pointer hover:bg-primary/90 transition-colors"
+                                    onClick={() => navigate(`/activities/${activity.id}`)}
+                                  >
+                                    Available · Learn More
+                                  </Badge>
+                                )}
                               </div>
                               
                               <p className="text-muted-foreground font-body text-sm mb-4 leading-relaxed line-clamp-2">

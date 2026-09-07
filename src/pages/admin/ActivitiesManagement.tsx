@@ -27,6 +27,7 @@ interface Activity {
   image?: string;
   image_key?: string;
   is_active: boolean;
+  availability_status?: string;
   tags?: any;
   audience_tags?: any;
   location_name?: string;
@@ -253,6 +254,31 @@ const ActivitiesManagement = () => {
       toast({
         title: "Error",
         description: "Failed to delete activity",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const toggleAvailability = async (id: string, currentStatus: string | undefined) => {
+    const newStatus = currentStatus === 'unavailable' ? 'available' : 'unavailable';
+    try {
+      const { error } = await supabase
+        .from('activities')
+        .update({ availability_status: newStatus })
+        .eq('id', id);
+
+      if (error) throw error;
+
+      toast({
+        title: "Success",
+        description: `Activity marked as ${newStatus === 'available' ? 'Available' : 'Currently Not Available'}`,
+      });
+      loadActivities();
+    } catch (error) {
+      console.error('Error toggling availability:', error);
+      toast({
+        title: "Error",
+        description: "Failed to update availability status",
         variant: "destructive",
       });
     }
@@ -1019,9 +1045,14 @@ const ActivitiesManagement = () => {
                           </CardDescription>
                         )}
                       </div>
-                      <Badge variant={activity.is_active ? "default" : "secondary"}>
-                        {activity.is_active ? 'Active' : 'Inactive'}
-                      </Badge>
+                      <div className="flex flex-col gap-1 items-end">
+                        <Badge variant={activity.is_active ? "default" : "secondary"}>
+                          {activity.is_active ? 'Active' : 'Inactive'}
+                        </Badge>
+                        <Badge variant={activity.availability_status === 'unavailable' ? "destructive" : "outline"}>
+                          {activity.availability_status === 'unavailable' ? 'Not Available' : 'Available'}
+                        </Badge>
+                      </div>
                     </div>
                   </CardHeader>
                   
@@ -1067,17 +1098,31 @@ const ActivitiesManagement = () => {
                         </AlertDialog>
                       </div>
                       
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => toggleActive(activity.id, activity.is_active)}
-                      >
-                        {activity.is_active ? (
-                          <ToggleRight className="w-5 h-5 text-green-600" />
-                        ) : (
-                          <ToggleLeft className="w-5 h-5 text-gray-400" />
-                        )}
-                      </Button>
+                      <div className="flex items-center gap-1">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          title={activity.availability_status === 'unavailable' ? 'Mark as Available' : 'Mark as Currently Not Available'}
+                          onClick={() => toggleAvailability(activity.id, activity.availability_status)}
+                        >
+                          {activity.availability_status === 'unavailable' ? (
+                            <span className="text-xs text-destructive font-medium">Unavailable</span>
+                          ) : (
+                            <span className="text-xs text-green-600 font-medium">Available</span>
+                          )}
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => toggleActive(activity.id, activity.is_active)}
+                        >
+                          {activity.is_active ? (
+                            <ToggleRight className="w-5 h-5 text-green-600" />
+                          ) : (
+                            <ToggleLeft className="w-5 h-5 text-gray-400" />
+                          )}
+                        </Button>
+                      </div>
                     </div>
                   </CardContent>
                 </Card>
@@ -1091,6 +1136,7 @@ const ActivitiesManagement = () => {
                   <TableHead>Description</TableHead>
                   <TableHead>Distance</TableHead>
                   <TableHead>Status</TableHead>
+                  <TableHead>Availability</TableHead>
                   <TableHead>Actions</TableHead>
                 </TableRow>
               </TableHeader>
@@ -1104,6 +1150,19 @@ const ActivitiesManagement = () => {
                       <Badge variant={activity.is_active ? "default" : "secondary"}>
                         {activity.is_active ? 'Active' : 'Inactive'}
                       </Badge>
+                    </TableCell>
+                    <TableCell>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="p-0 h-auto"
+                        title="Click to toggle availability"
+                        onClick={() => toggleAvailability(activity.id, activity.availability_status)}
+                      >
+                        <Badge variant={activity.availability_status === 'unavailable' ? "destructive" : "outline"}>
+                          {activity.availability_status === 'unavailable' ? 'Not Available' : 'Available'}
+                        </Badge>
+                      </Button>
                     </TableCell>
                     <TableCell>
                       <div className="flex gap-2">
