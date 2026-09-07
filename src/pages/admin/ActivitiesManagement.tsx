@@ -1150,18 +1150,6 @@ const ActivitiesManagement = () => {
                         <Button
                           variant="ghost"
                           size="sm"
-                          title={activity.availability_status === 'unavailable' ? 'Mark as Available' : 'Mark as Currently Not Available'}
-                          onClick={() => toggleAvailability(activity.id, activity.availability_status)}
-                        >
-                          {activity.availability_status === 'unavailable' ? (
-                            <span className="text-xs text-destructive font-medium">Unavailable</span>
-                          ) : (
-                            <span className="text-xs text-green-600 font-medium">Available</span>
-                          )}
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="sm"
                           onClick={() => toggleActive(activity.id, activity.is_active)}
                         >
                           {activity.is_active ? (
