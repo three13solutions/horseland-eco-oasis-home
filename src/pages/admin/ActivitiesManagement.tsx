@@ -448,28 +448,6 @@ const ActivitiesManagement = () => {
                       )}
                     />
                   </div>
-
-                  <FormField
-                    control={form.control}
-                    name="is_active"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Status</FormLabel>
-                        <Select onValueChange={(v) => field.onChange(v === 'published')} value={field.value ? 'published' : 'unpublished'}>
-                          <FormControl>
-                            <SelectTrigger>
-                              <SelectValue placeholder="Select status" />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            <SelectItem value="published">Published</SelectItem>
-                            <SelectItem value="unpublished">Unpublished</SelectItem>
-                          </SelectContent>
-                        </Select>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
                 </div>
 
                 {/* Available Days */}
