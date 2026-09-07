@@ -55,6 +55,7 @@ interface FormData {
   distance: string;
   location_name: string;
   is_on_property: boolean;
+  is_active: boolean;
   price_type: 'free' | 'fixed' | 'range';
   price_amount?: number;
   price_range_min?: number;
@@ -101,6 +102,7 @@ const ActivitiesManagement = () => {
       distance: '',
       location_name: '',
       is_on_property: true,
+      is_active: true,
       price_type: 'free',
       timings_type: '24_7',
       available_days: [],
@@ -153,6 +155,7 @@ const ActivitiesManagement = () => {
         image_key: data.image_key || null,
         location_name: data.location_name,
         is_on_property: data.is_on_property,
+        is_active: data.is_active,
         price_type: data.price_type,
         price_amount: data.price_amount || null,
         price_range_min: data.price_range_min || null,
@@ -169,7 +172,6 @@ const ActivitiesManagement = () => {
         activity_tags: data.activity_tags,
         media_keys: data.media_keys,
         availability_status: data.availability_status,
-        ...(editingActivity ? {} : { is_active: true })
       };
 
       if (editingActivity) {
@@ -214,6 +216,7 @@ const ActivitiesManagement = () => {
       distance: activity.distance || '',
       location_name: activity.location_name || '',
       is_on_property: activity.is_on_property ?? true,
+      is_active: activity.is_active ?? true,
       price_type: activity.price_type as any || 'free',
       price_amount: activity.price_amount || undefined,
       price_range_min: activity.price_range_min || undefined,
@@ -445,6 +448,28 @@ const ActivitiesManagement = () => {
                       )}
                     />
                   </div>
+
+                  <FormField
+                    control={form.control}
+                    name="is_active"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Status</FormLabel>
+                        <Select onValueChange={(v) => field.onChange(v === 'published')} value={field.value ? 'published' : 'unpublished'}>
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select status" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            <SelectItem value="published">Published</SelectItem>
+                            <SelectItem value="unpublished">Unpublished</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
                 </div>
 
                 {/* Available Days */}
@@ -1075,9 +1100,6 @@ const ActivitiesManagement = () => {
                         <Badge variant={activity.is_active ? "default" : "secondary"}>
                           {activity.is_active ? 'Published' : 'Unpublished'}
                         </Badge>
-                        <Badge variant={activity.availability_status === 'unavailable' ? "destructive" : "outline"}>
-                          {activity.availability_status === 'unavailable' ? 'Not Available' : 'Available'}
-                        </Badge>
                       </div>
                     </div>
                   </CardHeader>
@@ -1125,18 +1147,6 @@ const ActivitiesManagement = () => {
                       </div>
                       
                       <div className="flex items-center gap-1">
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          title={activity.availability_status === 'unavailable' ? 'Mark as Available' : 'Mark as Currently Not Available'}
-                          onClick={() => toggleAvailability(activity.id, activity.availability_status)}
-                        >
-                          {activity.availability_status === 'unavailable' ? (
-                            <span className="text-xs text-destructive font-medium">Unavailable</span>
-                          ) : (
-                            <span className="text-xs text-green-600 font-medium">Available</span>
-                          )}
-                        </Button>
                         <Button
                           variant="ghost"
                           size="sm"
