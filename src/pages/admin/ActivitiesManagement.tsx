@@ -73,6 +73,7 @@ interface FormData {
   image?: string;
   image_key?: string;
   media_keys: string[];
+  availability_status: 'available' | 'unavailable';
 }
 
 const DAYS_OF_WEEK = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
@@ -112,6 +113,7 @@ const ActivitiesManagement = () => {
       image: '',
       image_key: '',
       media_keys: [],
+      availability_status: 'available',
     }
   });
 
@@ -166,6 +168,7 @@ const ActivitiesManagement = () => {
         audience_tags: data.audience_tags,
         activity_tags: data.activity_tags,
         media_keys: data.media_keys,
+        availability_status: data.availability_status,
         is_active: true
       };
 
@@ -229,6 +232,7 @@ const ActivitiesManagement = () => {
       image: activity.image || '',
       image_key: activity.image_key || '',
       media_keys: Array.isArray(activity.media_keys) ? activity.media_keys : [],
+      availability_status: activity.availability_status === 'unavailable' ? 'unavailable' : 'available',
     });
     
     setEditingActivity(activity);
@@ -537,6 +541,28 @@ const ActivitiesManagement = () => {
                             </div>
                           ))}
                         </div>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="availability_status"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Availability Status</FormLabel>
+                        <Select onValueChange={field.onChange} value={field.value}>
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select availability status" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            <SelectItem value="available">Available</SelectItem>
+                            <SelectItem value="unavailable">Unavailable</SelectItem>
+                          </SelectContent>
+                        </Select>
                         <FormMessage />
                       </FormItem>
                     )}
@@ -1025,8 +1051,8 @@ const ActivitiesManagement = () => {
                 className="px-3 py-2 border border-input bg-background rounded-md text-sm"
               >
                 <option value="all">All Status</option>
-                <option value="active">Active</option>
-                <option value="inactive">Inactive</option>
+                <option value="active">Published</option>
+                <option value="inactive">Unpublished</option>
               </select>
             </div>
           </div>
@@ -1047,7 +1073,7 @@ const ActivitiesManagement = () => {
                       </div>
                       <div className="flex flex-col gap-1 items-end">
                         <Badge variant={activity.is_active ? "default" : "secondary"}>
-                          {activity.is_active ? 'Active' : 'Inactive'}
+                          {activity.is_active ? 'Published' : 'Unpublished'}
                         </Badge>
                         <Badge variant={activity.availability_status === 'unavailable' ? "destructive" : "outline"}>
                           {activity.availability_status === 'unavailable' ? 'Not Available' : 'Available'}
@@ -1148,7 +1174,7 @@ const ActivitiesManagement = () => {
                     <TableCell>{activity.distance || '-'}</TableCell>
                     <TableCell>
                       <Badge variant={activity.is_active ? "default" : "secondary"}>
-                        {activity.is_active ? 'Active' : 'Inactive'}
+                        {activity.is_active ? 'Published' : 'Unpublished'}
                       </Badge>
                     </TableCell>
                     <TableCell>
