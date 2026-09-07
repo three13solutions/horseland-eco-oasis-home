@@ -1100,9 +1100,6 @@ const ActivitiesManagement = () => {
                         <Badge variant={activity.is_active ? "default" : "secondary"}>
                           {activity.is_active ? 'Published' : 'Unpublished'}
                         </Badge>
-                        <Badge variant={activity.availability_status === 'unavailable' ? "destructive" : "outline"}>
-                          {activity.availability_status === 'unavailable' ? 'Not Available' : 'Available'}
-                        </Badge>
                       </div>
                     </div>
                   </CardHeader>
