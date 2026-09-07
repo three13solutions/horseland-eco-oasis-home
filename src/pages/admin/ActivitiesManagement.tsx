@@ -27,6 +27,7 @@ interface Activity {
   image?: string;
   image_key?: string;
   is_active: boolean;
+  availability_status?: string;
   tags?: any;
   audience_tags?: any;
   location_name?: string;
@@ -253,6 +254,31 @@ const ActivitiesManagement = () => {
       toast({
         title: "Error",
         description: "Failed to delete activity",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const toggleAvailability = async (id: string, currentStatus: string | undefined) => {
+    const newStatus = currentStatus === 'unavailable' ? 'available' : 'unavailable';
+    try {
+      const { error } = await supabase
+        .from('activities')
+        .update({ availability_status: newStatus })
+        .eq('id', id);
+
+      if (error) throw error;
+
+      toast({
+        title: "Success",
+        description: `Activity marked as ${newStatus === 'available' ? 'Available' : 'Currently Not Available'}`,
+      });
+      loadActivities();
+    } catch (error) {
+      console.error('Error toggling availability:', error);
+      toast({
+        title: "Error",
+        description: "Failed to update availability status",
         variant: "destructive",
       });
     }
