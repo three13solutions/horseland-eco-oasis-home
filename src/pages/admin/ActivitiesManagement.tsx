@@ -1152,6 +1152,19 @@ const ActivitiesManagement = () => {
                       </Badge>
                     </TableCell>
                     <TableCell>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="p-0 h-auto"
+                        title="Click to toggle availability"
+                        onClick={() => toggleAvailability(activity.id, activity.availability_status)}
+                      >
+                        <Badge variant={activity.availability_status === 'unavailable' ? "destructive" : "outline"}>
+                          {activity.availability_status === 'unavailable' ? 'Not Available' : 'Available'}
+                        </Badge>
+                      </Button>
+                    </TableCell>
+                    <TableCell>
                       <div className="flex gap-2">
                         <Button
                           variant="outline"
