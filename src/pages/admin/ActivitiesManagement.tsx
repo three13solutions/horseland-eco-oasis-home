@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowLeft, Plus, Search, Edit, Trash2, ToggleLeft, ToggleRight, Grid, List, X } from 'lucide-react';
+import { ArrowLeft, Plus, Search, Edit, Trash2, Grid, List, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -1096,11 +1096,6 @@ const ActivitiesManagement = () => {
                           </CardDescription>
                         )}
                       </div>
-                      <div className="flex flex-col gap-1 items-end">
-                        <Badge variant={activity.is_active ? "default" : "secondary"}>
-                          {activity.is_active ? 'Published' : 'Unpublished'}
-                        </Badge>
-                      </div>
                     </div>
                   </CardHeader>
                   
@@ -1146,18 +1141,19 @@ const ActivitiesManagement = () => {
                         </AlertDialog>
                       </div>
                       
-                      <div className="flex items-center gap-1">
-                        <Button
-                          variant="ghost"
-                          size="sm"
+                      <div className="flex items-center gap-2">
+                        <span className={`text-xs font-medium ${activity.is_active ? 'text-green-700' : 'text-muted-foreground'}`}>
+                          {activity.is_active ? 'Published' : 'Unpublished'}
+                        </span>
+                        <button
+                          type="button"
+                          aria-label={activity.is_active ? 'Unpublish activity' : 'Publish activity'}
+                          aria-pressed={activity.is_active}
                           onClick={() => toggleActive(activity.id, activity.is_active)}
+                          className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-1 ${activity.is_active ? 'bg-green-600' : 'bg-gray-300'}`}
                         >
-                          {activity.is_active ? (
-                            <ToggleRight className="w-5 h-5 text-green-600" />
-                          ) : (
-                            <ToggleLeft className="w-5 h-5 text-gray-400" />
-                          )}
-                        </Button>
+                          <span className={`inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform duration-200 ${activity.is_active ? 'translate-x-4' : 'translate-x-1'}`} />
+                        </button>
                       </div>
                     </div>
                   </CardContent>
@@ -1232,17 +1228,15 @@ const ActivitiesManagement = () => {
                           </AlertDialogContent>
                         </AlertDialog>
                         
-                        <Button
-                          variant="ghost"
-                          size="sm"
+                        <button
+                          type="button"
+                          aria-label={activity.is_active ? 'Unpublish activity' : 'Publish activity'}
+                          aria-pressed={activity.is_active}
                           onClick={() => toggleActive(activity.id, activity.is_active)}
+                          className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-1 ${activity.is_active ? 'bg-green-600' : 'bg-gray-300'}`}
                         >
-                          {activity.is_active ? (
-                            <ToggleRight className="w-5 h-5 text-green-600" />
-                          ) : (
-                            <ToggleLeft className="w-5 h-5 text-gray-400" />
-                          )}
-                        </Button>
+                          <span className={`inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform duration-200 ${activity.is_active ? 'translate-x-4' : 'translate-x-1'}`} />
+                        </button>
                       </div>
                     </TableCell>
                   </TableRow>
