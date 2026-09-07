@@ -216,6 +216,7 @@ const ActivitiesManagement = () => {
       distance: activity.distance || '',
       location_name: activity.location_name || '',
       is_on_property: activity.is_on_property ?? true,
+      is_active: activity.is_active ?? true,
       price_type: activity.price_type as any || 'free',
       price_amount: activity.price_amount || undefined,
       price_range_min: activity.price_range_min || undefined,
