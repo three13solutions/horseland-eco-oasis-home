@@ -385,9 +385,43 @@ const ActivityDetail = () => {
                   <h3 className="text-xl font-heading font-semibold mb-3 text-foreground">
                     Rules & Regulations
                   </h3>
-                  <p className="text-muted-foreground font-body leading-relaxed whitespace-pre-line text-sm">
-                    {activity.rules_regulations}
-                  </p>
+                  {(() => {
+                    const lines = activity.rules_regulations!.split('\n').map(l => l.trim()).filter(Boolean);
+                    const blocks: React.ReactNode[] = [];
+                    let currentList: string[] = [];
+
+                    const flushList = () => {
+                      if (currentList.length === 0) return;
+                      const items = [...currentList];
+                      currentList = [];
+                      blocks.push(
+                        <ul key={`ul-${blocks.length}`} className="list-none space-y-2 mb-3 pl-1">
+                          {items.map((item, idx) => (
+                            <li key={idx} className="flex gap-2 text-muted-foreground font-body leading-relaxed text-sm">
+                              <span className="text-primary mt-1.5 flex-shrink-0">•</span>
+                              <span className="flex-1">{item.replace(/^[•\-*]\s*/, '')}</span>
+                            </li>
+                          ))}
+                        </ul>
+                      );
+                    };
+
+                    for (const line of lines) {
+                      if (/^[•\-*]\s+/.test(line)) {
+                        currentList.push(line);
+                      } else {
+                        flushList();
+                        blocks.push(
+                          <p key={`p-${blocks.length}`} className="text-muted-foreground font-body leading-relaxed text-sm mb-2 font-medium">
+                            {line}
+                          </p>
+                        );
+                      }
+                    }
+                    flushList();
+
+                    return <>{blocks}</>;
+                  })()}
                 </div>
               )}
 
