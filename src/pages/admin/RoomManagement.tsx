@@ -18,6 +18,8 @@ import { Link, useNavigate } from 'react-router-dom';
 import { BulkUnitsDialog } from '@/components/admin/BulkUnitsDialog';
 import { BedConfiguration } from '@/components/admin/BedConfiguration';
 import { MediaPicker } from '@/components/admin/MediaPicker';
+import { MultiMediaPicker } from '@/components/admin/MultiMediaPicker';
+
 import { RoomCategoriesTab } from '@/components/admin/RoomCategoriesTab';
 
 const ROOM_FEATURES = [
