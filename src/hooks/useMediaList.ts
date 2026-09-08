@@ -76,7 +76,8 @@ export const useMediaList = (filters: MediaListFilters = {}) => {
           gallery_categories(name, slug),
           image_categories(category_id, gallery_categories(name, slug))
         `)
-        .order('sort_order');
+        .order('created_at', { ascending: false })
+        .order('sort_order', { ascending: true });
 
       // Apply filters
       if (filters.mediaType && filters.mediaType !== 'all') {
