@@ -812,65 +812,25 @@ export default function RoomManagement() {
               </div>
 
               <div>
-                <Label className="mb-3 block">Gallery Images</Label>
-                <div className="space-y-4">
-                  {formData.gallery.map((url, index) => (
-                    <div key={index} className="relative border rounded-lg p-4">
-                      <div className="flex items-start justify-between mb-2">
-                        <span className="text-sm font-medium">Image {index + 1}</span>
-                        {formData.gallery.length > 1 && (
-                          <Button
-                            type="button"
-                            variant="destructive"
-                            size="sm"
-                            onClick={() => {
-                              setFormData({
-                                ...formData,
-                                gallery: formData.gallery.filter((_, i) => i !== index)
-                              });
-                            }}
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        )}
-                      </div>
-                      <MediaPicker
-                        label=""
-                        value={url}
-                        onChange={async (newUrl) => {
-                          const newGallery = [...formData.gallery];
-                          newGallery[index] = newUrl;
-                          setFormData({...formData, gallery: newGallery});
-                          
-                          // Fetch and save the hardcoded_key
-                          const { data } = await supabase
-                            .from('gallery_images')
-                            .select('hardcoded_key')
-                            .eq('image_url', newUrl)
-                            .single();
-                          if (data?.hardcoded_key) {
-                            const newGalleryKeys = [...formData.gallery_keys];
-                            newGalleryKeys[index] = data.hardcoded_key;
-                            setFormData(prev => ({...prev, gallery_keys: newGalleryKeys}));
-                          }
-                        }}
-                        categorySlug="rooms"
-                        folder="room-images"
-                      />
-                    </div>
-                  ))}
-                </div>
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setFormData({...formData, gallery: [...formData.gallery, '']})}
-                  className="mt-3"
-                >
-                  <Plus className="h-4 w-4 mr-2" />
-                  Add Gallery Image
-                </Button>
+                <MultiMediaPicker
+                  label="Gallery Images"
+                  values={formData.gallery.filter(url => url && url.trim() !== '')}
+                  onChange={async (urls) => {
+                    setFormData(prev => ({ ...prev, gallery: urls }));
+                    const { data } = await supabase
+                      .from('gallery_images')
+                      .select('image_url, hardcoded_key')
+                      .in('image_url', urls);
+                    const keys = urls
+                      .map(u => data?.find(d => d.image_url === u)?.hardcoded_key)
+                      .filter((k): k is string => !!k);
+                    setFormData(prev => ({ ...prev, gallery_keys: keys }));
+                  }}
+                  categorySlug="rooms"
+                  folder="room-images"
+                />
               </div>
+
 
               <div className="flex items-center space-x-2">
                 <Switch
