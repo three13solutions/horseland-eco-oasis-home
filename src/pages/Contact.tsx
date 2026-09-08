@@ -187,11 +187,11 @@ const Contact = () => {
                       <div>
                         <h3 className="font-semibold text-foreground mb-2">Phone</h3>
                         <p className="text-muted-foreground">
-                          Hotel: +91 797538460
-                          <br />
                           Mahesh: +91 9404224600
                           <br />
                           Sachin: +91 9004424567
+                          <br />
+                          Hotel: +91 797538460
                           <br />
                         </p>
                       </div>
