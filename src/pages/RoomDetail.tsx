@@ -328,10 +328,12 @@ const RoomDetail = () => {
                     <Bed className="w-6 h-6 mx-auto mb-2 text-primary" />
                     <div className="font-body font-semibold text-sm">Comfortable Bedding</div>
                   </div>
-                  <div className="text-center p-4 bg-muted/30 rounded-lg">
-                    <Mountain className="w-6 h-6 mx-auto mb-2 text-primary" />
-                    <div className="font-body font-semibold text-sm">Mountain View</div>
-                  </div>
+                  {roomData.name !== 'Deluxe' && (
+                    <div className="text-center p-4 bg-muted/30 rounded-lg">
+                      <Mountain className="w-6 h-6 mx-auto mb-2 text-primary" />
+                      <div className="font-body font-semibold text-sm">Mountain View</div>
+                    </div>
+                  )}
                 </div>
               </div>
 
