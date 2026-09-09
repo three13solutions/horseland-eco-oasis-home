@@ -19,12 +19,12 @@ const StayPreviewV5 = () => {
         .from('room_types')
         .select('*')
         .eq('is_published', true)
-        .in('name', ['Standard', 'Deluxe', 'Superior']);
+        .in('name', ['Standard AC', 'Deluxe', 'Superior']);
       
       if (error) throw error;
       
       // Sort in the desired order
-      const order = ['Standard', 'Deluxe', 'Superior'];
+      const order = ['Standard AC', 'Deluxe', 'Superior'];
       return data?.sort((a, b) => order.indexOf(a.name) - order.indexOf(b.name)) || [];
     }
   });
