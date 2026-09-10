@@ -348,12 +348,12 @@ const ActivityDetail = () => {
                     <MapPin className="h-5 w-5 text-primary" />
                     Location
                   </h3>
-                  <div className="space-y-2 text-muted-foreground font-body">
+                  <div className="space-y-2 text-muted-foreground font-body leading-relaxed">
                     {activity.location_name && (
                       <p>{activity.location_name}</p>
                     )}
                     {activity.is_on_property !== null && (
-                      <p className="text-sm">
+                      <p>
                         {activity.is_on_property ? '✓ On Property' : '• Off Property'}
                       </p>
                     )}
