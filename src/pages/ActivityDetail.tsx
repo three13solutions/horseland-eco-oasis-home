@@ -368,10 +368,10 @@ const ActivityDetail = () => {
                     <Calendar className="h-5 w-5 text-primary" />
                     Booking Information
                   </h3>
-                  <div className="space-y-2 text-muted-foreground font-body">
+                  <div className="space-y-2 text-muted-foreground font-body leading-relaxed">
                     <p>Advance booking required</p>
                     {activity.booking_type && (
-                      <p className="text-sm capitalize">
+                      <p className="capitalize">
                         Book at: {activity.booking_type.replace('_', ' ')}
                       </p>
                     )}
