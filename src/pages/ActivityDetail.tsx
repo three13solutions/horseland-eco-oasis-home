@@ -395,10 +395,10 @@ const ActivityDetail = () => {
                       const items = [...currentList];
                       currentList = [];
                       blocks.push(
-                        <ul key={`ul-${blocks.length}`} className="list-none space-y-2 mb-3 pl-1">
+                        <ul key={`ul-${blocks.length}`} className="list-none space-y-2.5 mb-4 pl-0.5">
                           {items.map((item, idx) => (
-                            <li key={idx} className="flex gap-2 text-muted-foreground font-body leading-relaxed text-sm">
-                              <span className="text-primary mt-1.5 flex-shrink-0">•</span>
+                            <li key={idx} className="flex gap-2.5 text-muted-foreground font-body leading-relaxed">
+                              <span className="text-primary mt-1.5 flex-shrink-0 text-base leading-none">•</span>
                               <span className="flex-1">{item.replace(/^[•\-*]\s*/, '')}</span>
                             </li>
                           ))}
@@ -412,7 +412,7 @@ const ActivityDetail = () => {
                       } else {
                         flushList();
                         blocks.push(
-                          <p key={`p-${blocks.length}`} className="text-muted-foreground font-body leading-relaxed text-sm mb-2 font-medium">
+                          <p key={`p-${blocks.length}`} className="text-muted-foreground font-body leading-relaxed mb-3 font-medium">
                             {line}
                           </p>
                         );
