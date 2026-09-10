@@ -348,12 +348,12 @@ const ActivityDetail = () => {
                     <MapPin className="h-5 w-5 text-primary" />
                     Location
                   </h3>
-                  <div className="space-y-2 text-muted-foreground font-body">
+                  <div className="space-y-2 text-muted-foreground font-body leading-relaxed">
                     {activity.location_name && (
                       <p>{activity.location_name}</p>
                     )}
                     {activity.is_on_property !== null && (
-                      <p className="text-sm">
+                      <p>
                         {activity.is_on_property ? '✓ On Property' : '• Off Property'}
                       </p>
                     )}
@@ -368,10 +368,10 @@ const ActivityDetail = () => {
                     <Calendar className="h-5 w-5 text-primary" />
                     Booking Information
                   </h3>
-                  <div className="space-y-2 text-muted-foreground font-body">
+                  <div className="space-y-2 text-muted-foreground font-body leading-relaxed">
                     <p>Advance booking required</p>
                     {activity.booking_type && (
-                      <p className="text-sm capitalize">
+                      <p className="capitalize">
                         Book at: {activity.booking_type.replace('_', ' ')}
                       </p>
                     )}
@@ -395,11 +395,11 @@ const ActivityDetail = () => {
                       const items = [...currentList];
                       currentList = [];
                       blocks.push(
-                        <ul key={`ul-${blocks.length}`} className="list-none space-y-2 mb-3 pl-1">
+                        <ul key={`ul-${blocks.length}`} className="list-none space-y-2.5 mb-4">
                           {items.map((item, idx) => (
-                            <li key={idx} className="flex gap-2 text-muted-foreground font-body leading-relaxed text-sm">
-                              <span className="text-primary mt-1.5 flex-shrink-0">•</span>
-                              <span className="flex-1">{item.replace(/^[•\-*]\s*/, '')}</span>
+                            <li key={idx} className="relative pl-5 text-muted-foreground font-body leading-relaxed">
+                              <span className="absolute left-0 top-0 text-primary leading-relaxed">•</span>
+                              <span>{item.replace(/^[•\-*]\s*/, '')}</span>
                             </li>
                           ))}
                         </ul>
@@ -412,7 +412,7 @@ const ActivityDetail = () => {
                       } else {
                         flushList();
                         blocks.push(
-                          <p key={`p-${blocks.length}`} className="text-muted-foreground font-body leading-relaxed text-sm mb-2 font-medium">
+                          <p key={`p-${blocks.length}`} className="text-muted-foreground font-body leading-relaxed mb-3 font-medium">
                             {line}
                           </p>
                         );
@@ -428,7 +428,7 @@ const ActivityDetail = () => {
               {/* Disclaimer */}
               {activity.disclaimer && (
                 <div className="mb-6 p-4 bg-muted/30 rounded-lg border">
-                  <p className="text-muted-foreground font-body text-sm leading-relaxed whitespace-pre-line">
+                  <p className="text-muted-foreground font-body leading-relaxed whitespace-pre-line">
                     <strong>Note:</strong> {activity.disclaimer}
                   </p>
                 </div>
