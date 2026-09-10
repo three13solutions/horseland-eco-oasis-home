@@ -428,7 +428,7 @@ const ActivityDetail = () => {
               {/* Disclaimer */}
               {activity.disclaimer && (
                 <div className="mb-6 p-4 bg-muted/30 rounded-lg border">
-                  <p className="text-muted-foreground font-body text-sm leading-relaxed whitespace-pre-line">
+                  <p className="text-muted-foreground font-body leading-relaxed whitespace-pre-line">
                     <strong>Note:</strong> {activity.disclaimer}
                   </p>
                 </div>
