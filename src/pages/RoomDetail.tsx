@@ -465,23 +465,6 @@ const RoomDetail = () => {
                 </div>
               )}
 
-              {/* Hot Water Timings */}
-              <div>
-                <h2 className="text-2xl font-heading font-bold mb-4 text-foreground">Hot Water Timings</h2>
-                <div className="p-4 bg-muted/30 rounded-lg border">
-                  <div className="space-y-3">
-                    <div className="flex items-center justify-between">
-                      <span className="font-body font-medium text-muted-foreground">Morning</span>
-                      <span className="font-body font-semibold text-foreground">8:00 AM - 11:00 AM</span>
-                    </div>
-                    <div className="border-t pt-3 flex items-center justify-between">
-                      <span className="font-body font-medium text-muted-foreground">Evening</span>
-                      <span className="font-body font-semibold text-foreground">5:00 PM - 7:00 PM</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
               {/* Room Features */}
               {features.length > 0 && (
                 <div>
@@ -506,6 +489,23 @@ const RoomDetail = () => {
                   </div>
                 </div>
               )}
+
+              {/* Hot Water Timings */}
+              <div>
+                <h2 className="text-2xl font-heading font-bold mb-4 text-foreground">Hot Water Timings</h2>
+                <div className="p-4 bg-muted/30 rounded-lg border">
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between">
+                      <span className="font-body font-medium text-muted-foreground">Morning</span>
+                      <span className="font-body font-semibold text-foreground">8:00 AM - 11:00 AM</span>
+                    </div>
+                    <div className="border-t pt-3 flex items-center justify-between">
+                      <span className="font-body font-medium text-muted-foreground">Evening</span>
+                      <span className="font-body font-semibold text-foreground">5:00 PM - 7:00 PM</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
 
               {/* Seasonal Pricing */}
               {roomData.seasonal_pricing && Object.keys(roomData.seasonal_pricing).length > 0 && (
