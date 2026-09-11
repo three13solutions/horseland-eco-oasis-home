@@ -206,7 +206,7 @@ const RoomDetail = () => {
     images.push({ key: null, url: 'https://images.unsplash.com/photo-1631049307264-da0ec9d70304?auto=format&fit=crop&w=800&q=80' });
   }
 
-  const features = roomData.features || [];
+  const features = (roomData.features || []).map((feature: string) => toTitleCaseFeature(feature));
 
   const nextImage = () => {
     setCurrentImageIndex((prev) => (prev + 1) % images.length);
