@@ -26,6 +26,22 @@ import {
   X
 } from 'lucide-react';
 
+// Convert a feature string to Title Case while keeping known acronyms (TV, AC, Wi-Fi) intact
+const ACRONYMS = ['TV', 'AC', 'Wi-Fi', 'WiFi', 'LED', 'USB'];
+const toTitleCaseFeature = (text: string): string => {
+  if (!text) return text;
+  return text
+    .split(' ')
+    .map((word, index) => {
+      const upper = word.toUpperCase();
+      const match = ACRONYMS.find(a => a.toUpperCase() === upper || a.toUpperCase() === upper.replace(/[^A-Z0-9-]/g, ''));
+      if (match) return match;
+      if (word.length === 0) return word;
+      return word.charAt(0).toUpperCase() + word.slice(1).toLowerCase();
+    })
+    .join(' ');
+};
+
 const RoomDetail = () => {
   const { roomId } = useParams();
   const navigate = useNavigate();
@@ -206,7 +222,7 @@ const RoomDetail = () => {
     images.push({ key: null, url: 'https://images.unsplash.com/photo-1631049307264-da0ec9d70304?auto=format&fit=crop&w=800&q=80' });
   }
 
-  const features = roomData.features || [];
+  const features = (roomData.features || []).map((feature: string) => toTitleCaseFeature(feature));
 
   const nextImage = () => {
     setCurrentImageIndex((prev) => (prev + 1) % images.length);
