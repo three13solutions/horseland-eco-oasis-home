@@ -342,13 +342,13 @@ const CategoryCard: React.FC<Props> = ({ category, onViewDetails, onBookNow, vie
             <div className="flex items-end justify-between gap-4 mt-4">
               <div>
                 <div className="text-xs text-muted-foreground mb-1">
-                  {selectedVariant ? 'Price per person' : 'Starting from'}
+                  {selectedVariant ? 'Price per night' : 'Starting from'}
                 </div>
                 <span className="text-2xl font-heading font-bold text-primary">
-                  ₹{pricePerPerson.toLocaleString()}
+                  ₹{displayPrice.toLocaleString()}
                 </span>
                 <span className="text-sm text-muted-foreground ml-1">
-                  /person/night
+                  /night
                 </span>
                 {selectedVariant && (
                   <div className="text-xs text-muted-foreground mt-1">
@@ -485,13 +485,13 @@ const CategoryCard: React.FC<Props> = ({ category, onViewDetails, onBookNow, vie
         <div className="space-y-3">
           <div>
             <div className="text-xs text-muted-foreground mb-1">
-              {selectedVariant ? 'Total Price' : 'Starting from'}
+              {selectedVariant ? 'Price per night' : 'Starting from'}
             </div>
             <span className="text-2xl font-heading font-bold text-primary">
-              ₹{pricePerPerson.toLocaleString()}
+              ₹{displayPrice.toLocaleString()}
             </span>
             <span className="text-sm text-muted-foreground ml-1">
-              /person/night
+              /night
             </span>
             {selectedVariant && (
               <div className="text-xs text-muted-foreground mt-1">
