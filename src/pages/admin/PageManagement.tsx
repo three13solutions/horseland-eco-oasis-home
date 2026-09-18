@@ -13,6 +13,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
 import { Plus, Pencil, Trash2, Eye, EyeOff, Search, Languages, Loader2 } from "lucide-react";
 import { MediaPicker } from "@/components/admin/MediaPicker";
+import { MultiMediaPicker } from "@/components/admin/MultiMediaPicker";
 import { TranslationField } from "@/components/admin/TranslationField";
 import { PageContentEditor } from "@/components/admin/PageContentEditor";
 
@@ -553,68 +554,37 @@ export default function PageManagement() {
                   )}
 
                   {formData.hero_type === "carousel" && (
-                    <div>
-                      <Label>Carousel Images</Label>
-                      <p className="text-sm text-muted-foreground mb-2">
-                        Add up to 5 images for the carousel
-                      </p>
-                        {formData.hero_gallery.map((url, index) => (
-                        <div key={index} className="mb-4">
-                          <MediaPicker
-                            label={`Image ${index + 1}`}
-                            value={url}
-                            onChange={async (newUrl) => {
-                              const newGallery = [...formData.hero_gallery];
-                              newGallery[index] = newUrl;
-                              setFormData({ ...formData, hero_gallery: newGallery });
-                              
-                              // Fetch and save the hardcoded_key
-                              const { data } = await supabase
-                                .from('gallery_images')
-                                .select('hardcoded_key')
-                                .eq('image_url', newUrl)
-                                .single();
-                              if (data?.hardcoded_key) {
-                                const newGalleryKeys = [...formData.hero_gallery_keys];
-                                newGalleryKeys[index] = data.hardcoded_key;
-                                setFormData(prev => ({ ...prev, hero_gallery_keys: newGalleryKeys }));
-                              }
-                            }}
-                            categorySlug="hero-banners"
-                            folder="hero-images"
-                          />
-                          <Button
-                            type="button"
-                            variant="destructive"
-                            size="sm"
-                            className="mt-2"
-                            onClick={() => {
-                              const newGallery = formData.hero_gallery.filter(
-                                (_, i) => i !== index
-                              );
-                              setFormData({ ...formData, hero_gallery: newGallery });
-                            }}
-                          >
-                            Remove Image
-                          </Button>
-                        </div>
-                      ))}
-                      {formData.hero_gallery.length < 5 && (
-                        <Button
-                          type="button"
-                          variant="outline"
-                          onClick={() => {
-                            setFormData({
-                              ...formData,
-                              hero_gallery: [...formData.hero_gallery, ""],
-                            });
-                          }}
-                        >
-                          <Plus className="w-4 h-4 mr-2" />
-                          Add Image
-                        </Button>
-                      )}
-                    </div>
+                    <MultiMediaPicker
+                      label="Carousel Images"
+                      values={formData.hero_gallery.filter((url) => url && url.trim() !== "")}
+                      onChange={async (urls) => {
+                        if (urls.length === 0) {
+                          setFormData((prev) => ({
+                            ...prev,
+                            hero_gallery: [],
+                            hero_gallery_keys: [],
+                          }));
+                          return;
+                        }
+
+                        const { data } = await supabase
+                          .from("gallery_images")
+                          .select("image_url, hardcoded_key")
+                          .in("image_url", urls);
+
+                        const keys = urls.map(
+                          (url) => data?.find((media) => media.image_url === url)?.hardcoded_key || ""
+                        );
+
+                        setFormData((prev) => ({
+                          ...prev,
+                          hero_gallery: urls,
+                          hero_gallery_keys: keys,
+                        }));
+                      }}
+                      categorySlug="hero-banners"
+                      folder="hero-images"
+                    />
                   )}
                 </TabsContent>
 
