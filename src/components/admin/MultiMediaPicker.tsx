@@ -29,6 +29,7 @@ export const MultiMediaPicker: React.FC<MultiMediaPickerProps> = ({
   const [isOpen, setIsOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [selected, setSelected] = useState<string[]>(values);
+  const [dragIndex, setDragIndex] = useState<number | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const { data: mediaList, refetch } = useMediaList({
@@ -81,6 +82,15 @@ export const MultiMediaPicker: React.FC<MultiMediaPickerProps> = ({
   const removeAt = (index: number) => {
     onChange(values.filter((_, i) => i !== index));
   };
+
+  const moveItem = (from: number, to: number) => {
+    if (from === to || from < 0 || to < 0 || from >= values.length || to >= values.length) return;
+    const next = [...values];
+    const [moved] = next.splice(from, 1);
+    next.splice(to, 0, moved);
+    onChange(next);
+  };
+
 
   return (
     <div className="space-y-4">
