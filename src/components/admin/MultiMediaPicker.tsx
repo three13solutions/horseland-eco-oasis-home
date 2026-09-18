@@ -101,12 +101,29 @@ export const MultiMediaPicker: React.FC<MultiMediaPickerProps> = ({
         {values.length > 0 ? (
           <div className="grid grid-cols-3 md:grid-cols-4 gap-3">
             {values.map((url, index) => (
-              <div key={`${url}-${index}`} className="relative group">
+              <div
+                key={`${url}-${index}`}
+                draggable
+                onDragStart={() => setDragIndex(index)}
+                onDragOver={(e) => e.preventDefault()}
+                onDrop={(e) => {
+                  e.preventDefault();
+                  if (dragIndex !== null) moveItem(dragIndex, index);
+                  setDragIndex(null);
+                }}
+                onDragEnd={() => setDragIndex(null)}
+                className={`relative group cursor-move transition-opacity ${
+                  dragIndex === index ? 'opacity-50' : ''
+                }`}
+              >
                 <img
                   src={url}
                   alt={`Gallery image ${index + 1}`}
-                  className="w-full h-24 object-cover rounded-md border"
+                  className="w-full h-24 object-cover rounded-md border pointer-events-none"
                 />
+                <span className="absolute bottom-1 left-1 rounded bg-background/90 px-1.5 py-0.5 text-[10px] font-medium">
+                  {index + 1}
+                </span>
                 <Button
                   type="button"
                   variant="destructive"
@@ -234,7 +251,7 @@ export const MultiMediaPicker: React.FC<MultiMediaPickerProps> = ({
       </Dialog>
 
       <p className="text-xs text-muted-foreground">
-        Select multiple images from the library or upload new ones in one go
+        Select multiple images from the library or upload new ones in one go. Drag images to change the display order.
       </p>
     </div>
   );
