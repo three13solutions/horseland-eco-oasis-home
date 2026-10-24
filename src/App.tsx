@@ -115,6 +115,7 @@ function App() {
               <Route path="/faq" element={<FAQ />} />
               <Route path="/policies" element={<Policies />} />
               
+              
               {/* Dynamic Pages Route */}
               <Route path="/:slug" element={<DynamicPage />} />
 
