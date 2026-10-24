@@ -3,7 +3,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, MEDIA_GALLERY_CLOSE_BUTTON_CLASS } from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
 import { Image as ImageIcon, Trash2, ExternalLink, Plus, Upload, Check } from 'lucide-react';
 import { Link } from 'react-router-dom';

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, MEDIA_GALLERY_CLOSE_BUTTON_CLASS } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { ExternalLink, FileText, Package, MapPin, Dumbbell, Sparkles, UtensilsCrossed } from 'lucide-react';
