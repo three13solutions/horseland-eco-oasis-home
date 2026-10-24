@@ -53,6 +53,7 @@ import AddonsManagement from "./pages/admin/AddonsManagement";
 import MediaManagement from "./pages/admin/MediaManagement";
 import CategoryManagement from "./pages/admin/CategoryManagement";
 import GalleryManagement from "./pages/admin/GalleryManagement";
+import CloseBtnProbe from "./pages/CloseBtnProbe";
 import ContentManagement from "./pages/admin/ContentManagement";
 import IntegrationsManagement from "./pages/admin/IntegrationsManagement";
 import UserManagement from "./pages/admin/UserManagement";
