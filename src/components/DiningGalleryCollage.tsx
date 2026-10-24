@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import ScrollArrows from '@/components/ScrollArrows';
 
 interface GalleryImage {
   id: string;
@@ -173,6 +174,7 @@ const DiningGalleryCollage = () => {
         </div>
 
         {/* Navigation Buttons */}
+        {images.length > 1 && <ScrollArrows label="dining images" className="absolute right-4 bottom-3 z-20" onPrevious={handlePrev} onNext={handleNext} />}
         <Button
           variant="outline"
           size="icon"

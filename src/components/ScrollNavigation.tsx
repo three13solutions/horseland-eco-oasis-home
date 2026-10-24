@@ -30,7 +30,8 @@ export default function ScrollNavigation() {
     const measure = () => {
       frame = 0;
       const result: ScrollTarget[] = [];
-      const modal = [...document.querySelectorAll<HTMLElement>('[role="dialog"], [role="alertdialog"]')].filter(el => el.getClientRects().length > 0).at(-1);
+      const dialogs = [...document.querySelectorAll<HTMLElement>('[role="dialog"], [role="alertdialog"]')].filter(el => el.getClientRects().length > 0);
+      const modal = dialogs[dialogs.length - 1];
       const root = document.scrollingElement;
       const list = root instanceof HTMLElement ? [root, ...candidates] : candidates;
       for (const element of list) {
