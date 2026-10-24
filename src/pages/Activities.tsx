@@ -123,8 +123,15 @@ const Activities = () => {
 
   const filteredActivities = activities.filter(activity => {
     // Price category filter
-    if (priceCategoryFilter === 'free' && activity.price_amount && activity.price_amount > 0) return false;
-    if (priceCategoryFilter === 'paid' && (!activity.price_amount || activity.price_amount === 0)) return false;
+    if (priceCategoryFilter !== 'all') {
+      const pt = (activity as any).price_type;
+      const isPaid = pt
+        ? pt !== 'free'
+        : !!((activity.price_amount && activity.price_amount > 0) ||
+            ((activity as any).price_range_min > 0) || ((activity as any).price_range_max > 0));
+      if (priceCategoryFilter === 'free' && isPaid) return false;
+      if (priceCategoryFilter === 'paid' && !isPaid) return false;
+    }
     
     // Location filter
     if (locationFilter === 'on_property' && activity.is_on_property !== true) return false;
