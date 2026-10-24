@@ -63,8 +63,11 @@ export const UsageDetailsModal: React.FC<UsageDetailsModalProps> = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl">
-        <DialogHeader>
+      <DialogContent
+        className="max-w-2xl"
+        closeButtonClassName={MEDIA_GALLERY_CLOSE_BUTTON_CLASS}
+      >
+        <DialogHeader className="pr-8">
           <DialogTitle>Media Usage Details</DialogTitle>
         </DialogHeader>
 

@@ -151,8 +151,11 @@ export const MultiMediaPicker: React.FC<MultiMediaPickerProps> = ({
             {values.length > 0 ? 'Add / Manage Images' : 'Select Images'}
           </Button>
         </DialogTrigger>
-        <DialogContent className="max-w-4xl max-h-[90vh]">
-          <DialogHeader>
+        <DialogContent
+          className="max-w-4xl max-h-[90vh]"
+          closeButtonClassName={MEDIA_GALLERY_CLOSE_BUTTON_CLASS}
+        >
+          <DialogHeader className="pr-8">
             <DialogTitle>Select or Upload Images</DialogTitle>
           </DialogHeader>
 

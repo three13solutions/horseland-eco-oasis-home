@@ -116,8 +116,11 @@ export const MediaPicker: React.FC<MediaPickerProps> = ({
             {value ? 'Change Image' : 'Select Image'}
           </Button>
         </DialogTrigger>
-        <DialogContent className="max-w-4xl max-h-[90vh]">
-          <DialogHeader>
+        <DialogContent
+          className="max-w-4xl max-h-[90vh]"
+          closeButtonClassName={MEDIA_GALLERY_CLOSE_BUTTON_CLASS}
+        >
+          <DialogHeader className="pr-8">
             <DialogTitle>Select or Upload Media</DialogTitle>
           </DialogHeader>
 
