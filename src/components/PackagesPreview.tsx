@@ -3,7 +3,6 @@ import { Button } from '@/components/ui/button';
 import { Heart, Users, Briefcase, TreePine, ArrowRight, ChevronLeft, ChevronRight } from 'lucide-react';
 import useEmblaCarousel from 'embla-carousel-react';
 import { useTranslationContext } from '@/components/admin/TranslationProvider';
-import ScrollArrows from '@/components/ScrollArrows';
 
 const PackagesPreviewV5 = () => {
   const { getTranslation } = useTranslationContext();
@@ -71,7 +70,6 @@ const PackagesPreviewV5 = () => {
 
         {/* Carousel Container */}
         <div className="relative max-w-6xl mx-auto">
-          <ScrollArrows label="packages" className="absolute right-4 bottom-3 z-20" onPrevious={scrollPrev} onNext={scrollNext} />
           {/* Navigation Buttons */}
           <button
             className="absolute left-4 top-1/2 -translate-y-1/2 z-10 w-12 h-12 bg-white/90 backdrop-blur-sm rounded-full flex items-center justify-center shadow-lg hover:bg-white transition-all duration-300"

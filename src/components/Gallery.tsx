@@ -3,7 +3,6 @@ import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogTrigger } from '@/components/ui/dialog';
 import { Camera, Heart, MapPin, Eye, ArrowRight, Share, ChevronLeft, ChevronRight, X } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
-import ScrollArrows from '@/components/ScrollArrows';
 
 const GalleryV5 = () => {
   const [activeTab, setActiveTab] = useState('hotel');
@@ -222,7 +221,6 @@ const GalleryV5 = () => {
         <Dialog open={lightboxOpen} onOpenChange={setLightboxOpen}>
           <DialogContent className="max-w-none w-screen h-screen p-0 m-0 bg-transparent backdrop-blur-xl border-none shadow-none [&>button]:hidden" style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, transform: 'none' }}>
             <div className="relative w-full h-full flex items-center justify-center">
-              {currentImages.length > 1 && <ScrollArrows label="gallery images" className="absolute right-4 bottom-4 z-50" onPrevious={() => navigateImage('prev')} onNext={() => navigateImage('next')} />}
               {/* Close button */}
               <button
                 onClick={() => setLightboxOpen(false)}

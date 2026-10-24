@@ -3,7 +3,6 @@ import { Link } from 'react-router-dom';
 import { useTranslationContext } from '@/components/admin/TranslationProvider';
 import { Star, Quote, MapPin, ChevronLeft, ChevronRight } from 'lucide-react';
 import useEmblaCarousel from 'embla-carousel-react';
-import ScrollArrows from '@/components/ScrollArrows';
 
 const GuestReviewsV5 = () => {
   const { getTranslation } = useTranslationContext();
@@ -120,7 +119,6 @@ const GuestReviewsV5 = () => {
 
           {/* Testimonials Carousel */}
           <div className="relative">
-            <ScrollArrows label="guest reviews" className="absolute right-4 bottom-3 z-20" onPrevious={scrollPrev} onNext={scrollNext} />
             {/* Navigation Buttons */}
             <button
               className="absolute left-4 top-1/2 -translate-y-1/2 z-10 w-12 h-12 bg-white/90 backdrop-blur-sm rounded-full flex items-center justify-center shadow-lg hover:bg-white transition-all duration-300"
