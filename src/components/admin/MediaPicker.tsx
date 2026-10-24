@@ -138,8 +138,8 @@ export const MediaPicker: React.FC<MediaPickerProps> = ({
                 />
               </div>
 
-              <ScrollArea className="h-[400px] w-full">
-                <div className="grid grid-cols-3 gap-4 p-4 pr-4">
+              <ScrollArea data-admin-media-gallery className="h-[min(400px,45dvh)] w-full">
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 p-4 pb-16">
                   {mediaList?.map((media) => (
                     <div
                       key={media.id}

@@ -838,6 +838,7 @@ const MediaManagement = () => {
         </div>
       ) : images.length > 0 ? (
         <>
+          <div data-admin-media-gallery className="max-h-[65dvh] overflow-y-auto pb-16">
           {viewMode === 'grid' ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
               {images.map((image) => (
@@ -911,6 +912,7 @@ const MediaManagement = () => {
             </Card>
           )}
 
+          </div>
           {/* Pagination Controls */}
           <Card>
             <CardContent className="pt-6">

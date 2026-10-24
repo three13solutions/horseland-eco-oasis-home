@@ -97,7 +97,7 @@ export const MultiMediaPicker: React.FC<MultiMediaPickerProps> = ({
       <Label>{label}</Label>
 
       {/* Preview grid */}
-      <div className="border-2 border-dashed border-border rounded-lg p-4">
+      <div data-admin-media-gallery className="max-h-[min(400px,45dvh)] overflow-y-auto border-2 border-dashed border-border rounded-lg p-4 pb-16">
         {values.length > 0 ? (
           <div className="grid grid-cols-3 md:grid-cols-4 gap-3">
             {values.map((url, index) => (
@@ -173,8 +173,8 @@ export const MultiMediaPicker: React.FC<MultiMediaPickerProps> = ({
                 />
               </div>
 
-              <ScrollArea className="h-[400px] w-full">
-                <div className="grid grid-cols-3 gap-4 p-4 pr-4">
+              <ScrollArea data-admin-media-gallery className="h-[min(400px,45dvh)] w-full">
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 p-4 pb-16">
                   {mediaList?.map((media) => {
                     const isSelected = selected.includes(media.image_url);
                     return (

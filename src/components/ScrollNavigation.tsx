@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
+import { useLocation } from 'react-router-dom';
 import ScrollArrows from './ScrollArrows';
 
 interface ScrollTarget {
@@ -14,12 +15,14 @@ interface ScrollTarget {
   page: boolean;
 }
 
-// Only real auto/scroll overflow is discovered. Clipped image/animation tracks
-// use explicit ScrollArrows adapters instead of guessing from scrollWidth.
+// Only explicitly marked admin media galleries receive navigation controls.
 export default function ScrollNavigation() {
   const [targets, setTargets] = useState<ScrollTarget[]>([]);
+  const { pathname } = useLocation();
 
   useEffect(() => {
+    setTargets([]);
+    if (!pathname.startsWith('/admin/')) return;
     const ids = new WeakMap<HTMLElement, number>();
     let nextId = 0;
     let frame = 0;
@@ -32,8 +35,8 @@ export default function ScrollNavigation() {
       const result: ScrollTarget[] = [];
       const dialogs = [...document.querySelectorAll<HTMLElement>('[role="dialog"], [role="alertdialog"]')].filter(el => el.getClientRects().length > 0);
       const modal = dialogs[dialogs.length - 1];
-      const root = document.scrollingElement;
-      const list = root instanceof HTMLElement ? [root, ...candidates] : candidates;
+      const root = null;
+      const list = candidates;
       for (const element of list) {
         const page = element === root;
         if (!element.isConnected || element.closest('[data-scroll-arrows]') || (!page && !element.getClientRects().length)) continue;
@@ -80,10 +83,10 @@ export default function ScrollNavigation() {
     const discover = () => {
       timer = 0;
       resizeObserver.disconnect();
-      candidates = [...document.querySelectorAll<HTMLElement>('body *')].filter(element => {
+      candidates = [...document.querySelectorAll<HTMLElement>('[data-admin-media-gallery], [data-admin-media-gallery] [data-radix-scroll-area-viewport]')].filter(element => {
         if (element.closest('[data-scroll-arrows]') || element === document.body || element === document.documentElement) return false;
         const style = getComputedStyle(element);
-        return /auto|scroll/.test(`${style.overflowX} ${style.overflowY}`);
+        return /auto|scroll/.test(style.overflowY);
       });
       candidates.forEach(element => resizeObserver.observe(element));
       resizeObserver.observe(document.body);
@@ -105,7 +108,7 @@ export default function ScrollNavigation() {
       document.removeEventListener('load', schedule, true);
       window.removeEventListener('resize', schedule);
     };
-  }, []);
+  }, [pathname]);
 
   const scroll = (target: ScrollTarget, direction: number) => {
     const behavior = matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth';
@@ -116,7 +119,7 @@ export default function ScrollNavigation() {
 
   return <>{targets.map(target => createPortal(
     <div key={target.id} data-scroll-arrows className={`fixed pointer-events-none ${target.page ? 'z-40' : 'z-[60]'}`} style={{ left: target.left, top: target.top }}>
-      <ScrollArrows label={target.page ? 'page' : target.axis === 'x' ? 'horizontal content' : 'scrollable content'} previousDisabled={target.previousDisabled} nextDisabled={target.nextDisabled} onPrevious={() => scroll(target, -1)} onNext={() => scroll(target, 1)} />
+      <ScrollArrows label="media gallery" previousDisabled={target.previousDisabled} nextDisabled={target.nextDisabled} onPrevious={() => scroll(target, -1)} onNext={() => scroll(target, 1)} />
     </div>, target.portal, String(target.id)
   ))}</>;
 }

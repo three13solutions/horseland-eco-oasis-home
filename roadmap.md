@@ -1,8 +1,9 @@
 # Roadmap
 
-- [ ] Add shared up/down navigation to page and nested scroll containers.
-- [ ] Connect gallery and carousel navigation without changing swipe/drag behavior.
-- [ ] Verify desktop/mobile scrolling, galleries, and dialog controls.
+- [x] Limit shared up/down navigation to admin media galleries and image selectors.
+- [x] Remove added arrows from public pages and unrelated admin content.
+- [x] Verify desktop/mobile arrows and library selection in an isolated check using real components and media.
+- [ ] Verify signed-in admin flow (blocked: external admin session unavailable).
 
 - [x] V2 static content layer (src/v2/data)
 - [x] Port all public pages/components to src/v2

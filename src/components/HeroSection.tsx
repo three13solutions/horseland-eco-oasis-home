@@ -11,7 +11,6 @@ import { useTranslationContext } from '@/components/admin/TranslationProvider';
 import { supabase } from '@/integrations/supabase/client';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
-import ScrollArrows from '@/components/ScrollArrows';
 
 const HeroSection = () => {
   const navigate = useNavigate();
@@ -228,7 +227,6 @@ const HeroSection = () => {
       </div>
 
       {/* Navigation Arrows */}
-      {slides.length > 1 && <ScrollArrows label="banner images" className="absolute right-4 bottom-4 z-20" onPrevious={prevSlide} onNext={nextSlide} />}
       <button
         onClick={prevSlide}
         className="absolute left-4 top-1/2 -translate-y-1/2 z-20 flex items-center justify-center w-12 h-12 bg-white/20 backdrop-blur-sm rounded-full hover:bg-white/30 transition-colors"

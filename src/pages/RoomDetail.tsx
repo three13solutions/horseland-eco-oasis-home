@@ -13,7 +13,6 @@ import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { supabase } from '@/integrations/supabase/client';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
-import ScrollArrows from '@/components/ScrollArrows';
 import { 
   Users, 
   ChevronLeft, 
@@ -279,7 +278,6 @@ const RoomDetail = () => {
           )}
           
           {/* Navigation Arrows */}
-          {images.length > 1 && <ScrollArrows label="room images" className="absolute right-4 top-24 z-20" onPrevious={prevImage} onNext={nextImage} />}
           {images.length > 1 && (
             <>
               <button 
@@ -421,7 +419,6 @@ const RoomDetail = () => {
                           )}
 
                           {/* Navigation Arrows */}
-                          {images.length > 1 && <ScrollArrows label="room gallery" className="absolute right-3 bottom-3 z-20" onPrevious={() => navigateLightbox('prev')} onNext={() => navigateLightbox('next')} />}
                           {images.length > 1 && (
                             <>
                               <button

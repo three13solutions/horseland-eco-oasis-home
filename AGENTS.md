@@ -1,4 +1,4 @@
 # Architecture
 
-- Mount shared scroll navigation at the application root and discover actual overflow containers, so public pages, admin screens, and portalled dialogs receive the same accessible controls without changing saved content.
-- Register transformed carousels explicitly with the shared navigation layer, because their slide movement is not native scrolling.
+- Mount shared scroll navigation at the application root, scoped to admin routes and explicitly marked `data-admin-media-gallery` containers (including Radix viewports), so only admin media galleries and selectors receive accessible arrows without changing saved content.
+- Keep media gallery controls in the active dialog's portal so they remain interactive under modal focus management.
