@@ -6,6 +6,7 @@ import { ArrowLeft, ArrowRight } from "lucide-react"
 
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
+import ScrollArrows from '@/components/ScrollArrows'
 
 type CarouselApi = UseEmblaCarouselType[1]
 type UseCarouselParameters = Parameters<typeof useEmblaCarousel>
@@ -141,6 +142,7 @@ const Carousel = React.forwardRef<
           {...props}
         >
           {children}
+          <ScrollArrows label="carousel" className="absolute right-3 bottom-3 z-20" onPrevious={scrollPrev} onNext={scrollNext} previousDisabled={!canScrollPrev} nextDisabled={!canScrollNext} />
         </div>
       </CarouselContext.Provider>
     )

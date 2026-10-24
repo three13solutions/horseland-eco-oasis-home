@@ -6,6 +6,7 @@ import { useMediaList } from '@/hooks/useMediaList';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { ChevronLeft, ChevronRight, X } from 'lucide-react';
+import ScrollArrows from '@/components/ScrollArrows';
 
 const GallerySection = () => {
   const [activeTab, setActiveTab] = useState('official');
@@ -119,6 +120,7 @@ const GallerySection = () => {
             <div className="p-6">
               {/* Main Image */}
               <div className="relative aspect-video mb-6 bg-muted rounded-lg overflow-hidden">
+                {currentPhotos.length > 1 && <ScrollArrows label="gallery images" className="absolute right-3 bottom-3 z-20" onPrevious={() => navigateImage('prev')} onNext={() => navigateImage('next')} />}
                 <img
                   src={currentPhotos[selectedImageIndex]?.image_url}
                   alt={currentPhotos[selectedImageIndex]?.caption || currentPhotos[selectedImageIndex]?.title}
