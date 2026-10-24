@@ -114,6 +114,8 @@ function App() {
               <Route path="/packages/:packageId" element={<PackageDetail />} />
               <Route path="/faq" element={<FAQ />} />
               <Route path="/policies" element={<Policies />} />
+              <Route path="/close-btn-probe" element={<CloseBtnProbe />} />
+              
               
               {/* Dynamic Pages Route */}
               <Route path="/:slug" element={<DynamicPage />} />
