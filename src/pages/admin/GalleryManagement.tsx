@@ -320,7 +320,7 @@ const GalleryManagement = () => {
                 </Button>
               </div>
             ) : (
-              <div className="grid grid-cols-3 gap-4 max-h-96 overflow-y-auto">
+              <div data-admin-media-gallery className="grid grid-cols-2 sm:grid-cols-3 gap-4 max-h-[min(384px,45dvh)] overflow-y-auto pb-16">
                 {categoryImages.map((image: any) => (
                   <div key={image.id} className="relative group">
                     <img
@@ -384,8 +384,8 @@ const GalleryManagement = () => {
             </div>
           </div>
 
-          <ScrollArea className="h-[500px] w-full">
-            <div className="grid grid-cols-4 gap-4 p-4 pr-4">
+          <ScrollArea data-admin-media-gallery className="h-[min(500px,45dvh)] w-full">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 p-4 pb-16">
               {allImages.map((image: any) => {
                 const isSelected = selectedImageIds.includes(image.id);
                 const isAlreadyInGallery = categoryImages.some((img: any) => img.id === image.id);
