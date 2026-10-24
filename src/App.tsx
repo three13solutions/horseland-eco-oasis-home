@@ -53,7 +53,6 @@ import AddonsManagement from "./pages/admin/AddonsManagement";
 import MediaManagement from "./pages/admin/MediaManagement";
 import CategoryManagement from "./pages/admin/CategoryManagement";
 import GalleryManagement from "./pages/admin/GalleryManagement";
-import CloseBtnProbe from "./pages/CloseBtnProbe";
 import ContentManagement from "./pages/admin/ContentManagement";
 import IntegrationsManagement from "./pages/admin/IntegrationsManagement";
 import UserManagement from "./pages/admin/UserManagement";
@@ -115,7 +114,6 @@ function App() {
               <Route path="/packages/:packageId" element={<PackageDetail />} />
               <Route path="/faq" element={<FAQ />} />
               <Route path="/policies" element={<Policies />} />
-              <Route path="/close-btn-probe" element={<CloseBtnProbe />} />
               
               
               {/* Dynamic Pages Route */}
