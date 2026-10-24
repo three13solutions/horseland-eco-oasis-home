@@ -4,6 +4,7 @@
 - [x] Remove added arrows from public pages and unrelated admin content.
 - [x] Verify desktop/mobile arrows and library selection in an isolated check using real components and media.
 - [ ] Verify signed-in admin flow (blocked: external admin session unavailable).
+- [x] Red, properly aligned close button on admin media gallery dialogs (no overlap with title or header buttons).
 
 - [x] V2 static content layer (src/v2/data)
 - [x] Port all public pages/components to src/v2
