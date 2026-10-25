@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { mealPlanAliasPayload, findMealPlanAliasConflict } from "@/lib/mealPlanAliases";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -34,6 +35,8 @@ const MealPlansManagement = () => {
   const [formData, setFormData] = useState({
     plan_code: '',
     plan_name: '',
+    alias_names_text: '',
+    alias_codes_text: '',
     description: '',
     included_meal_types: [] as string[],
     preferred_variant: 'veg',
@@ -55,12 +58,20 @@ const MealPlansManagement = () => {
   });
 
   const saveMutation = useMutation({
-    mutationFn: async (data: typeof formData) => {
+    mutationFn: async (form: typeof formData) => {
+      const { alias_names_text, alias_codes_text, ...fields } = form;
+      const aliases = mealPlanAliasPayload(alias_names_text, alias_codes_text);
+      const conflict = findMealPlanAliasConflict([...aliases.alias_names, ...aliases.alias_codes],
+        (mealPlans || []).filter(plan => plan.id !== editingPlan?.id));
+      if (conflict) throw new Error(`Alias "${conflict}" is already used by another meal plan.`);
+      const data = { ...fields, ...aliases };
       if (editingPlan) {
         const { error } = await supabase
           .from('meal_plan_rules')
           .update(data)
-          .eq('id', editingPlan.id);
+          .eq('id', editingPlan.id)
+          .select('id')
+          .single();
         if (error) throw error;
       } else {
         const { error } = await supabase
@@ -101,6 +112,8 @@ const MealPlansManagement = () => {
     setFormData({
       plan_code: '',
       plan_name: '',
+      alias_names_text: '',
+      alias_codes_text: '',
       description: '',
       included_meal_types: [],
       preferred_variant: 'veg',
@@ -116,6 +129,8 @@ const MealPlansManagement = () => {
     setFormData({
       plan_code: plan.plan_code,
       plan_name: plan.plan_name,
+      alias_names_text: (plan.alias_names || []).join(', '),
+      alias_codes_text: (plan.alias_codes || []).join(', '),
       description: plan.description || '',
       included_meal_types: plan.included_meal_types || [],
       preferred_variant: plan.preferred_variant,
@@ -157,7 +172,7 @@ const MealPlansManagement = () => {
           <DialogTrigger asChild>
             <Button><Plus className="h-4 w-4 mr-2" /> Add Meal Plan</Button>
           </DialogTrigger>
-          <DialogContent className="max-w-2xl">
+          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>{editingPlan ? 'Edit' : 'Add'} Meal Plan</DialogTitle>
             </DialogHeader>
@@ -190,12 +205,21 @@ const MealPlansManagement = () => {
                 />
               </div>
 
-              {editingPlan && (
+              <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <Label>Aliases (admin only)</Label>
-                  <p className="text-sm text-muted-foreground">{editingPlan.alias_names?.join(' / ')}{editingPlan.alias_codes?.length ? ` (${editingPlan.alias_codes.join(' / ')})` : ''}</p>
+                  <Label htmlFor="alias-names">Alias Names (admin only)</Label>
+                  <Textarea id="alias-names" value={formData.alias_names_text}
+                    onChange={(e) => setFormData(prev => ({ ...prev, alias_names_text: e.target.value }))}
+                    placeholder="e.g., Bed & Breakfast, Continental Plan" />
                 </div>
-              )}
+                <div>
+                  <Label htmlFor="alias-codes">Alias Codes (admin only)</Label>
+                  <Input id="alias-codes" value={formData.alias_codes_text}
+                    onChange={(e) => setFormData(prev => ({ ...prev, alias_codes_text: e.target.value }))}
+                    placeholder="e.g., CP" />
+                </div>
+              </div>
+              <p className="text-xs text-muted-foreground">Separate aliases with commas or new lines. These are alternative names and codes for this plan, not extra plans or website descriptions.</p>
               <div>
                 <Label>Included Meals</Label>
                 <div className="flex gap-4 mt-2">
