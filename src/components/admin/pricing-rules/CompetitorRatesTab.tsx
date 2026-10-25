@@ -43,11 +43,11 @@ export function CompetitorRatesTab() {
   });
 
   const { data: roomTypes = [] } = useQuery<any[]>({
-    queryKey: ['room-types'],
+    queryKey: ['pricing-room-types-with-units', 'CompetitorRatesTab'],
     queryFn: async () => {
       const { data, error } = await (supabase as any)
         .from('room_types')
-        .select('id, name')
+        .select('id, name, room_units!inner(id)')
         .eq('is_active', true);
       if (error) throw error;
       return data;
@@ -304,3 +304,4 @@ export function CompetitorRatesTab() {
     </Card>
   );
 }
+

@@ -49,11 +49,11 @@ export default function LiveRateCard() {
   const [activeTab, setActiveTab] = useState('room-rates');
 
   const { data: roomTypes = [] } = useQuery<RoomType[]>({
-    queryKey: ['room-types'],
+    queryKey: ['pricing-room-types-with-units', 'LiveRateCard'],
     queryFn: async () => {
       const { data, error } = await (supabase as any)
         .from('room_types')
-        .select('id, name, base_price')
+        .select('id, name, base_price, room_units!inner(id)')
         .order('name');
       if (error) throw error;
       return data || [];

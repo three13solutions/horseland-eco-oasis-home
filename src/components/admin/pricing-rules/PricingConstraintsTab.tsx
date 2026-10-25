@@ -40,11 +40,11 @@ export function PricingConstraintsTab() {
   });
 
   const { data: roomTypes } = useQuery({
-    queryKey: ['room-types'],
+    queryKey: ['pricing-room-types-with-units', 'PricingConstraintsTab'],
     queryFn: async () => {
       const { data, error } = await supabase
         .from('room_types')
-        .select('id, name')
+        .select('id, name, room_units!inner(id)')
         .eq('is_published', true);
       
       if (error) throw error;
@@ -393,3 +393,4 @@ export function PricingConstraintsTab() {
     </Card>
   );
 }
+

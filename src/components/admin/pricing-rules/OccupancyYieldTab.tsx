@@ -44,11 +44,11 @@ export function OccupancyYieldTab() {
   });
 
   const { data: roomTypes } = useQuery({
-    queryKey: ['room-types'],
+    queryKey: ['pricing-room-types-with-units', 'OccupancyYieldTab'],
     queryFn: async () => {
       const { data, error } = await supabase
         .from('room_types')
-        .select('id, name');
+        .select('id, name, room_units!inner(id)');
       if (error) throw error;
       return data;
     }
@@ -59,7 +59,7 @@ export function OccupancyYieldTab() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('seasons')
-        .select('id, name');
+        .select('id, name, room_units!inner(id)');
       if (error) throw error;
       return data;
     }
@@ -344,3 +344,4 @@ export function OccupancyYieldTab() {
     </Card>
   );
 }
+

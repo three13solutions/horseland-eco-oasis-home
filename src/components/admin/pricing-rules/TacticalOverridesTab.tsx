@@ -128,7 +128,7 @@ export function TacticalOverridesTab() {
   const { data: roomTypes } = useQuery({
     queryKey: ['room-types-for-overrides'],
     queryFn: async () => {
-      const { data, error } = await supabase.from('room_types').select('id, name, category_id');
+      const { data, error } = await supabase.from('room_types').select('id, name, category_id, room_units!inner(id)');
       if (error) throw error;
       return data?.filter(rt => rt) || [];
     }

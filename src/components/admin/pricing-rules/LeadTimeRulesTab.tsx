@@ -44,9 +44,9 @@ export function LeadTimeRulesTab() {
   });
 
   const { data: roomTypes } = useQuery({
-    queryKey: ['room-types'],
+    queryKey: ['pricing-room-types-with-units', 'LeadTimeRulesTab'],
     queryFn: async () => {
-      const { data, error } = await supabase.from('room_types').select('id, name');
+      const { data, error } = await supabase.from('room_types').select('id, name, room_units!inner(id)');
       if (error) throw error;
       return data;
     }
@@ -55,7 +55,7 @@ export function LeadTimeRulesTab() {
   const { data: seasons } = useQuery({
     queryKey: ['seasons'],
     queryFn: async () => {
-      const { data, error } = await supabase.from('seasons').select('id, name');
+      const { data, error } = await supabase.from('seasons').select('id, name, room_units!inner(id)');
       if (error) throw error;
       return data;
     }
@@ -349,3 +349,4 @@ export function LeadTimeRulesTab() {
     </Card>
   );
 }
+

@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom';
 import React, { useState, useEffect } from 'react';
 import { HomeIcon, Save, X, IndianRupee, LayoutGrid, List } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -18,11 +19,13 @@ interface CustomPricing {
 interface RoomUnit {
   id: string;
   unit_number: string;
+  room_type_id: string;
   unit_name: string | null;
   custom_pricing: CustomPricing | null;
   room_types: {
     name: string;
-    base_price: number;
+    base_price: number | null;
+    pricing_status: 'legacy' | 'configuration_required' | 'ready';
     seasonal_pricing?: CustomPricing;
   } | null;
 }
@@ -47,11 +50,13 @@ export default function UnitPricing() {
         .select(`
           id,
           unit_number,
+          room_type_id,
           unit_name,
           custom_pricing,
           room_types (
             name,
             base_price,
+            pricing_status,
             seasonal_pricing
           )
         `)
@@ -73,6 +78,7 @@ export default function UnitPricing() {
   };
 
   const handleEdit = (unit: RoomUnit) => {
+    if (unit.room_types?.pricing_status !== 'legacy') return;
     setEditingUnit(unit.id);
     setPricing(unit.custom_pricing || {});
   };
@@ -149,7 +155,7 @@ export default function UnitPricing() {
     if (unit.room_types?.seasonal_pricing?.[season]) {
       return unit.room_types.seasonal_pricing[season];
     }
-    return unit.room_types?.base_price || 0;
+    return unit.room_types?.base_price ?? 'Not configured';
   };
 
   const groupedUnits = groupBy === 'category' 
@@ -209,12 +215,7 @@ export default function UnitPricing() {
                   Clear Custom Pricing
                 </Button>
               )}
-              <Button
-                size="sm"
-                onClick={() => handleEdit(unit)}
-              >
-                {unit.custom_pricing ? 'Edit' : 'Set Custom Pricing'}
-              </Button>
+              {unit.room_types?.pricing_status !== 'legacy' ? <Button size="sm" asChild><Link to={`/admin/pricing/rate-plans?room_type_id=${unit.room_type_id}`}>{unit.room_types?.pricing_status === 'configuration_required' ? 'Complete pricing setup' : 'Manage rate plans'}</Link></Button> : <Button size="sm" onClick={() => handleEdit(unit)}>{unit.custom_pricing ? 'Edit' : 'Set Custom Pricing'}</Button>}
             </>
           )}
         </div>
@@ -318,3 +319,4 @@ export default function UnitPricing() {
     </div>
   );
 }
+

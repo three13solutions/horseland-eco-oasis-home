@@ -44,7 +44,8 @@ interface RoomType {
   gallery_keys?: string[];
   max_guests: number;
   features: string[];
-  base_price: number;
+  base_price: number | null;
+  pricing_status?: 'legacy' | 'configuration_required' | 'ready';
   seasonal_pricing: any;
   availability_calendar: any;
   is_published: boolean;
@@ -85,6 +86,7 @@ export default function RoomManagement() {
   const [showBulkForm, setShowBulkForm] = useState(false);
   const [showRoomForm, setShowRoomForm] = useState(false);
   const [editingRoom, setEditingRoom] = useState<RoomType | null>(null);
+  const [pricingSetupType, setPricingSetupType] = useState<string | null>(null);
   const [editingUnit, setEditingUnit] = useState<RoomUnit | null>(null);
   const [activeTab, setActiveTab] = useState<'categories' | 'rooms' | 'units'>('rooms');
   const [viewMode, setViewMode] = useState<'card' | 'list'>('card');
@@ -104,7 +106,7 @@ export default function RoomManagement() {
     gallery_keys: [] as string[],
     max_guests: 2,
     features: [] as string[],
-    base_price: 0,
+    base_price: '' as string,
     is_published: false,
     category_id: '',
   });
@@ -222,7 +224,7 @@ export default function RoomManagement() {
       gallery_keys: [],
       max_guests: 2,
       features: [],
-      base_price: 0,
+      base_price: '' as string,
       is_published: false,
       category_id: '',
     });
@@ -257,7 +259,7 @@ export default function RoomManagement() {
       gallery_keys: [],
       max_guests: 2,
       features: [],
-      base_price: 0,
+      base_price: '' as string,
       is_published: false,
       category_id: '',
     });
@@ -276,7 +278,7 @@ export default function RoomManagement() {
       gallery_keys: room.gallery_keys || [],
       max_guests: room.max_guests,
       features: room.features,
-      base_price: Number(room.base_price),
+      base_price: room.base_price == null ? '' : String(room.base_price),
       is_published: room.is_published,
       category_id: room.category_id || '',
     });
@@ -325,8 +327,10 @@ export default function RoomManagement() {
     try {
       const roomData = {
         ...formData,
+        is_published: !editingRoom || editingRoom.pricing_status === 'configuration_required' ? false : formData.is_published,
         gallery: formData.gallery.filter(url => url.trim() !== ''),
         category_id: formData.category_id || null,
+        base_price: !editingRoom || editingRoom.pricing_status === 'configuration_required' ? null : (formData.base_price.trim() === '' ? null : Number(formData.base_price)),
       };
 
       let error;
@@ -411,6 +415,11 @@ export default function RoomManagement() {
         });
       }
 
+      const targetType = rooms.find(room => room.id === unitFormData.room_type_id);
+      if (targetType?.pricing_status === 'configuration_required' || !units.some(unit => unit.room_type_id === unitFormData.room_type_id)) {
+        setPricingSetupType(unitFormData.room_type_id);
+      }
+      loadRooms();
       loadUnits();
       resetUnitForm();
       setShowUnitForm(false);
@@ -517,7 +526,7 @@ export default function RoomManagement() {
     if (error) {
       toast({
         title: "Error",
-        description: "Failed to delete room unit",
+        description: error.message || "Failed to delete room unit",
         variant: "destructive",
       });
       return;
@@ -531,6 +540,11 @@ export default function RoomManagement() {
   };
 
   const togglePublish = async (room: RoomType) => {
+    if (!room.is_published && room.pricing_status === 'configuration_required') {
+      toast({ title: 'Pricing configuration required', description: 'Assign a unit and complete its rate-plan configuration before publishing.', variant: 'destructive' });
+      if (units.some(unit => unit.room_type_id === room.id)) setPricingSetupType(room.id);
+      return;
+    }
     try {
       const { error } = await supabase
         .from('room_types')
@@ -649,6 +663,13 @@ export default function RoomManagement() {
 
   return (
     <div className="container mx-auto p-6">
+      <Dialog open={!!pricingSetupType} onOpenChange={open => { if (!open) setPricingSetupType(null); }}>
+        <DialogContent><DialogHeader><DialogTitle>Complete pricing configuration</DialogTitle></DialogHeader>
+          <p>This room type has no configured pricing. Its units cannot be booked until an enabled, verified rate plan covers the requested stay. Configure the source price, included meal plan and guests, dates, extra-person charges and applicable policy.</p>
+          <Button onClick={() => { const id = pricingSetupType; setPricingSetupType(null); navigate(`/admin/pricing/rate-plans?room_type_id=${id}`); }}>Configure pricing now</Button>
+        </DialogContent>
+      </Dialog>
+
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-4">
           <h1 className="text-3xl font-bold">Room Management</h1>
@@ -713,16 +734,17 @@ export default function RoomManagement() {
                   />
                 </div>
                 <div>
-                  <Label htmlFor="base_price">Base Price (₹) *</Label>
+                  <Label htmlFor="base_price">Legacy Base Price (₹)</Label>
                   <Input
                     id="base_price"
                     type="number"
                     min="0"
                     value={formData.base_price}
-                    onChange={(e) => setFormData({...formData, base_price: Number(e.target.value)})}
-                    placeholder="2500"
-                    required
+                    disabled={!editingRoom || !units.some(unit => unit.room_type_id === editingRoom.id) || editingRoom.pricing_status !== 'legacy'}
+                    onChange={(e) => setFormData({...formData, base_price: e.target.value})}
+                    placeholder="Not configured"
                   />
+                  <p className="text-xs text-muted-foreground mt-1">New or cleared room types stay blank. Assign a unit, then complete pricing in Rate Plans.</p>
                 </div>
               </div>
 
@@ -837,10 +859,11 @@ export default function RoomManagement() {
               <div className="flex items-center space-x-2">
                 <Switch
                   id="is_published"
-                  checked={formData.is_published}
+                  disabled={!editingRoom || editingRoom.pricing_status === 'configuration_required'}
+                  checked={!!editingRoom && editingRoom.pricing_status !== 'configuration_required' && formData.is_published}
                   onCheckedChange={(checked) => setFormData(prev => ({ ...prev, is_published: checked }))}
                 />
-                <Label htmlFor="is_published">Publish room</Label>
+                <Label htmlFor="is_published">Publish room{(!editingRoom || editingRoom.pricing_status === 'configuration_required') && ' — complete pricing setup first'}</Label>
               </div>
 
               <div className="flex justify-end space-x-2">
@@ -898,11 +921,12 @@ export default function RoomManagement() {
                     <SelectContent>
                       {rooms.map((room) => (
                         <SelectItem key={room.id} value={room.id}>
-                          {room.name}
+                          {room.name}{room.pricing_status === 'configuration_required' ? ' · Pricing setup required' : ''}
                         </SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
+                  {rooms.find(room => room.id === unitFormData.room_type_id)?.pricing_status === 'configuration_required' && <p className="text-sm text-amber-700 mt-2">Assigning this unit will require complete pricing configuration before it can be booked. No price is inherited automatically.</p>}
                 </div>
                 <div>
                   <Label htmlFor="unit_number">Unit Number *</Label>
@@ -1204,7 +1228,7 @@ export default function RoomManagement() {
                           Up to {room.max_guests} guests
                           <span className="mx-2">•</span>
                           <IndianRupee className="w-4 h-4" />
-                          ₹{room.base_price}/night
+                          {room.base_price == null ? 'Not configured' : `₹${room.base_price}/night`}
                         </CardDescription>
                         {room.room_categories && (
                           <Badge variant="outline" className="mt-1 text-xs">
@@ -1314,7 +1338,7 @@ export default function RoomManagement() {
                         )}
                       </TableCell>
                       <TableCell>{room.max_guests}</TableCell>
-                      <TableCell>₹{room.base_price}</TableCell>
+                      <TableCell>{room.base_price == null ? 'Not configured' : `₹${room.base_price}`}</TableCell>
                       <TableCell>
                         <Badge variant={room.is_published ? "default" : "secondary"}>
                           {room.is_published ? 'Published' : 'Draft'}

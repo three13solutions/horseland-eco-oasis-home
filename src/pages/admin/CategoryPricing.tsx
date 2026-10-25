@@ -17,7 +17,7 @@ import {
 interface RoomType {
   id: string;
   name: string;
-  base_price: number;
+  base_price: number | null;
 }
 
 interface Season {
@@ -59,8 +59,9 @@ export default function CategoryPricing() {
       // Load rooms
       const { data: roomsData, error: roomsError } = await supabase
         .from('room_types')
-        .select('id, name, base_price')
+        .select('id, name, base_price, room_units!inner(id)')
         .eq('is_published', true)
+        .eq('pricing_status', 'legacy')
         .order('name');
 
       if (roomsError) throw roomsError;
@@ -257,7 +258,7 @@ export default function CategoryPricing() {
                       <div>
                         <div>{room.name}</div>
                         <div className="text-xs text-muted-foreground">
-                          Base: ₹{room.base_price.toLocaleString('en-IN')}
+                          Base: ₹{room.base_price?.toLocaleString('en-IN') ?? 'Not configured'}
                         </div>
                       </div>
                     </TableCell>
@@ -277,7 +278,7 @@ export default function CategoryPricing() {
                                   handlePriceChange(room.id, season.slug, dayType.slug, e.target.value)
                                 }
                                 className="pl-7 h-9 text-sm"
-                                placeholder={room.base_price.toString()}
+                                placeholder={room.base_price == null ? 'Not configured' : String(room.base_price)}
                               />
                             </div>
                           </TableCell>

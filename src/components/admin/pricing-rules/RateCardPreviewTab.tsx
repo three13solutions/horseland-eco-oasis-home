@@ -24,12 +24,12 @@ export function RateCardPreviewTab() {
   const [viewMonth, setViewMonth] = useState(new Date());
 
   const { data: roomTypes = [] } = useQuery<any[]>({
-    queryKey: ['room-types'],
+    queryKey: ['pricing-room-types-with-units', 'RateCardPreviewTab'],
     queryFn: async () => {
       const { data, error } = await (supabase as any)
         .from('room_types')
-        .select('id, name')
-        .eq('is_active', true);
+        .select('id, name, room_units!inner(id)')
+        .eq('is_published', true);
       if (error) throw error;
       return data;
     },
@@ -215,3 +215,4 @@ export function RateCardPreviewTab() {
     </Card>
   );
 }
+

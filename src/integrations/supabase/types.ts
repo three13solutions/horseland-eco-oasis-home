@@ -2523,7 +2523,8 @@ export type Database = {
       room_types: {
         Row: {
           availability_calendar: Json | null
-          base_price: number
+          pricing_status: string
+          base_price: number | null
           category_id: string | null
           created_at: string
           description: string | null
@@ -2541,7 +2542,8 @@ export type Database = {
         }
         Insert: {
           availability_calendar?: Json | null
-          base_price?: number
+          pricing_status?: string
+          base_price?: number | null
           category_id?: string | null
           created_at?: string
           description?: string | null
@@ -2559,7 +2561,8 @@ export type Database = {
         }
         Update: {
           availability_calendar?: Json | null
-          base_price?: number
+          pricing_status?: string
+          base_price?: number | null
           category_id?: string | null
           created_at?: string
           description?: string | null
