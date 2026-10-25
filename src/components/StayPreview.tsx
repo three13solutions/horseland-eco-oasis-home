@@ -8,6 +8,13 @@ import { ArrowRight, Sparkles } from 'lucide-react';
 import { useMediaAsset } from '@/hooks/useMediaAsset';
 import { useSiteSettings } from '@/hooks/useSiteSettings';
 
+// Stable room-type identities keep the home preview intact when display names change.
+const HOME_PREVIEW_ROOM_TYPE_IDS = [
+  '47b2ee9c-bd3b-4cbf-9795-ff9ca4c02d55', // Standard
+  '2fd9b1b5-d067-49af-a47d-64a17ce524eb', // Deluxe
+  '73dbc09f-64c2-4498-b58f-549151605ee4', // Superior
+];
+
 const StayPreviewV5 = () => {
   const { getTranslation } = useTranslationContext();
   const { settings } = useSiteSettings();
@@ -19,13 +26,14 @@ const StayPreviewV5 = () => {
         .from('room_types')
         .select('*')
         .eq('is_published', true)
-        .in('name', ['Standard AC', 'Deluxe', 'Superior']);
+        .in('id', HOME_PREVIEW_ROOM_TYPE_IDS);
       
       if (error) throw error;
       
       // Sort in the desired order
-      const order = ['Standard AC', 'Deluxe', 'Superior'];
-      return data?.sort((a, b) => order.indexOf(a.name) - order.indexOf(b.name)) || [];
+      return data?.sort((a, b) =>
+        HOME_PREVIEW_ROOM_TYPE_IDS.indexOf(a.id) - HOME_PREVIEW_ROOM_TYPE_IDS.indexOf(b.id)
+      ) || [];
     }
   });
 
