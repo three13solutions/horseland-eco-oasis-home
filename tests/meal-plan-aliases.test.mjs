@@ -22,3 +22,10 @@ test('add and update use the same editable alias payload', () => {
  assert.match(source,/id="alias-codes" value=\{formData.alias_codes_text\}/);
  assert.doesNotMatch(source,/editingPlan && \(/);
 });
+test('admin can save pending supplement without enabling checkout pricing', () => {
+ const source = readFileSync(new URL('../src/pages/admin/MealPlansManagement.tsx',import.meta.url),'utf8');
+ assert.match(source,/supplement_per_person_inr: supplement/);
+ assert.match(source,/Number\.isFinite\(supplement\)/);
+ assert.match(source,/not yet applied at checkout/);
+ assert.doesNotMatch(source,/supplement_pricing_enabled: (true|false)/);
+});

@@ -20,6 +20,10 @@ interface MealPlan {
   plan_name: string;
   alias_names: string[];
   alias_codes: string[];
+  supplement_per_person_inr: number | null;
+  supplement_pricing_enabled: boolean;
+  supplement_period: string | null;
+  supplement_guest_basis: string | null;
   description: string;
   included_meal_types: string[];
   preferred_variant: string;
@@ -37,6 +41,7 @@ const MealPlansManagement = () => {
     plan_name: '',
     alias_names_text: '',
     alias_codes_text: '',
+    supplement_amount_text: '',
     description: '',
     included_meal_types: [] as string[],
     preferred_variant: 'veg',
@@ -59,12 +64,14 @@ const MealPlansManagement = () => {
 
   const saveMutation = useMutation({
     mutationFn: async (form: typeof formData) => {
-      const { alias_names_text, alias_codes_text, ...fields } = form;
+      const { alias_names_text, alias_codes_text, supplement_amount_text, ...fields } = form;
+      const supplement = supplement_amount_text.trim() === '' ? null : Number(supplement_amount_text);
+      if (supplement !== null && (!Number.isFinite(supplement) || supplement < 0)) throw new Error('Enter a valid non-negative meal supplement.');
       const aliases = mealPlanAliasPayload(alias_names_text, alias_codes_text);
       const conflict = findMealPlanAliasConflict([...aliases.alias_names, ...aliases.alias_codes],
         (mealPlans || []).filter(plan => plan.id !== editingPlan?.id));
       if (conflict) throw new Error(`Alias "${conflict}" is already used by another meal plan.`);
-      const data = { ...fields, ...aliases };
+      const data = { ...fields, ...aliases, supplement_per_person_inr: supplement };
       if (editingPlan) {
         const { error } = await supabase
           .from('meal_plan_rules')
@@ -114,6 +121,7 @@ const MealPlansManagement = () => {
       plan_name: '',
       alias_names_text: '',
       alias_codes_text: '',
+    supplement_amount_text: '',
       description: '',
       included_meal_types: [],
       preferred_variant: 'veg',
@@ -131,6 +139,7 @@ const MealPlansManagement = () => {
       plan_name: plan.plan_name,
       alias_names_text: (plan.alias_names || []).join(', '),
       alias_codes_text: (plan.alias_codes || []).join(', '),
+      supplement_amount_text: plan.supplement_per_person_inr == null ? '' : String(plan.supplement_per_person_inr),
       description: plan.description || '',
       included_meal_types: plan.included_meal_types || [],
       preferred_variant: plan.preferred_variant,
@@ -220,6 +229,14 @@ const MealPlansManagement = () => {
                 </div>
               </div>
               <p className="text-xs text-muted-foreground">Separate aliases with commas or new lines. These are alternative names and codes for this plan, not extra plans or website descriptions.</p>
+              <div className="rounded-md border p-3 space-y-2">
+                <Label htmlFor="meal-supplement">Meal Supplement per Person (₹)</Label>
+                <Input id="meal-supplement" type="number" min="0" step="0.01"
+                  value={formData.supplement_amount_text}
+                  onChange={(e) => setFormData(prev => ({ ...prev, supplement_amount_text: e.target.value }))}
+                  placeholder="Not configured" />
+                <p className="text-xs text-muted-foreground">Saved amount only — not yet applied at checkout. {editingPlan?.supplement_period === 'per_night' ? 'Per person per night.' : 'Charging period not configured.'} {editingPlan?.supplement_guest_basis === 'all_guests' ? 'Adults, children and infants currently count at the full rate; Mahesh reconfirmation is pending.' : 'Guest charging basis not configured.'} Room Only accommodation rates must be confirmed before pricing is enabled.</p>
+              </div>
               <div>
                 <Label>Included Meals</Label>
                 <div className="flex gap-4 mt-2">
@@ -293,6 +310,7 @@ const MealPlansManagement = () => {
             <TableHead>Plan Name</TableHead>
             <TableHead>Code</TableHead>
             <TableHead>Aliases (admin only)</TableHead>
+            <TableHead>Meal Supplement / Person</TableHead>
             <TableHead>Included Meals</TableHead>
             <TableHead>Status</TableHead>
             <TableHead>Actions</TableHead>
@@ -306,6 +324,10 @@ const MealPlansManagement = () => {
               <TableCell>
                 <div>{plan.alias_names?.join(' / ') || 'None'}</div>
                 <div className="text-sm text-muted-foreground">{plan.alias_codes?.join(' / ')}</div>
+              </TableCell>
+              <TableCell>
+                {plan.supplement_per_person_inr == null ? 'Not configured' : `₹${plan.supplement_per_person_inr.toLocaleString('en-IN')}`}
+                <div className="text-xs text-muted-foreground">{plan.supplement_period === 'per_night' ? 'Per night · ' : ''}Pending pricing activation</div>
               </TableCell>
               <TableCell>
                 {plan.included_meal_types?.length > 0 ? (

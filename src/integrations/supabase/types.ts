@@ -1606,6 +1606,10 @@ export type Database = {
         Row: {
           alias_names: string[]
           alias_codes: string[]
+          supplement_per_person_inr: number | null
+          supplement_pricing_enabled: boolean
+          supplement_period: string | null
+          supplement_guest_basis: string | null
           applies_to: string
           created_at: string
           description: string | null
@@ -1624,6 +1628,10 @@ export type Database = {
         Insert: {
           alias_names?: string[]
           alias_codes?: string[]
+          supplement_per_person_inr?: number | null
+          supplement_pricing_enabled?: boolean
+          supplement_period?: string | null
+          supplement_guest_basis?: string | null
           applies_to?: string
           created_at?: string
           description?: string | null
@@ -1642,6 +1650,10 @@ export type Database = {
         Update: {
           alias_names?: string[]
           alias_codes?: string[]
+          supplement_per_person_inr?: number | null
+          supplement_pricing_enabled?: boolean
+          supplement_period?: string | null
+          supplement_guest_basis?: string | null
           applies_to?: string
           created_at?: string
           description?: string | null
