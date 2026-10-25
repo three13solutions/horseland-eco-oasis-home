@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { Calendar, Users, Clock, MapPin, Wifi, Coffee, Car, Utensils, Plus, Minus, Bed, CarFront, Sparkles, Package, ChevronDown, CalendarIcon, Edit2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -26,6 +26,10 @@ import { useQuery } from '@tanstack/react-query';
 import { RateVariant } from '@/hooks/useDynamicPricing';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
+import {
+  loadPaymentResolution, savePaymentResolution, clearPaymentResolution,
+  getFinalizationFailure, type BookingPaymentResolution,
+} from '@/lib/bookingPaymentResolution';
 
 interface RoomType {
   id: string;
@@ -173,6 +177,9 @@ const Booking = () => {
   const [selectedBedding, setSelectedBedding] = useState<BeddingOption[]>([]);
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [paymentModalKey, setPaymentModalKey] = useState(0);
+  const [paymentResolution, setPaymentResolution] = useState<BookingPaymentResolution | null>(loadPaymentResolution);
+  const [resolutionSaved, setResolutionSaved] = useState(true);
+  const pendingPaymentRef = useRef<BookingPaymentResolution | null>(paymentResolution);
   const [activeTab, setActiveTab] = useState<string>('');
   const [guestMeals, setGuestMeals] = useState<GuestMeal[]>([]);
   const [pickupServices, setPickupServices] = useState<PickupService[]>([]);
@@ -360,7 +367,11 @@ const Booking = () => {
   // Load booking state from localStorage on mount
   useEffect(() => {
     const loadBookingData = () => {
-      const savedBooking = localStorage.getItem('currentBooking');
+      let savedBooking: string | null = null;
+      try { savedBooking = localStorage.getItem('currentBooking'); } catch {
+        // Storage may be disabled; do not prevent the payment-resolution screen.
+        return;
+      }
       if (savedBooking) {
         try {
           const booking = JSON.parse(savedBooking);
@@ -489,7 +500,9 @@ const Booking = () => {
         lastUpdated: new Date().toISOString()
       };
       
-      localStorage.setItem('currentBooking', JSON.stringify(bookingData));
+      try { localStorage.setItem('currentBooking', JSON.stringify(bookingData)); } catch {
+        // Recovery still has its in-memory reference if browser storage is unavailable.
+      }
     }
   }, [checkIn, checkOut, guests, searchCheckIn, searchCheckOut, searchGuests, selectedRoomType, selectedAddons, selectedPickup, selectedBedding, guestDetails]);
 
@@ -1242,6 +1255,13 @@ const Booking = () => {
   }, [needsExtraBedding]);
 
   const handleProceedToPayment = () => {
+    // A paid callback awaiting resolution is not permission to charge again.
+    const unresolved = pendingPaymentRef.current || paymentResolution || loadPaymentResolution();
+    if (unresolved) {
+      setPaymentResolution(unresolved);
+      setShowPaymentModal(false);
+      return;
+    }
     if (!selectedRoomType) {
       toast({
         title: "Room Not Selected",
@@ -1284,6 +1304,20 @@ const Booking = () => {
   };
 
   const handlePaymentSuccess = async (paymentId: string, orderId: string, signature: string) => {
+    // Preserve only safe references before calling the finalizer. A reload or lost
+    // response must not silently offer another payment for the same attempt.
+    const pendingResolution: BookingPaymentResolution = {
+      paymentId, orderId, code: 'FINALIZATION_PENDING', outcome: 'unknown',
+      recordedAt: new Date().toISOString(),
+    };
+    pendingPaymentRef.current = pendingResolution;
+    setResolutionSaved(savePaymentResolution(pendingResolution));
+    const requireResolution = (details: Pick<BookingPaymentResolution, 'code' | 'outcome'>) => {
+      const resolution = { ...pendingResolution, ...details };
+      setResolutionSaved(savePaymentResolution(resolution));
+      setPaymentResolution(resolution);
+      setShowPaymentModal(false);
+    };
     try {
       // Split name into first and last name
       const nameParts = guestDetails.name.trim().split(' ');
@@ -1363,35 +1397,33 @@ const Booking = () => {
         }
       });
 
-      if (error || !result?.booking_id) {
-        console.error('Error finalizing booking:', error, result);
-        toast({
-          title: "Booking Error",
-          description: `Payment successful but the booking couldn't be saved. Please contact support with payment ID: ${paymentId}`,
-          variant: "destructive",
-          duration: 10000,
-        });
+      if (error || result?.success !== true || !result?.booking_id) {
+        requireResolution(await getFinalizationFailure(result, error));
         return;
       }
 
+      // Only an explicit confirmed result clears the unresolved-payment marker.
+      const clearedResolution = clearPaymentResolution();
+      pendingPaymentRef.current = null;
+      setPaymentResolution(null);
       toast({
         title: "Booking Confirmed!",
-        description: `Your booking has been confirmed. Redirecting to confirmation page...`,
+        description: clearedResolution
+          ? `Your booking has been confirmed. Redirecting to confirmation page...`
+          : `Your booking is confirmed. This browser could not clear an old payment reference; keep your booking confirmation for support.`,
       });
 
       // Clear booking data from localStorage after successful booking
-      localStorage.removeItem('currentBooking');
+      try { localStorage.removeItem('currentBooking'); } catch {
+        // Browser cleanup must never turn a confirmed booking into an apparent failure.
+      }
 
       // Redirect to confirmation page
       navigate(`/booking/confirmation?booking_id=${result.booking_id}`);
-    } catch (error) {
-      console.error('Error processing booking:', error);
-      toast({
-        title: "Booking Error",
-        description: `An error occurred while saving your booking. Please contact support with payment ID: ${paymentId}`,
-        variant: "destructive",
-        duration: 10000,
-      });
+    } catch {
+      // A transport failure may happen after the server confirmed the booking.
+      // Do not claim rejection, discard the references, or charge a second time.
+      requireResolution({ code: 'FINALIZATION_OUTCOME_UNKNOWN', outcome: 'unknown' });
     }
   };
 
@@ -1515,6 +1547,49 @@ const Booking = () => {
   };
 
   const nights = calculateNights();
+
+  // This screen is independent of the selected room and survives page reloads.
+  // It is evidence for manual support, not a refund or a durable reconciliation queue.
+  if (paymentResolution) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Navigation />
+        <main className="max-w-2xl mx-auto px-4 py-24">
+          <Card role="alert" aria-live="polite">
+            <CardHeader>
+              <CardTitle>{paymentResolution.outcome === 'not_confirmed' ? 'Payment needs attention: booking not confirmed' : 'Payment needs attention: confirmation not verified'}</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <p>{paymentResolution.outcome === 'not_confirmed'
+                ? 'The website could not confirm this booking. Your payment reference has been retained for the hotel to review.'
+                : 'We could not verify the final booking outcome. The hotel must check this payment before you try again.'}</p>
+              <p className="font-semibold">Do not pay again until the hotel has checked the payment and booking outcome.</p>
+              <dl className="space-y-2 text-sm break-all">
+                <div><dt className="font-medium">Payment reference</dt><dd>{paymentResolution.paymentId}</dd></div>
+                <div><dt className="font-medium">Order reference</dt><dd>{paymentResolution.orderId}</dd></div>
+                <div><dt className="font-medium">Review code</dt><dd>{paymentResolution.code}</dd></div>
+              </dl>
+              {!resolutionSaved && <p className="text-destructive">This browser could not save these references. Copy or screenshot them before leaving this page.</p>}
+              <p className="text-sm text-muted-foreground">Contact the hotel with both references. No automatic refund or alternative reservation has been made.</p>
+              <Button asChild><a href="/contact">Contact the hotel</a></Button>
+              <div>
+                <Button variant="outline" onClick={() => {
+                  if (!window.confirm('Only continue if the hotel has already resolved this payment and booking outcome. This does not issue a refund or cancel a booking. Has the hotel resolved it?')) return;
+                  if (!clearPaymentResolution()) {
+                    setResolutionSaved(false);
+                    return;
+                  }
+                  pendingPaymentRef.current = null;
+                  setPaymentResolution(null);
+                }}>The hotel has resolved this payment</Button>
+              </div>
+            </CardContent>
+          </Card>
+        </main>
+        <DynamicFooter />
+      </div>
+    );
+  }
 
   if (showBookingForm && selectedRoomType) {
     return (

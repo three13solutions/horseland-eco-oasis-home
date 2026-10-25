@@ -63,6 +63,52 @@ async function isSignatureValid(secret: string, orderId: string, paymentId: stri
   return hex === signature
 }
 
+type PublicationFailure = { code: string; message: string; status: number }
+
+// This is the customer website finalizer only. Staff creation paths are unchanged.
+// Never trust a publication flag or a claimed staff/channel flag from the caller.
+async function checkPublishedRoomSelection(
+  supabase: ReturnType<typeof createClient>,
+  booking: { room_type_id?: unknown; room_unit_id?: unknown },
+): Promise<PublicationFailure | null> {
+  if (typeof booking.room_type_id !== 'string' || !booking.room_type_id.trim()) {
+    return { code: 'ROOM_TYPE_REQUIRED', message: 'A published room type is required.', status: 409 }
+  }
+
+  try {
+    const { data: roomType, error } = await supabase
+      .from('room_types')
+      .select('id, is_published')
+      .eq('id', booking.room_type_id)
+      .maybeSingle()
+
+    if (error) throw error
+    if (!roomType || roomType.is_published !== true) {
+      return { code: 'ROOM_TYPE_NOT_PUBLISHED', message: 'This room type is no longer available for website booking.', status: 409 }
+    }
+
+    // Do not allow a published type ID to disguise a unit belonging to a hidden type.
+    if (booking.room_unit_id) {
+      if (typeof booking.room_unit_id !== 'string') {
+        return { code: 'ROOM_SELECTION_MISMATCH', message: 'The selected room is invalid.', status: 409 }
+      }
+      const { data: unit, error: unitError } = await supabase
+        .from('room_units')
+        .select('room_type_id')
+        .eq('id', booking.room_unit_id)
+        .maybeSingle()
+      if (unitError) throw unitError
+      if (!unit || unit.room_type_id !== roomType.id) {
+        return { code: 'ROOM_SELECTION_MISMATCH', message: 'The selected room does not match the published room type.', status: 409 }
+      }
+    }
+    return null
+  } catch {
+    // A database/lookup failure is not permission to confirm the booking.
+    return { code: 'ROOM_PUBLICATION_CHECK_FAILED', message: 'Room publication could not be verified.', status: 503 }
+  }
+}
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders })
@@ -114,16 +160,51 @@ serve(async (req) => {
     }
 
     // Idempotency: if this payment was already recorded, return existing booking
-    const { data: existingBooking } = await supabase
+    const { data: existingBooking, error: existingBookingError } = await supabase
       .from('bookings')
-      .select('booking_id, room_unit_id')
+      .select('booking_id, room_unit_id, payment_status')
       .eq('payment_id', razorpay_payment_id)
       .maybeSingle()
 
+    // Keep reconciliation references, but never log the signature or guest data.
+    const resolutionRequired = (code: string, message: string, status: number, bookingStatus = 'not_confirmed') => {
+      const resolution = {
+        success: false,
+        code,
+        error: message,
+        resolution_required: true,
+        booking_status: bookingStatus,
+        payment_reference: razorpay_payment_id,
+        order_reference: razorpay_order_id,
+        payment_verification: 'signature_verified',
+        next_action: 'Contact the hotel with these references. Do not pay again until the payment and booking outcome have been checked.',
+      }
+      console.error('website_booking_resolution_required', {
+        code, booking_status: bookingStatus,
+        payment_reference: razorpay_payment_id, order_reference: razorpay_order_id,
+      })
+      return new Response(JSON.stringify(resolution), {
+        status, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      })
+    }
+
+    if (existingBookingError) {
+      return resolutionRequired('BOOKING_LOOKUP_FAILED', 'The existing booking outcome could not be verified.', 503, 'unknown')
+    }
     if (existingBooking) {
+      // An already-confirmed payment stays idempotent even if its type was later unpublished.
+      // A cancelled/pending booking must not be represented as a new confirmation.
+      if (existingBooking.payment_status !== 'confirmed') {
+        return resolutionRequired('EXISTING_BOOKING_REQUIRES_REVIEW', 'This payment is linked to a booking that is not confirmed.', 409)
+      }
       return new Response(JSON.stringify({ success: true, booking_id: existingBooking.booking_id, room_unit_id: existingBooking.room_unit_id }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       })
+    }
+
+    const publicationFailure = await checkPublishedRoomSelection(supabase, booking)
+    if (publicationFailure) {
+      return resolutionRequired(publicationFailure.code, publicationFailure.message, publicationFailure.status)
     }
 
     // Guest upsert
@@ -209,6 +290,13 @@ serve(async (req) => {
           })
         }
       }
+    }
+
+    // Re-read immediately before confirmation, rather than relying on an earlier UI/cache value.
+    // This remains a point-in-time check, not a database transaction locking publication changes.
+    const finalPublicationFailure = await checkPublishedRoomSelection(supabase, booking)
+    if (finalPublicationFailure) {
+      return resolutionRequired(finalPublicationFailure.code, finalPublicationFailure.message, finalPublicationFailure.status)
     }
 
     const bookingRecord = {
