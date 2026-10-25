@@ -1,7 +1,11 @@
+import { format } from 'date-fns';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 
 interface RateVariant {
+  pricing_status?: string;
+  quote_fingerprint?: string;
+  nightly_breakdown?: unknown[];
   meal_plan_code: string;
   meal_plan_name: string;
   meal_plan_description: string;
@@ -28,27 +32,8 @@ export const applyMealPlanAdjustment = (
   childrenCount: number,
   nights: number
 ): { adjustedTotal: number; adjustedPerNight: number; adjustment: number } => {
-  const totalGuests = adultsCount + childrenCount;
-  let adjustmentPerPersonPerNight = 0;
-  
-  // All Meals Inclusive (all_meals_inclusive) is the base price - no adjustment
-  // Breakfast & Dinner (breakfast_and_dinner): -200 per person per night
-  // Room only (room_only): -500 per person per night
-  if (mealPlanCode === 'breakfast_and_dinner') {
-    adjustmentPerPersonPerNight = -200;
-  } else if (mealPlanCode === 'room_only') {
-    adjustmentPerPersonPerNight = -500;
-  }
-  
-  const totalAdjustment = adjustmentPerPersonPerNight * totalGuests * nights;
-  const adjustedTotal = basePrice + totalAdjustment;
-  const adjustedPerNight = adjustedTotal / nights;
-  
-  return {
-    adjustedTotal,
-    adjustedPerNight,
-    adjustment: totalAdjustment
-  };
+  // Server variants already include the selected meal plan. Never apply legacy deductions twice.
+  return { adjustedTotal: basePrice, adjustedPerNight: nights > 0 ? basePrice / nights : 0, adjustment: 0 };
 };
 
 interface UseDynamicPricingParams {
@@ -81,10 +66,10 @@ export const useDynamicPricing = ({
         throw new Error('Missing required parameters');
       }
 
-      const { data, error } = await supabase.rpc('calculate_rate_variants', {
+      const { data, error } = await supabase.rpc('calculate_rate_variants_v2', {
         p_room_type_id: roomTypeId,
-        p_check_in: checkIn.toISOString().split('T')[0],
-        p_check_out: checkOut.toISOString().split('T')[0],
+        p_check_in: format(checkIn, 'yyyy-MM-dd'),
+        p_check_out: format(checkOut, 'yyyy-MM-dd'),
         p_room_unit_id: roomUnitId || null,
         p_adults_count: adultsCount,
         p_children_count: childrenCount,
@@ -102,3 +87,4 @@ export const useDynamicPricing = ({
 };
 
 export type { RateVariant };
+

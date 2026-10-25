@@ -80,6 +80,7 @@ const mainMenuItems = [
 ];
 
 const pricingMenuItems = [
+  { icon: DollarSign, label: 'Rate Plans', path: '/admin/pricing/rate-plans', description: 'One price, all meal options' },
   { 
     icon: BarChart3, 
     label: 'Overview', 

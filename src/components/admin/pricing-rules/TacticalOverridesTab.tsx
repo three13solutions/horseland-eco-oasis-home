@@ -1,4 +1,7 @@
 import { useState, useMemo } from 'react';
+import { Link } from 'react-router-dom';
+import type { SupabaseClient } from '@supabase/supabase-js';
+import { managedOverrideIds, hasManagedRateOverlap, type RateScopeDates } from '@/lib/rate-plans';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
@@ -92,6 +95,27 @@ export function TacticalOverridesTab() {
     }
   });
 
+  const managedQuery = useQuery({
+    queryKey: ['managed-rate-plan-overrides'],
+    queryFn: async () => {
+      const { data, error } = await (supabase as SupabaseClient).from('rate_plan_anchors').select('source_override_id,room_category_id,room_type_id,room_unit_id,start_date,end_date');
+      if (error) throw error;
+      return data as ({ source_override_id: string | null } & RateScopeDates)[];
+    }
+  });
+  const managedIds = useMemo(() => managedOverrideIds(rules || [], managedQuery.data || []), [rules, managedQuery.data]);
+  const assertUnmanaged = (ids: string[]) => {
+    if (managedQuery.isLoading || managedQuery.error) throw new Error('Rate-plan ownership could not be verified. Refresh before changing legacy overrides.');
+    if (ids.some(id => managedIds.has(id))) throw new Error('This migrated rate is managed in Rate Plans. Edit or disable it there.');
+  };
+
+  const assertNoManagedOverlap = (payloads: RateScopeDates[]) => {
+    if (managedQuery.isLoading || managedQuery.error) throw new Error('Rate-plan ownership could not be verified. Refresh before creating overrides.');
+    if (payloads.some(payload => hasManagedRateOverlap(payload, managedQuery.data || []))) {
+      throw new Error('An overlapping rate is managed in Rate Plans. Add or edit its stay-length tier there instead of creating a competing legacy override.');
+    }
+  };
+
   const { data: roomCategories } = useQuery({
     queryKey: ['room-categories-for-overrides'],
     queryFn: async () => {
@@ -156,6 +180,7 @@ export function TacticalOverridesTab() {
 
   const createMutation = useMutation({
     mutationFn: async (dataList: any[]) => {
+      assertNoManagedOverlap(dataList);
       const { error } = await supabase.from('tactical_overrides').insert(dataList);
       if (error) throw error;
     },
@@ -168,13 +193,15 @@ export function TacticalOverridesTab() {
       resetForm();
     },
     onError: (err) => {
-      toast.error('Failed to create overrides');
+      toast.error(err instanceof Error ? err.message : 'Failed to create overrides');
       console.error(err);
     }
   });
 
   const deactivateAndCreateMutation = useMutation({
     mutationFn: async ({ idsToDeactivate, newPayloads }: { idsToDeactivate: string[]; newPayloads: any[] }) => {
+      assertUnmanaged(idsToDeactivate);
+      assertNoManagedOverlap(newPayloads);
       // Deactivate conflicting overrides
       if (idsToDeactivate.length > 0) {
         const { error: deactivateError } = await supabase
@@ -196,31 +223,35 @@ export function TacticalOverridesTab() {
       resetForm();
     },
     onError: (err) => {
-      toast.error('Failed to create overrides');
+      toast.error(err instanceof Error ? err.message : 'Failed to create overrides');
       console.error(err);
     }
   });
 
   const deleteMutation = useMutation({
     mutationFn: async (id: string) => {
+      assertUnmanaged([id]);
       const { error } = await supabase.from('tactical_overrides').delete().eq('id', id);
       if (error) throw error;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['tactical-overrides'] });
       toast.success('Override deleted');
-    }
+    },
+    onError: (error: Error) => toast.error(error.message)
   });
 
   const toggleActiveMutation = useMutation({
     mutationFn: async ({ id, is_active }: { id: string; is_active: boolean }) => {
+      assertUnmanaged([id]);
       const { error } = await supabase.from('tactical_overrides').update({ is_active }).eq('id', id);
       if (error) throw error;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['tactical-overrides'] });
       toast.success('Status updated');
-    }
+    },
+    onError: (error: Error) => toast.error(error.message)
   });
 
   const resetForm = () => {
@@ -860,13 +891,15 @@ export function TacticalOverridesTab() {
             filteredRules.map((rule) => {
               const status = getOverrideStatus(rule);
               const isExpired = status === 'expired';
+              const managed = managedIds.has(rule.id);
+              const ownershipPending = managedQuery.isLoading || !!managedQuery.error;
               const conditions = getConditionsSummary(rule);
               return (
                 <TableRow 
                   key={rule.id} 
                   className={isExpired ? 'opacity-50 bg-muted/30' : ''}
                 >
-                  <TableCell className="py-2.5 font-medium text-sm">{rule.reason}</TableCell>
+                  <TableCell className="py-2.5 font-medium text-sm">{rule.reason}{managed && <Link className="block text-xs underline text-primary mt-1" to="/admin/pricing/rate-plans">Managed in Rate Plans</Link>}</TableCell>
                   <TableCell className="py-2.5 text-xs text-muted-foreground">
                     {format(new Date(rule.start_date), 'MMM dd')} - {format(new Date(rule.end_date), 'MMM dd, yy')}
                   </TableCell>
@@ -904,6 +937,8 @@ export function TacticalOverridesTab() {
                     <div className="flex items-center gap-2">
                       <Switch
                         checked={rule.is_active}
+                        disabled={managed || ownershipPending}
+                        title={managed ? 'Manage this migrated rate in Rate Plans' : ownershipPending ? 'Checking rate-plan ownership' : undefined}
                         onCheckedChange={(checked) => 
                           toggleActiveMutation.mutate({ id: rule.id, is_active: checked })
                         }
@@ -913,12 +948,12 @@ export function TacticalOverridesTab() {
                         variant={status === 'active' ? 'default' : status === 'upcoming' ? 'secondary' : 'outline'}
                         className="text-xs"
                       >
-                        {status === 'inactive' ? 'Off' : status.charAt(0).toUpperCase() + status.slice(1)}
+                        {managed ? 'Preserved source' : status === 'inactive' ? 'Off' : status.charAt(0).toUpperCase() + status.slice(1)}
                       </Badge>
                     </div>
                   </TableCell>
                   <TableCell className="py-2.5 text-right">
-                    <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => deleteMutation.mutate(rule.id)}>
+                    <Button variant="ghost" size="icon" className="h-8 w-8" disabled={managed || ownershipPending} title={managed ? 'Preserved original: manage in Rate Plans' : 'Delete override'} onClick={() => deleteMutation.mutate(rule.id)}>
                       <Trash2 className="h-4 w-4" />
                     </Button>
                   </TableCell>
@@ -1021,3 +1056,4 @@ export function TacticalOverridesTab() {
     </div>
   );
 }
+

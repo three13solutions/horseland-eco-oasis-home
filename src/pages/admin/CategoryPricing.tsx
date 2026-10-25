@@ -217,9 +217,9 @@ export default function CategoryPricing() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Category Pricing</h1>
+          <h1 className="text-3xl font-bold tracking-tight">Room Type Pricing</h1>
           <p className="text-muted-foreground mt-2">
-            Configure seasonal pricing for all room categories
+            Configure seasonal pricing for room types
           </p>
         </div>
         <Button onClick={handleSaveAll} disabled={saving} size="lg">
@@ -240,7 +240,7 @@ export default function CategoryPricing() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead className="w-[200px] font-semibold">Room Category</TableHead>
+                  <TableHead className="w-[200px] font-semibold">Room Type</TableHead>
                   {seasons.flatMap((season) =>
                     dayTypes.map((dayType) => (
                       <TableHead key={`${season.id}_${dayType.id}`} className="text-center">

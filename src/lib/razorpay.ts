@@ -48,12 +48,14 @@ export const calculateBookingAmount = (
   roomPrice: number,
   nights: number,
   addonTotal: number = 0,
-  gstRate: number = RAZORPAY_CONFIG.GST_RATE
+  gstRate: number = RAZORPAY_CONFIG.GST_RATE,
+  exactStayTotal?: number
 ): BookingPaymentDetails => {
-  const baseAmount = roomPrice * nights;
-  const subtotal = baseAmount + addonTotal;
-  const gstAmount = subtotal * gstRate;
-  const totalAmount = subtotal + gstAmount;
+  const money = (value: number) => Math.round((value + Number.EPSILON) * 100) / 100;
+  const baseAmount = money(exactStayTotal ?? roomPrice * nights);
+  const subtotal = money(baseAmount + money(addonTotal));
+  const gstAmount = money(subtotal * gstRate);
+  const totalAmount = money(subtotal + gstAmount);
 
   return {
     baseAmount,

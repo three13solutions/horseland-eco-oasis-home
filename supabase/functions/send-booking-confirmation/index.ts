@@ -61,7 +61,7 @@ const handler = async (req: Request): Promise<Response> => {
     };
 
     // Calculate GST breakdown
-    const gstAmount = (booking.total_amount || 0) * 0.18 / 1.18;
+    const gstAmount = (booking.rate_breakdown?.validated_quote?.tax_amount ?? ((booking.total_amount || 0) * 0.18 / 1.18));
     const subtotal = (booking.total_amount || 0) - gstAmount;
 
     // Create email HTML
@@ -235,7 +235,7 @@ const handler = async (req: Request): Promise<Response> => {
                 <span class="detail-value">${formatCurrency(booking.room_cost || 0)}</span>
               </div>
               <div class="detail-row">
-                <span class="detail-label">GST (18%)</span>
+                <span class="detail-label">GST (${((booking.rate_breakdown?.validated_quote?.tax_rate ?? 0.18) * 100).toFixed(0)}%)</span>
                 <span class="detail-value">${formatCurrency(gstAmount)}</span>
               </div>
               <div class="total-row detail-row">
@@ -295,3 +295,4 @@ const handler = async (req: Request): Promise<Response> => {
 };
 
 serve(handler);
+

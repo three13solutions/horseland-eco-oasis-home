@@ -15,6 +15,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { PaymentOptionsModal } from '@/components/PaymentOptionsModal';
 import { calculateBookingAmount, formatCurrency } from '@/lib/razorpay';
+import { useDynamicPricing } from '@/hooks/useDynamicPricing';
 
 interface ManualBookingModalProps {
   isOpen: boolean;
@@ -42,6 +43,29 @@ export const ManualBookingModal: React.FC<ManualBookingModalProps> = ({
   const [guestEmail, setGuestEmail] = useState('');
   const [guestPhone, setGuestPhone] = useState('');
   const [guestsCount, setGuestsCount] = useState(2);
+  const [childrenCount, setChildrenCount] = useState(0);
+  const [infantsCount, setInfantsCount] = useState(0);
+  const [roomTypeId, setRoomTypeId] = useState<string>();
+  const [roomPrice, setRoomPrice] = useState(0);
+  const [mealPlanCode, setMealPlanCode] = useState('RO');
+  const [policyCode, setPolicyCode] = useState('credit_voucher');
+  const { data: rateVariants = [], isFetching: quoteLoading } = useDynamicPricing({
+    roomTypeId, roomUnitId, checkIn: checkInDate, checkOut: checkOutDate,
+    adultsCount: guestsCount, childrenCount, infantsCount, enabled: isOpen,
+  });
+  const rpcRate = rateVariants.find(v => v.meal_plan_code === mealPlanCode && v.cancellation_policy_code === policyCode);
+  const legacyManualRate = rpcRate?.pricing_status === 'legacy_basis_unverified';
+  const selectedRate = rpcRate && legacyManualRate ? { ...rpcRate,
+    room_rate: roomPrice * (checkInDate && checkOutDate ? differenceInDays(checkOutDate, checkInDate) : 0),
+    meal_cost: 0, policy_adjustment: 0,
+    total_price: roomPrice * (checkInDate && checkOutDate ? differenceInDays(checkOutDate, checkInDate) : 0),
+    price_per_night: roomPrice,
+    pricing_status: 'legacy_manual_basis_unverified',
+    quote_fingerprint: `${rpcRate.quote_fingerprint}:manual-base:${roomPrice}`,
+  } : rpcRate;
+  useEffect(() => {
+    if (rateVariants.length && !rateVariants.some(v => v.cancellation_policy_code === policyCode)) setPolicyCode(rateVariants[0].cancellation_policy_code);
+  }, [rateVariants, policyCode]);
   const [paymentStatus, setPaymentStatus] = useState<'pending' | 'confirmed'>('pending');
   const [totalAmount, setTotalAmount] = useState(0);
   const [notes, setNotes] = useState('');
@@ -61,7 +85,6 @@ export const ManualBookingModal: React.FC<ManualBookingModalProps> = ({
   
   // Payment related state
   const [showPaymentOptionsModal, setShowPaymentOptionsModal] = useState(false);
-  const [roomPrice, setRoomPrice] = useState(0);
   const [createdBooking, setCreatedBooking] = useState<any>(null);
   
   const { toast } = useToast();
@@ -83,6 +106,7 @@ export const ManualBookingModal: React.FC<ManualBookingModalProps> = ({
         if (activitiesRes.data) setAvailableActivities(activitiesRes.data);
         if (spaRes.data) setAvailableSpaServices(spaRes.data);
         
+        setRoomTypeId(roomUnitRes.data?.[0]?.room_type_id);
         // Set room price from room type
         if (roomUnitRes.data?.[0]?.room_types?.base_price) {
           setRoomPrice(roomUnitRes.data[0].room_types.base_price);
@@ -325,7 +349,7 @@ export const ManualBookingModal: React.FC<ManualBookingModalProps> = ({
   const getBookingTotal = () => {
     const nights = getNights();
     const addonTotal = calculateAddonTotal();
-    const breakdown = calculateBookingAmount(roomPrice, nights, addonTotal);
+    const breakdown = calculateBookingAmount(selectedRate?.price_per_night ?? 0, nights, addonTotal, 0.18, selectedRate?.total_price ?? 0);
     return breakdown.totalAmount;
   };
 
@@ -340,6 +364,8 @@ export const ManualBookingModal: React.FC<ManualBookingModalProps> = ({
     setGuestEmail('');
     setGuestPhone('');
     setGuestsCount(2);
+    setChildrenCount(0);
+    setInfantsCount(0);
     setPaymentStatus('pending');
     setTotalAmount(0);
     setNotes('');
@@ -359,7 +385,10 @@ export const ManualBookingModal: React.FC<ManualBookingModalProps> = ({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    alert('MANUAL BOOKING MODAL DETECTED - This alert confirms which form you are using');
+    if (!selectedRate?.quote_fingerprint || quoteLoading) {
+      toast({ title: 'Rate unavailable', description: 'Wait for a current server quote before creating this booking.', variant: 'destructive' });
+      return;
+    }
     
     console.log('=== FORM SUBMISSION STARTED ===');
     console.log('Guest Email:', guestEmail);
@@ -480,7 +509,7 @@ export const ManualBookingModal: React.FC<ManualBookingModalProps> = ({
         guest_phone: guestPhone.trim() || null,
         check_in: format(checkInDate, 'yyyy-MM-dd'),
         check_out: format(checkOutDate, 'yyyy-MM-dd'),
-        guests_count: guestsCount,
+        guests_count: guestsCount + childrenCount + infantsCount,
         payment_status: paymentStatus,
         total_amount: getBookingTotal(),
         notes: notes.trim() || null,
@@ -491,16 +520,26 @@ export const ManualBookingModal: React.FC<ManualBookingModalProps> = ({
 
       console.log('Booking data to insert:', bookingData);
       
-      const { data: insertedBooking, error } = await supabase
-        .from('bookings')
-        .insert([bookingData])
-        .select()
-        .single();
-
-      if (error) {
-        console.error('Supabase insert error:', error);
-        throw error;
-      }
+      const { data: result, error } = await supabase.functions.invoke('create-manual-booking', {
+        body: {
+          booking: bookingData,
+          expected_amount: getBookingTotal(),
+          quote_fingerprint: selectedRate.quote_fingerprint,
+          quote_request: {
+            room_type_id: roomTypeId, room_unit_id: roomUnitId,
+            check_in: format(checkInDate, 'yyyy-MM-dd'), check_out: format(checkOutDate, 'yyyy-MM-dd'),
+            adults_count: guestsCount, children_count: childrenCount, infants_count: infantsCount,
+            meal_plan_code: mealPlanCode, cancellation_policy_code: policyCode,
+            addons: [
+              ...selectedMeals.map(m => ({ id: m.id, type: 'meal', quantity: m.quantity || 1 })),
+              ...selectedActivities.map(a => ({ id: a.id, type: 'activity', quantity: a.quantity || 1 })),
+              ...selectedSpaServices.map(x => ({ id: x.id, type: 'spa', quantity: x.quantity || 1 })),
+            ],
+          },
+        },
+      });
+      if (error || !result?.success || !result.booking) throw new Error(result?.error || 'The quote or booking could not be verified. Refresh and try again.');
+      const insertedBooking = result.booking;
       
       console.log('Booking created successfully');
       setCreatedBooking(insertedBooking);
@@ -523,6 +562,8 @@ export const ManualBookingModal: React.FC<ManualBookingModalProps> = ({
       setGuestEmail('');
       setGuestPhone('');
       setGuestsCount(2);
+    setChildrenCount(0);
+    setInfantsCount(0);
       setPaymentStatus('pending');
       setTotalAmount(0);
       setNotes('');
@@ -542,7 +583,7 @@ export const ManualBookingModal: React.FC<ManualBookingModalProps> = ({
       console.error('Error creating booking:', error);
       toast({
         title: "Error",
-        description: "Failed to create booking. Please try again.",
+        description: error?.message || "Failed to create booking. Please try again.",
         variant: "destructive",
       });
     } finally {
@@ -629,6 +670,22 @@ export const ManualBookingModal: React.FC<ManualBookingModalProps> = ({
                 </PopoverContent>
               </Popover>
             </div>
+          </div>
+
+          <div className="grid gap-4 sm:grid-cols-2 rounded-lg border p-4">
+            <div className="space-y-2"><Label>Meal plan</Label>
+              <Select value={mealPlanCode} onValueChange={setMealPlanCode}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent>
+                {[...new Map(rateVariants.map(v => [v.meal_plan_code, v])).values()].map(v => <SelectItem key={v.meal_plan_code} value={v.meal_plan_code}>{v.meal_plan_name}</SelectItem>)}
+              </SelectContent></Select>
+            </div>
+            <div className="space-y-2"><Label>Cancellation policy</Label>
+              <Select value={policyCode} onValueChange={setPolicyCode}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent>
+                {[...new Map(rateVariants.map(v => [v.cancellation_policy_code, v])).values()].map(v => <SelectItem key={v.cancellation_policy_code} value={v.cancellation_policy_code}>{v.cancellation_policy_name}</SelectItem>)}
+              </SelectContent></Select>
+            </div>
+            <div className="space-y-2"><Label>Children</Label><Input type="number" min={0} value={childrenCount} onChange={e => setChildrenCount(Math.max(0, parseInt(e.target.value) || 0))} /></div>
+            <div className="space-y-2"><Label>Infants</Label><Input type="number" min={0} value={infantsCount} onChange={e => setInfantsCount(Math.max(0, parseInt(e.target.value) || 0))} /></div>
+            <p className="sm:col-span-2 text-sm text-muted-foreground">{quoteLoading ? 'Refreshing server quote…' : selectedRate ? `Room and extra accommodation: ₹${selectedRate.room_rate.toLocaleString()}; meals: ₹${selectedRate.meal_cost.toLocaleString()}; policy adjustment: ₹${selectedRate.policy_adjustment.toLocaleString()}.` : 'Select dates and guests to obtain a quote.'} {legacyManualRate ? ' Existing manual room pricing is retained while its meal basis awaits confirmation.' : ''} Manual booking tax remains 18% pending separate policy review.</p>
           </div>
 
           {/* Guest Information */}
@@ -728,7 +785,7 @@ export const ManualBookingModal: React.FC<ManualBookingModalProps> = ({
 
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="guestsCount">Number of Guests</Label>
+                <Label htmlFor="guestsCount">Adults</Label>
                 <Input
                   id="guestsCount"
                   type="number"
@@ -775,7 +832,7 @@ export const ManualBookingModal: React.FC<ManualBookingModalProps> = ({
                   />
                 </div>
                 <p className="text-xs text-muted-foreground">
-                  Room: {formatCurrency(roomPrice * getNights())} + Add-ons: {formatCurrency(calculateAddonTotal())} + GST (18%)
+                  Room and plan: {formatCurrency(selectedRate?.total_price ?? 0)} + Add-ons: {formatCurrency(calculateAddonTotal())} + GST (18%)
                 </p>
               </div>
             </div>
@@ -954,7 +1011,7 @@ export const ManualBookingModal: React.FC<ManualBookingModalProps> = ({
             <Button type="button" variant="outline" onClick={onClose}>
               Cancel
             </Button>
-            <Button type="submit" disabled={isSubmitting}>
+            <Button type="submit" disabled={isSubmitting || quoteLoading || !selectedRate?.quote_fingerprint}>
               {isSubmitting ? 'Creating...' : 'Create Booking'}
             </Button>
           </div>

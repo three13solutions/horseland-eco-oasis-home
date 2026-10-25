@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
@@ -44,6 +45,7 @@ interface RoomType {
 
 export default function LiveRateCard() {
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
+  const [stayNights, setStayNights] = useState(1);
   const [activeTab, setActiveTab] = useState('room-rates');
 
   const { data: roomTypes = [] } = useQuery<RoomType[]>({
@@ -60,7 +62,7 @@ export default function LiveRateCard() {
 
   // Determine day type for display
   const dayOfWeek = selectedDate.getDay();
-  const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
+  const isWeekend = dayOfWeek === 0 || dayOfWeek === 5 || dayOfWeek === 6;
 
   const { data: seasons = [] } = useQuery<any[]>({
     queryKey: ['seasons'],
@@ -87,44 +89,24 @@ export default function LiveRateCard() {
   const currentDayType = dayTypes.find(d => d.slug === (isWeekend ? 'weekend' : 'weekday'));
 
   const { data: liveRates = [], isLoading, refetch, isFetching } = useQuery<LiveRateResult[]>({
-    queryKey: ['live-rates', format(selectedDate, 'yyyy-MM-dd'), roomTypes.length],
+    queryKey: ['live-rates', format(selectedDate, 'yyyy-MM-dd'), stayNights, roomTypes.length],
     queryFn: async () => {
       if (roomTypes.length === 0) return [];
       
       const rates: LiveRateResult[] = [];
       
       for (const roomType of roomTypes) {
-        const { data, error } = await supabase.rpc('calculate_dynamic_price', {
-          p_room_type_id: roomType.id,
-          p_date: format(selectedDate, 'yyyy-MM-dd'),
-          p_adults_count: 2,
-          p_children_count: 0,
-          p_infants_count: 0,
-          p_booking_channel: 'direct',
-          p_current_occupancy: 0
+        const end = new Date(selectedDate); end.setDate(end.getDate() + stayNights);
+        const { data, error } = await supabase.rpc('calculate_rate_variants_v2', {
+          p_room_type_id: roomType.id, p_check_in: format(selectedDate, 'yyyy-MM-dd'),
+          p_check_out: format(end, 'yyyy-MM-dd'), p_adults_count: 2, p_children_count: 0, p_infants_count: 0, p_booking_channel: 'direct'
         });
-        
-        if (error) {
-          console.error(`Error fetching rate for ${roomType.name}:`, error);
-          rates.push({
-            roomTypeId: roomType.id,
-            roomTypeName: roomType.name,
-            basePrice: roomType.base_price || 0,
-            finalPrice: roomType.base_price || 0,
-            adjustments: [],
-            dayTypeName: currentDayType?.name || (isWeekend ? 'Weekend' : 'Weekday')
-          });
-        } else if (data && data.length > 0) {
-          const adjustmentsData = data[0].adjustments;
-          rates.push({
-            roomTypeId: roomType.id,
-            roomTypeName: roomType.name,
-            basePrice: data[0].base_price || 0,
-            finalPrice: data[0].final_price || 0,
-            adjustments: Array.isArray(adjustmentsData) ? adjustmentsData : [],
-            dayTypeName: currentDayType?.name || (isWeekend ? 'Weekend' : 'Weekday')
-          });
-        }
+        if (error) throw error;
+        const variants = Array.isArray(data) ? data as unknown as RateVariant[] : [];
+        const selected = variants.find(v => v.meal_plan_code === 'RO' && v.cancellation_policy_code === 'refundable_credit') || variants.find(v=>v.meal_plan_code==='RO');
+        if (selected) rates.push({ roomTypeId:roomType.id, roomTypeName:roomType.name,
+          basePrice:selected.room_rate / stayNights, finalPrice:selected.price_per_night,
+          adjustments:[], dayTypeName:currentDayType?.name || (isWeekend?'Weekend':'Weekday') });
       }
       
       return rates;
@@ -134,16 +116,16 @@ export default function LiveRateCard() {
 
   // Fetch full rate variants for the first room type (for demonstration)
   const { data: rateVariants = [] } = useQuery<{ roomTypeId: string; roomTypeName: string; variants: RateVariant[] }[]>({
-    queryKey: ['rate-variants', format(selectedDate, 'yyyy-MM-dd'), roomTypes.length],
+    queryKey: ['rate-variants', format(selectedDate, 'yyyy-MM-dd'), stayNights, roomTypes.length],
     queryFn: async () => {
       if (roomTypes.length === 0) return [];
       
       const results: { roomTypeId: string; roomTypeName: string; variants: RateVariant[] }[] = [];
       const checkOut = new Date(selectedDate);
-      checkOut.setDate(checkOut.getDate() + 1);
+      checkOut.setDate(checkOut.getDate() + stayNights);
       
       for (const roomType of roomTypes) {
-        const { data, error } = await supabase.rpc('calculate_rate_variants', {
+        const { data, error } = await supabase.rpc('calculate_rate_variants_v2', {
           p_room_type_id: roomType.id,
           p_check_in: format(selectedDate, 'yyyy-MM-dd'),
           p_check_out: format(checkOut, 'yyyy-MM-dd'),
@@ -185,7 +167,7 @@ export default function LiveRateCard() {
         <div>
           <h1 className="text-3xl font-bold">Live Rate Card</h1>
           <p className="text-muted-foreground mt-2">
-            View real-time computed pricing for all room types
+            Server-calculated rates for two adults. Verified anchors use meal conversion; legacy rates retain their unconfirmed basis.
           </p>
         </div>
         <Button onClick={() => refetch()} variant="outline" disabled={isFetching}>
@@ -208,6 +190,7 @@ export default function LiveRateCard() {
                 )}
               </CardDescription>
             </div>
+            <label className="text-sm">Stay nights<Input aria-label="Stay nights" type="number" min="1" max="365" value={stayNights} onChange={e=>setStayNights(Math.min(365,Math.max(1,Number(e.target.value)||1)))} className="w-24" /></label>
             <Popover>
               <PopoverTrigger asChild>
                 <Button variant="outline" className="min-w-[200px] justify-start text-left font-normal">
@@ -516,3 +499,4 @@ export default function LiveRateCard() {
     </div>
   );
 }
+

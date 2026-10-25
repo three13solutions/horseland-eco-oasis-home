@@ -26,6 +26,6 @@ test('admin can save pending supplement without enabling checkout pricing', () =
  const source = readFileSync(new URL('../src/pages/admin/MealPlansManagement.tsx',import.meta.url),'utf8');
  assert.match(source,/supplement_per_person_inr: supplement/);
  assert.match(source,/Number\.isFinite\(supplement\)/);
- assert.match(source,/not yet applied at checkout/);
+ assert.match(source,/unclassified legacy rates remain unchanged/);
  assert.doesNotMatch(source,/supplement_pricing_enabled: (true|false)/);
 });

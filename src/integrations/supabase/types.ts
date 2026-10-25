@@ -382,6 +382,36 @@ export type Database = {
         }
         Relationships: []
       }
+      booking_order_quotes: {
+        Row: {
+          amount: number
+          created_at: string
+          currency: string
+          expires_at: string | null
+          order_id: string
+          quote: Json
+          request: Json
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          currency?: string
+          expires_at?: string | null
+          order_id: string
+          quote: Json
+          request: Json
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          currency?: string
+          expires_at?: string | null
+          order_id?: string
+          quote?: Json
+          request?: Json
+        }
+        Relationships: []
+      }
       booking_waitlist: {
         Row: {
           alternative_date_range_end: string | null
@@ -1604,12 +1634,8 @@ export type Database = {
       }
       meal_plan_rules: {
         Row: {
-          alias_names: string[]
           alias_codes: string[]
-          supplement_per_person_inr: number | null
-          supplement_pricing_enabled: boolean
-          supplement_period: string | null
-          supplement_guest_basis: string | null
+          alias_names: string[]
           applies_to: string
           created_at: string
           description: string | null
@@ -1623,15 +1649,16 @@ export type Database = {
           preferred_variant: string | null
           room_type_id: string | null
           season_id: string | null
+          supplement_effective_from: string
+          supplement_guest_basis: string | null
+          supplement_per_person_inr: number | null
+          supplement_period: string | null
+          supplement_pricing_enabled: boolean
           updated_at: string
         }
         Insert: {
-          alias_names?: string[]
           alias_codes?: string[]
-          supplement_per_person_inr?: number | null
-          supplement_pricing_enabled?: boolean
-          supplement_period?: string | null
-          supplement_guest_basis?: string | null
+          alias_names?: string[]
           applies_to?: string
           created_at?: string
           description?: string | null
@@ -1645,15 +1672,16 @@ export type Database = {
           preferred_variant?: string | null
           room_type_id?: string | null
           season_id?: string | null
+          supplement_effective_from?: string
+          supplement_guest_basis?: string | null
+          supplement_per_person_inr?: number | null
+          supplement_period?: string | null
+          supplement_pricing_enabled?: boolean
           updated_at?: string
         }
         Update: {
-          alias_names?: string[]
           alias_codes?: string[]
-          supplement_per_person_inr?: number | null
-          supplement_pricing_enabled?: boolean
-          supplement_period?: string | null
-          supplement_guest_basis?: string | null
+          alias_names?: string[]
           applies_to?: string
           created_at?: string
           description?: string | null
@@ -1667,6 +1695,11 @@ export type Database = {
           preferred_variant?: string | null
           room_type_id?: string | null
           season_id?: string | null
+          supplement_effective_from?: string
+          supplement_guest_basis?: string | null
+          supplement_per_person_inr?: number | null
+          supplement_period?: string | null
+          supplement_pricing_enabled?: boolean
           updated_at?: string
         }
         Relationships: [
@@ -1682,6 +1715,50 @@ export type Database = {
             columns: ["season_id"]
             isOneToOne: false
             referencedRelation: "seasons"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      meal_supplement_versions: {
+        Row: {
+          amount: number
+          changed_by: string | null
+          effective_from: string
+          guest_basis: string
+          id: string
+          meal_plan_id: string
+          period: string
+          plan_code: string
+          recorded_at: string
+        }
+        Insert: {
+          amount: number
+          changed_by?: string | null
+          effective_from: string
+          guest_basis: string
+          id?: string
+          meal_plan_id: string
+          period: string
+          plan_code: string
+          recorded_at?: string
+        }
+        Update: {
+          amount?: number
+          changed_by?: string | null
+          effective_from?: string
+          guest_basis?: string
+          id?: string
+          meal_plan_id?: string
+          period?: string
+          plan_code?: string
+          recorded_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "meal_supplement_versions_meal_plan_id_fkey"
+            columns: ["meal_plan_id"]
+            isOneToOne: false
+            referencedRelation: "meal_plan_rules"
             referencedColumns: ["id"]
           },
         ]
@@ -2225,6 +2302,187 @@ export type Database = {
             columns: ["season_id"]
             isOneToOne: false
             referencedRelation: "seasons"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      rate_plan_anchor_versions: {
+        Row: {
+          anchor_id: string
+          changed_by: string | null
+          id: string
+          recorded_at: string
+          snapshot: Json
+        }
+        Insert: {
+          anchor_id: string
+          changed_by?: string | null
+          id?: string
+          recorded_at?: string
+          snapshot: Json
+        }
+        Update: {
+          anchor_id?: string
+          changed_by?: string | null
+          id?: string
+          recorded_at?: string
+          snapshot?: Json
+        }
+        Relationships: [
+          {
+            foreignKeyName: "rate_plan_anchor_versions_anchor_id_fkey"
+            columns: ["anchor_id"]
+            isOneToOne: false
+            referencedRelation: "rate_plan_anchors"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      rate_plan_anchors: {
+        Row: {
+          amount: number
+          created_at: string
+          day_type: string
+          end_date: string | null
+          extra_adult_per_night: number | null
+          extra_child_per_night: number | null
+          extra_infant_per_night: number
+          id: string
+          included_adults: number
+          is_active: boolean
+          los_adjustment_type: string | null
+          los_adjustment_value: number | null
+          los_min_nights: number | null
+          max_nights: number | null
+          min_nights: number
+          name: string
+          priority: number
+          quoted_nights: number
+          room_category_id: string | null
+          room_type_id: string | null
+          room_unit_id: string | null
+          source_meal_plan_code: string
+          source_override_id: string | null
+          start_date: string | null
+          updated_at: string
+          verified_basis: boolean
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          day_type?: string
+          end_date?: string | null
+          extra_adult_per_night?: number | null
+          extra_child_per_night?: number | null
+          extra_infant_per_night?: number
+          id?: string
+          included_adults?: number
+          is_active?: boolean
+          los_adjustment_type?: string | null
+          los_adjustment_value?: number | null
+          los_min_nights?: number | null
+          max_nights?: number | null
+          min_nights?: number
+          name: string
+          priority?: number
+          quoted_nights?: number
+          room_category_id?: string | null
+          room_type_id?: string | null
+          room_unit_id?: string | null
+          source_meal_plan_code: string
+          source_override_id?: string | null
+          start_date?: string | null
+          updated_at?: string
+          verified_basis?: boolean
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          day_type?: string
+          end_date?: string | null
+          extra_adult_per_night?: number | null
+          extra_child_per_night?: number | null
+          extra_infant_per_night?: number
+          id?: string
+          included_adults?: number
+          is_active?: boolean
+          los_adjustment_type?: string | null
+          los_adjustment_value?: number | null
+          los_min_nights?: number | null
+          max_nights?: number | null
+          min_nights?: number
+          name?: string
+          priority?: number
+          quoted_nights?: number
+          room_category_id?: string | null
+          room_type_id?: string | null
+          room_unit_id?: string | null
+          source_meal_plan_code?: string
+          source_override_id?: string | null
+          start_date?: string | null
+          updated_at?: string
+          verified_basis?: boolean
+        }
+        Relationships: [
+          {
+            foreignKeyName: "rate_plan_anchors_room_category_id_fkey"
+            columns: ["room_category_id"]
+            isOneToOne: false
+            referencedRelation: "room_categories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "rate_plan_anchors_room_type_id_fkey"
+            columns: ["room_type_id"]
+            isOneToOne: false
+            referencedRelation: "room_types"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "rate_plan_anchors_room_unit_id_fkey"
+            columns: ["room_unit_id"]
+            isOneToOne: false
+            referencedRelation: "room_units"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "rate_plan_anchors_source_override_id_fkey"
+            columns: ["source_override_id"]
+            isOneToOne: true
+            referencedRelation: "tactical_overrides"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      rate_plan_managed_overrides: {
+        Row: {
+          anchor_id: string
+          enabled: boolean
+          override_id: string
+        }
+        Insert: {
+          anchor_id: string
+          enabled: boolean
+          override_id: string
+        }
+        Update: {
+          anchor_id?: string
+          enabled?: boolean
+          override_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "rate_plan_managed_overrides_anchor_id_fkey"
+            columns: ["anchor_id"]
+            isOneToOne: false
+            referencedRelation: "rate_plan_anchors"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "rate_plan_managed_overrides_override_id_fkey"
+            columns: ["override_id"]
+            isOneToOne: true
+            referencedRelation: "tactical_overrides"
             referencedColumns: ["id"]
           },
         ]
@@ -2865,6 +3123,23 @@ export type Database = {
           final_price: number
         }[]
       }
+      calculate_dynamic_price_legacy_20261025: {
+        Args: {
+          p_adults_count?: number
+          p_booking_channel?: string
+          p_children_count?: number
+          p_current_occupancy?: number
+          p_date?: string
+          p_infants_count?: number
+          p_room_type_id: string
+          p_room_unit_id?: string
+        }
+        Returns: {
+          adjustments: Json
+          base_price: number
+          final_price: number
+        }[]
+      }
       calculate_invoice_totals:
         | {
             Args: { p_subtotal: number }
@@ -2897,6 +3172,32 @@ export type Database = {
         }[]
       }
       calculate_rate_variants: {
+        Args: {
+          p_adults_count?: number
+          p_booking_channel?: string
+          p_check_in: string
+          p_check_out: string
+          p_children_count?: number
+          p_infants_count?: number
+          p_room_type_id: string
+          p_room_unit_id?: string
+        }
+        Returns: Json
+      }
+      calculate_rate_variants_legacy_20261025: {
+        Args: {
+          p_adults_count?: number
+          p_booking_channel?: string
+          p_check_in: string
+          p_check_out: string
+          p_children_count?: number
+          p_infants_count?: number
+          p_room_type_id: string
+          p_room_unit_id?: string
+        }
+        Returns: Json
+      }
+      calculate_rate_variants_v2: {
         Args: {
           p_adults_count?: number
           p_booking_channel?: string
@@ -2956,6 +3257,7 @@ export type Database = {
         }
         Returns: undefined
       }
+      rate_override_disabled: { Args: { p_id: string }; Returns: boolean }
     }
     Enums: {
       app_role: "super_admin" | "admin" | "content_editor"
@@ -3090,4 +3392,3 @@ export const Constants = {
     },
   },
 } as const
-

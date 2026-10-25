@@ -23,6 +23,7 @@ interface MealPlan {
   supplement_per_person_inr: number | null;
   supplement_pricing_enabled: boolean;
   supplement_period: string | null;
+  supplement_effective_from: string;
   supplement_guest_basis: string | null;
   description: string;
   included_meal_types: string[];
@@ -42,6 +43,7 @@ const MealPlansManagement = () => {
     alias_names_text: '',
     alias_codes_text: '',
     supplement_amount_text: '',
+    supplement_effective_from: new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Kolkata' }),
     description: '',
     included_meal_types: [] as string[],
     preferred_variant: 'veg',
@@ -66,12 +68,14 @@ const MealPlansManagement = () => {
     mutationFn: async (form: typeof formData) => {
       const { alias_names_text, alias_codes_text, supplement_amount_text, ...fields } = form;
       const supplement = supplement_amount_text.trim() === '' ? null : Number(supplement_amount_text);
+      if (fields.is_active && (!['RO','BB','HB','FB'].includes(fields.plan_code) || supplement === null)) throw new Error('Active booking plans require RO, BB, HB or FB and a configured meal supplement. Save other plans as inactive drafts.');
       if (supplement !== null && (!Number.isFinite(supplement) || supplement < 0)) throw new Error('Enter a valid non-negative meal supplement.');
       const aliases = mealPlanAliasPayload(alias_names_text, alias_codes_text);
       const conflict = findMealPlanAliasConflict([...aliases.alias_names, ...aliases.alias_codes],
         (mealPlans || []).filter(plan => plan.id !== editingPlan?.id));
       if (conflict) throw new Error(`Alias "${conflict}" is already used by another meal plan.`);
-      const data = { ...fields, ...aliases, supplement_per_person_inr: supplement };
+      if (fields.plan_code === 'RO' && supplement !== 0) throw new Error('Room Only must have a zero meal supplement.');
+      const data = { ...fields, ...aliases, supplement_per_person_inr: supplement, supplement_period: 'per_night', supplement_guest_basis: 'all_guests' };
       if (editingPlan) {
         const { error } = await supabase
           .from('meal_plan_rules')
@@ -89,6 +93,9 @@ const MealPlansManagement = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['meal-plans'] });
+      queryClient.invalidateQueries({ queryKey: ['meal-supplement-versions'] });
+      queryClient.invalidateQueries({ queryKey: ['rate-plan-admin'] });
+      queryClient.invalidateQueries({ queryKey: ['rate-variants'] });
       setIsOpen(false);
       resetForm();
       toast.success(editingPlan ? 'Meal plan updated' : 'Meal plan created');
@@ -108,6 +115,9 @@ const MealPlansManagement = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['meal-plans'] });
+      queryClient.invalidateQueries({ queryKey: ['meal-supplement-versions'] });
+      queryClient.invalidateQueries({ queryKey: ['rate-plan-admin'] });
+      queryClient.invalidateQueries({ queryKey: ['rate-variants'] });
       toast.success('Meal plan deleted');
     },
     onError: (error: any) => {
@@ -122,6 +132,7 @@ const MealPlansManagement = () => {
       alias_names_text: '',
       alias_codes_text: '',
     supplement_amount_text: '',
+    supplement_effective_from: new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Kolkata' }),
       description: '',
       included_meal_types: [],
       preferred_variant: 'veg',
@@ -140,6 +151,7 @@ const MealPlansManagement = () => {
       alias_names_text: (plan.alias_names || []).join(', '),
       alias_codes_text: (plan.alias_codes || []).join(', '),
       supplement_amount_text: plan.supplement_per_person_inr == null ? '' : String(plan.supplement_per_person_inr),
+      supplement_effective_from: new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Kolkata' }),
       description: plan.description || '',
       included_meal_types: plan.included_meal_types || [],
       preferred_variant: plan.preferred_variant,
@@ -170,7 +182,7 @@ const MealPlansManagement = () => {
           <div className="mt-2 p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
             <p className="text-sm text-blue-800 dark:text-blue-200">
               <strong>How It Works:</strong> Meal plans are now independent from cancellation policies in the booking flow. 
-              This screen defines names, codes, descriptions and included meals. Aliases refer to the same plan, not additional plans. Pricing rules are configured separately.
+              This screen is the single source for meal names, aliases, inclusions and effective-dated supplements. Verified Rate Plans use these amounts; unclassified legacy rates remain unchanged. Aliases refer to the same plan, not additional plans. Pricing rules are configured separately.
             </p>
           </div>
         </div>
@@ -191,6 +203,7 @@ const MealPlansManagement = () => {
                   <Label>Plan Code</Label>
                   <Input 
                     value={formData.plan_code}
+                    disabled={!!editingPlan && ['RO','BB','HB','FB'].includes(editingPlan.plan_code)}
                     onChange={(e) => setFormData(prev => ({ ...prev, plan_code: e.target.value }))}
                     placeholder="RO, BB, HB or FB"
                   />
@@ -235,7 +248,14 @@ const MealPlansManagement = () => {
                   value={formData.supplement_amount_text}
                   onChange={(e) => setFormData(prev => ({ ...prev, supplement_amount_text: e.target.value }))}
                   placeholder="Not configured" />
-                <p className="text-xs text-muted-foreground">Saved amount only — not yet applied at checkout. {editingPlan?.supplement_period === 'per_night' ? 'Per person per night.' : 'Charging period not configured.'} {editingPlan?.supplement_guest_basis === 'all_guests' ? 'Adults, children and infants currently count at the full rate; Mahesh reconfirmation is pending.' : 'Guest charging basis not configured.'} Room Only accommodation rates must be confirmed before pricing is enabled.</p>
+                <Label htmlFor="supplement-effective-from">Effective for stay nights from</Label>
+                <Input id="supplement-effective-from" type="date" value={formData.supplement_effective_from}
+                  onChange={(e) => setFormData(prev => ({ ...prev, supplement_effective_from: e.target.value }))} />
+                <p className="text-xs text-muted-foreground">Per person per night. Adults, children and infants currently count at the full rate; Mahesh reconfirmation is pending. Existing paid booking snapshots are preserved.</p>
+                {editingPlan && Number(formData.supplement_amount_text) !== Number(editingPlan.supplement_per_person_inr) && <div className="rounded border border-amber-400 p-2 text-sm">
+                  Price impact: this plan changes by ₹{(Number(formData.supplement_amount_text || 0) - Number(editingPlan.supplement_per_person_inr || 0)).toFixed(2)} per person per night from {formData.supplement_effective_from}. Entered room/package anchors stay fixed. For anchors entered with this plan, the derived RO amount moves by the opposite difference × included guests; for RO anchors, this inclusive plan moves by this difference × guests. Review affected rates in Rate Plans before saving.
+                </div>}
+
               </div>
               <div>
                 <Label>Included Meals</Label>
@@ -327,7 +347,7 @@ const MealPlansManagement = () => {
               </TableCell>
               <TableCell>
                 {plan.supplement_per_person_inr == null ? 'Not configured' : `₹${plan.supplement_per_person_inr.toLocaleString('en-IN')}`}
-                <div className="text-xs text-muted-foreground">{plan.supplement_period === 'per_night' ? 'Per night · ' : ''}Pending pricing activation</div>
+                <div className="text-xs text-muted-foreground">{plan.supplement_period === 'per_night' ? 'Per night · ' : ''}Used by verified Rate Plans; legacy rates unchanged</div>
               </TableCell>
               <TableCell>
                 {plan.included_meal_types?.length > 0 ? (

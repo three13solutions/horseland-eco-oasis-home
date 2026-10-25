@@ -23,7 +23,11 @@ interface PaymentModalProps {
     roomName: string;
     roomPrice: number; // per-night rate; multiplied by nights
     nights: number;
+    exactStayTotal?: number; // authoritative variant total, never reconstructed from rounded nightly display
     addonTotal?: number;
+    quoteRequest?: Record<string, unknown>;
+    quoteFingerprint?: string;
+    existingBookingId?: string;
     gstRate?: number; // optional GST rate override (e.g. from DB tiers)
     guestName: string;
     guestEmail: string;
@@ -54,7 +58,8 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
     bookingDetails.roomPrice,
     bookingDetails.nights,
     bookingDetails.addonTotal || 0,
-    gstRate
+    gstRate,
+    bookingDetails.exactStayTotal
   );
 
   const loadRazorpayScript = (): Promise<boolean> => {
@@ -77,10 +82,13 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
 
     try {
       // Step 1: Create Razorpay order through secure edge function
-      const { data: orderData, error: orderError } = await supabase.functions.invoke('create-razorpay-order', {
+      const { data: orderData, error: orderError } = await supabase.functions.invoke('create-razorpay-order-v2', {
         body: {
           amount: paymentBreakdown.totalAmount,
           currency: 'INR',
+          quote_request: bookingDetails.quoteRequest,
+          quote_fingerprint: bookingDetails.quoteFingerprint,
+          existing_booking_id: bookingDetails.existingBookingId,
           notes: {
             booking_guest: bookingDetails.guestName,
             booking_room: bookingDetails.roomName,
@@ -93,7 +101,7 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
         console.error('Order creation error:', orderError);
         toast({
           title: "Payment Error",
-          description: "Failed to create payment order. Please try again.",
+          description: orderData?.error || 'The quote could not be verified. Refresh and review the price before paying.',
           variant: "destructive",
         });
         throw new Error('Failed to create payment order');
@@ -124,12 +132,17 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
         handler: async function (response: any) {
           setRazorpayOpen(false);
           try {
+            // Public checkout persists its paid-but-unconfirmed marker immediately
+            // in onSuccess, then finalize-booking verifies signature and capture.
+            // Staff collection uses the bound existing-booking verifier instead.
+            if (bookingDetails.existingBookingId) {
             // Step 4: Verify payment through secure edge function
-            const { data: verifyData, error: verifyError } = await supabase.functions.invoke('verify-razorpay-payment', {
+            const { data: verifyData, error: verifyError } = await supabase.functions.invoke('verify-razorpay-payment-v2', {
               body: {
                 razorpay_order_id: orderData.id,
                 razorpay_payment_id: response.razorpay_payment_id,
-                razorpay_signature: response.razorpay_signature
+                razorpay_signature: response.razorpay_signature,
+                booking_id: bookingDetails.existingBookingId,
               }
             });
 
@@ -140,6 +153,8 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
                 variant: "destructive",
               });
               throw new Error('Payment verification failed');
+            }
+
             }
 
             // Payment verified successfully - hand over to the success handler

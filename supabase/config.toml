@@ -79,3 +79,16 @@ verify_jwt = false
 
 [functions.get-booking-confirmation]
 verify_jwt = false
+
+
+[functions.create-manual-booking]
+verify_jwt = true
+
+[functions.create-razorpay-order-v2]
+verify_jwt = true
+
+[functions.verify-razorpay-payment-v2]
+verify_jwt = true
+
+[functions.finalize-booking-v2]
+verify_jwt = false

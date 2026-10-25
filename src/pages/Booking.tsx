@@ -242,7 +242,7 @@ const Booking = () => {
     queryFn: async () => {
       if (!selectedRoomType?.id || !checkIn || !checkOut) return null;
       
-      const { data, error } = await supabase.rpc('calculate_rate_variants', {
+      const { data, error } = await supabase.rpc('calculate_rate_variants_v2', {
         p_room_type_id: selectedRoomType.id,
         p_check_in: checkIn,
         p_check_out: checkOut,
@@ -890,10 +890,10 @@ const Booking = () => {
   };
 
   const calculateTotal = () => {
-    const subtotal = calculateSubtotal();
-    const gstRate = getGSTRate();
-    const gst = subtotal * gstRate;
-    return subtotal + gst;
+    const money = (value: number) => Math.round((value + Number.EPSILON) * 100) / 100;
+    const subtotal = money(calculateSubtotal());
+    const gst = money(subtotal * getGSTRate());
+    return money(subtotal + gst);
   };
 
   const formatDate = (dateString: string) => {
@@ -1220,6 +1220,23 @@ const Booking = () => {
     }
   }, [needsExtraBedding]);
 
+  const buildQuoteRequest = () => ({
+    room_type_id: selectedRoomType?.id,
+    room_unit_id: null,
+    check_in: checkIn,
+    check_out: checkOut,
+    adults_count: adultsCount,
+    children_count: childrenCount,
+    infants_count: infantsCount,
+    meal_plan_code: selectedMealPlan,
+    cancellation_policy_code: selectedCancellationPolicy,
+    addons: [
+      ...selectedAddons.map(a => ({ id: a.id, type: a.type, quantity: a.quantity })),
+      ...(selectedPickup ? [{ id: selectedPickup.id, type: 'transport', quantity: 1 }] : []),
+      ...selectedBedding.map(b => ({ id: b.id, type: 'bedding', quantity: 1 })),
+    ],
+  });
+
   const handleProceedToPayment = () => {
     // A paid callback awaiting resolution is not permission to charge again.
     const unresolved = pendingPaymentRef.current || paymentResolution || loadPaymentResolution();
@@ -1238,7 +1255,7 @@ const Booking = () => {
     }
     
     // Never carry a stale quote into payment after changing a plan or policy.
-    if (!selectedVariant || normalizeMealPlanCode(selectedVariant.meal_plan_code) !== selectedMealPlan || selectedVariant.cancellation_policy_code !== selectedCancellationPolicy) {
+    if (!selectedVariant || !selectedVariant.quote_fingerprint || normalizeMealPlanCode(selectedVariant.meal_plan_code) !== selectedMealPlan || selectedVariant.cancellation_policy_code !== selectedCancellationPolicy) {
       toast({ title: 'Rate unavailable', description: 'Please select an available meal plan and cancellation policy before continuing.', variant: 'destructive' });
       return;
     }
@@ -1308,7 +1325,7 @@ const Booking = () => {
         room_type_id: selectedRoomType?.id || null,
         check_in: checkIn || null,
         check_out: checkOut || null,
-        guests_count: (adultsCount || 0) + (childrenCount || 0), // Total paying guests (infants free)
+        guests_count: (adultsCount || 0) + (childrenCount || 0) + (infantsCount || 0), // Meal supplements currently include every guest.
         total_amount: calculateTotal() || 0,
         // Store meal plan information
         meal_plan_code: selectedMealPlan || 'RO',
@@ -1316,6 +1333,9 @@ const Booking = () => {
         cancellation_policy_code: selectedCancellationPolicy || 'flexible',
         room_cost: selectedVariant?.room_rate || 0,
         rate_breakdown: {
+          quote_fingerprint: selectedVariant?.quote_fingerprint,
+          pricing_status: selectedVariant?.pricing_status,
+          nightly_breakdown: selectedVariant?.nightly_breakdown,
           meal_plan: selectedMealPlan,
           cancellation_policy: selectedCancellationPolicy,
           adults_count: adultsCount,
@@ -1350,7 +1370,7 @@ const Booking = () => {
 
       // Persist guest + booking + payment securely on the server (verifies the
       // Razorpay signature again before writing anything).
-      const { data: result, error } = await supabase.functions.invoke('finalize-booking', {
+      const { data: result, error } = await supabase.functions.invoke('finalize-booking-v2', {
         body: {
           razorpay_order_id: orderId,
           razorpay_payment_id: paymentId,
@@ -1440,8 +1460,8 @@ const Booking = () => {
           });
 
           const params = new URLSearchParams({
-            checkIn: tempCheckIn.toISOString().split('T')[0],
-            checkOut: tempCheckOut.toISOString().split('T')[0],
+            checkIn: format(tempCheckIn, 'yyyy-MM-dd'),
+            checkOut: format(tempCheckOut, 'yyyy-MM-dd'),
             guests: tempGuests.toString(),
             adults: tempAdults.toString(),
             children: tempChildren.toString(),
@@ -1455,8 +1475,8 @@ const Booking = () => {
 
       // Room is available, update URL and navigate using React Router
       const params = new URLSearchParams({
-        checkIn: tempCheckIn.toISOString().split('T')[0],
-        checkOut: tempCheckOut.toISOString().split('T')[0],
+        checkIn: format(tempCheckIn, 'yyyy-MM-dd'),
+        checkOut: format(tempCheckOut, 'yyyy-MM-dd'),
         guests: tempGuests.toString(),
         adults: tempAdults.toString(),
         children: tempChildren.toString(),
@@ -2518,10 +2538,13 @@ const Booking = () => {
               roomName: selectedRoomType.name,
               roomPrice: selectedVariant?.price_per_night || 0,
               nights: nights,
+              exactStayTotal: selectedVariant?.total_price ?? 0,
               addonTotal: selectedAddons.reduce((total, addon) => total + (addon.price * addon.quantity), 0) + 
                          (selectedPickup ? selectedPickup.price : 0) + 
                          selectedBedding.reduce((total, bed) => total + bed.price, 0),
               gstRate: getGSTRate(),
+              quoteRequest: buildQuoteRequest(),
+              quoteFingerprint: selectedVariant?.quote_fingerprint,
               guestName: guestDetails.name,
               guestEmail: guestDetails.email,
               guestPhone: guestDetails.phone,

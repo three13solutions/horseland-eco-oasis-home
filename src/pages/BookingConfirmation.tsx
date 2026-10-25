@@ -154,9 +154,12 @@ export default function BookingConfirmation() {
                 <td>Room Cost</td>
                 <td>${formatCurrency(booking.room_cost || 0)}</td>
               </tr>
+              <tr><td>Meals</td><td>${formatCurrency(booking.meal_cost || 0)}</td></tr>
+              <tr><td>Policy adjustment</td><td>${formatCurrency(booking.rate_breakdown?.validated_quote?.variant?.policy_adjustment || 0)}</td></tr>
+              <tr><td>Extras</td><td>${formatCurrency(booking.rate_breakdown?.validated_quote?.addon_total || 0)}</td></tr>
               <tr>
-                <td>GST (18%)</td>
-                <td>${formatCurrency((booking.total_amount || 0) * 0.18 / 1.18)}</td>
+                <td>GST (${((booking.rate_breakdown?.validated_quote?.tax_rate ?? 0.18) * 100).toFixed(0)}%)</td>
+                <td>${formatCurrency((booking.rate_breakdown?.validated_quote?.tax_amount ?? ((booking.total_amount || 0) * 0.18 / 1.18)))}</td>
               </tr>
               <tr class="total">
                 <td>Total Paid</td>
@@ -196,7 +199,7 @@ export default function BookingConfirmation() {
       (1000 * 60 * 60 * 24)
   );
 
-  const gstAmount = (booking.total_amount || 0) * 0.18 / 1.18;
+  const gstAmount = (booking.rate_breakdown?.validated_quote?.tax_amount ?? ((booking.total_amount || 0) * 0.18 / 1.18));
   const subtotal = (booking.total_amount || 0) - gstAmount;
 
   return (
@@ -332,8 +335,13 @@ export default function BookingConfirmation() {
               <span className="text-muted-foreground">Room Cost</span>
               <span className="font-semibold">{formatCurrency(booking.room_cost || 0)}</span>
             </div>
+            <div className="flex justify-between"><span className="text-muted-foreground">Meals</span><span className="font-semibold">{formatCurrency(booking.meal_cost || 0)}</span></div>
+            {booking.rate_breakdown?.validated_quote && <>
+              <div className="flex justify-between"><span className="text-muted-foreground">Policy adjustment</span><span>{formatCurrency(booking.rate_breakdown.validated_quote.variant?.policy_adjustment || 0)}</span></div>
+              <div className="flex justify-between"><span className="text-muted-foreground">Extras</span><span>{formatCurrency(booking.rate_breakdown.validated_quote.addon_total || 0)}</span></div>
+            </>}
             <div className="flex justify-between">
-              <span className="text-muted-foreground">GST (18%)</span>
+              <span className="text-muted-foreground">GST ({((booking.rate_breakdown?.validated_quote?.tax_rate ?? 0.18) * 100).toFixed(0)}%)</span>
               <span className="font-semibold">{formatCurrency(gstAmount)}</span>
             </div>
             <Separator />

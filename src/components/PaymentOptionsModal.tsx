@@ -162,7 +162,10 @@ export const PaymentOptionsModal: React.FC<PaymentOptionsModalProps> = ({
                      'Room',
             roomPrice: booking.total_amount / calculateNights() || 0,
             nights: calculateNights(),
-            addonTotal: 0, // This should be calculated based on the booking
+            exactStayTotal: booking.total_amount,
+            addonTotal: 0,
+            gstRate: 0, // Saved total already includes the booking tax.
+            existingBookingId: booking.id,
             guestName: booking.guest_name,
             guestEmail: booking.guest_email || '',
             guestPhone: booking.guest_phone || '',

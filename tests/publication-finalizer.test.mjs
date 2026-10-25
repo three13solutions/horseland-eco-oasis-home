@@ -3,9 +3,10 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { stripTypeScriptTypes } from 'node:module';
 import vm from 'node:vm';
+import { snapshotBookingFields } from '../supabase/functions/_shared/bookingQuote.ts';
 import { webcrypto, createHmac } from 'node:crypto';
 
-const source = readFileSync(new URL('../supabase/functions/finalize-booking/index.ts', import.meta.url), 'utf8');
+const source = readFileSync(new URL('../supabase/functions/finalize-booking-v2/index.ts', import.meta.url), 'utf8');
 // Execute the actual finalizer with injected I/O, not a reimplementation of its logic.
 const runnable = stripTypeScriptTypes(source.replace(/^import .*\n/gm, ''), { mode: 'strip' });
 const typeId = '11111111-1111-4111-8111-111111111111';
@@ -31,6 +32,11 @@ async function run(config = {}) {
     then(resolve, reject) { return this.execute().then(resolve, reject); }
     async execute() {
       calls.push({ table: this.table, operation: this.operation, fields: this.fields, value: this.value, filters: this.filters });
+      if (this.table === 'booking_order_quotes') {
+        const request = { room_type_id: typeId, room_unit_id: config.booking?.room_unit_id ?? null, check_in: '2099-01-01', check_out: '2099-01-02', meal_plan_code: 'FB', cancellation_policy_code: 'credit_voucher', adults_count: 2, children_count: 0, infants_count: 0, addons: [] };
+        const quote = { request, variant: { room_rate: 80, meal_cost: 20, total_price: 100 }, extras: [], total_amount: 100 };
+        return { data: config.noOrderQuote ? null : { request, quote, amount: 100, currency: 'INR' }, error: null };
+      }
       if (this.table === 'api_integrations') return { data: null, error: null };
       if (this.table === 'room_types') {
         publicationReads++;
@@ -60,11 +66,12 @@ async function run(config = {}) {
   const context = vm.createContext({
     serve: fn => { handler = fn; }, createClient: () => client,
     Deno: { env: { get: key => ({ RAZORPAY_KEY_ID: 'rzp_test_local', RAZORPAY_SECRET: secret })[key] } },
-    crypto: webcrypto, TextEncoder, TextDecoder, Uint8Array, Response, Request, atob,
+    crypto: webcrypto, TextEncoder, TextDecoder, Uint8Array, Response, Request, atob, btoa, snapshotBookingFields,
+    fetch: async () => ({ ok: !config.paymentLookupFails, json: async () => ({ order_id: 'order_test', currency: 'INR', status: config.paymentStatus ?? 'captured', amount: config.paidAmount ?? 10000 }) }),
     console: { error: (...args) => logs.push(args), log: (...args) => logs.push(args) },
   });
   vm.runInContext(runnable, context);
-  const booking = { booking_id: 'BOOK_LOCAL_TEST', room_type_id: typeId, check_in: '2099-01-01', check_out: '2099-01-02', total_amount: 100, ...config.booking };
+  const booking = { booking_id: 'BOOK_LOCAL_TEST', room_type_id: typeId, check_in: '2099-01-01', check_out: '2099-01-02', total_amount: 100, meal_plan_code: 'FB', cancellation_policy_code: 'credit_voucher', rate_breakdown: { adults_count: 2, children_count: 0, infants_count: 0 }, ...config.booking };
   const payload = { razorpay_order_id: 'order_test', razorpay_payment_id: 'pay_test', razorpay_signature: signature,
     guest: { first_name: 'Local', last_name: 'Test', email: 'local-test@example.invalid', phone: 'local-test-only', id_type: 'other', id_number: 'never-log-me' }, booking,
     ...config.payload };
@@ -128,4 +135,28 @@ test('unpublished during guest processing is caught before booking insert', asyn
   const r = await run({ unpublishBeforeInsert: true }); assertResolution(r, 'ROOM_TYPE_NOT_PUBLISHED');
   assert.equal(r.publicationReads, 2);
   assert.equal(r.calls.filter(c => ['bookings', 'payments', 'room_units', 'send-booking-confirmation'].includes(c.table) && ['insert', 'update', 'invoke'].includes(c.operation)).length, 0);
+});
+
+test('missing immutable quote requires reconciliation before writes', async () => {
+ const r = await run({noOrderQuote:true}); assertResolution(r,'ORDER_QUOTE_MISSING'); assertNoWrites(r);
+});
+test('tampered selection cannot change paid snapshot', async () => {
+ const r = await run({booking:{meal_plan_code:'RO'}}); assertResolution(r,'ORDER_SELECTION_MISMATCH'); assertNoWrites(r);
+});
+test('captured amount must match saved order quote', async () => {
+ const r = await run({paidAmount:1}); assertResolution(r,'PAYMENT_AMOUNT_MISMATCH'); assertNoWrites(r);
+});
+test('uncaptured payment requires reconciliation', async () => {
+ const r = await run({paymentStatus:'authorized'}); assertResolution(r,'PAYMENT_AMOUNT_MISMATCH'); assertNoWrites(r);
+});
+test('payment lookup failure never causes second charge or writes', async () => {
+ const r = await run({paymentLookupFails:true}); assertResolution(r,'PAYMENT_AMOUNT_UNVERIFIED',503); assertNoWrites(r);
+});
+test('stored totals use server snapshot not browser submitted amount', async () => {
+ const r = await run({booking:{total_amount:1, meal_cost:1,room_cost:0},payload:{payment_amount:1}});
+ assert.equal(r.body.success,true);
+ const saved=r.calls.find(c=>c.table==='bookings'&&c.operation==='insert').value[0];
+ assert.equal(saved.total_amount,100);assert.equal(saved.meal_cost,20);assert.equal(saved.room_cost,80);
+ const payment=r.calls.find(c=>c.table==='payments'&&c.operation==='insert').value;
+ assert.equal(payment.amount,100);
 });
