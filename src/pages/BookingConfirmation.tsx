@@ -1,3 +1,4 @@
+import { getMealPlan } from '@/lib/mealPlans';
 import { useEffect, useState } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -315,7 +316,7 @@ export default function BookingConfirmation() {
             <div>
               <p className="text-sm text-muted-foreground">Meal Plan</p>
               <p className="font-semibold capitalize">
-                {booking.meal_plan_code?.replace(/_/g, ' ') || 'N/A'}
+                {getMealPlan(booking.meal_plan_code || '')?.name || booking.meal_plan_code?.replace(/_/g, ' ') || 'N/A'}
               </p>
             </div>
           </CardContent>
@@ -376,3 +377,4 @@ export default function BookingConfirmation() {
     </div>
   );
 }
+

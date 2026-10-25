@@ -1,3 +1,4 @@
+import { normalizeMealPlanCode, type MealPlanCode } from '@/lib/mealPlans';
 import React, { useState, useEffect, useRef } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { Calendar, Users, Clock, MapPin, Wifi, Coffee, Car, Utensils, Plus, Minus, Bed, CarFront, Sparkles, Package, ChevronDown, CalendarIcon, Edit2 } from 'lucide-react';
@@ -151,8 +152,8 @@ const Booking = () => {
   // Addon states
   const [meals, setMeals] = useState<Addon[]>([]);
   const [activities, setActivities] = useState<Addon[]>([]);
-  const [selectedMealPlan, setSelectedMealPlan] = useState<'room_only' | 'breakfast_and_dinner' | 'all_meals_inclusive'>(
-    (urlMealPlan as any) || 'all_meals_inclusive'
+  const [selectedMealPlan, setSelectedMealPlan] = useState<MealPlanCode>(
+    normalizeMealPlanCode(urlMealPlan) || 'FB'
   );
   const [selectedCancellationPolicy, setSelectedCancellationPolicy] = useState<string>(
     urlCancellationPolicy || 'refundable_credit'
@@ -260,33 +261,19 @@ const Booking = () => {
     enabled: !!selectedRoomType?.id && !!checkIn && !!checkOut
   });
 
-  // Parse rate variants
-  let rateVariants: RateVariant[] = [];
-  if (rateVariantsData && typeof rateVariantsData === 'object' && !Array.isArray(rateVariantsData)) {
-    // It's returned as JSONB, might need parsing
-    try {
-      rateVariants = Array.isArray(rateVariantsData) ? rateVariantsData as unknown as RateVariant[] : [];
-    } catch (e) {
-      console.error('Error parsing rate variants:', e);
-    }
-  } else if (Array.isArray(rateVariantsData)) {
-    rateVariants = rateVariantsData as unknown as RateVariant[];
-  }
+  // Keep the selected quote tied to the currently returned plan/policy variants.
+  const rateVariants = React.useMemo<RateVariant[]>(() =>
+    Array.isArray(rateVariantsData) ? rateVariantsData as unknown as RateVariant[] : [],
+    [rateVariantsData]
+  );
 
-  // Update selected variant when meal plan or cancellation policy changes
   useEffect(() => {
-    if (rateVariants.length > 0 && selectedMealPlan && selectedCancellationPolicy) {
-      const matchingVariant = rateVariants.find(
-        (v: RateVariant) => 
-          v.meal_plan_code === selectedMealPlan && 
-          v.cancellation_policy_code === selectedCancellationPolicy
-      );
-      if (matchingVariant) {
-        setSelectedVariant(matchingVariant);
-      }
-    }
+    const matchingVariant = rateVariants.find(v =>
+      normalizeMealPlanCode(v.meal_plan_code) === selectedMealPlan &&
+      v.cancellation_policy_code === selectedCancellationPolicy
+    );
+    setSelectedVariant(matchingVariant || null);
   }, [rateVariants, selectedMealPlan, selectedCancellationPolicy]);
-
 
   // Load package if packageId is present
   useEffect(() => {
@@ -357,7 +344,7 @@ const Booking = () => {
   // Update meal plan and cancellation policy when URL params change
   useEffect(() => {
     if (urlMealPlan && urlMealPlan !== selectedMealPlan) {
-      setSelectedMealPlan(urlMealPlan as any);
+      setSelectedMealPlan(normalizeMealPlanCode(urlMealPlan) || 'FB');
     }
     if (urlCancellationPolicy && urlCancellationPolicy !== selectedCancellationPolicy) {
       setSelectedCancellationPolicy(urlCancellationPolicy);
@@ -769,7 +756,7 @@ const Booking = () => {
     if (variant) {
       setSelectedVariant(variant);
       // Set meal plan and cancellation policy from variant
-      setSelectedMealPlan(variant.meal_plan_code as 'room_only' | 'breakfast_and_dinner' | 'all_meals_inclusive');
+      setSelectedMealPlan(normalizeMealPlanCode(variant.meal_plan_code) || 'FB');
       setSelectedCancellationPolicy(variant.cancellation_policy_code);
     }
     setShowBookingForm(true);
@@ -1131,27 +1118,6 @@ const Booking = () => {
     });
   };
 
-  const calculateMealPlanTotal = () => {
-    if (selectedMealPlan === 'room_only') return 0;
-    
-    const nights = calculateNights();
-    // Default to vegetarian pricing for meal plan calculation
-    const breakfastPrice = getMealPrice('breakfast', 'vegetarian') || 0;
-    const lunchPrice = getMealPrice('lunch', 'vegetarian') || 0;
-    const highTeaPrice = getMealPrice('high_tea', 'vegetarian') || 0;
-    const dinnerPrice = getMealPrice('dinner', 'vegetarian') || 0;
-    
-    if (selectedMealPlan === 'breakfast_and_dinner') {
-      return (breakfastPrice + dinnerPrice) * guests * nights;
-    }
-    
-    if (selectedMealPlan === 'all_meals_inclusive') {
-      return (breakfastPrice + lunchPrice + highTeaPrice + dinnerPrice) * guests * nights;
-    }
-    
-    return 0;
-  };
-
   // Default/fallback pickup services
   const getDefaultPickupServices = (): PickupService[] => [
     // Pickup only
@@ -1271,6 +1237,12 @@ const Booking = () => {
       return;
     }
     
+    // Never carry a stale quote into payment after changing a plan or policy.
+    if (!selectedVariant || normalizeMealPlanCode(selectedVariant.meal_plan_code) !== selectedMealPlan || selectedVariant.cancellation_policy_code !== selectedCancellationPolicy) {
+      toast({ title: 'Rate unavailable', description: 'Please select an available meal plan and cancellation policy before continuing.', variant: 'destructive' });
+      return;
+    }
+
     // Validate required guest details
     const missingFields = [];
     if (!guestDetails.name?.trim()) missingFields.push("Full Name");
@@ -1339,7 +1311,7 @@ const Booking = () => {
         guests_count: (adultsCount || 0) + (childrenCount || 0), // Total paying guests (infants free)
         total_amount: calculateTotal() || 0,
         // Store meal plan information
-        meal_plan_code: selectedMealPlan || 'room_only',
+        meal_plan_code: selectedMealPlan || 'RO',
         meal_cost: selectedVariant?.meal_cost || 0,
         cancellation_policy_code: selectedCancellationPolicy || 'flexible',
         room_cost: selectedVariant?.room_rate || 0,
@@ -1666,68 +1638,21 @@ const Booking = () => {
                       <CollapsibleContent>
                         <CardContent className="space-y-4">
                           <div className="space-y-3">
-                            <div 
-                              className={`p-4 border rounded-lg cursor-pointer transition-colors ${
-                                selectedMealPlan === 'all_meals_inclusive' ? 'border-primary bg-primary/5' : 'border-border hover:border-primary/50'
-                              }`}
-                              onClick={() => setSelectedMealPlan('all_meals_inclusive')}
-                            >
-                              <div className="flex items-start gap-3">
-                                <div className={`w-5 h-5 rounded-full border-2 mt-0.5 flex items-center justify-center ${
-                                  selectedMealPlan === 'all_meals_inclusive' ? 'border-primary' : 'border-muted-foreground'
-                                }`}>
-                                  {selectedMealPlan === 'all_meals_inclusive' && (
-                                    <div className="w-3 h-3 rounded-full bg-primary" />
-                                  )}
-                                </div>
-                                <div className="flex-1">
-                                  <h4 className="font-semibold">All Meals Inclusive</h4>
-                                  <p className="text-sm text-muted-foreground">Breakfast, Lunch, Hi Tea & Dinner included for all guests</p>
-                                </div>
-                              </div>
-                            </div>
-
-                            <div 
-                              className={`p-4 border rounded-lg cursor-pointer transition-colors ${
-                                selectedMealPlan === 'breakfast_and_dinner' ? 'border-primary bg-primary/5' : 'border-border hover:border-primary/50'
-                              }`}
-                              onClick={() => setSelectedMealPlan('breakfast_and_dinner')}
-                            >
-                              <div className="flex items-start gap-3">
-                                <div className={`w-5 h-5 rounded-full border-2 mt-0.5 flex items-center justify-center ${
-                                  selectedMealPlan === 'breakfast_and_dinner' ? 'border-primary' : 'border-muted-foreground'
-                                }`}>
-                                  {selectedMealPlan === 'breakfast_and_dinner' && (
-                                    <div className="w-3 h-3 rounded-full bg-primary" />
-                                  )}
-                                </div>
-                                <div className="flex-1">
-                                  <h4 className="font-semibold">Breakfast & Dinner</h4>
-                                  <p className="text-sm text-muted-foreground">Breakfast & Dinner included for all guests</p>
-                                </div>
-                              </div>
-                            </div>
-
-                            <div 
-                              className={`p-4 border rounded-lg cursor-pointer transition-colors ${
-                                selectedMealPlan === 'room_only' ? 'border-primary bg-primary/5' : 'border-border hover:border-primary/50'
-                              }`}
-                              onClick={() => setSelectedMealPlan('room_only')}
-                            >
-                              <div className="flex items-start gap-3">
-                                <div className={`w-5 h-5 rounded-full border-2 mt-0.5 flex items-center justify-center ${
-                                  selectedMealPlan === 'room_only' ? 'border-primary' : 'border-muted-foreground'
-                                }`}>
-                                  {selectedMealPlan === 'room_only' && (
-                                    <div className="w-3 h-3 rounded-full bg-primary" />
-                                  )}
-                                </div>
-                                <div className="flex-1">
-                                  <h4 className="font-semibold">Room Only</h4>
-                                  <p className="text-sm text-muted-foreground">No meals included</p>
-                                </div>
-                              </div>
-                            </div>
+                            {mealPlans.map((plan) => (
+                              <button
+                                type="button"
+                                key={plan.id}
+                                aria-pressed={selectedMealPlan === plan.plan_code}
+                                className={`w-full text-left p-4 border rounded-lg transition-colors ${selectedMealPlan === plan.plan_code ? 'border-primary bg-primary/5' : 'border-border hover:border-primary/50'}`}
+                                onClick={() => {
+                                  const code = normalizeMealPlanCode(plan.plan_code);
+                                  if (code) setSelectedMealPlan(code);
+                                }}
+                              >
+                                <h4 className="font-semibold">{plan.plan_name}</h4>
+                                <p className="text-sm text-muted-foreground">{plan.description}</p>
+                              </button>
+                            ))}
                           </div>
                         </CardContent>
                       </CollapsibleContent>

@@ -1,3 +1,4 @@
+import { MEAL_PLANS, getMealPlan, normalizeMealPlanCode } from '@/lib/mealPlans';
 import React, { useState, useMemo } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -56,7 +57,7 @@ const CategoryCard: React.FC<Props> = ({ category, onViewDetails, onBookNow, vie
   React.useEffect(() => {
     if (variants && variants.length > 0 && !selectedMealPlan) {
       // Default to Full Board (all_meals_inclusive) if available
-      const fullBoardVariant = variants.find(v => v.meal_plan_code === 'all_meals_inclusive');
+      const fullBoardVariant = variants.find(v => normalizeMealPlanCode(v.meal_plan_code) === 'FB');
       const defaultVariant = fullBoardVariant || variants.find(v => v.is_featured) || variants[0];
       setSelectedMealPlan(defaultVariant.meal_plan_code);
       
@@ -71,53 +72,18 @@ const CategoryCard: React.FC<Props> = ({ category, onViewDetails, onBookNow, vie
 
   // Get unique meal plans and cancellation policies
   const mealPlans = useMemo(() => {
-    if (!variants || variants.length === 0) {
-      return [
-        { code: 'all_meals_inclusive', name: 'Full Board', description: 'All Meals', icon: UtensilsCrossed },
-        { code: 'breakfast_and_dinner', name: 'Half Board', description: 'Breakfast & Dinner', icon: Coffee },
-        { code: 'room_only', name: 'Room Only', description: 'No Meals', icon: Home }
-      ];
-    }
-    
-    // Define the desired order
-    const order = ['all_meals_inclusive', 'breakfast_and_dinner', 'breakfast_included', 'breakfast_and_lunch', 'room_only'];
-    const unique = Array.from(new Set(variants.map(v => v.meal_plan_code)));
-    
-    return unique
-      .map(code => {
-        let name = '';
-        let description = '';
-        let icon = UtensilsCrossed;
-        
-        if (code === 'room_only') {
-          name = 'Room Only';
-          description = 'No Meals';
-          icon = Home;
-        } else if (code === 'breakfast_and_dinner') {
-          name = 'Half Board';
-          description = 'Breakfast & Dinner';
-          icon = Coffee;
-        } else if (code === 'all_meals_inclusive') {
-          name = 'Full Board';
-          description = 'All Meals';
-          icon = UtensilsCrossed;
-        } else if (code === 'breakfast_included') {
-          name = 'With Breakfast';
-          description = 'Breakfast';
-          icon = Coffee;
-        } else if (code === 'breakfast_and_lunch') {
-          name = 'Breakfast & Lunch';
-          description = 'B&L';
-          icon = Coffee;
-        }
-        
-        return { code, name, description, icon, order: order.indexOf(code) };
-      })
-      .sort((a, b) => {
-        const orderA = a.order === -1 ? 999 : a.order;
-        const orderB = b.order === -1 ? 999 : b.order;
-        return orderA - orderB;
-      });
+    const available = variants?.length ? variants.map(v => v.meal_plan_code) : MEAL_PLANS.map(p => p.code);
+    return Array.from(new Set(available)).map(code => {
+      const plan = getMealPlan(code);
+      const variant = variants?.find(v => v.meal_plan_code === code);
+      return {
+        code,
+        name: variant?.meal_plan_name || plan?.name || code,
+        description: variant?.meal_plan_description || plan?.description || '',
+        icon: plan?.code === 'RO' ? Home : plan?.code === 'FB' ? UtensilsCrossed : Coffee,
+        order: MEAL_PLANS.findIndex(p => p.code === plan?.code)
+      };
+    }).sort((a, b) => a.order - b.order);
   }, [variants]);
 
   const cancellationPolicies = useMemo(() => {
@@ -516,3 +482,4 @@ const CategoryCard: React.FC<Props> = ({ category, onViewDetails, onBookNow, vie
 };
 
 export default CategoryCard;
+

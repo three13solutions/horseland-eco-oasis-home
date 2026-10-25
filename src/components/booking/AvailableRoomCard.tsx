@@ -45,7 +45,7 @@ export const AvailableRoomCard: React.FC<AvailableRoomCardProps> = ({
   onSelectRoom,
   getFeatureIcon
 }) => {
-  const [selectedMealPlan, setSelectedMealPlan] = useState<string>('all_meals_inclusive');
+  const [selectedMealPlan, setSelectedMealPlan] = useState<string>('FB');
   const [selectedCancellationPolicy, setSelectedCancellationPolicy] = useState<string>('refundable_credit');
 
   // Fetch dynamic pricing with all rules applied
@@ -70,8 +70,8 @@ export const AvailableRoomCard: React.FC<AvailableRoomCardProps> = ({
           code: v.meal_plan_code,
           name: v.meal_plan_name,
           description: v.meal_plan_description,
-          icon: v.meal_plan_code === 'all_meals_inclusive' ? UtensilsCrossed :
-                v.meal_plan_code === 'breakfast_and_dinner' ? Coffee : Home
+          icon: v.meal_plan_code === 'FB' ? UtensilsCrossed :
+                ['BB', 'HB'].includes(v.meal_plan_code) ? Coffee : Home
         });
       }
     });
@@ -250,3 +250,4 @@ export const AvailableRoomCard: React.FC<AvailableRoomCardProps> = ({
     </Card>
   );
 };
+

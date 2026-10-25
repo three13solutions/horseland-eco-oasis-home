@@ -1604,6 +1604,8 @@ export type Database = {
       }
       meal_plan_rules: {
         Row: {
+          alias_names: string[]
+          alias_codes: string[]
           applies_to: string
           created_at: string
           description: string | null
@@ -1620,6 +1622,8 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          alias_names?: string[]
+          alias_codes?: string[]
           applies_to?: string
           created_at?: string
           description?: string | null
@@ -1636,6 +1640,8 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          alias_names?: string[]
+          alias_codes?: string[]
           applies_to?: string
           created_at?: string
           description?: string | null
@@ -3072,3 +3078,4 @@ export const Constants = {
     },
   },
 } as const
+

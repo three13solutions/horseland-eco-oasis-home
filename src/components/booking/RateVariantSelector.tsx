@@ -1,3 +1,4 @@
+import { MEAL_PLANS, normalizeMealPlanCode } from '@/lib/mealPlans';
 import React, { useState } from 'react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { RateVariantCard } from './RateVariantCard';
@@ -21,7 +22,7 @@ export const RateVariantSelector: React.FC<RateVariantSelectorProps> = ({
   childrenCount = 0
 }) => {
   const [sortBy, setSortBy] = useState<'price' | 'savings' | 'popular'>('popular');
-  const [filterMealPlan, setFilterMealPlan] = useState<string>('all_meals_inclusive');
+  const [filterMealPlan, setFilterMealPlan] = useState<string>('FB');
 
   // Filter out variants with empty meal_plan_code or cancellation_policy_code
   const validVariants = variants.filter(v => 
@@ -33,7 +34,7 @@ export const RateVariantSelector: React.FC<RateVariantSelectorProps> = ({
 
   let filteredVariants = validVariants;
   if (filterMealPlan !== 'all') {
-    filteredVariants = validVariants.filter(v => v.meal_plan_code === filterMealPlan);
+    filteredVariants = validVariants.filter(v => normalizeMealPlanCode(v.meal_plan_code) === filterMealPlan);
   }
 
   const sortedVariants = [...filteredVariants].sort((a, b) => {
@@ -53,11 +54,9 @@ export const RateVariantSelector: React.FC<RateVariantSelectorProps> = ({
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">All Meal Plans</SelectItem>
-              <SelectItem value="all_meals_inclusive">Full Board (All Meals)</SelectItem>
-              <SelectItem value="breakfast_and_dinner">Half Board (Breakfast & Dinner)</SelectItem>
-              <SelectItem value="breakfast_included">With Breakfast</SelectItem>
-              <SelectItem value="breakfast_and_lunch">Breakfast & Lunch</SelectItem>
-              <SelectItem value="room_only">Room Only</SelectItem>
+              {MEAL_PLANS.filter(plan => validVariants.some(v => normalizeMealPlanCode(v.meal_plan_code) === plan.code)).map(plan => (
+                <SelectItem key={plan.code} value={plan.code}>{plan.name}</SelectItem>
+              ))}
             </SelectContent>
           </Select>
         </div>
@@ -95,3 +94,4 @@ export const RateVariantSelector: React.FC<RateVariantSelectorProps> = ({
     </div>
   );
 };
+

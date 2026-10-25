@@ -17,6 +17,8 @@ interface MealPlan {
   id: string;
   plan_code: string;
   plan_name: string;
+  alias_names: string[];
+  alias_codes: string[];
   description: string;
   included_meal_types: string[];
   preferred_variant: string;
@@ -144,8 +146,7 @@ const MealPlansManagement = () => {
           <div className="mt-2 p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
             <p className="text-sm text-blue-800 dark:text-blue-200">
               <strong>How It Works:</strong> Meal plans are now independent from cancellation policies in the booking flow. 
-              Users select a meal plan separately, and the cost is calculated based on the included meal types, guest count, 
-              and number of nights. The meal cost is then combined with the room rate before applying any cancellation policy adjustments.
+              This screen defines names, codes, descriptions and included meals. Aliases refer to the same plan, not additional plans. Pricing rules are configured separately.
             </p>
           </div>
         </div>
@@ -167,7 +168,7 @@ const MealPlansManagement = () => {
                   <Input 
                     value={formData.plan_code}
                     onChange={(e) => setFormData(prev => ({ ...prev, plan_code: e.target.value }))}
-                    placeholder="e.g., breakfast_included"
+                    placeholder="RO, BB, HB or FB"
                   />
                 </div>
                 <div>
@@ -189,6 +190,12 @@ const MealPlansManagement = () => {
                 />
               </div>
 
+              {editingPlan && (
+                <div>
+                  <Label>Aliases (admin only)</Label>
+                  <p className="text-sm text-muted-foreground">{editingPlan.alias_names?.join(' / ')}{editingPlan.alias_codes?.length ? ` (${editingPlan.alias_codes.join(' / ')})` : ''}</p>
+                </div>
+              )}
               <div>
                 <Label>Included Meals</Label>
                 <div className="flex gap-4 mt-2">
@@ -261,6 +268,7 @@ const MealPlansManagement = () => {
           <TableRow>
             <TableHead>Plan Name</TableHead>
             <TableHead>Code</TableHead>
+            <TableHead>Aliases (admin only)</TableHead>
             <TableHead>Included Meals</TableHead>
             <TableHead>Status</TableHead>
             <TableHead>Actions</TableHead>
@@ -271,6 +279,10 @@ const MealPlansManagement = () => {
             <TableRow key={plan.id}>
               <TableCell className="font-medium">{plan.plan_name}</TableCell>
               <TableCell><code>{plan.plan_code}</code></TableCell>
+              <TableCell>
+                <div>{plan.alias_names?.join(' / ') || 'None'}</div>
+                <div className="text-sm text-muted-foreground">{plan.alias_codes?.join(' / ')}</div>
+              </TableCell>
               <TableCell>
                 {plan.included_meal_types?.length > 0 ? (
                   plan.included_meal_types.map(m => (
@@ -309,3 +321,4 @@ const MealPlansManagement = () => {
 };
 
 export default MealPlansManagement;
+
