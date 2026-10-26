@@ -1,9 +1,11 @@
+import QuickRoomInventory from '@/components/admin/QuickRoomInventory';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 
 export default function DashboardContent() {
   return (
     <div>
+      <QuickRoomInventory />
       <h3 className="text-lg font-semibold text-card-foreground mb-6 font-heading">Quick Actions</h3>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         <Card className="hover:shadow-md transition-all duration-200 border-border">

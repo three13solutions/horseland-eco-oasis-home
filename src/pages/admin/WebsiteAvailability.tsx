@@ -1,9 +1,9 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import type { SupabaseClient } from '@supabase/supabase-js';
+import { readDistributionInventory as readGrid, saveDistributionInventory } from '@/lib/distributionInventoryApi';
 import { supabase } from '@/integrations/supabase/client';
-import { addDays, bulkChanges, cellKey, dateRange, hotelToday, makeChange, validDate, type InventoryChange, type InventoryGrid } from '@/lib/distribution-inventory';
+import { addDays, bulkChanges, cellKey, dateRange, hotelToday, makeChange, validDate, type InventoryChange } from '@/lib/distribution-inventory';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -16,13 +16,6 @@ import { ChevronLeft, ChevronRight, Info, ShieldCheck, RefreshCw } from 'lucide-
 import { toast } from 'sonner';
 import DistributionHolds from '@/components/admin/DistributionHolds';
 
-const db = supabase as SupabaseClient;
-const readGrid = async (start: string, end: string): Promise<InventoryGrid> => {
-  const { data, error } = await db.rpc('distribution_inventory_grid', { p_start: start, p_end: end });
-  if (error) throw error;
-  if (!data || !Array.isArray(data.categories) || !Array.isArray(data.cells)) throw new Error('The availability response is incomplete. No changes were saved.');
-  return data;
-};
 const dateLabel = (date: string, options: Intl.DateTimeFormatOptions) => new Intl.DateTimeFormat('en-IN', { timeZone: 'UTC', ...options }).format(new Date(`${date}T12:00:00Z`));
 
 export default function WebsiteAvailability() {
@@ -99,10 +92,9 @@ export default function WebsiteAvailability() {
       const signature = JSON.stringify(canonicalChanges);
       if (saveRequest.current?.signature !== signature) saveRequest.current = { signature, id: crypto.randomUUID() };
       if (draftStorageKey) { try { sessionStorage.setItem(draftStorageKey, JSON.stringify({ schema: 1, start, draft, inputs, save_request: saveRequest.current })); } catch { /* Retry stays stable in this mounted page. */ } }
-      const { error } = await db.rpc('save_distribution_inventory', { p_changes: canonicalChanges, p_request_id: saveRequest.current.id });
-      if (error) throw error;
+      await saveDistributionInventory(canonicalChanges, saveRequest.current.id);
     },
-    onSuccess: async () => { setDraft({}); setInputs({}); await client.invalidateQueries({ queryKey: ['distribution-inventory'] }); toast.success('Website availability saved. Room statuses were not changed.'); },
+    onSuccess: async () => { setDraft({}); setInputs({}); await client.invalidateQueries({ queryKey: ['distribution-inventory'] }); toast.success('Room inventory saved. Room statuses were not changed.'); },
     onError: (error: Error & { code?: string }) => toast.error(error.code === '40001' ? 'Availability changed while you were editing. Nothing from this request was applied. Discard and refresh, then review your counts again.' : `Save not confirmed: ${error.message}. Your changes are retained. Retry without editing to safely check the same request.`),
   });
 
@@ -129,10 +121,10 @@ export default function WebsiteAvailability() {
 
   return <div className="space-y-6">
     <div className="flex flex-wrap items-start justify-between gap-3">
-      <div><h1 className="text-3xl font-heading font-bold">Website Availability</h1><p className="mt-1 text-muted-foreground">Enter how many more rooms guests can book on the website.</p></div>
+      <div><h1 className="text-3xl font-heading font-bold">Room Inventory</h1><p className="mt-1 text-muted-foreground">Enter how many more rooms guests can book on the website.</p></div>
       <Button asChild variant="outline"><Link to="/admin/distribution/channels">Channels</Link></Button>
     </div>
-    <div className="flex gap-6 border-b"><span className="border-b-2 border-primary pb-3 font-medium text-primary">Availability</span><Link className="pb-3 text-muted-foreground" to="/admin/pricing/rate-plans">Rate Plans</Link></div>
+    <div className="flex gap-6 border-b"><span className="border-b-2 border-primary pb-3 font-medium text-primary">Room Inventory</span><Link className="pb-3 text-muted-foreground" to="/admin/pricing/rate-plans">Rate Plans</Link></div>
     <Alert><Info className="h-4 w-4" /><AlertDescription>Website inventory only. Offline and OTA bookings stay in your existing systems. These counts do not change any individual room’s status.</AlertDescription></Alert>
     {recovered && dirty && <Alert><Info className="h-4 w-4" /><AlertDescription>Unsaved edits were recovered from this browser session. Review all pending dates before saving; stale edits will be rejected. <Button variant="link" className="h-auto p-0" onClick={() => { setDraft({}); setInputs({}); setRecovered(false); }}>Discard recovered edits</Button></AlertDescription></Alert>}
     {query.isError && <Alert variant="destructive"><AlertDescription>Availability controls could not be loaded. No inventory or room statuses have changed. <Button variant="link" className="h-auto p-0 text-inherit" onClick={() => query.refetch()}>Retry</Button></AlertDescription></Alert>}

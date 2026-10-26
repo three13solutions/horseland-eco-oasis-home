@@ -1,3 +1,6 @@
+import { useChannelMaster } from '@/hooks/useChannelMaster';
+import { channelRuleLabel, selectableChannels, requireChannelSelection } from '@/lib/channelMaster';
+import type { SupabaseClient } from '@supabase/supabase-js';
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -16,10 +19,12 @@ import { EmptyRuleState } from './EmptyRuleState';
 
 export function ChannelRulesTab() {
   const queryClient = useQueryClient();
+  const channels = useChannelMaster();
+  const db = supabase as SupabaseClient;
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingRule, setEditingRule] = useState<any>(null);
   const [formData, setFormData] = useState({
-    channel_name: '',
+    channel_id: '',
     adjustment_type: 'percentage',
     adjustment_value: '',
     applies_to: 'all',
@@ -31,7 +36,7 @@ export function ChannelRulesTab() {
   const { data: rules, isLoading } = useQuery({
     queryKey: ['channel-rules'],
     queryFn: async () => {
-      const { data, error } = await supabase
+      const { data, error } = await db
         .from('channel_rules')
         .select('*, room_types(name), seasons(name)')
         .order('created_at', { ascending: false });
@@ -60,7 +65,7 @@ export function ChannelRulesTab() {
 
   const createMutation = useMutation({
     mutationFn: async (data: any) => {
-      const { error } = await supabase.from('channel_rules').insert([data]);
+      const { error } = await db.from('channel_rules').insert([data]);
       if (error) throw error;
     },
     onSuccess: () => {
@@ -68,12 +73,13 @@ export function ChannelRulesTab() {
       toast.success('Channel rule created');
       setIsDialogOpen(false);
       resetForm();
-    }
+    },
+    onError: (error: Error) => toast.error(`Save not confirmed: ${error.message}`)
   });
 
   const updateMutation = useMutation({
     mutationFn: async ({ id, data }: { id: string; data: any }) => {
-      const { error } = await supabase.from('channel_rules').update(data).eq('id', id);
+      const { error } = await db.from('channel_rules').update(data).eq('id', id);
       if (error) throw error;
     },
     onSuccess: () => {
@@ -81,7 +87,8 @@ export function ChannelRulesTab() {
       toast.success('Rule updated');
       setIsDialogOpen(false);
       resetForm();
-    }
+    },
+    onError: (error: Error) => toast.error(`Save not confirmed: ${error.message}`)
   });
 
   const deleteMutation = useMutation({
@@ -108,7 +115,7 @@ export function ChannelRulesTab() {
 
   const resetForm = () => {
     setFormData({
-      channel_name: '',
+      channel_id: '',
       adjustment_type: 'percentage',
       adjustment_value: '',
       applies_to: 'all',
@@ -121,8 +128,12 @@ export function ChannelRulesTab() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    if (channels.isPending || channels.isError) { toast.error('The channel directory must load before saving a rule.'); return; }
+    let channelId: string;
+    try { channelId = requireChannelSelection(formData.channel_id, channels.data || [], editingRule?.channel_id); }
+    catch (error) { toast.error(error instanceof Error ? error.message : 'Select a channel.'); return; }
     const payload = {
-      channel_name: formData.channel_name,
+      channel_id: channelId,
       adjustment_type: formData.adjustment_type,
       adjustment_value: parseFloat(formData.adjustment_value),
       applies_to: formData.applies_to,
@@ -141,7 +152,7 @@ export function ChannelRulesTab() {
   const handleEdit = (rule: any) => {
     setEditingRule(rule);
     setFormData({
-      channel_name: rule.channel_name,
+      channel_id: rule.channel_id || '',
       adjustment_type: rule.adjustment_type,
       adjustment_value: rule.adjustment_value?.toString() || '',
       applies_to: rule.applies_to,
@@ -162,7 +173,7 @@ export function ChannelRulesTab() {
               Channel Adjustments
             </CardTitle>
             <CardDescription>
-              Set pricing rules for different booking channels (direct, OTA, travel agents)
+              Set pricing rules using the shared Channels directory. Adding a channel does not automatically add a price adjustment.
             </CardDescription>
           </div>
           <Dialog open={isDialogOpen} onOpenChange={(open) => { setIsDialogOpen(open); if (!open) resetForm(); }}>
@@ -176,18 +187,18 @@ export function ChannelRulesTab() {
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div className="space-y-2">
                   <Label>Channel Name</Label>
-                  <Select value={formData.channel_name} onValueChange={(value) => setFormData({ ...formData, channel_name: value })}>
-                    <SelectTrigger><SelectValue placeholder="Select channel" /></SelectTrigger>
+                  <Select value={formData.channel_id} disabled={channels.isPending || channels.isError} onValueChange={(value) => setFormData({ ...formData, channel_id: value })}>
+                    <SelectTrigger><SelectValue placeholder={channels.isPending ? 'Loading channels…' : 'Select channel'} /></SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="direct">Direct Booking</SelectItem>
-                      <SelectItem value="booking.com">Booking.com</SelectItem>
-                      <SelectItem value="makemytrip">MakeMyTrip</SelectItem>
-                      <SelectItem value="goibibo">Goibibo</SelectItem>
-                      <SelectItem value="agoda">Agoda</SelectItem>
-                      <SelectItem value="travel_agent">Travel Agent</SelectItem>
-                      <SelectItem value="corporate">Corporate</SelectItem>
+                      {selectableChannels(channels.data || [], editingRule?.channel_id).map(channel =>
+                        <SelectItem key={channel.id} value={channel.id}>{channel.name}{channel.is_active ? '' : ' (archived)'}</SelectItem>)}
                     </SelectContent>
                   </Select>
+                  {channels.isError && <p role="alert" className="text-sm text-destructive">Channels could not be loaded. <button type="button" className="underline" onClick={() => channels.refetch()}>Retry</button></p>}
+                  {!channels.isPending && !channels.isError && !selectableChannels(channels.data || [], editingRule?.channel_id).length && <p className="text-sm text-muted-foreground">Add an active channel in Distribution → Channels first.</p>}
+                  {editingRule && !editingRule.channel_id && <p role="status" className="text-sm text-amber-700">Existing channel: {editingRule.channel_name}. Its shared-directory mapping is pending. The rule and its current rate are retained; confirm the correct channel before saving.</p>}
+                  {editingRule?.channel_id && !channels.data?.some(channel => channel.id === editingRule.channel_id) && !channels.isPending && !channels.isError && <p role="alert" className="text-sm text-destructive">The linked channel is unavailable. Refresh the directory before editing this rule.</p>}
+                  <p className="text-xs text-muted-foreground">Manage names in Distribution → Channels. Archived channels remain linked to existing rules; archive does not disable a pricing rule.</p>
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
@@ -243,7 +254,7 @@ export function ChannelRulesTab() {
                 </div>
                 <div className="flex justify-end gap-2">
                   <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>Cancel</Button>
-                  <Button type="submit">{editingRule ? 'Update' : 'Create'}</Button>
+                  <Button type="submit" disabled={channels.isPending || channels.isError || !formData.channel_id || createMutation.isPending || updateMutation.isPending}>{editingRule ? 'Update' : 'Create'}</Button>
                 </div>
               </form>
             </DialogContent>
@@ -283,7 +294,7 @@ export function ChannelRulesTab() {
             ) : (
               rules?.map((rule) => (
                 <TableRow key={rule.id}>
-                  <TableCell className="font-medium capitalize">{rule.channel_name.replace('_', ' ')}</TableCell>
+                  <TableCell className="font-medium capitalize">{channelRuleLabel(rule, channels.data || [])}</TableCell>
                   <TableCell>
                     <Badge 
                       variant={rule.adjustment_value > 0 ? 'destructive' : 'default'}

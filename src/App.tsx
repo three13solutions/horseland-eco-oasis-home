@@ -126,7 +126,9 @@ function App() {
               <Route path="/admin/login" element={<AdminLogin />} />
               <Route path="/admin" element={<AdminLayout />}>
                 <Route index element={<AdminDashboard />} />
+                {/* Keep the original availability URL as a bookmark-compatible alias. */}
                 <Route path="distribution/availability" element={<WebsiteAvailability />} />
+                <Route path="distribution/inventory" element={<WebsiteAvailability />} />
                 <Route path="distribution/channels" element={<DistributionChannels />} />
                 <Route path="bookings" element={<BookingManagement />} />
                 <Route path="guests" element={<GuestManagement />} />

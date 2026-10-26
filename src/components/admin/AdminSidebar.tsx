@@ -80,7 +80,6 @@ const mainMenuItems = [
 ];
 
 const distributionMenuItems = [
-  { icon: Calendar, label: 'Website Availability', path: '/admin/distribution/availability' },
   { icon: Plug, label: 'Channels', path: '/admin/distribution/channels' },
 ];
 
@@ -250,6 +249,7 @@ export function AdminSidebar() {
   const [mediaOpen, setMediaOpen] = useState(true);
 
   const isActive = (item: any) => {
+    if (item.path === '/admin/distribution/channels' && (location.pathname === '/admin/distribution/inventory' || location.pathname === '/admin/distribution/availability')) return true;
     return item.exact ? location.pathname === item.path : location.pathname.startsWith(item.path);
   };
 
