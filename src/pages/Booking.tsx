@@ -2389,8 +2389,8 @@ const Booking = () => {
                             <span className="text-muted-foreground">
                               {infantsCount} {infantsCount === 1 ? 'Infant' : 'Infants'}
                             </span>
-                            <span className="font-medium text-green-600">
-                              Free
+                            <span className="font-medium text-right">
+                              Meals follow selected plan
                             </span>
                           </div>
                         )}
