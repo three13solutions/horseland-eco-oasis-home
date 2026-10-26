@@ -1,3 +1,5 @@
+import { createClient as createDistributionClient } from 'https://esm.sh/@supabase/supabase-js@2'
+import { legacyCheckoutAdmission } from '../_shared/distributionLegacyGuard.ts'
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 
@@ -96,7 +98,12 @@ serve(async (req) => {
       )
     }
 
+    const admissionDb = createDistributionClient(Deno.env.get('SUPABASE_URL') ?? '', Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '')
+    const admission = await legacyCheckoutAdmission(admissionDb)
+    if (admission !== 'legacy_allowed') return new Response(JSON.stringify({ code: admission === 'refresh_required' ? 'CHECKOUT_REFRESH_REQUIRED' : 'CHECKOUT_UNAVAILABLE', error: 'Refresh the website checkout before starting a new payment. No order was created by this request.' }), { status: admission === 'refresh_required' ? 409 : 503, headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
+
     const { keyId, secret } = await getRazorpayCredentials()
+    if (!keyId.startsWith('rzp_test_')) throw new Error('This rollout supports test payments only; live payment processing is disabled.')
 
     const order = {
       amount: Math.round(amount * 100), // Convert to paise

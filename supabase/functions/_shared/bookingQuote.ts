@@ -53,7 +53,7 @@ export async function calculateBookingQuote(db: any, raw: any, mode: 'website' |
   if (!room || (mode === 'website' && room.is_published !== true)) throw new QuoteError('ROOM_TYPE_NOT_PUBLISHED', 'This room is not available for website booking.');
   if (request.room_unit_id) {
     const { data: unit, error } = await db.from('room_units').select('id,room_type_id,is_active,status').eq('id', request.room_unit_id).maybeSingle();
-    if (error || !unit || unit.room_type_id !== room.id || !unit.is_active || unit.status === 'maintenance') throw new QuoteError('ROOM_SELECTION_MISMATCH', 'The selected room unit is unavailable.');
+    if (error || !unit || unit.room_type_id !== room.id || !unit.is_active || (unit.status === 'maintenance' || (unit.status === 'management_block' || unit.status === 'reserved'))) throw new QuoteError('ROOM_SELECTION_MISMATCH', 'The selected room unit is unavailable.');
   }
   const { data: variants, error } = await db.rpc('calculate_rate_variants_v2', {
     p_room_type_id: request.room_type_id, p_room_unit_id: request.room_unit_id,

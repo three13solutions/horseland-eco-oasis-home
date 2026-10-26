@@ -92,3 +92,15 @@ verify_jwt = true
 
 [functions.finalize-booking-v2]
 verify_jwt = false
+
+
+[functions.create-razorpay-order-v3]
+verify_jwt = false
+
+
+[functions.finalize-booking-v3]
+verify_jwt = false
+
+
+[functions.reconcile-distribution-hold]
+verify_jwt = true

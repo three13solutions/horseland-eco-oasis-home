@@ -1,3 +1,4 @@
+import { legacyCheckoutAdmission } from '../_shared/distributionLegacyGuard.ts'
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2"
 import { calculateBookingQuote, assertQuoteMatches, QuoteError } from "../_shared/bookingQuote.ts"
@@ -93,6 +94,8 @@ serve(async (req) => {
     const { amount, currency = 'INR', quote_request, quote_fingerprint, existing_booking_id } = await req.json()
     if (currency !== 'INR') throw new QuoteError('INVALID_CURRENCY', 'Only INR is supported.', 400)
     const db = createClient(Deno.env.get('SUPABASE_URL') ?? '', Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '')
+    const admission = await legacyCheckoutAdmission(db, Boolean(existing_booking_id))
+    if (admission !== 'legacy_allowed') return new Response(JSON.stringify({ code: admission === 'refresh_required' ? 'CHECKOUT_REFRESH_REQUIRED' : 'CHECKOUT_UNAVAILABLE', error: 'Refresh the checkout before starting a payment. No order was created by this request.' }), { status: admission === 'refresh_required' ? 409 : 503, headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
     let snapshot: any
     if (existing_booking_id) {
       const caller = createClient(Deno.env.get('SUPABASE_URL') ?? '', Deno.env.get('SUPABASE_ANON_KEY') ?? '', { global: { headers: { Authorization: req.headers.get('Authorization') ?? '' } } })
@@ -120,6 +123,7 @@ serve(async (req) => {
     }
 
     const { keyId, secret } = await getRazorpayCredentials()
+    if (!keyId.startsWith('rzp_test_')) throw new Error('This rollout supports test payments only; live payment processing is disabled.')
 
     if (existing_booking_id) {
       const { data: pending, error: pendingError } = await db.from('booking_order_quotes')
