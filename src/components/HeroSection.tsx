@@ -21,6 +21,7 @@ const HeroSection = () => {
   const [guests, setGuests] = useState(2);
   const [adults, setAdults] = useState(2);
   const [children, setChildren] = useState(0);
+  const [infants, setInfants] = useState(0);
   const [heroTitle, setHeroTitle] = useState('Escape to Nature\'s Embrace');
   const [heroSubtitle, setHeroSubtitle] = useState('A mindful retreat in Matheran\'s no-car eco zone');
   const [slides, setSlides] = useState<Array<{ type: string; content: string; alt: string }>>([]);
@@ -191,12 +192,16 @@ const HeroSection = () => {
                   <label className="text-white/80 text-sm font-medium block text-left">{getTranslation('hero.guests', 'Guests')}</label>
                   <GuestSelector
                     totalGuests={guests}
+                    adultsCount={adults}
+                    childrenCount={children}
+                    infantsCount={infants}
                     open={guestSelectorOpen}
                     onOpenChange={setGuestSelectorOpen}
-                    onGuestsChange={(total, a, c) => {
+                    onGuestsChange={(total, a, c, i) => {
                       setGuests(total);
                       setAdults(a);
                       setChildren(c);
+                      setInfants(i || 0);
                     }}
                     variant="hero"
                   />
@@ -208,7 +213,10 @@ const HeroSection = () => {
                       const searchParams = new URLSearchParams({
                         checkIn: format(checkIn, 'yyyy-MM-dd'),
                         checkOut: format(checkOut, 'yyyy-MM-dd'),
-                        guests: guests.toString()
+                        guests: guests.toString(),
+                        adults: adults.toString(),
+                        children: children.toString(),
+                        infants: infants.toString()
                       });
                       navigate(`/search-availability?${searchParams.toString()}`);
                     } else {
@@ -244,3 +252,4 @@ const HeroSection = () => {
 };
 
 export default HeroSection;
+

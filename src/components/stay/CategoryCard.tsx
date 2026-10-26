@@ -34,10 +34,11 @@ type Props = {
   guests?: number;
   adults?: number;
   children?: number;
+  infants?: number;
   hideBookNow?: boolean;
 };
 
-const CategoryCard: React.FC<Props> = ({ category, onViewDetails, onBookNow, viewMode = 'grid', checkIn, checkOut, guests = 2, adults = 2, children = 0, hideBookNow = false }) => {
+const CategoryCard: React.FC<Props> = ({ category, onViewDetails, onBookNow, viewMode = 'grid', checkIn, checkOut, guests = 2, adults = 2, children = 0, infants = 0, hideBookNow = false }) => {
   const navigate = useNavigate();
   const [selectedMealPlan, setSelectedMealPlan] = useState<string>('');
   const [selectedCancellationPolicy, setSelectedCancellationPolicy] = useState<string>('');
@@ -49,7 +50,7 @@ const CategoryCard: React.FC<Props> = ({ category, onViewDetails, onBookNow, vie
     checkOut,
     adultsCount: adults,
     childrenCount: children,
-    infantsCount: 0,
+    infantsCount: infants,
     enabled: !!(checkIn && checkOut)
   });
 
@@ -174,6 +175,7 @@ const CategoryCard: React.FC<Props> = ({ category, onViewDetails, onBookNow, vie
         guests: guests.toString(),
         adults: adults.toString(),
         children: children.toString(),
+        infants: infants.toString(),
         roomTypeId: category.id
       });
 
@@ -482,4 +484,5 @@ const CategoryCard: React.FC<Props> = ({ category, onViewDetails, onBookNow, vie
 };
 
 export default CategoryCard;
+
 

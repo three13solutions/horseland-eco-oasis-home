@@ -241,7 +241,7 @@ const RoomDetail = () => {
       return tomorrow;
     })();
     
-    const totalGuests = adults + children + infants;
+    const totalGuests = adults + children; // Occupancy excludes infants; meal pricing receives infants separately.
     const searchParams = new URLSearchParams({
       checkIn: checkIn.toISOString().split('T')[0],
       checkOut: checkOut.toISOString().split('T')[0],
@@ -755,7 +755,10 @@ const RoomDetail = () => {
                   <div className="mb-6">
                     <label className="block text-sm font-body font-medium mb-2">Guests</label>
                     <GuestSelector
-                      totalGuests={adults + children + infants}
+                      totalGuests={adults + children}
+                      adultsCount={adults}
+                      childrenCount={children}
+                      infantsCount={infants}
                       open={guestSelectorOpen}
                       onOpenChange={setGuestSelectorOpen}
                       onGuestsChange={(total, adultsCount, childrenCount, infantsCount) => {
@@ -796,3 +799,4 @@ const RoomDetail = () => {
 };
 
 export default RoomDetail;
+

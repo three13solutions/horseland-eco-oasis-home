@@ -1,3 +1,4 @@
+import { readGuestParty } from '@/lib/guestParty';
 import React, { useState, useEffect, useMemo } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { CalendarIcon, Users, LayoutGrid, List, Filter } from 'lucide-react';
@@ -79,10 +80,11 @@ const SearchAvailability = () => {
   const [checkOut, setCheckOut] = useState<Date | undefined>(
     searchParams.get('checkOut') ? new Date(searchParams.get('checkOut')!) : undefined
   );
-  const [guests, setGuests] = useState<number>(parseInt(searchParams.get('guests') || '2'));
-  const [adults, setAdults] = useState<number>(parseInt(searchParams.get('adults') || '2'));
-  const [children, setChildren] = useState<number>(parseInt(searchParams.get('children') || '0'));
-  const [infants, setInfants] = useState<number>(parseInt(searchParams.get('infants') || '0'));
+  const initialParty = readGuestParty(searchParams);
+  const [guests, setGuests] = useState<number>(initialParty.guests);
+  const [adults, setAdults] = useState<number>(initialParty.adults);
+  const [children, setChildren] = useState<number>(initialParty.children);
+  const [infants, setInfants] = useState<number>(initialParty.infants);
   const roomTypeIdParam = searchParams.get('roomTypeId'); // Filter to specific room if provided
   
   const [categories, setCategories] = useState<Category[]>([]);
@@ -110,7 +112,7 @@ const SearchAvailability = () => {
   // Auto-search on initial load if dates are present in URL
   useEffect(() => {
     if (checkIn && checkOut && !searched) {
-      handleSearch();
+      handleSearch(true);
     }
   }, []); // Empty dependency array - only run once on mount
 
@@ -130,7 +132,7 @@ const SearchAvailability = () => {
     }
   }, [categories, searched, roomTypeIdParam]);
 
-  const handleSearch = async () => {
+  const handleSearch = async (replaceHistory = false) => {
     if (!checkIn || !checkOut) {
       toast({
         title: "Missing dates",
@@ -173,7 +175,7 @@ const SearchAvailability = () => {
         children: children.toString(),
         infants: infants.toString()
       });
-      setSearchParams(params);
+      setSearchParams(params, { replace: replaceHistory });
 
       if (mappedCategories.length === 0) {
         toast({
@@ -352,6 +354,9 @@ const SearchAvailability = () => {
                 <label className="text-sm font-medium mb-2 block">Guests</label>
                 <GuestSelector
                   totalGuests={guests}
+                  adultsCount={adults}
+                  childrenCount={children}
+                  infantsCount={infants}
                   open={guestSelectorOpen}
                   onOpenChange={setGuestSelectorOpen}
                   onGuestsChange={(total, a, c, i) => {
@@ -363,7 +368,7 @@ const SearchAvailability = () => {
                 />
               </div>
               <Button 
-                onClick={handleSearch} 
+                onClick={() => handleSearch()} 
                 disabled={loading || !checkIn || !checkOut}
                 className="h-10"
               >
@@ -1126,6 +1131,7 @@ const SearchAvailability = () => {
                           guests={guests}
                           adults={adults}
                           children={children}
+                          infants={infants}
                           onViewDetails={(cat) => navigate(`/stay/${cat.id}`)}
                           onBookNow={(cat) => {
                             const params = new URLSearchParams({
@@ -1157,3 +1163,4 @@ const SearchAvailability = () => {
 };
 
 export default SearchAvailability;
+

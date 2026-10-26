@@ -30,6 +30,9 @@ interface AvailableRoomCardProps {
   checkIn: string;
   checkOut: string;
   guests: number;
+  adults?: number;
+  children?: number;
+  infants?: number;
   nights: number;
   onSelectRoom: (roomType: RoomType, variant?: RateVariant) => void;
   getFeatureIcon: (feature: string) => JSX.Element;
@@ -41,6 +44,9 @@ export const AvailableRoomCard: React.FC<AvailableRoomCardProps> = ({
   checkIn,
   checkOut,
   guests,
+  adults = guests,
+  children = 0,
+  infants = 0,
   nights,
   onSelectRoom,
   getFeatureIcon
@@ -53,9 +59,9 @@ export const AvailableRoomCard: React.FC<AvailableRoomCardProps> = ({
     roomTypeId: roomType.id,
     checkIn: checkIn ? new Date(checkIn) : undefined,
     checkOut: checkOut ? new Date(checkOut) : undefined,
-    adultsCount: guests,
-    childrenCount: 0,
-    infantsCount: 0,
+    adultsCount: adults,
+    childrenCount: children,
+    infantsCount: infants,
     bookingChannel: 'direct',
     enabled: !!checkIn && !!checkOut
   });
@@ -250,4 +256,5 @@ export const AvailableRoomCard: React.FC<AvailableRoomCardProps> = ({
     </Card>
   );
 };
+
 

@@ -7,6 +7,9 @@ import { cn } from '@/lib/utils';
 
 type GuestSelectorProps = {
   totalGuests: number;
+  adultsCount?: number;
+  childrenCount?: number;
+  infantsCount?: number;
   onGuestsChange: (total: number, adults: number, children: number, infants?: number) => void;
   className?: string;
   variant?: 'default' | 'hero';
@@ -15,30 +18,32 @@ type GuestSelectorProps = {
 };
 
 const GuestSelector: React.FC<GuestSelectorProps> = ({ 
-  totalGuests, 
+  totalGuests,
+  adultsCount,
+  childrenCount,
+  infantsCount,
   onGuestsChange, 
   className,
   variant = 'default',
   open: controlledOpen,
   onOpenChange: controlledOnOpenChange
 }) => {
-  const [adults, setAdults] = useState(2);
-  const [children, setChildren] = useState(0);
-  const [infants, setInfants] = useState(0);
+  const [adults, setAdults] = useState(Math.max(1, adultsCount ?? totalGuests ?? 2));
+  const [children, setChildren] = useState(childrenCount ?? 0);
+  const [infants, setInfants] = useState(infantsCount ?? 0);
   const [internalOpen, setInternalOpen] = useState(false);
   
   // Use controlled state if provided, otherwise use internal state
   const isOpen = controlledOpen !== undefined ? controlledOpen : internalOpen;
   const setIsOpen = controlledOnOpenChange || setInternalOpen;
 
-  // Initialize from totalGuests prop
+  // Preserve the actual party breakdown when reopening, navigating, or editing.
   useEffect(() => {
-    if (totalGuests > 0) {
-      setAdults(Math.max(1, totalGuests));
-      setChildren(0);
-      setInfants(0);
-    }
-  }, []);
+    if (adultsCount === undefined && childrenCount === undefined && infantsCount === undefined) return;
+    setAdults(Math.max(1, adultsCount ?? totalGuests ?? 2));
+    setChildren(childrenCount ?? 0);
+    setInfants(infantsCount ?? 0);
+  }, [totalGuests, adultsCount, childrenCount, infantsCount]);
 
   const handleAdultsChange = (delta: number) => {
     const newAdults = Math.max(1, Math.min(20, adults + delta)); // Increased cap to 20
@@ -161,7 +166,7 @@ const GuestSelector: React.FC<GuestSelectorProps> = ({
             <div className="flex items-center justify-between py-2">
               <div>
                 <div className="font-medium">Infants</div>
-                <div className="text-xs text-muted-foreground">0-2 Years (Free)</div>
+                <div className="text-xs text-muted-foreground">0-2 Years</div>
               </div>
               <div className="flex items-center gap-3">
                 <Button
@@ -189,8 +194,8 @@ const GuestSelector: React.FC<GuestSelectorProps> = ({
 
           <div className="pt-3 border-t">
             <p className="text-xs text-muted-foreground">
-              Adults (10+ years) pay full price. Children (2-9 years) are charged at half the adult rate.
-              Infants (0-2 years) stay free.
+              Accommodation charges depend on the selected room and guest ages.
+              Meal supplements currently apply at the full rate to every guest, including children and infants.
               Please provide the right number of guests for the best options and prices.
             </p>
           </div>

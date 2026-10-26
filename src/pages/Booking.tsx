@@ -1,3 +1,4 @@
+import { readGuestParty } from '@/lib/guestParty';
 import { normalizeMealPlanCode, type MealPlanCode } from '@/lib/mealPlans';
 import React, { useState, useEffect, useRef } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
@@ -108,10 +109,7 @@ const Booking = () => {
   // Get search parameters
   const checkIn = searchParams.get('checkIn') || '';
   const checkOut = searchParams.get('checkOut') || '';
-  const guests = parseInt(searchParams.get('guests') || '2');
-  const urlAdults = parseInt(searchParams.get('adults') || '2');
-  const urlChildren = parseInt(searchParams.get('children') || '0');
-  const urlInfants = parseInt(searchParams.get('infants') || '0');
+  const { guests, adults: urlAdults, children: urlChildren, infants: urlInfants } = readGuestParty(searchParams);
   const roomTypeId = searchParams.get('roomTypeId');
   const packageId = searchParams.get('packageId');
   const tabParam = searchParams.get('tab');
@@ -126,6 +124,7 @@ const Booking = () => {
   const [searchGuests, setSearchGuests] = useState(guests.toString());
   const [searchAdults, setSearchAdults] = useState(urlAdults);
   const [searchChildren, setSearchChildren] = useState(urlChildren);
+  const [searchInfants, setSearchInfants] = useState(urlInfants);
   const [selectedPackage, setSelectedPackage] = useState<any>(null);
   const [packageLoading, setPackageLoading] = useState(false);
   const [heroImage, setHeroImage] = useState<string>('');
@@ -340,6 +339,21 @@ const Booking = () => {
     loadAddons();
     loadHeroImage();
   }, [checkIn, checkOut, guests, roomTypeId]);
+
+  // URL navigation must update pricing counts, including Back/Forward and search edits.
+  useEffect(() => {
+    setAdultsCount(Math.max(1, urlAdults));
+    setChildrenCount(urlChildren);
+    setInfantsCount(urlInfants);
+    setSearchGuests(guests.toString());
+    setSearchAdults(urlAdults);
+    setSearchChildren(urlChildren);
+    setSearchInfants(urlInfants);
+    setTempGuests(guests);
+    setTempAdults(urlAdults);
+    setTempChildren(urlChildren);
+    setTempInfants(urlInfants);
+  }, [urlAdults, urlChildren, urlInfants, guests]);
 
   // Update meal plan and cancellation policy when URL params change
   useEffect(() => {
@@ -747,6 +761,7 @@ const Booking = () => {
     newSearchParams.set('guests', searchGuests);
     newSearchParams.set('adults', searchAdults.toString());
     newSearchParams.set('children', searchChildren.toString());
+    newSearchParams.set('infants', searchInfants.toString());
     
     navigate(`/booking?${newSearchParams.toString()}`);
   };
@@ -2291,6 +2306,9 @@ const Booking = () => {
                             <label className="text-sm font-medium">Guests</label>
                             <GuestSelector
                               totalGuests={tempGuests}
+                              adultsCount={tempAdults}
+                              childrenCount={tempChildren}
+                              infantsCount={tempInfants}
                               open={editGuestSelectorOpen}
                               onOpenChange={setEditGuestSelectorOpen}
                               onGuestsChange={(total, adults, children, infants) => {
@@ -2676,12 +2694,16 @@ const Booking = () => {
                   <Label className="text-foreground text-sm font-medium block text-left">Guests</Label>
                   <GuestSelector
                     totalGuests={parseInt(searchGuests)}
+                    adultsCount={searchAdults}
+                    childrenCount={searchChildren}
+                    infantsCount={searchInfants}
                     open={editGuestSelectorOpen}
                     onOpenChange={setEditGuestSelectorOpen}
-                    onGuestsChange={(total, a, c) => {
+                    onGuestsChange={(total, a, c, i) => {
                       setSearchGuests(total.toString());
                       setSearchAdults(a);
                       setSearchChildren(c);
+                      setSearchInfants(i || 0);
                     }}
                     className="w-full h-12 bg-background border-border hover:bg-accent hover:text-accent-foreground rounded-xl"
                   />
@@ -2759,6 +2781,9 @@ const Booking = () => {
                     checkIn={checkIn}
                     checkOut={checkOut}
                     guests={guests}
+                    adults={adultsCount}
+                    children={childrenCount}
+                    infants={infantsCount}
                     nights={nights}
                     onSelectRoom={handleSelectRoom}
                     getFeatureIcon={getFeatureIcon}
