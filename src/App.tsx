@@ -35,6 +35,8 @@ import BookingConfirmation from "./pages/BookingConfirmation";
 import STAAHBooking from "./pages/STAAHBooking";
 
 // Admin imports
+import WebsiteAvailability from "./pages/admin/WebsiteAvailability";
+import DistributionChannels from "./pages/admin/DistributionChannels";
 import AdminLogin from "./pages/AdminLogin";
 import AdminLayout from "./components/admin/AdminLayout";
 import AdminDashboard from "./pages/AdminDashboard";
@@ -124,6 +126,8 @@ function App() {
               <Route path="/admin/login" element={<AdminLogin />} />
               <Route path="/admin" element={<AdminLayout />}>
                 <Route index element={<AdminDashboard />} />
+                <Route path="distribution/availability" element={<WebsiteAvailability />} />
+                <Route path="distribution/channels" element={<DistributionChannels />} />
                 <Route path="bookings" element={<BookingManagement />} />
                 <Route path="guests" element={<GuestManagement />} />
                 <Route path="payments" element={<PaymentManagement />} />

@@ -1,5 +1,6 @@
+import { websiteTypeAvailability } from '@/lib/websiteInventory';
 import { readGuestParty } from '@/lib/guestParty';
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { CalendarIcon, Users, LayoutGrid, List, Filter } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -90,6 +91,7 @@ const SearchAvailability = () => {
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(false);
   const [searched, setSearched] = useState(false);
+  const availabilityRequest = useRef(0);
   const [heroImage] = useState('https://images.unsplash.com/photo-1571896349842-33c89424de2d?ixlib=rb-4.0.3&auto=format&fit=crop&w=2000&q=80');
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
 
@@ -151,6 +153,9 @@ const SearchAvailability = () => {
       return;
     }
 
+    const request = ++availabilityRequest.current;
+    const checkInDate = format(checkIn, 'yyyy-MM-dd');
+    const checkOutDate = format(checkOut, 'yyyy-MM-dd');
     setLoading(true);
     setSearched(true);
 
@@ -164,12 +169,16 @@ const SearchAvailability = () => {
 
       if (roomsError) throw roomsError;
 
-      const mappedCategories = allRooms?.map(mapRoomToCategory) || [];
+      const available = await Promise.all((allRooms || []).map(async room => ({
+        room, count: await websiteTypeAvailability(room.id, checkInDate, checkOutDate),
+      })));
+      if (request !== availabilityRequest.current) return;
+      const mappedCategories = available.filter(({ count }) => count > 0).map(({ room }) => mapRoomToCategory(room));
       setCategories(mappedCategories);
 
       const params = new URLSearchParams({
-        checkIn: checkIn.toISOString().split('T')[0],
-        checkOut: checkOut.toISOString().split('T')[0],
+        checkIn: checkInDate,
+        checkOut: checkOutDate,
         guests: guests.toString(),
         adults: adults.toString(),
         children: children.toString(),
@@ -184,6 +193,8 @@ const SearchAvailability = () => {
         });
       }
     } catch (error) {
+      if (request !== availabilityRequest.current) return;
+      setCategories([]);
       console.error('Error searching availability:', error);
       toast({
         title: "Error",
@@ -191,7 +202,7 @@ const SearchAvailability = () => {
         variant: "destructive"
       });
     } finally {
-      setLoading(false);
+      if (request === availabilityRequest.current) setLoading(false);
     }
   };
 

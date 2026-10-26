@@ -1,3 +1,5 @@
+import { readWebsiteCheckout, clearConfirmedWebsiteCheckout, type WebsiteCheckoutContext } from '@/lib/websiteCheckoutAttempt';
+import { websiteTypeAvailability } from '@/lib/websiteInventory';
 import { readGuestParty } from '@/lib/guestParty';
 import { normalizeMealPlanCode, type MealPlanCode } from '@/lib/mealPlans';
 import React, { useState, useEffect, useRef } from 'react';
@@ -162,6 +164,7 @@ const Booking = () => {
   const [showActivitiesInBooking, setShowActivitiesInBooking] = useState(false);
   const [selectedAddons, setSelectedAddons] = useState<SelectedAddon[]>([]);
   const [selectedRoomType, setSelectedRoomType] = useState<RoomType | null>(null);
+  const availabilityRequestRef = useRef(0);
   const [showBookingForm, setShowBookingForm] = useState(false);
   const [showGuestDetails, setShowGuestDetails] = useState(false);
   const [guestDetails, setGuestDetails] = useState<GuestDetails>({
@@ -176,6 +179,10 @@ const Booking = () => {
   const [selectedPickup, setSelectedPickup] = useState<PickupService | null>(null);
   const [selectedBedding, setSelectedBedding] = useState<BeddingOption[]>([]);
   const [showPaymentModal, setShowPaymentModal] = useState(false);
+  const [retainedCheckoutAtLoad] = useState(() => {
+    try { const saved = readWebsiteCheckout(); return saved && saved.state !== 'session' ? saved.requestId : null; }
+    catch { return 'unreadable'; }
+  });
   const [paymentModalKey, setPaymentModalKey] = useState(0);
   const [paymentResolution, setPaymentResolution] = useState<BookingPaymentResolution | null>(loadPaymentResolution);
   const [resolutionSaved, setResolutionSaved] = useState(true);
@@ -525,6 +532,7 @@ const Booking = () => {
   };
 
   const loadAvailableRooms = async () => {
+    const request = ++availabilityRequestRef.current;
     try {
       setLoading(true);
       
@@ -540,8 +548,10 @@ const Booking = () => {
       }
 
       const { data: roomTypes, error: roomTypesError } = await query;
+      if (request !== availabilityRequestRef.current) return;
 
       if (roomTypesError) {
+        setAvailableRooms([]);
         console.error('Error loading room types:', roomTypesError);
         toast({
           title: "Error",
@@ -554,30 +564,11 @@ const Booking = () => {
       const availableRoomsData: AvailableRoom[] = [];
 
       for (const roomType of roomTypes || []) {
-        const { data: availabilityData, error: availabilityError } = await supabase
-          .rpc('check_room_availability', {
-            p_room_type_id: roomType.id,
-            p_check_in: checkIn,
-            p_check_out: checkOut
-          });
-
-        if (availabilityError) {
-          console.error('Error checking availability:', availabilityError);
-          continue;
-        }
-
-        if (availabilityData && availabilityData.length > 0) {
-          const availableCount = availabilityData[0].available_units;
-
-          if (availableCount > 0) {
-            availableRoomsData.push({
-              roomType,
-              availableCount
-            });
-          }
-        }
+        const availableCount = await websiteTypeAvailability(roomType.id, checkIn, checkOut);
+        if (availableCount > 0) availableRoomsData.push({ roomType, availableCount });
       }
 
+      if (request !== availabilityRequestRef.current) return;
       setAvailableRooms(availableRoomsData);
       
       // Auto-select room if roomTypeId is in URL and room is available
@@ -592,6 +583,8 @@ const Booking = () => {
         }
       }
     } catch (error) {
+      if (request !== availabilityRequestRef.current) return;
+      setAvailableRooms([]);
       console.error('Error loading available rooms:', error);
       toast({
         title: "Error",
@@ -599,7 +592,7 @@ const Booking = () => {
         variant: "destructive",
       });
     } finally {
-      setLoading(false);
+      if (request === availabilityRequestRef.current) setLoading(false);
     }
   };
 
@@ -1307,7 +1300,7 @@ const Booking = () => {
     }, 100);
   };
 
-  const handlePaymentSuccess = async (paymentId: string, orderId: string, signature: string) => {
+  const handlePaymentSuccess = async (paymentId: string, orderId: string, signature: string, checkout?: WebsiteCheckoutContext) => {
     // Preserve only safe references before calling the finalizer. A reload or lost
     // response must not silently offer another payment for the same attempt.
     const pendingResolution: BookingPaymentResolution = {
@@ -1385,8 +1378,11 @@ const Booking = () => {
 
       // Persist guest + booking + payment securely on the server (verifies the
       // Razorpay signature again before writing anything).
-      const { data: result, error } = await supabase.functions.invoke('finalize-booking-v2', {
-        body: {
+      const { data: result, error } = await supabase.functions.invoke(checkout ? 'finalize-booking-v3' : 'finalize-booking-v2', {
+        body: checkout ? {
+          razorpay_order_id: orderId, razorpay_payment_id: paymentId, razorpay_signature: signature,
+          request_id: checkout.requestId, checkout_token: checkout.checkoutToken,
+        } : {
           razorpay_order_id: orderId,
           razorpay_payment_id: paymentId,
           razorpay_signature: signature,
@@ -1410,7 +1406,8 @@ const Booking = () => {
       }
 
       // Only an explicit confirmed result clears the unresolved-payment marker.
-      const clearedResolution = clearPaymentResolution();
+      const clearedCheckout = checkout ? clearConfirmedWebsiteCheckout(checkout.requestId) : true;
+      const clearedResolution = clearPaymentResolution() && clearedCheckout;
       pendingPaymentRef.current = null;
       setPaymentResolution(null);
       toast({
@@ -1596,6 +1593,29 @@ const Booking = () => {
         <DynamicFooter />
       </div>
     );
+  }
+
+  // A held room may no longer appear in public availability. Recovery must not
+  // require selecting it again, reconstructing the old quote, or passing today's
+  // date/lead-time validation. The modal reads the owner's immutable server data.
+  if (retainedCheckoutAtLoad) {
+    return <div className="min-h-screen bg-background">
+      <Navigation />
+      <main className="max-w-2xl mx-auto px-4 py-24">
+        <Card><CardHeader><CardTitle>Your saved checkout</CardTitle></CardHeader>
+          <CardContent className="space-y-4">
+            <p>An earlier checkout needs to be resumed or reconciled before starting a different payment. Its room hold has not been released.</p>
+            {retainedCheckoutAtLoad !== 'unreadable' && <p className="text-sm break-all">Checkout reference: {retainedCheckoutAtLoad}</p>}
+            <Button onClick={() => setShowPaymentModal(true)}>Review saved checkout</Button>
+            <Button variant="outline" asChild><a href="/contact">Contact the hotel</a></Button>
+          </CardContent>
+        </Card>
+        <PaymentModal isOpen={showPaymentModal} onClose={() => setShowPaymentModal(false)} onSuccess={handlePaymentSuccess}
+          bookingDetails={{roomName: 'Saved checkout', roomPrice: 0, nights: 0, exactStayTotal: 0,
+            guestName: '', guestEmail: '', guestPhone: '', checkIn: '', checkOut: ''}} />
+      </main>
+      <DynamicFooter />
+    </div>;
   }
 
   if (showBookingForm && selectedRoomType) {
@@ -2566,6 +2586,10 @@ const Booking = () => {
               guestName: guestDetails.name,
               guestEmail: guestDetails.email,
               guestPhone: guestDetails.phone,
+              guestGender: guestDetails.gender,
+              guestIdType: guestDetails.idType,
+              guestIdNumber: guestDetails.idNumber,
+              bookingNotes: guestDetails.specialRequests,
               checkIn: formatDate(checkIn),
               checkOut: formatDate(checkOut),
             }}

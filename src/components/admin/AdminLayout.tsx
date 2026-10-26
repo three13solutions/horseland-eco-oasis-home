@@ -96,6 +96,8 @@ export default function AdminLayout() {
   const getPageInfo = () => {
     const path = location.pathname;
     
+    if (path.startsWith('/admin/distribution/availability')) return { label: 'Website Availability', description: 'Category-level website inventory' };
+    if (path.startsWith('/admin/distribution/channels')) return { label: 'Channels', description: 'Booking source definitions' };
     if (path === '/admin') return { label: 'Dashboard', description: 'Overview and analytics' };
     if (path.startsWith('/admin/bookings')) return { label: 'Bookings', description: 'Manage reservations' };
     if (path.startsWith('/admin/guests')) return { label: 'Guests', description: 'Guest management' };

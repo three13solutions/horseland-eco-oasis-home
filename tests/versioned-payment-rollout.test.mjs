@@ -5,7 +5,7 @@ const read=p=>readFileSync(new URL('../'+p,import.meta.url),'utf8');
 test('new checkout exclusively invokes versioned payment endpoints',()=>{
  const payment=read('src/components/PaymentModal.tsx'),booking=read('src/pages/Booking.tsx');
  assert.match(payment,/invoke\('create-razorpay-order-v2'/);assert.match(payment,/invoke\('verify-razorpay-payment-v2'/);
- assert.match(booking,/invoke\('finalize-booking-v2'/);assert.match(booking,/rpc\('calculate_rate_variants_v2'/);
+ assert.match(booking,/invoke\(checkout \? 'finalize-booking-v3' : 'finalize-booking-v2'/);assert.match(booking,/rpc\('calculate_rate_variants_v2'/);
  assert.doesNotMatch(payment,/invoke\('(create-razorpay-order|verify-razorpay-payment)'/);
  assert.doesNotMatch(booking,/invoke\('finalize-booking'/);
 });

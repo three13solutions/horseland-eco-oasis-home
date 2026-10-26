@@ -79,6 +79,11 @@ const mainMenuItems = [
   }
 ];
 
+const distributionMenuItems = [
+  { icon: Calendar, label: 'Website Availability', path: '/admin/distribution/availability' },
+  { icon: Plug, label: 'Channels', path: '/admin/distribution/channels' },
+];
+
 const pricingMenuItems = [
   { icon: DollarSign, label: 'Rate Plans', path: '/admin/pricing/rate-plans', description: 'One price, all meal options' },
   { 
@@ -288,6 +293,24 @@ export function AdminSidebar() {
                           : 'text-sidebar-foreground hover:bg-sidebar-accent/50 hover:text-sidebar-foreground'
                       }`}
                     >
+                      <item.icon className="h-4 w-4 flex-shrink-0" />
+                      {!isCollapsed && <span>{item.label}</span>}
+                    </Link>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              ))}
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+
+        <SidebarGroup>
+          <SidebarGroupLabel className="text-sidebar-foreground/60 font-medium">{isCollapsed ? '' : 'Distribution'}</SidebarGroupLabel>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              {distributionMenuItems.map(item => (
+                <SidebarMenuItem key={item.path}>
+                  <SidebarMenuButton asChild isActive={isActive(item)} tooltip={item.label}>
+                    <Link to={item.path} aria-label={item.label} className={`flex items-center space-x-3 transition-colors ${isActive(item) ? 'bg-sidebar-accent text-sidebar-primary font-medium' : 'text-sidebar-foreground hover:bg-sidebar-accent/50'}`}>
                       <item.icon className="h-4 w-4 flex-shrink-0" />
                       {!isCollapsed && <span>{item.label}</span>}
                     </Link>
