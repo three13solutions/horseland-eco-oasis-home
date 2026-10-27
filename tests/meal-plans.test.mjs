@@ -19,7 +19,7 @@ test('unknown or missing codes do not invent a fifth plan', () => {
 });
 test('website renders saved plan descriptions and canonical selection, without tea or alias promises', () => {
  const booking=read('src/pages/Booking.tsx');
- assert.match(booking,/mealPlans\.map\(\(plan\)/);
+ assert.match(booking,/mealPlans\.filter\(plan => rateVariants\.some\(variant => normalizeMealPlanCode\(variant\.meal_plan_code\) === normalizeMealPlanCode\(plan\.plan_code\)\)\)\.map\(\(plan\)/);
  assert.match(booking,/\{plan\.plan_name\}/); assert.match(booking,/\{plan\.description\}/);
  assert.doesNotMatch(booking,/Hi Tea & Dinner included|all_meals_inclusive|breakfast_and_dinner/);
  assert.match(booking,/normalizeMealPlanCode\(urlMealPlan\)/);

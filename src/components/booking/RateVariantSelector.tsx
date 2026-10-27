@@ -22,7 +22,7 @@ export const RateVariantSelector: React.FC<RateVariantSelectorProps> = ({
   childrenCount = 0
 }) => {
   const [sortBy, setSortBy] = useState<'price' | 'savings' | 'popular'>('popular');
-  const [filterMealPlan, setFilterMealPlan] = useState<string>('FB');
+  const [filterMealPlan, setFilterMealPlan] = useState<string>('all');
 
   // Filter out variants with empty meal_plan_code or cancellation_policy_code
   const validVariants = variants.filter(v => 

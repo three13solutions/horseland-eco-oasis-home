@@ -1,3 +1,4 @@
+import type { SupabaseClient } from '@supabase/supabase-js';
 import { readWebsiteCheckout, clearConfirmedWebsiteCheckout, type WebsiteCheckoutContext } from '@/lib/websiteCheckoutAttempt';
 import { websiteTypeAvailability } from '@/lib/websiteInventory';
 import { readGuestParty } from '@/lib/guestParty';
@@ -130,7 +131,7 @@ const Booking = () => {
   const [selectedPackage, setSelectedPackage] = useState<any>(null);
   const [packageLoading, setPackageLoading] = useState(false);
   const [heroImage, setHeroImage] = useState<string>('');
-  const [selectedVariant, setSelectedVariant] = useState<RateVariant | null>(null);
+  const [selectedVariantCandidate, setSelectedVariant] = useState<RateVariant | null>(null);
   
   // Guest breakdown state
   const [adultsCount, setAdultsCount] = useState(Math.max(1, urlAdults));
@@ -243,12 +244,12 @@ const Booking = () => {
   });
 
   // Fetch rate variants when room type and dates are selected
-  const { data: rateVariantsData } = useQuery({
-    queryKey: ['rate-variants', selectedRoomType?.id, checkIn, checkOut, adultsCount, childrenCount, infantsCount],
+  const { data: rateVariantsData, isFetching: websiteRatesChecking, isError: websiteRatesError } = useQuery({
+    queryKey: ['website-rate-variants', selectedRoomType?.id, checkIn, checkOut, adultsCount, childrenCount, infantsCount],
     queryFn: async () => {
       if (!selectedRoomType?.id || !checkIn || !checkOut) return null;
       
-      const { data, error } = await supabase.rpc('calculate_rate_variants_v2', {
+      const { data, error } = await (supabase as SupabaseClient).rpc('calculate_website_rate_variants', {
         p_room_type_id: selectedRoomType.id,
         p_check_in: checkIn,
         p_check_out: checkOut,
@@ -259,19 +260,22 @@ const Booking = () => {
       });
       
       if (error) {
-        console.error('Error fetching rate variants:', error);
-        return null;
+        throw error;
       }
       return data;
     },
-    enabled: !!selectedRoomType?.id && !!checkIn && !!checkOut
+    enabled: !!selectedRoomType?.id && !!checkIn && !!checkOut,
+    staleTime: 0, refetchOnWindowFocus: true, refetchOnReconnect: true
   });
 
   // Keep the selected quote tied to the currently returned plan/policy variants.
   const rateVariants = React.useMemo<RateVariant[]>(() =>
-    Array.isArray(rateVariantsData) ? rateVariantsData as unknown as RateVariant[] : [],
-    [rateVariantsData]
+    !websiteRatesChecking && !websiteRatesError && Array.isArray(rateVariantsData) ? rateVariantsData as unknown as RateVariant[] : [],
+    [rateVariantsData, websiteRatesChecking, websiteRatesError]
   );
+
+  // Do not render or charge a cached selection while its eligibility is stale.
+  const selectedVariant = rateVariants.find(v => v.meal_plan_code === selectedVariantCandidate?.meal_plan_code && v.cancellation_policy_code === selectedVariantCandidate?.cancellation_policy_code && v.quote_fingerprint === selectedVariantCandidate?.quote_fingerprint) || null;
 
   useEffect(() => {
     const matchingVariant = rateVariants.find(v =>
@@ -1263,7 +1267,7 @@ const Booking = () => {
     }
     
     // Never carry a stale quote into payment after changing a plan or policy.
-    if (!selectedVariant || !selectedVariant.quote_fingerprint || normalizeMealPlanCode(selectedVariant.meal_plan_code) !== selectedMealPlan || selectedVariant.cancellation_policy_code !== selectedCancellationPolicy) {
+    if (websiteRatesChecking || websiteRatesError || !rateVariants.some(v => v.quote_fingerprint === selectedVariant?.quote_fingerprint && v.meal_plan_code === selectedVariant?.meal_plan_code && v.cancellation_policy_code === selectedVariant?.cancellation_policy_code) || !selectedVariant || !selectedVariant.quote_fingerprint || normalizeMealPlanCode(selectedVariant.meal_plan_code) !== selectedMealPlan || selectedVariant.cancellation_policy_code !== selectedCancellationPolicy) {
       toast({ title: 'Rate unavailable', description: 'Please select an available meal plan and cancellation policy before continuing.', variant: 'destructive' });
       return;
     }
@@ -1692,8 +1696,9 @@ const Booking = () => {
                       </CollapsibleTrigger>
                       <CollapsibleContent>
                         <CardContent className="space-y-4">
+                          {websiteRatesChecking ? <p role="status">Checking plans for every night of your stay…</p> : websiteRatesError ? <p role="alert">Meal-plan availability could not be verified. Please refresh before continuing.</p> : !rateVariants.length ? <p role="status">No meal plans are available for this room and stay. Choose different dates or a different room.</p> : !rateVariants.some(v => normalizeMealPlanCode(v.meal_plan_code) === selectedMealPlan) ? <p role="status" className="text-amber-700">Your selected meal plan is no longer available for this stay. Select an offered plan and review the new total; we have not changed it for you.</p> : null}
                           <div className="space-y-3">
-                            {mealPlans.map((plan) => (
+                            {mealPlans.filter(plan => rateVariants.some(variant => normalizeMealPlanCode(variant.meal_plan_code) === normalizeMealPlanCode(plan.plan_code))).map((plan) => (
                               <button
                                 type="button"
                                 key={plan.id}
@@ -2535,7 +2540,7 @@ const Booking = () => {
                           
                           <div className="flex justify-between font-semibold text-base md:text-lg">
                             <span>Total:</span>
-                            <span>₹{calculateTotal().toLocaleString()}</span>
+                            <span>{selectedVariant ? `₹${calculateTotal().toLocaleString()}` : 'Select an available plan'}</span>
                           </div>
 
                           <div className="space-y-2 pt-2">
@@ -2550,6 +2555,7 @@ const Booking = () => {
                               <Button 
                                 className="w-full text-xs md:text-sm h-10 md:h-11" 
                                 onClick={handleProceedToPayment}
+                                disabled={websiteRatesChecking || websiteRatesError || !selectedVariant || !rateVariants.some(v => v.quote_fingerprint === selectedVariant.quote_fingerprint && v.meal_plan_code === selectedVariant.meal_plan_code && v.cancellation_policy_code === selectedVariant.cancellation_policy_code)}
                               >
                                 Proceed
                               </Button>

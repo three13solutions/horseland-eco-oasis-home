@@ -1,3 +1,4 @@
+import type { SupabaseClient } from '@supabase/supabase-js';
 import { format } from 'date-fns';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -46,6 +47,7 @@ interface UseDynamicPricingParams {
   infantsCount?: number;
   bookingChannel?: string;
   enabled?: boolean;
+  website?: boolean;
 }
 
 export const useDynamicPricing = ({
@@ -57,16 +59,17 @@ export const useDynamicPricing = ({
   childrenCount = 0,
   infantsCount = 0,
   bookingChannel = 'direct',
-  enabled = true
+  enabled = true,
+  website = false
 }: UseDynamicPricingParams) => {
-  return useQuery({
-    queryKey: ['rate-variants', roomTypeId, roomUnitId, checkIn, checkOut, adultsCount, childrenCount, infantsCount, bookingChannel],
+  const query = useQuery({
+    queryKey: [website ? 'website-rate-variants' : 'rate-variants', roomTypeId, roomUnitId, checkIn, checkOut, adultsCount, childrenCount, infantsCount, bookingChannel],
     queryFn: async () => {
       if (!roomTypeId || !checkIn || !checkOut) {
         throw new Error('Missing required parameters');
       }
 
-      const { data, error } = await supabase.rpc('calculate_rate_variants_v2', {
+      const { data, error } = await (supabase as SupabaseClient).rpc(website ? 'calculate_website_rate_variants' : 'calculate_rate_variants_v2', {
         p_room_type_id: roomTypeId,
         p_check_in: format(checkIn, 'yyyy-MM-dd'),
         p_check_out: format(checkOut, 'yyyy-MM-dd'),
@@ -82,8 +85,13 @@ export const useDynamicPricing = ({
       return (data || []) as unknown as RateVariant[];
     },
     enabled: enabled && !!roomTypeId && !!checkIn && !!checkOut,
-    staleTime: 1000 * 60 * 5, // 5 minutes
+    staleTime: website ? 0 : 1000 * 60 * 5,
+    refetchOnWindowFocus: true,
+    refetchOnReconnect: true,
   });
+  // Website offers must never fall back to stale cached options on a failed or
+  // in-flight eligibility check. Admin pricing keeps its existing behavior.
+  return website ? { ...query, data: query.isError || query.isFetching ? undefined : query.data, isLoading: query.isFetching } : query;
 };
 
 export type { RateVariant };

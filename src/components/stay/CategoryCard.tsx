@@ -6,7 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import MediaAsset from '@/components/MediaAsset';
 import { Users, MapPin, Coffee, UtensilsCrossed, Home, CreditCard, XCircle, Check } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
-import { useDynamicPricing, applyMealPlanAdjustment } from '@/hooks/useDynamicPricing';
+import { useDynamicPricing } from '@/hooks/useDynamicPricing';
 
 export type Category = {
   id: string;
@@ -44,7 +44,8 @@ const CategoryCard: React.FC<Props> = ({ category, onViewDetails, onBookNow, vie
   const [selectedCancellationPolicy, setSelectedCancellationPolicy] = useState<string>('');
 
   // Fetch dynamic pricing variants
-  const { data: variants, isLoading } = useDynamicPricing({
+  const { data: variants, isLoading, isError: ratesError } = useDynamicPricing({
+    website: true,
     roomTypeId: category.id,
     checkIn,
     checkOut,
@@ -73,7 +74,7 @@ const CategoryCard: React.FC<Props> = ({ category, onViewDetails, onBookNow, vie
 
   // Get unique meal plans and cancellation policies
   const mealPlans = useMemo(() => {
-    const available = variants?.length ? variants.map(v => v.meal_plan_code) : MEAL_PLANS.map(p => p.code);
+    const available = variants?.map(v => v.meal_plan_code) || [];
     return Array.from(new Set(available)).map(code => {
       const plan = getMealPlan(code);
       const variant = variants?.find(v => v.meal_plan_code === code);
@@ -127,6 +128,8 @@ const CategoryCard: React.FC<Props> = ({ category, onViewDetails, onBookNow, vie
     );
   }, [variants, selectedMealPlan, selectedCancellationPolicy]);
 
+  const unavailableSelection = !!(checkIn && checkOut && selectedMealPlan && !isLoading && !variants?.some(v => v.meal_plan_code === selectedMealPlan));
+
   const nights = checkIn && checkOut ? Math.ceil((checkOut.getTime() - checkIn.getTime()) / (1000 * 60 * 60 * 24)) : 1;
 
   // Use database variant prices (which include both meal plan AND cancellation policy adjustments)
@@ -141,32 +144,14 @@ const CategoryCard: React.FC<Props> = ({ category, onViewDetails, onBookNow, vie
       };
     }
     
-    // Fallback for when variants aren't loaded
-    if (!checkIn || !checkOut || !selectedMealPlan) {
-      return { 
-        displayPrice: category.basePrice, 
-        totalPrice: category.basePrice,
-        pricePerPerson: Math.round(category.basePrice / guests)
-      };
-    }
-
-    const baseRate = category.basePrice;
-    const { adjustedPerNight, adjustedTotal } = applyMealPlanAdjustment(
-      baseRate * nights,
-      selectedMealPlan,
-      adults,
-      children,
-      nights
-    );
-    
-    return { 
-      displayPrice: adjustedPerNight,
-      totalPrice: adjustedTotal,
-      pricePerPerson: Math.round(adjustedPerNight / guests)
-    };
+    // A dated offer needs a server-confirmed eligible variant. No client-side
+    // fallback can resurrect a hidden plan or silently quote another plan.
+    if (!checkIn || !checkOut) return { displayPrice: category.basePrice, totalPrice: category.basePrice, pricePerPerson: Math.round(category.basePrice / guests) };
+    return { displayPrice: 0, totalPrice: 0, pricePerPerson: 0 };
   }, [selectedVariant, selectedMealPlan, adults, children, guests, nights, category.basePrice, checkIn, checkOut]);
 
   const handleBookNow = () => {
+    if (checkIn && checkOut && (!selectedVariant || isLoading)) return;
     if (checkIn && checkOut) {
       // We have dates - navigate to booking page with room selected
       const searchParams = new URLSearchParams({
@@ -310,10 +295,10 @@ const CategoryCard: React.FC<Props> = ({ category, onViewDetails, onBookNow, vie
             <div className="flex items-end justify-between gap-4 mt-4">
               <div>
                 <div className="text-xs text-muted-foreground mb-1">
-                  {selectedVariant ? 'Price per night' : 'Starting from'}
+                  {selectedVariant ? 'Price per night' : checkIn && checkOut ? 'Choose an available plan' : 'Starting from · select dates'}
                 </div>
                 <span className="text-2xl font-heading font-bold text-primary">
-                  ₹{displayPrice.toLocaleString()}
+                  {selectedVariant || !checkIn || !checkOut ? `₹${displayPrice.toLocaleString()}` : '—'}
                 </span>
                 <span className="text-sm text-muted-foreground ml-1">
                   /night
@@ -324,13 +309,14 @@ const CategoryCard: React.FC<Props> = ({ category, onViewDetails, onBookNow, vie
                   </div>
                 )}
               </div>
+              {!!(checkIn && checkOut) && !isLoading && (ratesError || !variants?.length || unavailableSelection) && <p role="status" className="text-sm text-amber-700">{ratesError ? 'Meal-plan availability could not be verified. Refresh before booking.' : !variants?.length ? 'No meal plans are available for this room and entire stay. Choose different dates or a room.' : 'Your selected plan is no longer available. Choose an offered plan; no replacement was selected.'}</p>}
               <div className="flex gap-2">
                 <Link to={`/stay/${category.id}`}>
                   <Button variant="outline" className="font-body">
                     View Details
                   </Button>
                 </Link>
-                <Button className="font-body" onClick={handleBookNow}>
+                <Button className="font-body" onClick={handleBookNow} disabled={!!(checkIn && checkOut) && (!selectedVariant || isLoading)}>
                   {checkIn && checkOut ? 'Book Now' : 'Search Availability'}
                 </Button>
               </div>
@@ -453,10 +439,10 @@ const CategoryCard: React.FC<Props> = ({ category, onViewDetails, onBookNow, vie
         <div className="space-y-3">
           <div>
             <div className="text-xs text-muted-foreground mb-1">
-              {selectedVariant ? 'Price per night' : 'Starting from'}
+              {selectedVariant ? 'Price per night' : checkIn && checkOut ? 'Choose an available plan' : 'Starting from · select dates'}
             </div>
             <span className="text-2xl font-heading font-bold text-primary">
-              ₹{displayPrice.toLocaleString()}
+              {selectedVariant || !checkIn || !checkOut ? `₹${displayPrice.toLocaleString()}` : '—'}
             </span>
             <span className="text-sm text-muted-foreground ml-1">
               /night
@@ -467,13 +453,14 @@ const CategoryCard: React.FC<Props> = ({ category, onViewDetails, onBookNow, vie
               </div>
             )}
           </div>
+          {!!(checkIn && checkOut) && !isLoading && (ratesError || !variants?.length || unavailableSelection) && <p role="status" className="text-sm text-amber-700">{ratesError ? 'Meal-plan availability could not be verified. Refresh before booking.' : !variants?.length ? 'No meal plans are available for this room and entire stay. Choose different dates or a room.' : 'Your selected plan is no longer available. Choose an offered plan; no replacement was selected.'}</p>}
           <div className="flex gap-2 w-full">
             <Link to={`/stay/${category.id}`} className="flex-1">
               <Button variant="outline" size="sm" className="font-body w-full">
                 View Details
               </Button>
             </Link>
-            <Button size="sm" className="font-body flex-1" onClick={handleBookNow}>
+            <Button size="sm" className="font-body flex-1" onClick={handleBookNow} disabled={!!(checkIn && checkOut) && (!selectedVariant || isLoading)}>
               {checkIn && checkOut ? 'Book Now' : 'Search Availability'}
             </Button>
           </div>

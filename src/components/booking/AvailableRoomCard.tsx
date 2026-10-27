@@ -55,7 +55,8 @@ export const AvailableRoomCard: React.FC<AvailableRoomCardProps> = ({
   const [selectedCancellationPolicy, setSelectedCancellationPolicy] = useState<string>('refundable_credit');
 
   // Fetch dynamic pricing with all rules applied
-  const { data: rateVariants, isLoading } = useDynamicPricing({
+  const { data: rateVariants, isLoading, isError: ratesError } = useDynamicPricing({
+    website: true,
     roomTypeId: roomType.id,
     checkIn: checkIn ? new Date(checkIn) : undefined,
     checkOut: checkOut ? new Date(checkOut) : undefined,
@@ -110,7 +111,7 @@ export const AvailableRoomCard: React.FC<AvailableRoomCardProps> = ({
   }, [rateVariants, selectedMealPlan, selectedCancellationPolicy]);
 
   const handleSelectRoom = () => {
-    if (selectedVariant) {
+    if (!isLoading && selectedVariant) {
       onSelectRoom(roomType, selectedVariant);
     }
   };
@@ -169,6 +170,7 @@ export const AvailableRoomCard: React.FC<AvailableRoomCardProps> = ({
 
             <Separator />
 
+            {!isLoading && selectedMealPlan && !mealPlans.some(plan => plan.code === selectedMealPlan) && <p role="status" className="text-sm text-amber-700">{ratesError ? 'Meal-plan availability could not be verified. Refresh before booking.' : !mealPlans.length ? 'No meal plans are available for this room and entire stay. Choose different dates or a room.' : 'This meal plan is not available for your stay. Choose an offered plan; no replacement was selected.'}</p>}
             {/* Meal Plan Selection */}
             <div>
               <label className="text-sm font-medium mb-2 block">Select Meal Plan</label>

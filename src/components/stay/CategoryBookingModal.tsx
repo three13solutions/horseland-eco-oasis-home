@@ -1,3 +1,4 @@
+import { variantStillOffered } from '@/lib/mealPlanVisibility';
 import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -34,6 +35,7 @@ const CategoryBookingModal: React.FC<Props> = ({ open, onOpenChange, category })
   const [availableUnits, setAvailableUnits] = useState(0);
   const [loading, setLoading] = useState(false);
   const [selectedVariant, setSelectedVariant] = useState<any>(null);
+  const [selectionInvalidated, setSelectionInvalidated] = useState(false);
   
   // Popover states for auto-advance
   const [checkInOpen, setCheckInOpen] = useState(false);
@@ -48,7 +50,8 @@ const CategoryBookingModal: React.FC<Props> = ({ open, onOpenChange, category })
   const totalGuests = guests + extraMattress;
   const guestsForPricing = Math.max(totalGuests, minGuests);
   
-  const { data: variants = [], isLoading: variantsLoading } = useDynamicPricing({
+  const { data: variants = [], isLoading: variantsLoading, isError: variantError } = useDynamicPricing({
+    website: true,
     roomTypeId: category?.id,
     checkIn: date?.from,
     checkOut: date?.to,
@@ -57,6 +60,10 @@ const CategoryBookingModal: React.FC<Props> = ({ open, onOpenChange, category })
     infantsCount: 0,
     enabled: !!date?.from && !!date?.to && availableUnits > 0
   });
+
+  useEffect(() => {
+    if (!variantsLoading && !variantError && selectedVariant && !variantStillOffered(selectedVariant, variants)) { setSelectedVariant(null); setSelectionInvalidated(true); }
+  }, [variants, selectedVariant, variantsLoading, variantError]);
 
   const checkAvailability = async () => {
     if (!category?.id || !date?.from || !date?.to) {
@@ -291,16 +298,18 @@ const CategoryBookingModal: React.FC<Props> = ({ open, onOpenChange, category })
                 </Alert>
               )}
               
+              {variantError && <p role="alert">Meal-plan availability could not be verified. Please refresh before continuing.</p>}
+              {selectionInvalidated && <p role="status" className="text-sm text-amber-700">Your earlier plan or quote is no longer available. Choose an offered plan and review the total; no alternative was selected.</p>}
               <RateVariantSelector
                 variants={variants}
                 selectedVariant={selectedVariant}
-                onSelect={setSelectedVariant}
+                onSelect={variant => { setSelectedVariant(variant); setSelectionInvalidated(false); }}
                 nights={nights}
                 adultsCount={guestsForPricing}
                 childrenCount={0}
               />
               
-              {selectedVariant && (() => {
+              {selectedVariant && !variantsLoading && !variantError && variantStillOffered(selectedVariant, variants) && (() => {
                 const { adjustedTotal } = applyMealPlanAdjustment(
                   selectedVariant.total_price,
                   selectedVariant.meal_plan_code,
@@ -343,7 +352,7 @@ const CategoryBookingModal: React.FC<Props> = ({ open, onOpenChange, category })
             <Button 
               onClick={() => onOpenChange(false)} 
               className="sm:flex-1"
-              disabled={!date?.from || !date?.to || availableUnits === 0 || loading || !selectedVariant}
+              disabled={!date?.from || !date?.to || availableUnits === 0 || loading || variantsLoading || !selectedVariant || !variantStillOffered(selectedVariant, variants)}
             >
               {!selectedVariant && date?.from && date?.to && availableUnits > 0 
                 ? 'Select a Rate Plan' 

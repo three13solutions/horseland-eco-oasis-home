@@ -55,13 +55,15 @@ export async function calculateBookingQuote(db: any, raw: any, mode: 'website' |
     const { data: unit, error } = await db.from('room_units').select('id,room_type_id,is_active,status').eq('id', request.room_unit_id).maybeSingle();
     if (error || !unit || unit.room_type_id !== room.id || !unit.is_active || (unit.status === 'maintenance' || (unit.status === 'management_block' || unit.status === 'reserved'))) throw new QuoteError('ROOM_SELECTION_MISMATCH', 'The selected room unit is unavailable.');
   }
-  const { data: variants, error } = await db.rpc('calculate_rate_variants_v2', {
+  const { data: variants, error } = await db.rpc(mode === 'website' ? 'calculate_website_rate_variants' : 'calculate_rate_variants_v2', {
     p_room_type_id: request.room_type_id, p_room_unit_id: request.room_unit_id,
     p_check_in: request.check_in, p_check_out: request.check_out,
     p_adults_count: request.adults_count, p_children_count: request.children_count, p_infants_count: request.infants_count,
     p_booking_channel: 'direct',
   });
+  if (mode === 'website' && error?.code === 'P0001' && error.message?.startsWith('MEAL_PLAN_UNAVAILABLE')) throw new QuoteError('MEAL_PLAN_UNAVAILABLE', 'This meal plan is no longer available for the selected room and stay. Please choose an available plan.');
   if (error) throw new QuoteError('QUOTE_LOOKUP_FAILED', 'The rate could not be calculated. Please refresh.', 503);
+  if (mode === 'website' && Array.isArray(variants) && !variants.some(v => v.meal_plan_code === request.meal_plan_code)) throw new QuoteError('MEAL_PLAN_UNAVAILABLE', 'This meal plan is no longer available for the selected room and stay. Please choose an available plan.');
   let variant = Array.isArray(variants) ? variants.find(v => v.meal_plan_code === request.meal_plan_code && v.cancellation_policy_code === request.cancellation_policy_code) : null;
   if (!variant || !['verified', 'legacy_basis_unverified'].includes(variant.pricing_status) || !variant.quote_fingerprint) throw new QuoteError('RATE_BASIS_UNVERIFIED', 'A server-verified rate is required before booking.');
   if (!Number.isFinite(Number(variant.total_price)) || Number(variant.total_price) < 0) throw new QuoteError('INVALID_QUOTE', 'Invalid calculated room price.');
