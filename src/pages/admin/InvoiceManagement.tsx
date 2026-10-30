@@ -21,6 +21,7 @@ import {
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { format, parseISO } from 'date-fns';
+import { openInvoice } from '@/lib/invoiceTemplate';
 
 interface Invoice {
   id: string;
@@ -401,10 +402,10 @@ export default function InvoiceManagement() {
                         </TableCell>
                         <TableCell>
                           <div className="flex items-center gap-2">
-                            <Button variant="ghost" size="sm">
+                            <Button variant="ghost" size="sm" title="View invoice" onClick={() => openInvoice(invoice.id)}>
                               <Eye className="h-4 w-4" />
                             </Button>
-                            <Button variant="ghost" size="sm">
+                            <Button variant="ghost" size="sm" title="Download invoice" onClick={() => openInvoice(invoice.id, true)}>
                               <Download className="h-4 w-4" />
                             </Button>
                           </div>
