@@ -39,8 +39,9 @@ const handler = async (req: Request): Promise<Response> => {
         *,
         room_type:room_types(name, description)
       `)
-      .eq('booking_id', booking_id)
-      .single();
+      // Callers pass either the internal row id (uuid) or the public booking reference.
+      .eq(/^[0-9a-f-]{36}$/i.test(booking_id) ? 'id' : 'booking_id', booking_id)
+      .maybeSingle();
 
     if (bookingError || !booking) {
       console.error('Error fetching booking:', bookingError);
