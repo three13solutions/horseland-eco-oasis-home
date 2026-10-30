@@ -58,6 +58,7 @@ import GalleryManagement from "./pages/admin/GalleryManagement";
 import ContentManagement from "./pages/admin/ContentManagement";
 import IntegrationsManagement from "./pages/admin/IntegrationsManagement";
 import UserManagement from "./pages/admin/UserManagement";
+import EmailSettings from "./pages/admin/EmailSettings";
 import SiteSettings from "./pages/admin/SiteSettings";
 import BlogManagement from "./pages/admin/BlogManagement";
 import PageManagement from "./pages/admin/PageManagement";
@@ -167,6 +168,7 @@ function App() {
                 <Route path="faq" element={<FAQManagement />} />
                 <Route path="users" element={<UserManagement />} />
                 <Route path="settings" element={<SiteSettings />} />
+                <Route path="email" element={<EmailSettings />} />
               </Route>
               
               {/* Catch All Route */}
