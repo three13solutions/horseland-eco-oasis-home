@@ -271,10 +271,15 @@ const handler = async (req: Request): Promise<Response> => {
       html: emailHtml,
     });
 
-    console.log("Email sent successfully:", emailResponse);
+    // Resend returns { data, error } instead of throwing; surface delivery failures.
+    if ((emailResponse as any).error) {
+      console.error("Resend rejected email:", JSON.stringify((emailResponse as any).error));
+      throw new Error((emailResponse as any).error.message || "Email delivery failed");
+    }
+    console.log("Email sent successfully:", JSON.stringify(emailResponse));
 
     return new Response(
-      JSON.stringify({ success: true, email_id: emailResponse.id }),
+      JSON.stringify({ success: true, email_id: (emailResponse as any).data?.id }),
       {
         status: 200,
         headers: {
