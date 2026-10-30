@@ -42,6 +42,11 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     )
 
+    const liveKeyId = Deno.env.get('RAZORPAY_LIVE_KEY_ID')
+    if (liveKeyId && Deno.env.get('RAZORPAY_LIVE_KEY_SECRET')) {
+      return new Response(JSON.stringify({ key_id: liveKeyId.trim() }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
+    }
+
     // Get Razorpay integration
     const { data: integration } = await supabaseClient
       .from('api_integrations')

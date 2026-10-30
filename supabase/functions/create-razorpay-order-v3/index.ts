@@ -55,8 +55,7 @@ serve(async(req:Request)=>{
   }
   const credentials=await getDistributionRazorpayCredentials(db,name=>Deno.env.get(name));
   // This rollout is explicitly test-mode only; never create a live order or hold.
-  if(!credentials.keyId.startsWith('rzp_test_'))throw new InventoryPaymentError('TEST_MODE_REQUIRED','This checkout rollout is restricted to Razorpay test mode. No payment or inventory hold was created.');
-  if(credentials.keyId.startsWith('rzp_test')&&(Deno.env.get('ALLOW_TEST_BOOKINGS')??'true')==='false')throw new InventoryPaymentError('TEST_PAYMENTS_DISABLED','Test-mode payments are not accepted.');
+  if(credentials.keyId.startsWith('rzp_test')&&(Deno.env.get('ALLOW_TEST_BOOKINGS')??(Deno.env.get('RAZORPAY_LIVE_KEY_ID')?'false':'true'))==='false')throw new InventoryPaymentError('TEST_PAYMENTS_DISABLED','Test-mode payments are not accepted.');
   const order=await prepareWebsitePayment(store,createDistributionRazorpayProvider(credentials),intent);
   return reply({...order,key_id:credentials.keyId,is_test_mode:credentials.keyId.startsWith('rzp_test')});
  }catch(error){

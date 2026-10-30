@@ -5,6 +5,8 @@ type Integration = {api_integration_secrets?:{key:string;value_encrypted:string}
 type Env = (name:string)=>string|undefined;
 // Preserves the deployed encrypted integration/env precedence. Credentials never leave the server.
 export async function getDistributionRazorpayCredentials(db: CredentialDb, env: Env): Promise<{keyId:string;secret:string}> {
+ const liveId=env('RAZORPAY_LIVE_KEY_ID'),liveSecret=env('RAZORPAY_LIVE_KEY_SECRET');
+ if(liveId&&liveSecret)return {keyId:liveId.trim(),secret:liveSecret.trim()};
  try {
   const {data:integration}=await db.from('api_integrations').select('id,is_enabled,api_integration_secrets(key,value_encrypted)').eq('integration_key','razorpay').eq('is_enabled',true).single();
   const saved=integration as Integration|null;

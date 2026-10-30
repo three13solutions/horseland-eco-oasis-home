@@ -19,8 +19,7 @@ serve(async(req:Request)=>{
   if(error||!initialLookup)return reply({status:'review_required',message:'The held payment could not be read safely. Inventory remains held.'},409);
   let lookup=initialLookup;
   const credentials=await getDistributionRazorpayCredentials(db,name=>Deno.env.get(name));
-  if(!credentials.keyId.startsWith('rzp_test_'))return reply({error:'This rollout supports test payments only. Live confirmation requires a separately verified rollout.',status:'review_required',resolution_required:true},403);
-  if(credentials.keyId.startsWith('rzp_test')&&(Deno.env.get('ALLOW_TEST_BOOKINGS')??'true')==='false')return reply({status:'review_required',message:'Test-mode confirmations are disabled. Inventory remains held.'},403);
+  if(credentials.keyId.startsWith('rzp_test')&&(Deno.env.get('ALLOW_TEST_BOOKINGS')??(Deno.env.get('RAZORPAY_LIVE_KEY_ID')?'false':'true'))==='false')return reply({status:'review_required',message:'Test-mode confirmations are disabled. Inventory remains held.'},403);
   const provider=createDistributionRazorpayProvider(credentials);
   if(!lookup.provider_order_id){
    const recovered=await recoverUnknownProviderOrder(lookup as HoldPaymentLookup,provider,async(holdId,order)=>{const bound=await db.rpc('distribution_reconcile_payment_order',{p_hold_id:holdId,p_order:order});if(bound.error)throw new Error('Provider order binding was not confirmed');return bound.data;});
