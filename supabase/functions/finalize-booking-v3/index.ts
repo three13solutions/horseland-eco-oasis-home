@@ -15,8 +15,7 @@ serve(async(req:Request)=>{
   const db=createClient(Deno.env.get('SUPABASE_URL')??'',secret);
   const ownerScope=await verifyCheckoutCapability(body.checkout_token,body.request_id,secret);
   const credentials=await getDistributionRazorpayCredentials(db,name=>Deno.env.get(name));
-  if(!credentials.keyId.startsWith('rzp_test_'))return reply({error:'This rollout supports test payments only. Live confirmation requires a separately verified rollout.',status:'review_required',resolution_required:true},403);
-  if(credentials.keyId.startsWith('rzp_test')&&(Deno.env.get('ALLOW_TEST_BOOKINGS')??'true')==='false')return reply({error:'Test-mode payments are not accepted.',resolution_required:true},403);
+  if(credentials.keyId.startsWith('rzp_test')&&(Deno.env.get('ALLOW_TEST_BOOKINGS')??(Deno.env.get('RAZORPAY_LIVE_KEY_ID')?'false':'true'))==='false')return reply({error:'Test-mode payments are not accepted.',resolution_required:true},403);
   // Finalization remains available when new sales are disabled. Never abandon a paid hold.
   const result=await confirmWebsitePayment(createDistributionStore(db),createDistributionRazorpayProvider(credentials),{orderId:body.razorpay_order_id,paymentId:body.razorpay_payment_id,signature:body.razorpay_signature,ownerScope},(orderId,paymentId,signature)=>verifyDistributionPaymentSignature(credentials.secret,orderId,paymentId,signature));
   if(!result.reused){try{await db.functions.invoke('send-booking-confirmation',{body:{booking_id:result.bookingId}});}catch{/* A mail retry must not duplicate a confirmed booking or debit inventory again. */}}
