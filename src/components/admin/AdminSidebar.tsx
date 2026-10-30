@@ -25,7 +25,8 @@ import {
   DollarSign,
   Zap,
   Percent,
-  MessageCircle
+  MessageCircle,
+  Mail
 } from 'lucide-react';
 import {
   Sidebar,
@@ -232,6 +233,12 @@ const systemMenuItems = [
     label: 'FAQ Management', 
     path: '/admin/faq', 
     description: 'Manage FAQ sections' 
+  },
+  { 
+    icon: Mail, 
+    label: 'Email Settings', 
+    path: '/admin/email', 
+    description: 'Sender & templates' 
   },
   { 
     icon: SettingsIcon, 

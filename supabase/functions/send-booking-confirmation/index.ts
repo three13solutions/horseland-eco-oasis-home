@@ -263,12 +263,45 @@ const handler = async (req: Request): Promise<Response> => {
       </html>
     `;
 
-    // Send email
+    // Admin-managed sender settings and template (Admin → Email Settings); fall back to built-in HTML.
+    const { data: settings } = await supabase.from('email_settings').select('*').limit(1).maybeSingle();
+    const { data: template } = await supabase.from('email_templates').select('*')
+      .eq('template_key', 'booking_confirmation').eq('is_active', true).maybeSingle();
+
+    if (settings && settings.send_booking_confirmation === false) {
+      return new Response(JSON.stringify({ success: true, skipped: 'disabled' }),
+        { status: 200, headers: { "Content-Type": "application/json", ...corsHeaders } });
+    }
+
+    const fmtDate = (d: Date) => d.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
+    const vars: Record<string, string> = {
+      guest_name: booking.guest_name || 'Guest',
+      guest_email: booking.guest_email || '',
+      guest_phone: booking.guest_phone || '',
+      booking_id: booking.booking_id || '',
+      room_type: booking.room_type?.name || 'N/A',
+      check_in: fmtDate(checkIn),
+      check_out: fmtDate(checkOut),
+      nights: String(nights),
+      guests: String(booking.guests_count ?? ''),
+      meal_plan: booking.meal_plan_code?.replace(/_/g, ' ').toUpperCase() || 'Room Only',
+      gst_amount: formatCurrency(gstAmount),
+      total_amount: formatCurrency(booking.total_amount || 0),
+      payment_id: booking.payment_id || '',
+    };
+    const esc = (s: string) => s.replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]!));
+    const fill = (t: string, html: boolean) =>
+      t.replace(/\{\{\s*(\w+)\s*\}\}/g, (_, k) => (k in vars ? (html ? esc(vars[k]) : vars[k]) : ''));
+
+    const fromName = settings?.from_name || 'Horseland Hotel';
+    const fromEmail = settings?.from_email || 'onboarding@resend.dev';
     const emailResponse = await resend.emails.send({
-      from: "Bookings <onboarding@resend.dev>", // Update with your verified domain
+      from: `${fromName} <${fromEmail}>`,
       to: [booking.guest_email],
-      subject: `Booking Confirmation - ${booking.booking_id}`,
-      html: emailHtml,
+      ...(settings?.reply_to ? { reply_to: settings.reply_to } : {}),
+      ...(settings?.admin_notification_email ? { bcc: [settings.admin_notification_email] } : {}),
+      subject: template ? fill(template.subject, false) : `Booking Confirmation - ${booking.booking_id}`,
+      html: template ? fill(template.html_body, true) : emailHtml,
     });
 
     // Resend returns { data, error } instead of throwing; surface delivery failures.

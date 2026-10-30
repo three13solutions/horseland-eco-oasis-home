@@ -939,6 +939,66 @@ export type Database = {
         }
         Relationships: []
       }
+      email_settings: {
+        Row: {
+          admin_notification_email: string | null
+          from_email: string
+          from_name: string
+          id: string
+          reply_to: string | null
+          send_booking_confirmation: boolean
+          updated_at: string
+        }
+        Insert: {
+          admin_notification_email?: string | null
+          from_email?: string
+          from_name?: string
+          id?: string
+          reply_to?: string | null
+          send_booking_confirmation?: boolean
+          updated_at?: string
+        }
+        Update: {
+          admin_notification_email?: string | null
+          from_email?: string
+          from_name?: string
+          id?: string
+          reply_to?: string | null
+          send_booking_confirmation?: boolean
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      email_templates: {
+        Row: {
+          html_body: string
+          id: string
+          is_active: boolean
+          name: string
+          subject: string
+          template_key: string
+          updated_at: string
+        }
+        Insert: {
+          html_body: string
+          id?: string
+          is_active?: boolean
+          name: string
+          subject: string
+          template_key: string
+          updated_at?: string
+        }
+        Update: {
+          html_body?: string
+          id?: string
+          is_active?: boolean
+          name?: string
+          subject?: string
+          template_key?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       faq_categories: {
         Row: {
           created_at: string
