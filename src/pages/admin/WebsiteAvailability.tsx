@@ -124,6 +124,7 @@ export default function WebsiteAvailability() {
       <div><h1 className="text-3xl font-heading font-bold">Room Inventory</h1><p className="mt-1 text-muted-foreground">Enter how many more rooms guests can book on the website.</p></div>
       <Button asChild variant="outline"><Link to="/admin/distribution/channels">Channels</Link></Button>
     </div>
+    <DistributionHolds />
     <div className="flex gap-6 border-b"><span className="border-b-2 border-primary pb-3 font-medium text-primary">Room Inventory</span><Link className="pb-3 text-muted-foreground" to="/admin/pricing/rate-plans">Rate Plans</Link></div>
     <Alert><Info className="h-4 w-4" /><AlertDescription>Website inventory only. Offline and OTA bookings stay in your existing systems. These counts do not change any individual room’s status.</AlertDescription></Alert>
     {recovered && dirty && <Alert><Info className="h-4 w-4" /><AlertDescription>Unsaved edits were recovered from this browser session. Review all pending dates before saving; stale edits will be rejected. <Button variant="link" className="h-auto p-0" onClick={() => { setDraft({}); setInputs({}); setRecovered(false); }}>Discard recovered edits</Button></AlertDescription></Alert>}
@@ -167,7 +168,6 @@ export default function WebsiteAvailability() {
       <div><p className="font-medium">{changes.length ? `${changes.length} category/date changes to review` : 'Review your changes, then save.'}</p><p className="mt-1 flex items-center gap-2 text-sm text-muted-foreground"><ShieldCheck className="h-4 w-4 shrink-0" />Existing bookings, maintenance, management blocks and unpublished rooms stay protected.</p></div>
       <div className="flex gap-2"><Button variant="outline" disabled={save.isPending || busy} onClick={() => { if (!dirty || window.confirm('Discard all unsaved availability changes?')) { setDraft({}); setInputs({}); query.refetch(); } }}><RefreshCw className="mr-2 h-4 w-4" />{dirty ? 'Discard' : 'Refresh'}</Button><Button disabled={!enabled || !changes.length || Object.keys(inputs).length > 0 || save.isPending || busy} onClick={() => save.mutate()}>{save.isPending ? 'Saving…' : 'Save changes'}</Button></div>
     </div>
-    <DistributionHolds />
     {changes.length > 0 && <details className="rounded-md border p-4"><summary className="cursor-pointer text-sm font-medium">Review all pending changes, including dates outside this week <Badge variant="secondary" className="ml-2">{changes.length}</Badge></summary><ul className="mt-3 max-h-56 space-y-1 overflow-auto text-sm">{changes.sort((a, b) => a.date.localeCompare(b.date) || a.category_id.localeCompare(b.category_id)).map(change => <li key={cellKey(change.category_id, change.date)}>{query.data?.categories.find(c => c.id === change.category_id)?.name || change.category_id} · {change.date}: {change.remaining === 0 ? 'Sold out' : `${change.remaining} remaining rooms`}</li>)}</ul></details>}
   </div>;
 }
