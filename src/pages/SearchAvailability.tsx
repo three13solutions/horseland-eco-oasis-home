@@ -122,6 +122,15 @@ const SearchAvailability = () => {
     }
   }, []); // Empty dependency array - only run once on mount
 
+  // Crossfade banner slider between the hero images
+  useEffect(() => {
+    if (heroImages.length < 2) return;
+    const t = setInterval(() => {
+      setHeroSlide(prev => (prev + 1) % heroImages.length);
+    }, 5000);
+    return () => clearInterval(t);
+  }, []);
+
   // Set room type filter based on URL parameter
   useEffect(() => {
     if (roomTypeIdParam) {
