@@ -123,6 +123,18 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
     bookingDetails.exactStayTotal
   );
 
+  const [promoInput, setPromoInput] = useState('');
+  const [promoApplied, setPromoApplied] = useState<string | null>(null);
+  const [promoMessage, setPromoMessage] = useState<string | null>(null);
+  // TEMPORARY: live test promo. Server validates the code and sets the order to ₹1.
+  const payableAmount = promoApplied ? 1 : paymentBreakdown.totalAmount;
+  const applyPromo = async () => {
+    const code = promoInput.trim().toUpperCase();
+    const { data } = await supabase.functions.invoke('create-razorpay-order-v3', { body: { action: 'promo', promo_code: code } });
+    if (data?.valid) { setPromoApplied(code); setPromoMessage('Promo applied. Total is now ₹1.'); }
+    else setPromoMessage('This promo code is not valid.');
+  };
+
   const loadRazorpayScript = (): Promise<boolean> => {
     return new Promise((resolve) => {
       if (window.Razorpay) {
@@ -189,7 +201,7 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
             email: bookingDetails.guestEmail, phone: bookingDetails.guestPhone,
             gender: bookingDetails.guestGender || null, id_type: bookingDetails.guestIdType || null,
             id_number: bookingDetails.guestIdNumber || null };
-          const request = { amount: paymentBreakdown.totalAmount, currency: 'INR',
+          const request = { amount: payableAmount, currency: 'INR', promo_code: promoApplied || undefined,
             quote_request: bookingDetails.quoteRequest, quote_fingerprint: bookingDetails.quoteFingerprint,
             guest, booking_notes: bookingDetails.bookingNotes || null };
           const selectionKey = await checkoutSelectionKey(request);
@@ -415,8 +427,18 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
 
             <div className="flex justify-between font-semibold">
               <span>Total Amount</span>
-              <span>{formatCurrency(paymentBreakdown.totalAmount)}</span>
+              <span>{formatCurrency(payableAmount)}</span>
             </div>
+            {!reviewRequired && <div className="space-y-1 pt-2">
+              <div className="flex gap-2">
+                <input aria-label="Promo code" value={promoInput} onChange={e => setPromoInput(e.target.value)} disabled={!!promoApplied || isProcessing}
+                  placeholder="Promo code" className="flex h-9 w-full rounded-md border border-input bg-background px-3 text-sm uppercase" />
+                {promoApplied
+                  ? <Button type="button" variant="outline" size="sm" onClick={() => { setPromoApplied(null); setPromoInput(''); setPromoMessage(null); }} disabled={isProcessing}>Remove</Button>
+                  : <Button type="button" variant="outline" size="sm" onClick={applyPromo} disabled={!promoInput.trim() || isProcessing}>Apply</Button>}
+              </div>
+              {promoMessage && <p className="text-xs text-muted-foreground">{promoMessage}</p>}
+            </div>}
           </div>
 
           </>}
@@ -437,7 +459,7 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
             ) : (
               <>
                 <CreditCard className="w-4 h-4 mr-2" />
-                {reviewRequired ? 'Resume saved checkout' : checkoutReference ? 'Review saved checkout' : `Pay ${formatCurrency(paymentBreakdown.totalAmount)}`}
+                {reviewRequired ? 'Resume saved checkout' : checkoutReference ? 'Review saved checkout' : `Pay ${formatCurrency(payableAmount)}`}
               </>
             )}
           </Button>
