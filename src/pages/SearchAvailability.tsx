@@ -92,11 +92,9 @@ const SearchAvailability = () => {
   const [loading, setLoading] = useState(false);
   const [searched, setSearched] = useState(false);
   const availabilityRequest = useRef(0);
-  const heroImages = [
-    'https://mmmogqappdtnwqkvzxih.supabase.co/storage/v1/object/public/uploads/gallery/1760780895211-dftqxerpswk.png', // HotelGallery (2) - entrance
-    'https://mmmogqappdtnwqkvzxih.supabase.co/storage/v1/object/public/uploads/gallery/1760780898218-5h492e1fjtc.jpg', // HotelGallery (4) - pool & waterfall
-  ];
-  const [heroSlide, setHeroSlide] = useState(0);
+  // Single banner image: pool & waterfall (HotelGallery 4)
+  const heroImage =
+    'https://mmmogqappdtnwqkvzxih.supabase.co/storage/v1/object/public/uploads/gallery/1760780898218-5h492e1fjtc.jpg';
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
 
   // Popover states for auto-advance
@@ -122,14 +120,6 @@ const SearchAvailability = () => {
     }
   }, []); // Empty dependency array - only run once on mount
 
-  // Crossfade banner slider between the hero images
-  useEffect(() => {
-    if (heroImages.length < 2) return;
-    const t = setInterval(() => {
-      setHeroSlide(prev => (prev + 1) % heroImages.length);
-    }, 5000);
-    return () => clearInterval(t);
-  }, []);
 
   // Set room type filter based on URL parameter
   useEffect(() => {
