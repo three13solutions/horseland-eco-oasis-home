@@ -92,7 +92,11 @@ const SearchAvailability = () => {
   const [loading, setLoading] = useState(false);
   const [searched, setSearched] = useState(false);
   const availabilityRequest = useRef(0);
-  const [heroImage] = useState('https://mmmogqappdtnwqkvzxih.supabase.co/storage/v1/object/public/uploads/gallery/1760780895211-dftqxerpswk.png');
+  const heroImages = [
+    'https://mmmogqappdtnwqkvzxih.supabase.co/storage/v1/object/public/uploads/gallery/1760780895211-dftqxerpswk.png', // HotelGallery (2) - entrance
+    'https://mmmogqappdtnwqkvzxih.supabase.co/storage/v1/object/public/uploads/gallery/1760780898218-5h492e1fjtc.jpg', // HotelGallery (4) - pool & waterfall
+  ];
+  const [heroSlide, setHeroSlide] = useState(0);
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
 
   // Popover states for auto-advance
@@ -117,6 +121,15 @@ const SearchAvailability = () => {
       handleSearch(true);
     }
   }, []); // Empty dependency array - only run once on mount
+
+  // Crossfade banner slider between the hero images
+  useEffect(() => {
+    if (heroImages.length < 2) return;
+    const t = setInterval(() => {
+      setHeroSlide(prev => (prev + 1) % heroImages.length);
+    }, 5000);
+    return () => clearInterval(t);
+  }, []);
 
   // Set room type filter based on URL parameter
   useEffect(() => {
@@ -268,11 +281,19 @@ const SearchAvailability = () => {
 
         <section className="relative h-[40vh] min-h-[300px] flex items-center justify-center">
           <div 
-            className="absolute inset-0 bg-cover bg-center bg-no-repeat"
-            style={{
-              backgroundImage: `url('${heroImage}')`
-            }}
+            className="absolute inset-0 bg-no-repeat"
+            style={{ backgroundPosition: 'center', backgroundSize: 'cover' }}
           >
+            {heroImages.map((img, i) => (
+              <div
+                key={img}
+                className="absolute inset-0 bg-cover bg-center bg-no-repeat transition-opacity duration-1000 ease-in-out"
+                style={{
+                  backgroundImage: `url('${img}')`,
+                  opacity: heroSlide === i ? 1 : 0,
+                }}
+              />
+            ))}
             <div className="absolute inset-0 bg-black/40"></div>
           </div>
           
