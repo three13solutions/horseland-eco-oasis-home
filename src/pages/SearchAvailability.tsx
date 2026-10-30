@@ -281,11 +281,19 @@ const SearchAvailability = () => {
 
         <section className="relative h-[40vh] min-h-[300px] flex items-center justify-center">
           <div 
-            className="absolute inset-0 bg-cover bg-center bg-no-repeat"
-            style={{
-              backgroundImage: `url('${heroImage}')`
-            }}
+            className="absolute inset-0 bg-no-repeat"
+            style={{ backgroundPosition: 'center', backgroundSize: 'cover' }}
           >
+            {heroImages.map((img, i) => (
+              <div
+                key={img}
+                className="absolute inset-0 bg-cover bg-center bg-no-repeat transition-opacity duration-1000 ease-in-out"
+                style={{
+                  backgroundImage: `url('${img}')`,
+                  opacity: heroSlide === i ? 1 : 0,
+                }}
+              />
+            ))}
             <div className="absolute inset-0 bg-black/40"></div>
           </div>
           
