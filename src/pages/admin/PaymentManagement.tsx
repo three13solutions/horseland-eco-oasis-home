@@ -122,9 +122,6 @@ export default function PaymentManagement() {
             booking_id,
             guest_name,
             guest_email
-          ),
-          admin_profiles:received_by (
-            email
           )
         `)
         .order('created_at', { ascending: false });
