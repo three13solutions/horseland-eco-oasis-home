@@ -92,7 +92,11 @@ const SearchAvailability = () => {
   const [loading, setLoading] = useState(false);
   const [searched, setSearched] = useState(false);
   const availabilityRequest = useRef(0);
-  const [heroImage] = useState('https://mmmogqappdtnwqkvzxih.supabase.co/storage/v1/object/public/uploads/gallery/1760780895211-dftqxerpswk.png');
+  const heroImages = [
+    'https://mmmogqappdtnwqkvzxih.supabase.co/storage/v1/object/public/uploads/gallery/1760780895211-dftqxerpswk.png', // HotelGallery (2) - entrance
+    'https://mmmogqappdtnwqkvzxih.supabase.co/storage/v1/object/public/uploads/gallery/1760780898218-5h492e1fjtc.jpg', // HotelGallery (4) - pool & waterfall
+  ];
+  const [heroSlide, setHeroSlide] = useState(0);
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
 
   // Popover states for auto-advance
