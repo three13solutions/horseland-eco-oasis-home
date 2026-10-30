@@ -124,6 +124,7 @@ export default function WebsiteAvailability() {
       <div><h1 className="text-3xl font-heading font-bold">Room Inventory</h1><p className="mt-1 text-muted-foreground">Enter how many more rooms guests can book on the website.</p></div>
       <Button asChild variant="outline"><Link to="/admin/distribution/channels">Channels</Link></Button>
     </div>
+    <DistributionHolds />
     <div className="flex gap-6 border-b"><span className="border-b-2 border-primary pb-3 font-medium text-primary">Room Inventory</span><Link className="pb-3 text-muted-foreground" to="/admin/pricing/rate-plans">Rate Plans</Link></div>
     <Alert><Info className="h-4 w-4" /><AlertDescription>Website inventory only. Offline and OTA bookings stay in your existing systems. These counts do not change any individual room’s status.</AlertDescription></Alert>
     {recovered && dirty && <Alert><Info className="h-4 w-4" /><AlertDescription>Unsaved edits were recovered from this browser session. Review all pending dates before saving; stale edits will be rejected. <Button variant="link" className="h-auto p-0" onClick={() => { setDraft({}); setInputs({}); setRecovered(false); }}>Discard recovered edits</Button></AlertDescription></Alert>}

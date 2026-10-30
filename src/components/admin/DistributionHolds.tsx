@@ -36,7 +36,7 @@ export default function DistributionHolds() {
     else toast.info(result.message || 'Payment is not confirmed. Inventory remains held.');
   }, onError: (error: Error) => toast.error(`Check not confirmed: ${error.message}. Inventory has not been released.`) });
 
-  return <details className="rounded-lg border bg-card p-4">
+  return <details open={(query.data?.length ?? 0) > 0} className="rounded-lg border bg-card p-4">
     <summary className="flex cursor-pointer items-center gap-2 font-medium"><Clock3 className="h-4 w-4" />Checkout holds <Badge variant="secondary">{query.data?.length ?? '…'}</Badge></summary>
     <div className="mt-4 space-y-4">
       <Alert><ShieldCheck className="h-4 w-4" /><AlertDescription>A payment attempt holds an eligible room and its category inventory. Closing checkout or an elapsed timer does not release it. Check payment status to finalise a verified paid checkout; unpaid or uncertain orders remain held for reconciliation.</AlertDescription></Alert>
