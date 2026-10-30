@@ -701,6 +701,7 @@ export type Database = {
           adjustment_type: string
           adjustment_value: number
           applies_to: string
+          channel_id: string
           channel_name: string
           created_at: string | null
           id: string
@@ -713,6 +714,7 @@ export type Database = {
           adjustment_type: string
           adjustment_value: number
           applies_to: string
+          channel_id: string
           channel_name: string
           created_at?: string | null
           id?: string
@@ -725,6 +727,7 @@ export type Database = {
           adjustment_type?: string
           adjustment_value?: number
           applies_to?: string
+          channel_id?: string
           channel_name?: string
           created_at?: string | null
           id?: string
@@ -734,6 +737,13 @@ export type Database = {
           updated_at?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "channel_rules_channel_id_fkey"
+            columns: ["channel_id"]
+            isOneToOne: false
+            referencedRelation: "distribution_channels"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "channel_rules_room_type_id_fkey"
             columns: ["room_type_id"]
@@ -893,6 +903,39 @@ export type Database = {
           is_active?: boolean
           name?: string
           slug?: string
+        }
+        Relationships: []
+      }
+      distribution_channels: {
+        Row: {
+          code: string
+          created_at: string
+          id: string
+          is_active: boolean
+          kind: string
+          name: string
+          notes: string
+          updated_at: string
+        }
+        Insert: {
+          code: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          kind: string
+          name: string
+          notes?: string
+          updated_at?: string
+        }
+        Update: {
+          code?: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          kind?: string
+          name?: string
+          notes?: string
+          updated_at?: string
         }
         Relationships: []
       }
@@ -2355,6 +2398,7 @@ export type Database = {
           los_min_nights: number | null
           max_nights: number | null
           min_nights: number
+          modifier_policy: string
           name: string
           priority: number
           quoted_nights: number
@@ -2383,6 +2427,7 @@ export type Database = {
           los_min_nights?: number | null
           max_nights?: number | null
           min_nights?: number
+          modifier_policy?: string
           name: string
           priority?: number
           quoted_nights?: number
@@ -2411,6 +2456,7 @@ export type Database = {
           los_min_nights?: number | null
           max_nights?: number | null
           min_nights?: number
+          modifier_policy?: string
           name?: string
           priority?: number
           quoted_nights?: number
@@ -2523,7 +2569,6 @@ export type Database = {
       room_types: {
         Row: {
           availability_calendar: Json | null
-          pricing_status: string
           base_price: number | null
           category_id: string | null
           created_at: string
@@ -2537,12 +2582,12 @@ export type Database = {
           is_published: boolean
           max_guests: number
           name: string
+          pricing_status: string
           seasonal_pricing: Json | null
           updated_at: string
         }
         Insert: {
           availability_calendar?: Json | null
-          pricing_status?: string
           base_price?: number | null
           category_id?: string | null
           created_at?: string
@@ -2556,12 +2601,12 @@ export type Database = {
           is_published?: boolean
           max_guests?: number
           name: string
+          pricing_status?: string
           seasonal_pricing?: Json | null
           updated_at?: string
         }
         Update: {
           availability_calendar?: Json | null
-          pricing_status?: string
           base_price?: number | null
           category_id?: string | null
           created_at?: string
@@ -2575,6 +2620,7 @@ export type Database = {
           is_published?: boolean
           max_guests?: number
           name?: string
+          pricing_status?: string
           seasonal_pricing?: Json | null
           updated_at?: string
         }
@@ -3067,11 +3113,158 @@ export type Database = {
         }
         Relationships: []
       }
+      website_meal_visibility_plans: {
+        Row: {
+          meal_plan_id: string
+          rule_id: string
+        }
+        Insert: {
+          meal_plan_id: string
+          rule_id: string
+        }
+        Update: {
+          meal_plan_id?: string
+          rule_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "website_meal_visibility_plans_meal_plan_id_fkey"
+            columns: ["meal_plan_id"]
+            isOneToOne: false
+            referencedRelation: "meal_plan_rules"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "website_meal_visibility_plans_rule_id_fkey"
+            columns: ["rule_id"]
+            isOneToOne: false
+            referencedRelation: "website_meal_visibility_rules"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      website_meal_visibility_rules: {
+        Row: {
+          create_payload: Json
+          created_at: string
+          created_by: string
+          end_date: string | null
+          id: string
+          is_active: boolean
+          name: string
+          revision: number
+          scope_kind: string
+          start_date: string | null
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          create_payload: Json
+          created_at?: string
+          created_by: string
+          end_date?: string | null
+          id?: string
+          is_active?: boolean
+          name: string
+          revision?: number
+          scope_kind: string
+          start_date?: string | null
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          create_payload?: Json
+          created_at?: string
+          created_by?: string
+          end_date?: string | null
+          id?: string
+          is_active?: boolean
+          name?: string
+          revision?: number
+          scope_kind?: string
+          start_date?: string | null
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: []
+      }
+      website_meal_visibility_types: {
+        Row: {
+          room_type_id: string
+          rule_id: string
+        }
+        Insert: {
+          room_type_id: string
+          rule_id: string
+        }
+        Update: {
+          room_type_id?: string
+          rule_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "website_meal_visibility_types_room_type_id_fkey"
+            columns: ["room_type_id"]
+            isOneToOne: false
+            referencedRelation: "room_types"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "website_meal_visibility_types_rule_id_fkey"
+            columns: ["rule_id"]
+            isOneToOne: false
+            referencedRelation: "website_meal_visibility_rules"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      website_meal_visibility_units: {
+        Row: {
+          room_unit_id: string
+          rule_id: string
+        }
+        Insert: {
+          room_unit_id: string
+          rule_id: string
+        }
+        Update: {
+          room_unit_id?: string
+          rule_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "website_meal_visibility_units_room_unit_id_fkey"
+            columns: ["room_unit_id"]
+            isOneToOne: false
+            referencedRelation: "room_units"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "website_meal_visibility_units_rule_id_fkey"
+            columns: ["rule_id"]
+            isOneToOne: false
+            referencedRelation: "website_meal_visibility_rules"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
+      apply_accommodation_modifiers: {
+        Args: {
+          p_channel: string
+          p_date: string
+          p_extra_accommodation: number
+          p_included_fb_meals: number
+          p_room_only: number
+          p_room_type_id: string
+          p_room_unit_id: string
+        }
+        Returns: Json
+      }
       calculate_booking_total:
         | {
             Args: {
@@ -3213,6 +3406,19 @@ export type Database = {
         }
         Returns: Json
       }
+      calculate_website_rate_variants: {
+        Args: {
+          p_adults_count?: number
+          p_booking_channel?: string
+          p_check_in: string
+          p_check_out: string
+          p_children_count?: number
+          p_infants_count?: number
+          p_room_type_id: string
+          p_room_unit_id?: string
+        }
+        Returns: Json
+      }
       check_room_availability: {
         Args: {
           p_check_in: string
@@ -3223,6 +3429,80 @@ export type Database = {
           available_units: number
           unit_ids: string[]
         }[]
+      }
+      clear_room_type_pricing: {
+        Args: {
+          p_confirmation_name: string
+          p_expected_fingerprint: string
+          p_type_id: string
+        }
+        Returns: Json
+      }
+      distribution_admin_reconciliation_intent: {
+        Args: { p_hold_id: string }
+        Returns: Json
+      }
+      distribution_backfill_existing_bookings: { Args: never; Returns: Json }
+      distribution_begin_payment_intent: {
+        Args: { p_intent: Json }
+        Returns: Json
+      }
+      distribution_bind_payment_order: {
+        Args: { p_operation_token: string; p_order: Json; p_record: Json }
+        Returns: undefined
+      }
+      distribution_checkout_state: { Args: never; Returns: Json }
+      distribution_close_unused_checkout: {
+        Args: { p_owner_scope: string; p_request_id: string }
+        Returns: boolean
+      }
+      distribution_confirm_captured_payment: {
+        Args: { p_payment: Json; p_record: Json }
+        Returns: Json
+      }
+      distribution_find_bound_order: {
+        Args: { p_order_id: string; p_owner_scope: string }
+        Returns: Json
+      }
+      distribution_get_hold_payment_record: {
+        Args: { p_hold_id: string }
+        Returns: Json
+      }
+      distribution_hold_website_inventory: {
+        Args: {
+          p_check_in: string
+          p_check_out: string
+          p_request_id: string
+          p_type: string
+          p_unit?: string
+        }
+        Returns: Json
+      }
+      distribution_inventory_activation_audit: { Args: never; Returns: Json }
+      distribution_inventory_grid: {
+        Args: { p_end: string; p_start: string }
+        Returns: Json
+      }
+      distribution_mark_payment_unknown: {
+        Args: { p_reason: string; p_record: Json }
+        Returns: undefined
+      }
+      distribution_pending_holds: { Args: never; Returns: Json }
+      distribution_reconcile_payment_order: {
+        Args: { p_hold_id: string; p_order: Json }
+        Returns: Json
+      }
+      distribution_resume_checkout: {
+        Args: { p_owner_scope: string; p_request_id: string }
+        Returns: Json
+      }
+      distribution_resume_payment_intent: {
+        Args: { p_owner_scope: string; p_request_id: string }
+        Returns: Json
+      }
+      distribution_website_type_availability: {
+        Args: { p_check_in: string; p_check_out: string; p_type: string }
+        Returns: number
       }
       generate_invoice_number: { Args: never; Returns: string }
       get_base_price_for_date: {
@@ -3239,6 +3519,10 @@ export type Database = {
         Args: { p_guest_id: string }
         Returns: number
       }
+      get_room_type_pricing_cleanup_preview: {
+        Args: { p_type_id: string }
+        Returns: Json
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -3250,6 +3534,7 @@ export type Database = {
       is_admin_new: { Args: never; Returns: boolean }
       is_super_admin: { Args: never; Returns: boolean }
       is_super_admin_new: { Args: never; Returns: boolean }
+      list_website_meal_visibility_rules: { Args: never; Returns: Json }
       log_admin_action: {
         Args: {
           action_type: string
@@ -3261,6 +3546,20 @@ export type Database = {
         Returns: undefined
       }
       rate_override_disabled: { Args: { p_id: string }; Returns: boolean }
+      resolve_distribution_channel_id: {
+        Args: { p_channel: string }
+        Returns: string
+      }
+      room_type_has_pricing: { Args: { p_type: string }; Returns: boolean }
+      save_distribution_inventory: {
+        Args: { p_changes: Json; p_request_id: string }
+        Returns: Json
+      }
+      save_website_meal_visibility_rule: {
+        Args: { p_expected_revision?: number; p_rule: Json }
+        Returns: Json
+      }
+      unit_has_direct_pricing: { Args: { p_unit: string }; Returns: boolean }
     }
     Enums: {
       app_role: "super_admin" | "admin" | "content_editor"
