@@ -37,6 +37,9 @@ serve(async(req:Request)=>{
    const status=classifySavedCheckout({...r,orderId:entry.provider_order_id},order,payments);
    return reply({...base,state:status,order:{id:order.id,amount:order.amount,currency:order.currency},key_id:credentials.keyId,is_test_mode:credentials.keyId.startsWith('rzp_test')});
   }
+  // TEMPORARY live-test promo: sets the charge to ₹1 (Razorpay minimum). Remove after testing.
+  const promo=typeof body.promo_code==='string'&&body.promo_code.trim().toUpperCase()==='HLTEST1';
+  if(body.action==='promo')return reply({valid:promo});
   const {data:state,error:stateError}=await db.rpc('distribution_checkout_state');
   if(stateError||state?.enabled!==true)throw new InventoryPaymentError('INVENTORY_NOT_ACTIVE','The new inventory checkout is not active. Refresh before starting a payment.');
   if(body.action==='session')return reply({request_id:body.request_id,checkout_token:await issueCheckoutCapability(body.request_id,secret)});
@@ -47,11 +50,12 @@ serve(async(req:Request)=>{
   if((body.currency??'INR')!=='INR')throw new QuoteError('INVALID_CURRENCY','Only INR is supported.',400);
   const store=createDistributionStore(db);
   let intent=await store.resume(body.request_id,ownerScope);
-  if(intent){assertResumeMatches(intent,{request,metadata,amount:body.amount,fingerprint:body.quote_fingerprint});}
+  if(intent){assertResumeMatches(intent,{request,metadata,amount:promo?1:body.amount,fingerprint:body.quote_fingerprint});}
   else{
    const snapshot=await calculateBookingQuote(db,request,'website');
-   assertQuoteMatches(snapshot,body.amount,body.quote_fingerprint);
-   intent={requestId:body.request_id,ownerScope,quoteFingerprint:snapshot.variant.quote_fingerprint,amountPaise:Math.round(snapshot.total_amount*100),currency:'INR',selection:{roomTypeId:request.room_type_id,unitId:request.room_unit_id,checkIn:request.check_in,checkOut:request.check_out},quoteSnapshot:snapshot,bookingMetadata:metadata,admission:await admissionIdentity(req.headers,metadata,secret,ownerScope)} as PaymentIntent;
+   if(promo&&body.amount!==1)throw new QuoteError('QUOTE_CHANGED','Promo total mismatch.',409);
+   assertQuoteMatches(snapshot,promo?snapshot.total_amount:body.amount,body.quote_fingerprint);
+   intent={requestId:body.request_id,ownerScope,quoteFingerprint:snapshot.variant.quote_fingerprint,amountPaise:promo?100:Math.round(snapshot.total_amount*100),currency:'INR',selection:{roomTypeId:request.room_type_id,unitId:request.room_unit_id,checkIn:request.check_in,checkOut:request.check_out},quoteSnapshot:snapshot,bookingMetadata:metadata,admission:await admissionIdentity(req.headers,metadata,secret,ownerScope)} as PaymentIntent;
   }
   const credentials=await getDistributionRazorpayCredentials(db,name=>Deno.env.get(name));
   // This rollout is explicitly test-mode only; never create a live order or hold.
