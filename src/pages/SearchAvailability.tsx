@@ -92,7 +92,7 @@ const SearchAvailability = () => {
   const [loading, setLoading] = useState(false);
   const [searched, setSearched] = useState(false);
   const availabilityRequest = useRef(0);
-  const [heroImage] = useState('https://images.unsplash.com/photo-1571896349842-33c89424de2d?ixlib=rb-4.0.3&auto=format&fit=crop&w=2000&q=80');
+  const [heroImage] = useState('https://mmmogqappdtnwqkvzxih.supabase.co/storage/v1/object/public/uploads/gallery/1760780895211-dftqxerpswk.png');
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
 
   // Popover states for auto-advance
