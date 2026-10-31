@@ -149,36 +149,45 @@ export type Database = {
       admin_audit_log: {
         Row: {
           action: string
+          actor_email: string | null
+          actor_name: string | null
           admin_user_id: string
           created_at: string
           id: string
           ip_address: unknown
           new_values: Json | null
           old_values: Json | null
+          record_key: string | null
           target_id: string | null
           target_table: string | null
           user_agent: string | null
         }
         Insert: {
           action: string
+          actor_email?: string | null
+          actor_name?: string | null
           admin_user_id: string
           created_at?: string
           id?: string
           ip_address?: unknown
           new_values?: Json | null
           old_values?: Json | null
+          record_key?: string | null
           target_id?: string | null
           target_table?: string | null
           user_agent?: string | null
         }
         Update: {
           action?: string
+          actor_email?: string | null
+          actor_name?: string | null
           admin_user_id?: string
           created_at?: string
           id?: string
           ip_address?: unknown
           new_values?: Json | null
           old_values?: Json | null
+          record_key?: string | null
           target_id?: string | null
           target_table?: string | null
           user_agent?: string | null

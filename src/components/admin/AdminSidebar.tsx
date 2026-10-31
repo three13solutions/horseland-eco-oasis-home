@@ -26,7 +26,8 @@ import {
   Zap,
   Percent,
   MessageCircle,
-  Mail
+  Mail,
+  History
 } from 'lucide-react';
 import {
   Sidebar,
@@ -239,6 +240,12 @@ const systemMenuItems = [
     label: 'Email Settings', 
     path: '/admin/email', 
     description: 'Sender & templates' 
+  },
+  { 
+    icon: History, 
+    label: 'Activity Logs', 
+    path: '/admin/activity-logs', 
+    description: 'Audit trail of changes' 
   },
   { 
     icon: SettingsIcon, 
