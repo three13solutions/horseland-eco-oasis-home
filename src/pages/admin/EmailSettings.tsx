@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import DOMPurify from 'dompurify';
+import { FunctionsHttpError } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -11,18 +12,14 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { EMAIL_PLACEHOLDERS, EMAIL_TRIGGERS } from '../../../supabase/functions/_shared/guestEmail';
+import { EMAIL_TEST_SAMPLE, validateEmailTest } from '../../../supabase/functions/_shared/guestEmailTest';
 import { useToast } from '@/hooks/use-toast';
-import { Mail, Save } from 'lucide-react';
+import { Mail, Save, Send, Loader2 } from 'lucide-react';
 
 const db = supabase as any;
 
 const PLACEHOLDERS = EMAIL_PLACEHOLDERS;
-const SAMPLE: Record<string, string> = {
-  guest_name: 'Priya Sharma', guest_email: 'priya@example.com', guest_phone: '+91 98765 43210',
-  booking_id: 'HL-SAMPLE123', room_type: 'Deluxe', check_in: '10 Dec 2026', check_out: '12 Dec 2026',
-  nights: '2', guests: '2', meal_plan: 'ROOM ONLY', gst_amount: '₹573.30', total_amount: '₹5,350.60', payment_id: 'pay_SAMPLE',
-  payment_amount: '₹5,350.60', refund_amount: '₹5,350.60', payment_order_id: 'order_SAMPLE',
-};
+const SAMPLE = EMAIL_TEST_SAMPLE;
 const fill = (t: string) => t.replace(/\{\{\s*(\w+)\s*\}\}/g, (_, k) => SAMPLE[k] ?? '');
 
 const EmailSettings = () => {
@@ -32,6 +29,9 @@ const EmailSettings = () => {
   const [activeId, setActiveId] = useState<string>('');
   const [saving, setSaving] = useState(false);
   const [loadError, setLoadError] = useState('');
+  const [testRecipient, setTestRecipient] = useState('');
+  const [sendingTest, setSendingTest] = useState(false);
+  const [testResult, setTestResult] = useState<{ error: boolean; message: string } | null>(null);
 
   useEffect(() => {
     (async () => {
@@ -72,6 +72,39 @@ const EmailSettings = () => {
     }).eq('id', active.id);
     setSaving(false);
     toast(error ? { title: 'Could not save', description: error.message, variant: 'destructive' } : { title: 'Template saved' });
+  };
+
+  const sendTestEmail = async () => {
+    if (!active || sendingTest) return;
+    const body = { template_id: active.id, to: testRecipient.trim(), subject: active.subject, html_body: active.html_body };
+    if (!validateEmailTest(body)) {
+      setTestResult({ error: true, message: 'Enter a valid recipient email, subject and email body.' });
+      return;
+    }
+    setSendingTest(true);
+    setTestResult(null);
+    try {
+      const { data, error } = await supabase.functions.invoke('send-template-test', { body });
+      if (error) {
+        let message = error.message;
+        if (error instanceof FunctionsHttpError) {
+          const raw = await error.context.text();
+          try {
+            const details = JSON.parse(raw);
+            let providerMessage = '';
+            if (details.details) {
+              try { providerMessage = JSON.parse(details.details).message || details.details; } catch { providerMessage = details.details; }
+            }
+            message = providerMessage || details.error || message;
+          } catch { message = raw || message; }
+        }
+        throw new Error(message);
+      }
+      if (!data?.success) throw new Error(data?.error || 'Could not send test email');
+      setTestResult({ error: false, message: `Test email accepted for ${body.to}. Check the inbox and spam folder.` });
+    } catch (error) {
+      setTestResult({ error: true, message: error instanceof Error ? error.message : 'Could not send test email' });
+    } finally { setSendingTest(false); }
   };
 
   if (loadError) return <div className="p-6 text-destructive" role="alert">{loadError}</div>;
@@ -126,7 +159,7 @@ const EmailSettings = () => {
         <TabsContent value="templates" className="space-y-4">
           <div className="max-w-xl space-y-1.5">
             <Label htmlFor="email-category">Email Category</Label>
-            <Select value={activeId} onValueChange={setActiveId}>
+            <Select value={activeId} onValueChange={id => { setActiveId(id); setTestResult(null); }} disabled={sendingTest}>
               <SelectTrigger id="email-category"><SelectValue placeholder="Select email category" /></SelectTrigger>
               <SelectContent>{templates.map(t => <SelectItem key={t.id} value={t.id}>{t.name}</SelectItem>)}</SelectContent>
             </Select>
@@ -175,7 +208,18 @@ const EmailSettings = () => {
                   <CardTitle className="text-lg">Preview</CardTitle>
                   <CardDescription>Subject: {fill(active.subject)}</CardDescription>
                 </CardHeader>
-                <CardContent>
+                <CardContent className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="test-email-recipient">Test Email Recipient</Label>
+                    <div className="flex flex-col sm:flex-row gap-2">
+                      <Input id="test-email-recipient" type="email" placeholder="you@example.com" value={testRecipient} onChange={e => { setTestRecipient(e.target.value); setTestResult(null); }} disabled={sendingTest} />
+                      <Button variant="outline" className="shrink-0" onClick={sendTestEmail} disabled={sendingTest || !testRecipient.trim()}>
+                        {sendingTest ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Send className="mr-2 h-4 w-4" />}
+                        {sendingTest ? 'Sending…' : 'Send Test Email'}
+                      </Button>
+                    </div>
+                    {testResult && <p role={testResult.error ? 'alert' : 'status'} className={`text-sm break-words ${testResult.error ? 'text-destructive' : 'text-muted-foreground'}`}>{testResult.message}</p>}
+                  </div>
                   <iframe title="Email preview" sandbox="" srcDoc={preview} className="w-full h-[720px] rounded-md border bg-background" />
                 </CardContent>
               </Card>

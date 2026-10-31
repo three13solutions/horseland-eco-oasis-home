@@ -1,5 +1,8 @@
 # Roadmap
 
+- [x] Add a recipient field and Send Test Email control for every email category using current draft and sample data.
+- [ ] Deploy and validate protected test sending (real inbox delivery requires configured Resend sender and an admin session).
+
 - [x] Add ten guest email categories, editing, previews and automatic trigger controls.
 - [x] Connect Resend event notifications and scheduled stay reminders with duplicate protection.
 - [x] Verify email rules, protected access, deployed worker and active hourly schedule (8 tests pass).
