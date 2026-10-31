@@ -19,8 +19,16 @@ type Log = {
   actor_email: string | null; actor_name: string | null; created_at: string;
 };
 
+const MODULE_NAMES: Record<string, string> = {
+  inventory_days: 'Room Inventory', adjustments: 'Room Inventory Adjustments', settings: 'Room Inventory Settings',
+  reservations: 'Room Inventory Reservations', room_categories: 'Room Categories', room_types: 'Room Types',
+  room_units: 'Room Units', rate_plan_anchors: 'Pricing (Rate Plans)', rate_plan_anchor_versions: 'Pricing (Rate Plan History)',
+  tactical_overrides: 'Pricing (Rate Overrides)', seasonal_pricing: 'Pricing (Seasonal)', pricing_constraints: 'Pricing (Constraints)',
+  occupancy_yield_rules: 'Pricing (Occupancy Rules)', lead_time_rules: 'Pricing (Lead Time Rules)', gst_tiers: 'GST Tiers',
+  spa_services: 'Spa Services', addons: 'Add-on Services', activities: 'Activities', meals: 'Meals',
+};
 export const moduleLabel = (t?: string | null) =>
-  (t || 'unknown').split('_').map((w) => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
+  (t && MODULE_NAMES[t]) || (t || 'unknown').split('_').map((w) => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
 
 const ACTION_LABEL: Record<string, string> = { insert: 'Added', update: 'Updated', delete: 'Deleted' };
 const actionVariant = (a: string) => (a === 'delete' ? 'destructive' : a === 'insert' ? 'default' : 'secondary') as any;
