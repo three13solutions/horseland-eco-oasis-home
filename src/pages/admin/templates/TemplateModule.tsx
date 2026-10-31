@@ -172,7 +172,7 @@ const TemplateModule = ({ module }: { module: TemplateModuleKey }) => {
             </Card>
           ) : (
           <>
-
+            <div className="flex flex-wrap items-center gap-2">
             {templates.map((t) => (
               <Button key={t.id} variant={t.id === activeId ? 'default' : 'outline'} size="sm" onClick={() => setActiveId(t.id)}>
                 {t.is_default && <Star className="h-3 w-3 mr-1 fill-current" />}{t.name}
