@@ -10,7 +10,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
-import { FileText, Receipt, MessageCircle, MessageSquare, Plus, Save, Trash2, Star, type LucideIcon } from 'lucide-react';
+import { FileText, Receipt, MessageCircle, MessageSquare, Plus, Save, Trash2, Star, Clock, type LucideIcon } from 'lucide-react';
 
 const db = supabase as any;
 
@@ -28,7 +28,7 @@ const SAMPLE: Record<string, string> = {
 
 const COMMON = ['guest_name', 'guest_email', 'guest_phone', 'booking_id', 'room_type', 'check_in', 'check_out', 'nights', 'guests', 'total_amount'];
 
-const CONFIG: Record<TemplateModuleKey, { title: string; description: string; icon: LucideIcon; html: boolean; subject: boolean; placeholders: string[]; settings: SettingField[]; charLimit?: number }> = {
+const CONFIG: Record<TemplateModuleKey, { title: string; description: string; icon: LucideIcon; html: boolean; subject: boolean; placeholders: string[]; settings: SettingField[]; charLimit?: number; comingSoon?: boolean }> = {
   invoice: {
     title: 'Invoice Templates', description: 'Layouts used for guest tax invoices', icon: FileText, html: true, subject: true,
     placeholders: ['invoice_number', ...COMMON, 'meal_plan', 'subtotal', 'gst_amount'],
@@ -50,7 +50,7 @@ const CONFIG: Record<TemplateModuleKey, { title: string; description: string; ic
   },
   whatsapp: {
     title: 'WhatsApp Templates', description: 'Messages sent to guests on WhatsApp', icon: MessageCircle, html: false, subject: false,
-    placeholders: [...COMMON, 'payment_id'], charLimit: 1024,
+    placeholders: [...COMMON, 'payment_id'], charLimit: 1024, comingSoon: true,
     settings: [
       { key: 'business_number', label: 'WhatsApp Business Number', type: 'text', placeholder: '+91 88791 92885' },
       { key: 'enabled', label: 'Enable WhatsApp messages', type: 'switch', help: 'Requires a WhatsApp Business provider to be connected before messages are actually sent.' },
@@ -59,7 +59,7 @@ const CONFIG: Record<TemplateModuleKey, { title: string; description: string; ic
   },
   sms: {
     title: 'SMS Templates', description: 'Text messages sent to guests', icon: MessageSquare, html: false, subject: false,
-    placeholders: [...COMMON], charLimit: 160,
+    placeholders: [...COMMON], charLimit: 160, comingSoon: true,
     settings: [
       { key: 'sender_id', label: 'Sender ID', type: 'text', placeholder: 'HRSLND', help: '6-character DLT-registered sender ID.' },
       { key: 'dlt_entity_id', label: 'DLT Entity ID', type: 'text', placeholder: 'Optional' },
@@ -160,7 +160,21 @@ const TemplateModule = ({ module }: { module: TemplateModuleKey }) => {
         </TabsList>
 
         <TabsContent value="templates" className="space-y-4">
-          <div className="flex flex-wrap items-center gap-2">
+          {cfg.comingSoon && (
+            <Card>
+              <CardContent className="flex flex-col items-center justify-center gap-3 py-20 text-center">
+                <Clock className="h-10 w-10 text-muted-foreground" />
+                <p className="text-lg font-medium">Coming Soon</p>
+                <p className="max-w-md text-sm text-muted-foreground">
+                  {cfg.title.replace(' Templates', '')} template editing will be available in a future update. In the meantime, you can adjust settings under the Configuration tab.
+                </p>
+              </CardContent>
+            </Card>
+          )}
+
+          {!cfg.comingSoon && (
+          <>
+            <div className="flex flex-wrap items-center gap-2">
             {templates.map((t) => (
               <Button key={t.id} variant={t.id === activeId ? 'default' : 'outline'} size="sm" onClick={() => setActiveId(t.id)}>
                 {t.is_default && <Star className="h-3 w-3 mr-1 fill-current" />}{t.name}
@@ -168,6 +182,7 @@ const TemplateModule = ({ module }: { module: TemplateModuleKey }) => {
             ))}
             <Button size="sm" variant="secondary" onClick={createTemplate}><Plus className="h-4 w-4 mr-1" />New Template</Button>
           </div>
+
 
           {!active ? (
             <Card><CardContent className="p-8 text-center text-muted-foreground">No templates yet. Create one to get started.</CardContent></Card>
@@ -221,7 +236,10 @@ const TemplateModule = ({ module }: { module: TemplateModuleKey }) => {
               </Card>
             </div>
           )}
+          </>
+          )}
         </TabsContent>
+
 
         <TabsContent value="config">
           <Card>
