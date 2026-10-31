@@ -28,7 +28,7 @@ const SAMPLE: Record<string, string> = {
 
 const COMMON = ['guest_name', 'guest_email', 'guest_phone', 'booking_id', 'room_type', 'check_in', 'check_out', 'nights', 'guests', 'total_amount'];
 
-const CONFIG: Record<TemplateModuleKey, { title: string; description: string; icon: LucideIcon; html: boolean; subject: boolean; placeholders: string[]; settings: SettingField[]; charLimit?: number }> = {
+const CONFIG: Record<TemplateModuleKey, { title: string; description: string; icon: LucideIcon; html: boolean; subject: boolean; placeholders: string[]; settings: SettingField[]; charLimit?: number; comingSoon?: boolean }> = {
   invoice: {
     title: 'Invoice Templates', description: 'Layouts used for guest tax invoices', icon: FileText, html: true, subject: true,
     placeholders: ['invoice_number', ...COMMON, 'meal_plan', 'subtotal', 'gst_amount'],
@@ -50,7 +50,7 @@ const CONFIG: Record<TemplateModuleKey, { title: string; description: string; ic
   },
   whatsapp: {
     title: 'WhatsApp Templates', description: 'Messages sent to guests on WhatsApp', icon: MessageCircle, html: false, subject: false,
-    placeholders: [...COMMON, 'payment_id'], charLimit: 1024,
+    placeholders: [...COMMON, 'payment_id'], charLimit: 1024, comingSoon: true,
     settings: [
       { key: 'business_number', label: 'WhatsApp Business Number', type: 'text', placeholder: '+91 88791 92885' },
       { key: 'enabled', label: 'Enable WhatsApp messages', type: 'switch', help: 'Requires a WhatsApp Business provider to be connected before messages are actually sent.' },
@@ -59,7 +59,7 @@ const CONFIG: Record<TemplateModuleKey, { title: string; description: string; ic
   },
   sms: {
     title: 'SMS Templates', description: 'Text messages sent to guests', icon: MessageSquare, html: false, subject: false,
-    placeholders: [...COMMON], charLimit: 160,
+    placeholders: [...COMMON], charLimit: 160, comingSoon: true,
     settings: [
       { key: 'sender_id', label: 'Sender ID', type: 'text', placeholder: 'HRSLND', help: '6-character DLT-registered sender ID.' },
       { key: 'dlt_entity_id', label: 'DLT Entity ID', type: 'text', placeholder: 'Optional' },
