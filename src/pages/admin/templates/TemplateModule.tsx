@@ -10,7 +10,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
-import { FileText, Receipt, MessageCircle, MessageSquare, Plus, Save, Trash2, Star, type LucideIcon } from 'lucide-react';
+import { FileText, Receipt, MessageCircle, MessageSquare, Plus, Save, Trash2, Star, Clock, type LucideIcon } from 'lucide-react';
 
 const db = supabase as any;
 
@@ -160,7 +160,19 @@ const TemplateModule = ({ module }: { module: TemplateModuleKey }) => {
         </TabsList>
 
         <TabsContent value="templates" className="space-y-4">
-          <div className="flex flex-wrap items-center gap-2">
+          {cfg.comingSoon ? (
+            <Card>
+              <CardContent className="flex flex-col items-center justify-center gap-3 py-20 text-center">
+                <Clock className="h-10 w-10 text-muted-foreground" />
+                <p className="text-lg font-medium">Coming Soon</p>
+                <p className="max-w-md text-sm text-muted-foreground">
+                  {cfg.title.replace(' Templates', '')} template editing will be available in a future update. In the meantime, you can adjust settings under the Configuration tab.
+                </p>
+              </CardContent>
+            </Card>
+          ) : (
+          <>
+
             {templates.map((t) => (
               <Button key={t.id} variant={t.id === activeId ? 'default' : 'outline'} size="sm" onClick={() => setActiveId(t.id)}>
                 {t.is_default && <Star className="h-3 w-3 mr-1 fill-current" />}{t.name}
@@ -221,7 +233,10 @@ const TemplateModule = ({ module }: { module: TemplateModuleKey }) => {
               </Card>
             </div>
           )}
+          </>
+          )}
         </TabsContent>
+
 
         <TabsContent value="config">
           <Card>
