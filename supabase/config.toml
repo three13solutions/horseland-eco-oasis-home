@@ -74,6 +74,9 @@ verify_jwt = true
 [functions.send-booking-confirmation]
 verify_jwt = true
 
+[functions.guest-email-automation]
+verify_jwt = false
+
 [functions.finalize-booking]
 verify_jwt = false
 
