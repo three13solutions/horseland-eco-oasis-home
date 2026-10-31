@@ -984,8 +984,11 @@ export type Database = {
           id: string
           is_active: boolean
           name: string
+          offset_hours: number
           subject: string
           template_key: string
+          trigger_enabled: boolean
+          trigger_event: string
           updated_at: string
         }
         Insert: {
@@ -993,8 +996,11 @@ export type Database = {
           id?: string
           is_active?: boolean
           name: string
+          offset_hours?: number
           subject: string
           template_key: string
+          trigger_enabled?: boolean
+          trigger_event?: string
           updated_at?: string
         }
         Update: {
@@ -1002,8 +1008,11 @@ export type Database = {
           id?: string
           is_active?: boolean
           name?: string
+          offset_hours?: number
           subject?: string
           template_key?: string
+          trigger_enabled?: boolean
+          trigger_event?: string
           updated_at?: string
         }
         Relationships: []
@@ -1406,6 +1415,83 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      guest_email_events: {
+        Row: {
+          attempts: number
+          booking_id: string
+          created_at: string
+          due_at: string
+          event_data: Json
+          event_key: string
+          event_type: string
+          id: string
+          last_error: string | null
+          provider_id: string | null
+          status: string
+          template_key: string
+          updated_at: string
+        }
+        Insert: {
+          attempts?: number
+          booking_id: string
+          created_at?: string
+          due_at?: string
+          event_data?: Json
+          event_key: string
+          event_type: string
+          id?: string
+          last_error?: string | null
+          provider_id?: string | null
+          status?: string
+          template_key: string
+          updated_at?: string
+        }
+        Update: {
+          attempts?: number
+          booking_id?: string
+          created_at?: string
+          due_at?: string
+          event_data?: Json
+          event_key?: string
+          event_type?: string
+          id?: string
+          last_error?: string | null
+          provider_id?: string | null
+          status?: string
+          template_key?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "guest_email_events_booking_id_fkey"
+            columns: ["booking_id"]
+            isOneToOne: false
+            referencedRelation: "bookings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      guest_email_runtime: {
+        Row: {
+          endpoint: string
+          id: boolean
+          publishable_key: string
+          updated_at: string
+        }
+        Insert: {
+          endpoint: string
+          id?: boolean
+          publishable_key: string
+          updated_at?: string
+        }
+        Update: {
+          endpoint?: string
+          id?: boolean
+          publishable_key?: string
+          updated_at?: string
+        }
+        Relationships: []
       }
       guest_identity_documents: {
         Row: {
@@ -3553,6 +3639,30 @@ export type Database = {
           unit_ids: string[]
         }[]
       }
+      claim_guest_email_events: {
+        Args: never
+        Returns: {
+          attempts: number
+          booking_id: string
+          created_at: string
+          due_at: string
+          event_data: Json
+          event_key: string
+          event_type: string
+          id: string
+          last_error: string | null
+          provider_id: string | null
+          status: string
+          template_key: string
+          updated_at: string
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "guest_email_events"
+          isOneToOne: false
+          isSetofReturn: true
+        }
+      }
       clear_room_type_pricing: {
         Args: {
           p_confirmation_name: string
@@ -3668,6 +3778,7 @@ export type Database = {
         }
         Returns: undefined
       }
+      prepare_guest_email_reminders: { Args: never; Returns: undefined }
       rate_override_disabled: { Args: { p_id: string }; Returns: boolean }
       resolve_distribution_channel_id: {
         Args: { p_channel: string }
