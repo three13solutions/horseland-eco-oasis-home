@@ -1,5 +1,9 @@
 # Roadmap
 
+- [ ] Add ten guest email categories, editing, previews and automatic trigger controls.
+- [ ] Connect Resend event notifications and scheduled stay reminders with duplicate protection.
+- [ ] Verify email rules, access boundaries and previews; report delivery/session limitations.
+
 - [x] Limit shared up/down navigation to admin media galleries and image selectors.
 - [x] Remove added arrows from public pages and unrelated admin content.
 - [x] Verify desktop/mobile arrows and library selection in an isolated check using real components and media.
