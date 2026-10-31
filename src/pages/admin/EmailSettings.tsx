@@ -72,7 +72,7 @@ const EmailSettings = () => {
       <div className="flex items-center gap-3">
         <Mail className="h-6 w-6 text-primary" />
         <div>
-          <h1 className="text-2xl font-bold">Email Settings</h1>
+          <h1 className="text-2xl font-bold">Email Templates</h1>
           <p className="text-muted-foreground text-sm">Sender configuration and guest email templates</p>
         </div>
       </div>

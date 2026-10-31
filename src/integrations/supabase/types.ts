@@ -1929,6 +1929,42 @@ export type Database = {
         }
         Relationships: []
       }
+      message_templates: {
+        Row: {
+          body: string
+          created_at: string
+          id: string
+          is_active: boolean
+          is_default: boolean
+          module: string
+          name: string
+          subject: string | null
+          updated_at: string
+        }
+        Insert: {
+          body?: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          is_default?: boolean
+          module: string
+          name: string
+          subject?: string | null
+          updated_at?: string
+        }
+        Update: {
+          body?: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          is_default?: boolean
+          module?: string
+          name?: string
+          subject?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       navigation_items: {
         Row: {
           created_at: string
@@ -3094,6 +3130,24 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      template_module_settings: {
+        Row: {
+          module: string
+          settings: Json
+          updated_at: string
+        }
+        Insert: {
+          module: string
+          settings?: Json
+          updated_at?: string
+        }
+        Update: {
+          module?: string
+          settings?: Json
+          updated_at?: string
+        }
+        Relationships: []
       }
       translation_sections: {
         Row: {

@@ -59,6 +59,7 @@ import ContentManagement from "./pages/admin/ContentManagement";
 import IntegrationsManagement from "./pages/admin/IntegrationsManagement";
 import UserManagement from "./pages/admin/UserManagement";
 import EmailSettings from "./pages/admin/EmailSettings";
+import TemplateModule from "./pages/admin/templates/TemplateModule";
 import ActivityLogs from "./pages/admin/ActivityLogs";
 import SiteSettings from "./pages/admin/SiteSettings";
 import BlogManagement from "./pages/admin/BlogManagement";
@@ -169,7 +170,13 @@ function App() {
                 <Route path="faq" element={<FAQManagement />} />
                 <Route path="users" element={<UserManagement />} />
                 <Route path="settings" element={<SiteSettings />} />
-                <Route path="email" element={<EmailSettings />} />
+                <Route path="email" element={<Navigate to="/admin/templates/emails" replace />} />
+                <Route path="templates" element={<Navigate to="/admin/templates/emails" replace />} />
+                <Route path="templates/emails" element={<EmailSettings />} />
+                <Route path="templates/invoices" element={<TemplateModule module="invoice" />} />
+                <Route path="templates/receipts" element={<TemplateModule module="receipt" />} />
+                <Route path="templates/whatsapp" element={<TemplateModule module="whatsapp" />} />
+                <Route path="templates/sms" element={<TemplateModule module="sms" />} />
                 <Route path="activity-logs" element={<ActivityLogs />} />
               </Route>
               

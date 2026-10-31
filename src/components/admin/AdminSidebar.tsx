@@ -27,7 +27,9 @@ import {
   Percent,
   MessageCircle,
   Mail,
-  History
+  History,
+  Receipt,
+  MessageSquare
 } from 'lucide-react';
 import {
   Sidebar,
@@ -204,6 +206,14 @@ const mediaMenuItems = [
   }
 ];
 
+const templateMenuItems = [
+  { icon: FileText, label: 'Invoices', path: '/admin/templates/invoices' },
+  { icon: Receipt, label: 'Receipts', path: '/admin/templates/receipts' },
+  { icon: Mail, label: 'Emails', path: '/admin/templates/emails' },
+  { icon: MessageCircle, label: 'WhatsApp', path: '/admin/templates/whatsapp' },
+  { icon: MessageSquare, label: 'SMS', path: '/admin/templates/sms' },
+];
+
 const systemMenuItems = [
   { 
     icon: BookOpen, 
@@ -234,12 +244,6 @@ const systemMenuItems = [
     label: 'FAQ Management', 
     path: '/admin/faq', 
     description: 'Manage FAQ sections' 
-  },
-  { 
-    icon: Mail, 
-    label: 'Email Settings', 
-    path: '/admin/email', 
-    description: 'Sender & templates' 
   },
   { 
     icon: History, 
@@ -526,6 +530,34 @@ export function AdminSidebar() {
                   </SidebarMenuItem>
                 ))
               )}
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+
+        {/* Templates Menu */}
+        <SidebarGroup>
+          <SidebarGroupLabel className="text-sidebar-foreground/60 font-medium">
+            {isCollapsed ? '' : 'Templates'}
+          </SidebarGroupLabel>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              {templateMenuItems.map((item) => (
+                <SidebarMenuItem key={item.label}>
+                  <SidebarMenuButton asChild isActive={isActive(item)}>
+                    <Link
+                      to={item.path}
+                      className={`flex items-center space-x-3 transition-colors ${
+                        isActive(item)
+                          ? 'bg-sidebar-accent text-sidebar-primary font-medium'
+                          : 'text-sidebar-foreground hover:bg-sidebar-accent/50 hover:text-sidebar-foreground'
+                      }`}
+                    >
+                      <item.icon className="h-4 w-4 flex-shrink-0" />
+                      {!isCollapsed && <span>{item.label}</span>}
+                    </Link>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              ))}
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
