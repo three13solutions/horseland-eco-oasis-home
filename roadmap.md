@@ -1,8 +1,9 @@
 # Roadmap
 
-- [ ] Add ten guest email categories, editing, previews and automatic trigger controls.
-- [ ] Connect Resend event notifications and scheduled stay reminders with duplicate protection.
-- [ ] Verify email rules, access boundaries and previews; report delivery/session limitations.
+- [x] Add ten guest email categories, editing, previews and automatic trigger controls.
+- [x] Connect Resend event notifications and scheduled stay reminders with duplicate protection.
+- [x] Verify email rules, protected access, deployed worker and active hourly schedule (8 tests pass).
+- [ ] Verify signed-in email editing/preview and real guest delivery (blocked: external admin session unavailable; Resend sending domain remains unverified).
 
 - [x] Limit shared up/down navigation to admin media galleries and image selectors.
 - [x] Remove added arrows from public pages and unrelated admin content.
