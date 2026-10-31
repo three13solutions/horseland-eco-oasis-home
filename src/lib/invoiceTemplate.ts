@@ -43,7 +43,7 @@ th,td{padding:8px 10px;border-bottom:1px solid #eadfd3}td.r,th.r{text-align:righ
 .bar{text-align:center;margin-bottom:16px}.bar button{padding:8px 18px;font-size:14px;cursor:pointer}@media print{.bar{display:none}}
 </style></head><body><div class="wrap">
 <div class="bar"><button onclick="window.print()">Download / Print PDF</button></div>
-<div class="head"><div class="brand"><img src="${location.origin}${LOGO}" alt="Horseland Hotel"><div><h1>Horseland Hotel &amp; Mountain Spa</h1><p>Matheran, Maharashtra, India · +91 7977538460</p></div></div>
+<div class="head"><div class="brand"><img src="${location.origin}${LOGO}" alt="Horseland Hotel"><div><h1>Horseland Hotel &amp; Mountain Spa</h1><p>Vitthalrao Kotwal Road, Matheran, Maharashtra 410102, India</p><p>+91 88791 92885 · GSTIN: 27AAACH5543C1ZX</p></div></div>
 <div class="title"><h2>INVOICE</h2><p><b>${esc(inv.invoice_number)}</b></p><p>Date: ${date(inv.invoice_date ?? inv.created_at)}</p><p><span class="badge">${esc(String(inv.status).toUpperCase())}</span></p></div></div>
 <div class="grid">
 <div class="box"><h3>Billed To</h3><p><b>${esc(b.guest_name)}</b></p><p>${esc(b.guest_email)}</p><p>${esc(b.guest_phone)}</p></div>
