@@ -160,7 +160,7 @@ const TemplateModule = ({ module }: { module: TemplateModuleKey }) => {
         </TabsList>
 
         <TabsContent value="templates" className="space-y-4">
-          {cfg.comingSoon ? (
+          {cfg.comingSoon && (
             <Card>
               <CardContent className="flex flex-col items-center justify-center gap-3 py-20 text-center">
                 <Clock className="h-10 w-10 text-muted-foreground" />
@@ -170,7 +170,9 @@ const TemplateModule = ({ module }: { module: TemplateModuleKey }) => {
                 </p>
               </CardContent>
             </Card>
-          ) : (
+          )}
+
+          {!cfg.comingSoon && (
           <>
             <div className="flex flex-wrap items-center gap-2">
             {templates.map((t) => (
@@ -180,6 +182,7 @@ const TemplateModule = ({ module }: { module: TemplateModuleKey }) => {
             ))}
             <Button size="sm" variant="secondary" onClick={createTemplate}><Plus className="h-4 w-4 mr-1" />New Template</Button>
           </div>
+
 
           {!active ? (
             <Card><CardContent className="p-8 text-center text-muted-foreground">No templates yet. Create one to get started.</CardContent></Card>
