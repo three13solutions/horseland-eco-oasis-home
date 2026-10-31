@@ -1,0 +1,2 @@
+DROP TRIGGER wake_guest_email_delivery ON public.guest_email_events;
+CREATE TRIGGER wake_guest_email_delivery AFTER INSERT ON public.guest_email_events FOR EACH ROW EXECUTE FUNCTION public.wake_guest_email_delivery();
