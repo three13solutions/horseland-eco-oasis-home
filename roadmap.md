@@ -1,5 +1,7 @@
 # Roadmap
 
+- [ ] Set up delivery for horseland.three13.solutions (blocked: sending service confirmation and account connection required).
+- [x] Explain Google Workspace booking email sending as an alternative to Resend.
 - [x] Add a recipient field and Send Test Email control for every email category using current draft and sample data.
 - [x] Deploy template test sending, verify unauthenticated rejection and pass all 11 email tests.
 - [ ] Verify signed-in template test and real inbox delivery (blocked: external admin session unavailable; Resend sender setup not completed).
