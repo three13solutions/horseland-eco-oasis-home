@@ -130,7 +130,7 @@ const EmailSettings = () => {
           <Card>
             <CardHeader>
               <CardTitle>Sender Configuration</CardTitle>
-              <CardDescription>The sender email must belong to a domain verified in Resend, otherwise guests will not receive emails.</CardDescription>
+              <CardDescription>Google Workspace · Connected mailbox: saif@313s.com</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4 max-w-xl">
               {[
@@ -141,7 +141,7 @@ const EmailSettings = () => {
               ].map(([key, label, ph]) => (
                 <div key={key} className="space-y-1.5">
                   <Label htmlFor={key}>{label}</Label>
-                  <Input id={key} placeholder={ph} value={settings[key] ?? ''} onChange={(e) => setSettings({ ...settings, [key]: e.target.value })} />
+                  <Input id={key} placeholder={ph} value={key === 'from_email' ? 'saif@313s.com' : settings[key] ?? ''} disabled={key === 'from_email'} onChange={(e) => setSettings({ ...settings, [key]: e.target.value })} />
                 </div>
               ))}
               <div className="flex items-center justify-between rounded-md border p-3">

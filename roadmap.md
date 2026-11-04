@@ -1,6 +1,6 @@
 # Roadmap
 
-- [ ] Set up delivery for horseland.three13.solutions (blocked: sending service confirmation and account connection required).
+- [ ] Verify Google Workspace delivery for template tests and guest automations; sender uses the connected mailbox rather than the website domain.
 - [x] Explain Google Workspace booking email sending as an alternative to Resend.
 - [x] Add a recipient field and Send Test Email control for every email category using current draft and sample data.
 - [x] Deploy template test sending, verify unauthenticated rejection and pass all 11 email tests.
