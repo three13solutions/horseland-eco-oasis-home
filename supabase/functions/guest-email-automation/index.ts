@@ -2,6 +2,7 @@ import { serve } from 'https://deno.land/std@0.190.0/http/server.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.50.4';
 import { corsHeaders } from 'npm:@supabase/supabase-js@2/cors';
 import { fillEmail, maySendEmail } from '../_shared/guestEmail.ts';
+import { sendGoogleEmail } from '../_shared/googleMail.ts';
 
 serve(async (req) => {
   const respond = (body: unknown, status = 200) => new Response(JSON.stringify(body), { status, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
@@ -9,7 +10,7 @@ serve(async (req) => {
   if (req.method !== 'POST') return respond({ error: 'Method not allowed' }, 405);
   const url = Deno.env.get('SUPABASE_URL');
   const serviceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
-  const apiKey = Deno.env.get('RESEND_API_KEY');
+  const apiKey = Deno.env.get('GOOGLE_MAIL_API_KEY');
   const anonKey = Deno.env.get('SUPABASE_ANON_KEY');
   if (!url || !serviceKey || !apiKey || !anonKey) return respond({ error: 'Email service is not configured' }, 503);
   // Public scheduler credential only wakes delivery of database-owned events; no recipient/content input is accepted.
@@ -50,15 +51,11 @@ serve(async (req) => {
           refund_amount: event.event_type === 'payment_refunded' ? currency(event.event_data.payment_amount) : '',
           payment_id: event.event_data.payment_id || booking.payment_id || '', payment_order_id: booking.payment_order_id || '',
         };
-        const response = await fetch('https://api.resend.com/emails', {
-          method: 'POST', headers: { Authorization: `Bearer ${apiKey}`, 'Content-Type': 'application/json', 'Idempotency-Key': event.id },
-          body: JSON.stringify({ from: `${settings?.from_name || 'Horseland Hotel'} <${settings?.from_email || 'onboarding@resend.dev'}>`,
-            to: [booking.guest_email], ...(settings?.reply_to ? { reply_to: settings.reply_to } : {}),
-            ...(settings?.admin_notification_email ? { bcc: [settings.admin_notification_email] } : {}),
-            subject: fillEmail(template.subject, values), html: fillEmail(template.html_body, values, true) }),
+        const result = await sendGoogleEmail({
+          name: settings?.from_name || 'Horseland Hotel', to: booking.guest_email,
+          replyTo: settings?.reply_to || undefined, bcc: settings?.admin_notification_email || undefined,
+          eventId: event.id, subject: fillEmail(template.subject, values), html: fillEmail(template.html_body, values, true),
         });
-        const result = await response.json();
-        if (!response.ok) throw new Error(result.message || 'Email provider rejected the message');
         const { error: saveError } = await db.from('guest_email_events').update({ status: 'sent', provider_id: result.id, last_error: null }).eq('id', event.id);
         if (saveError) throw saveError;
         sent++;

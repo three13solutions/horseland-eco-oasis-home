@@ -2,6 +2,7 @@ import { serve } from 'https://deno.land/std@0.190.0/http/server.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.50.4';
 import { corsHeaders } from 'npm:@supabase/supabase-js@2/cors';
 import { renderEmailTest, validateEmailTest } from '../_shared/guestEmailTest.ts';
+import { sendGoogleEmail, GoogleMailError } from '../_shared/googleMail.ts';
 
 serve(async (req) => {
   const respond = (body: unknown, status = 200) => new Response(JSON.stringify(body), { status, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
@@ -25,22 +26,13 @@ serve(async (req) => {
     if (templateError || !template) return respond({ error: 'Template not found' }, 404);
     const { data: settings, error: settingsError } = await caller.from('email_settings').select('from_name,from_email,reply_to').limit(1).maybeSingle();
     if (settingsError) return respond({ error: 'Could not read sender settings' }, 500);
-    const apiKey = Deno.env.get('RESEND_API_KEY');
-    if (!apiKey) return respond({ error: 'Resend is not configured' }, 503);
     const content = renderEmailTest(input.subject, input.html_body);
-    const response = await fetch('https://api.resend.com/emails', {
-      method: 'POST', headers: { Authorization: `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ from: `${settings?.from_name || 'Horseland Hotel'} <${settings?.from_email || 'onboarding@resend.dev'}>`,
-        to: [input.to], ...(settings?.reply_to ? { reply_to: settings.reply_to } : {}), ...content }),
+    const result = await sendGoogleEmail({
+      name: settings?.from_name || 'Horseland Hotel', to: input.to, replyTo: settings?.reply_to || undefined, ...content,
     });
-    if (!response.ok) {
-      const details = await response.text();
-      console.error(`Resend test email failed [${response.status}]: ${details}`);
-      return respond({ error: 'Resend rejected the test email', status: response.status, details }, response.status);
-    }
-    const result = await response.json();
     return respond({ success: true, provider_id: result.id });
   } catch (error) {
+    if (error instanceof GoogleMailError) return respond({ error: 'Google rejected the test email', status: error.status, details: error.details }, error.status);
     console.error('Template test email failed:', error instanceof Error ? error.message : 'Unknown error');
     return respond({ error: 'Could not send test email. Please try again.' }, 500);
   }
