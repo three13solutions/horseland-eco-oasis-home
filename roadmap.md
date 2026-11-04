@@ -1,15 +1,15 @@
 # Roadmap
 
-- [ ] Verify Google Workspace delivery for template tests and guest automations; sender uses the connected mailbox rather than the website domain.
+- [x] Connect Google Workspace, deploy both email senders, pass 13 tests, and verify a sample booking email arrived in the connected inbox.
 - [x] Explain Google Workspace booking email sending as an alternative to Resend.
 - [x] Add a recipient field and Send Test Email control for every email category using current draft and sample data.
 - [x] Deploy template test sending, verify unauthenticated rejection and pass all 11 email tests.
-- [ ] Verify signed-in template test and real inbox delivery (blocked: external admin session unavailable; Resend sender setup not completed).
+- [ ] Verify signed-in template test button (blocked: external admin session unavailable); shared sender inbox delivery verified.
 
 - [x] Add ten guest email categories, editing, previews and automatic trigger controls.
 - [x] Connect Resend event notifications and scheduled stay reminders with duplicate protection.
 - [x] Verify email rules, protected access, deployed worker and active hourly schedule (8 tests pass).
-- [ ] Verify signed-in email editing/preview and real guest delivery (blocked: external admin session unavailable; Resend sending domain remains unverified).
+- [ ] Verify signed-in email editing/preview and a real booking-triggered guest email (blocked: external admin session unavailable and no new booking event).
 
 - [x] Limit shared up/down navigation to admin media galleries and image selectors.
 - [x] Remove added arrows from public pages and unrelated admin content.
