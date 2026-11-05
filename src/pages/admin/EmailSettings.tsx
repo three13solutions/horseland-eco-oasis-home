@@ -124,6 +124,7 @@ const EmailSettings = () => {
         <TabsList>
           <TabsTrigger value="config">Configuration</TabsTrigger>
           <TabsTrigger value="templates">Email Templates</TabsTrigger>
+          <TabsTrigger value="preview">Preview</TabsTrigger>
         </TabsList>
 
         <TabsContent value="config">
@@ -165,7 +166,7 @@ const EmailSettings = () => {
             </Select>
           </div>
           {active && (
-            <div className="grid gap-4 lg:grid-cols-2">
+            <div className="max-w-4xl">
               <Card>
                 <CardHeader className="flex-row items-center justify-between space-y-0">
                   <CardTitle className="text-lg">Edit Template</CardTitle>
@@ -203,6 +204,20 @@ const EmailSettings = () => {
                   <Button onClick={saveTemplate} disabled={saving}><Save className="h-4 w-4 mr-2" />Save Template</Button>
                 </CardContent>
               </Card>
+            </div>
+          )}
+        </TabsContent>
+
+        <TabsContent value="preview" className="space-y-4">
+          <div className="max-w-xl space-y-1.5">
+            <Label htmlFor="preview-email-category">Email Category</Label>
+            <Select value={activeId} onValueChange={id => { setActiveId(id); setTestResult(null); }} disabled={sendingTest}>
+              <SelectTrigger id="preview-email-category"><SelectValue placeholder="Select email category" /></SelectTrigger>
+              <SelectContent>{templates.map(t => <SelectItem key={t.id} value={t.id}>{t.name}</SelectItem>)}</SelectContent>
+            </Select>
+          </div>
+          {active && (
+            <div className="max-w-4xl">
               <Card>
                 <CardHeader>
                   <CardTitle className="text-lg">Preview</CardTitle>
