@@ -49,7 +49,7 @@ export default function WebsiteAvailability() {
         const saved = sessionStorage.getItem(key);
         if (saved) {
           const previous = JSON.parse(saved);
-          if (previous.schema === 1 && previous.draft && typeof previous.draft === 'object') {
+          if (previous.schema === 2 && previous.draft && typeof previous.draft === 'object') {
             setDraft(previous.draft); setInputs(previous.inputs || {});
             if (typeof previous.start === 'string' && validDate(previous.start)) setStart(previous.start);
             if (previous.save_request?.id && previous.save_request?.signature) saveRequest.current = previous.save_request;
@@ -65,7 +65,7 @@ export default function WebsiteAvailability() {
   useEffect(() => {
     if (!draftStorageKey) return;
     try {
-      if (dirty) sessionStorage.setItem(draftStorageKey, JSON.stringify({ schema: 1, start, draft, inputs, save_request: saveRequest.current }));
+      if (dirty) sessionStorage.setItem(draftStorageKey, JSON.stringify({ schema: 2, start, draft, inputs, save_request: saveRequest.current }));
       else sessionStorage.removeItem(draftStorageKey);
     } catch { /* Navigation confirmation remains active when session storage is unavailable. */ }
   }, [draftStorageKey, start, draft, inputs, dirty]);
@@ -91,7 +91,7 @@ export default function WebsiteAvailability() {
       const canonicalChanges = [...changes].sort((a, b) => cellKey(a.category_id, a.date).localeCompare(cellKey(b.category_id, b.date)));
       const signature = JSON.stringify(canonicalChanges);
       if (saveRequest.current?.signature !== signature) saveRequest.current = { signature, id: crypto.randomUUID() };
-      if (draftStorageKey) { try { sessionStorage.setItem(draftStorageKey, JSON.stringify({ schema: 1, start, draft, inputs, save_request: saveRequest.current })); } catch { /* Retry stays stable in this mounted page. */ } }
+      if (draftStorageKey) { try { sessionStorage.setItem(draftStorageKey, JSON.stringify({ schema: 2, start, draft, inputs, save_request: saveRequest.current })); } catch { /* Retry stays stable in this mounted page. */ } }
       await saveDistributionInventory(canonicalChanges, saveRequest.current.id);
     },
     onSuccess: async () => { setDraft({}); setInputs({}); await client.invalidateQueries({ queryKey: ['distribution-inventory'] }); toast.success('Room inventory saved. Room statuses were not changed.'); },
@@ -114,7 +114,7 @@ export default function WebsiteAvailability() {
         return [key, { ...patch, expected_version: old[key]?.expected_version ?? patch.expected_version }];
       })]));
       setInputs(old => Object.fromEntries(Object.entries(old).filter(([key]) => !patches.some(patch => cellKey(patch.category_id, patch.date) === key))));
-      toast.success(`${patches.length} category/date cells prepared. Review, then save.`);
+      toast.success(`${patches.length} room type/date cells prepared. Review, then save.`);
     } catch (error) { toast.error(error instanceof Error ? error.message : 'Could not prepare the update.'); }
     finally { setApplying(false); }
   };
@@ -137,8 +137,8 @@ export default function WebsiteAvailability() {
         <Button aria-label="Next week" size="icon" variant="outline" disabled={save.isPending || busy} onClick={() => move(addDays(start, 7))}><ChevronRight className="h-4 w-4" /></Button>
         <Button variant="outline" disabled={save.isPending || busy} onClick={() => move(today)}>Today</Button>
       </div></CardHeader>
-      <CardContent className="p-0"><Table><TableHeader><TableRow><TableHead className="min-w-36">Category</TableHead>{dateRange(start, end).map(date => <TableHead key={date} className="min-w-28 text-center"><div className="font-semibold">{dateLabel(date, { weekday: 'short', day: 'numeric' })}</div><div className="text-xs">{dateLabel(date, { month: 'short' })}</div></TableHead>)}</TableRow></TableHeader><TableBody>
-        {query.isLoading ? <TableRow><TableCell colSpan={8} className="p-8 text-center text-muted-foreground">Loading current availability…</TableCell></TableRow> : query.data?.categories.map(category => <TableRow key={category.id}><TableCell className="font-semibold">{category.name}</TableCell>{dateRange(start, end).map(date => {
+      <CardContent className="p-0"><Table><TableHeader><TableRow><TableHead className="min-w-36">Room Type</TableHead>{dateRange(start, end).map(date => <TableHead key={date} className="min-w-28 text-center"><div className="font-semibold">{dateLabel(date, { weekday: 'short', day: 'numeric' })}</div><div className="text-xs">{dateLabel(date, { month: 'short' })}</div></TableHead>)}</TableRow></TableHeader><TableBody>
+        {query.isLoading ? <TableRow><TableCell colSpan={8} className="p-8 text-center text-muted-foreground">Loading current availability…</TableCell></TableRow> : query.data?.categories.map(category => <TableRow key={category.id}><TableCell className="font-semibold">{category.name}{category.category_name && <p className="text-xs font-normal text-muted-foreground">{category.category_name}</p>}</TableCell>{dateRange(start, end).map(date => {
           const key = cellKey(category.id, date); const cell = cells.get(key); const patch = draft[key];
           const value = inputs[key]?.value ?? String(patch?.remaining ?? cell?.remaining ?? '');
           const soldOut = value === '0';
@@ -155,17 +155,17 @@ export default function WebsiteAvailability() {
             }
           }} />{inputs[key] && <p id={`error-${key}`} className="mt-1 max-w-32 text-xs text-destructive">{inputs[key].error}</p>}{soldOut ? <p className="mt-1 text-xs text-destructive">Sold out</p> : <p className="mt-1 text-xs text-muted-foreground">{cell ? `Up to ${cell.physical_remaining} eligible` : 'Unavailable'}</p>}{patch && <span className="sr-only">Unsaved change</span>}</TableCell>;
         })}</TableRow>)}
-      </TableBody></Table><p className="border-t px-4 py-3 text-sm text-muted-foreground">Enter 0 to close website sales for that category and date. Dates are in Mumbai time; each date is an occupied night.</p></CardContent>
+      </TableBody></Table><p className="border-t px-4 py-3 text-sm text-muted-foreground">Enter 0 to close website sales for that room type and date. Dates are in Mumbai time; each date is an occupied night.</p></CardContent>
     </Card>
     <Card className="border-primary/20 bg-primary/[0.03]"><CardHeader><CardTitle>Update multiple dates</CardTitle></CardHeader><CardContent className="space-y-4"><div className="grid gap-4 lg:grid-cols-[2fr_1fr_1fr_1fr_auto]">
-      <div><Label>Categories</Label><div className="mt-2 flex flex-wrap gap-3">{query.data?.categories.map(category => <label key={category.id} className="flex items-center gap-2 rounded-md border bg-background p-2 text-sm"><Checkbox checked={selected.includes(category.id)} disabled={!enabled || save.isPending || busy} onCheckedChange={checked => setSelected(old => checked ? [...old, category.id] : old.filter(id => id !== category.id))} />{category.name}</label>)}</div></div>
+      <div><Label>Room Types</Label><div className="mt-2 flex flex-wrap gap-3">{query.data?.categories.map(category => <label key={category.id} className="flex items-center gap-2 rounded-md border bg-background p-2 text-sm"><Checkbox checked={selected.includes(category.id)} disabled={!enabled || save.isPending || busy} onCheckedChange={checked => setSelected(old => checked ? [...old, category.id] : old.filter(id => id !== category.id))} />{category.name}</label>)}</div></div>
       <div><Label htmlFor="bulk-from">From</Label><Input id="bulk-from" type="date" min={today} value={from} disabled={!enabled || save.isPending || busy} onChange={e => setFrom(e.target.value)} className="mt-2" /></div>
       <div><Label htmlFor="bulk-to">To (inclusive)</Label><Input id="bulk-to" type="date" min={from || today} value={to} disabled={!enabled || save.isPending || busy} onChange={e => setTo(e.target.value)} className="mt-2" /></div>
       <div><Label htmlFor="bulk-count">Available rooms</Label><Input id="bulk-count" type="number" min="0" step="1" value={count} disabled={!enabled || save.isPending || busy} onChange={e => setCount(e.target.value)} className="mt-2" /></div>
       <Button className="self-end" variant="outline" disabled={!enabled || save.isPending || busy} onClick={apply}>{applying ? 'Checking…' : 'Apply to grid'}</Button>
-    </div><p className="text-sm text-muted-foreground">Apply the same remaining count to each selected category and date, up to 90 dates. This is not the total room capacity and does not add to the previous count.</p></CardContent></Card>
+    </div><p className="text-sm text-muted-foreground">Apply the same remaining count to each selected room type and date, up to 90 dates. This is not the total room capacity and does not add to the previous count.</p></CardContent></Card>
     <div className="sticky bottom-0 z-10 flex flex-wrap items-center justify-between gap-4 border-t bg-background/95 py-4 backdrop-blur">
-      <div><p className="font-medium">{changes.length ? `${changes.length} category/date changes to review` : 'Review your changes, then save.'}</p><p className="mt-1 flex items-center gap-2 text-sm text-muted-foreground"><ShieldCheck className="h-4 w-4 shrink-0" />Existing bookings, maintenance, management blocks and unpublished rooms stay protected.</p></div>
+      <div><p className="font-medium">{changes.length ? `${changes.length} room type/date changes to review` : 'Review your changes, then save.'}</p><p className="mt-1 flex items-center gap-2 text-sm text-muted-foreground"><ShieldCheck className="h-4 w-4 shrink-0" />Existing bookings, maintenance, management blocks and unpublished rooms stay protected.</p></div>
       <div className="flex gap-2"><Button variant="outline" disabled={save.isPending || busy} onClick={() => { if (!dirty || window.confirm('Discard all unsaved availability changes?')) { setDraft({}); setInputs({}); query.refetch(); } }}><RefreshCw className="mr-2 h-4 w-4" />{dirty ? 'Discard' : 'Refresh'}</Button><Button disabled={!enabled || !changes.length || Object.keys(inputs).length > 0 || save.isPending || busy} onClick={() => save.mutate()}>{save.isPending ? 'Saving…' : 'Save changes'}</Button></div>
     </div>
     {changes.length > 0 && <details className="rounded-md border p-4"><summary className="cursor-pointer text-sm font-medium">Review all pending changes, including dates outside this week <Badge variant="secondary" className="ml-2">{changes.length}</Badge></summary><ul className="mt-3 max-h-56 space-y-1 overflow-auto text-sm">{changes.sort((a, b) => a.date.localeCompare(b.date) || a.category_id.localeCompare(b.category_id)).map(change => <li key={cellKey(change.category_id, change.date)}>{query.data?.categories.find(c => c.id === change.category_id)?.name || change.category_id} · {change.date}: {change.remaining === 0 ? 'Sold out' : `${change.remaining} remaining rooms`}</li>)}</ul></details>}

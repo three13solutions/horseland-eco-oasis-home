@@ -1,4 +1,4 @@
-export type DistributionCategory = { id: string; name: string };
+export type DistributionCategory = { id: string; name: string; category_name?: string };
 export type InventoryCell = { category_id: string; date: string; remaining: number; physical_remaining: number; version: number; configured: boolean };
 export type InventoryGrid = { enabled: boolean; readiness_message: string; categories: DistributionCategory[]; cells: InventoryCell[] };
 export type InventoryChange = { category_id: string; date: string; remaining: number; expected_version: number };
@@ -41,7 +41,7 @@ export function makeChange(cell: InventoryCell, value: string, today = hotelToda
 }
 export function bulkChanges(grid: InventoryGrid, categoryIds: string[], start: string, end: string, value: string, today = hotelToday()): InventoryChange[] {
   if (!grid.enabled) throw new Error('Website inventory controls are not activated yet.');
-  if (!categoryIds.length) throw new Error('Select at least one category.');
+  if (!categoryIds.length) throw new Error('Select at least one room type.');
   const dates = dateRange(start, end);
   const index = new Map(grid.cells.map(cell => [cellKey(cell.category_id, cell.date), cell]));
   return [...new Set(categoryIds)].flatMap(categoryId => dates.map(date => {
