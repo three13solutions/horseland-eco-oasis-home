@@ -1,4 +1,4 @@
-export type DistributionCategory = { id: string; name: string };
+export type DistributionCategory = { id: string; name: string; category_name?: string };
 export type InventoryCell = { category_id: string; date: string; remaining: number; physical_remaining: number; version: number; configured: boolean };
 export type InventoryGrid = { enabled: boolean; readiness_message: string; categories: DistributionCategory[]; cells: InventoryCell[] };
 export type InventoryChange = { category_id: string; date: string; remaining: number; expected_version: number };

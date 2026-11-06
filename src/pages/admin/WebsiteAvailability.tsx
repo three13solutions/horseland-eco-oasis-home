@@ -49,7 +49,7 @@ export default function WebsiteAvailability() {
         const saved = sessionStorage.getItem(key);
         if (saved) {
           const previous = JSON.parse(saved);
-          if (previous.schema === 1 && previous.draft && typeof previous.draft === 'object') {
+          if (previous.schema === 2 && previous.draft && typeof previous.draft === 'object') {
             setDraft(previous.draft); setInputs(previous.inputs || {});
             if (typeof previous.start === 'string' && validDate(previous.start)) setStart(previous.start);
             if (previous.save_request?.id && previous.save_request?.signature) saveRequest.current = previous.save_request;
@@ -65,7 +65,7 @@ export default function WebsiteAvailability() {
   useEffect(() => {
     if (!draftStorageKey) return;
     try {
-      if (dirty) sessionStorage.setItem(draftStorageKey, JSON.stringify({ schema: 1, start, draft, inputs, save_request: saveRequest.current }));
+      if (dirty) sessionStorage.setItem(draftStorageKey, JSON.stringify({ schema: 2, start, draft, inputs, save_request: saveRequest.current }));
       else sessionStorage.removeItem(draftStorageKey);
     } catch { /* Navigation confirmation remains active when session storage is unavailable. */ }
   }, [draftStorageKey, start, draft, inputs, dirty]);
@@ -91,7 +91,7 @@ export default function WebsiteAvailability() {
       const canonicalChanges = [...changes].sort((a, b) => cellKey(a.category_id, a.date).localeCompare(cellKey(b.category_id, b.date)));
       const signature = JSON.stringify(canonicalChanges);
       if (saveRequest.current?.signature !== signature) saveRequest.current = { signature, id: crypto.randomUUID() };
-      if (draftStorageKey) { try { sessionStorage.setItem(draftStorageKey, JSON.stringify({ schema: 1, start, draft, inputs, save_request: saveRequest.current })); } catch { /* Retry stays stable in this mounted page. */ } }
+      if (draftStorageKey) { try { sessionStorage.setItem(draftStorageKey, JSON.stringify({ schema: 2, start, draft, inputs, save_request: saveRequest.current })); } catch { /* Retry stays stable in this mounted page. */ } }
       await saveDistributionInventory(canonicalChanges, saveRequest.current.id);
     },
     onSuccess: async () => { setDraft({}); setInputs({}); await client.invalidateQueries({ queryKey: ['distribution-inventory'] }); toast.success('Room inventory saved. Room statuses were not changed.'); },
@@ -138,7 +138,7 @@ export default function WebsiteAvailability() {
         <Button variant="outline" disabled={save.isPending || busy} onClick={() => move(today)}>Today</Button>
       </div></CardHeader>
       <CardContent className="p-0"><Table><TableHeader><TableRow><TableHead className="min-w-36">Room Type</TableHead>{dateRange(start, end).map(date => <TableHead key={date} className="min-w-28 text-center"><div className="font-semibold">{dateLabel(date, { weekday: 'short', day: 'numeric' })}</div><div className="text-xs">{dateLabel(date, { month: 'short' })}</div></TableHead>)}</TableRow></TableHeader><TableBody>
-        {query.isLoading ? <TableRow><TableCell colSpan={8} className="p-8 text-center text-muted-foreground">Loading current availability…</TableCell></TableRow> : query.data?.categories.map(category => <TableRow key={category.id}><TableCell className="font-semibold">{category.name}</TableCell>{dateRange(start, end).map(date => {
+        {query.isLoading ? <TableRow><TableCell colSpan={8} className="p-8 text-center text-muted-foreground">Loading current availability…</TableCell></TableRow> : query.data?.categories.map(category => <TableRow key={category.id}><TableCell className="font-semibold">{category.name}{category.category_name && <p className="text-xs font-normal text-muted-foreground">{category.category_name}</p>}</TableCell>{dateRange(start, end).map(date => {
           const key = cellKey(category.id, date); const cell = cells.get(key); const patch = draft[key];
           const value = inputs[key]?.value ?? String(patch?.remaining ?? cell?.remaining ?? '');
           const soldOut = value === '0';
