@@ -85,7 +85,7 @@ const FooterV5 = () => {
                   <Phone className="w-4 h-4 text-accent mt-1 flex-shrink-0" />
                   <div>
                     <p className="text-primary-foreground/80 text-xs">Percy</p>
-                    <p className="font-medium text-sm">+91 7977538460</p>
+                    <p className="font-medium text-sm">+91 79775 38460</p>
                   </div>
                 </div>
                 
