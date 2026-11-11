@@ -273,7 +273,7 @@ const DynamicFooter = () => {
                     <div className="space-y-1">
                       <p className="font-medium text-background text-sm">Mahesh: +91 94042 24600</p>
                       <p className="font-medium text-background text-sm">Sachin: +91 90044 24567</p>
-                      <p className="font-medium text-background text-sm">Hotel: +91 79753 8460</p>
+                      <p className="font-medium text-background text-sm">Hotel: +91 79775 38460</p>
                     </div>
                   </div>
                 </div>
