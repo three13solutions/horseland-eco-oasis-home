@@ -191,7 +191,7 @@ const Contact = () => {
                           <br />
                           Sachin: +91 9004424567
                           <br />
-                          Hotel: +91 797538460
+                          Hotel: +91 79775 38460
                           <br />
                         </p>
                       </div>
