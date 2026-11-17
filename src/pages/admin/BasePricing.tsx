@@ -9,6 +9,7 @@ import { supabase } from '@/integrations/supabase/client';
 // Import existing components to reuse their logic
 import CategoryPricing from './CategoryPricing';
 import UnitPricing from './UnitPricing';
+import EffectiveWeekendRules from '@/components/admin/EffectiveWeekendRules';
 
 export default function BasePricing() {
   const [activeTab, setActiveTab] = useState('categories');
@@ -51,6 +52,8 @@ export default function BasePricing() {
           Configure base rates for room categories and individual units
         </p>
       </div>
+
+      <EffectiveWeekendRules />
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
         <TabsList className="grid w-full grid-cols-3">

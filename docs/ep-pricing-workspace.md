@@ -1,42 +1,31 @@
-# EP-first pricing workspace (draft implementation)
+# Horseland pricing integration
 
-Route: `/admin/pricing/workspace`, inside the existing protected admin layout.
+## Production-capable implementation
 
-Implemented:
-- Calendar selection, inclusive bulk date range and Sunday–Friday/Saturday filters.
-- EP-only input, additive meal previews, explicit manual overrides with reason.
-- Review dialog, cancel/close resets acknowledgment, draft save, date-level rate card and coverage check.
-- Session-only promo draft create/edit/delete and guarded price preview.
-- Rate draft JSON export; no seeded prices, no backend writes and no guest-facing changes.
-- Existing pricing settings remain accessible during migration. A new draft entry is added; the old live system is not replaced.
+- Meal Management and Meal Plans share one revision-checked catalogue/editor. Required AND groups contain equal-priced OR alternatives; unequal alternatives are blocked until guest choice capture is implemented.
+- Reviewed shared-price edits disclose affected plans and support explicitly selected atomic alternative-price changes. MAP remains breakfast+dinner; AP includes high tea; all guest ages use the same meal price.
+- Editable effective-dated weekday/weekend rules appear in Base Pricing. Historical changes are blocked; bounded rules revert to the prior rule afterwards.
+- Date-specific preservation policies retain existing festive EP calculation; mixed stays calculate each night in its original full-stay context.
+- Promo Codes has EP300 configuration and server-bound guest offer selection. Its separate release gate defaults OFF; configuration does not activate redemption.
 
-Important limits:
-- This is functional UI and calculation preparation, NOT production rate management. Reloading or leaving the page loses session drafts; export rates first. Promo drafts are memory-only.
-- Meal totals are explicit draft inputs for two adults. This UI does not read effective-date meal policies or change configured supplements.
-- No true live rate-card replacement, server authorization/persistence, promo redemption or authoritative booking quote integration is implemented here.
-- Do not merge as a complete production pricing release. A separately tested migration and quote integration must follow.
+Database migration/activation and frontend publication are separate. Local implementation or GitHub sync alone is not evidence of a live rollout. See the deployment report for verified status. `shared-meal-pricing-db.md` and `ep-promo-rollout.md` describe their respective contracts.
 
-Before production activation:
-1. Confirm the EP schedule and applicable period with the hotel. Proposed ₹300 reduction is not approval. Do not infer EP from AP.
-2. Obtain separate 24 December 2026–1 January 2027 rates, and confirm Saturday-only weekend mapping.
-3. Confirm meal inclusion, MAP major-meal choice, extra adult/child/infant rules and minimum-price policy.
-4. Add a versioned, authorized atomic persistence endpoint and audit evidence; avoid writing browser-derived prices into authoritative quotes.
-5. Test multi-night/date transitions, category applicability, overrides/reset, live plan ordering, promo eligibility/redemption concurrency, taxes, payment totals and existing-booking immutability in an isolated database.
-6. Visually verify desktop/mobile and interrupted/repeated workflows in a functioning browser before release.
+## Deferred calendar prototype
 
-Validation on this branch:
-- Production Vite build passes (pre-existing large-chunk warning).
-- TypeScript app check passes.
-- Targeted ESLint for all newly added implementation files passes.
-- New focused tests: 68 pass (30 workspace + 7 draft-store contract + 11 stay-subtotal + 20 meal-choice model/source guards).
-- Complete existing + new suite: 193 pass, 39 fail; baseline main: 125 pass, the same 39 fail. Existing failures are around retired checkout/publication paths, not introduced by this branch.
-- Full repository ESLint fails with 483 errors and 59 warnings; same counts on baseline main.
-- Browser QA attempted using local Chromium, blocked by environment socket permission / runtime unavailability. No screenshot or interactive pass is claimed.
+`/admin/pricing/workspace` remains an experimental protected route but is not in the main sidebar. The user deferred the broader rate-calendar release.
 
-## Further isolated groundwork
+It supports session-only calendar selection, inclusive bulk ranges, EP input, additive previews, explicit overrides/reason, review/cancel, rate-card/coverage preview and JSON export. Leaving/reloading loses session drafts. It does not write authoritative rates, replace the live rate card or alter booking quotes. Its former session-only promo demo is replaced with a link to the production-capable Promo Codes page.
 
-See `ep-persistence-groundwork.md` and `ep-quote-groundwork.md`. These add independently tested contracts/calculation modules only. They are not wired to this workspace, existing Edge Functions, live booking/payment paths, or a database. Real durable persistence and backend activation remain blocked pending isolated database/security/integration testing and confirmed rate/policy inputs.
+See `pricing-followup-backlog.md` for deferred per-guest choices, age-specific pricing and calendar persistence. Do not mistake the prototype for completed production calendar management.
 
-## Meal choice workspace
+## Validation checkpoint (before final coordinated rollout)
 
-See `meal-choice-draft.md` for the new read-only Meal Management catalogue links, configurable AND/OR groups, independent actual-choice per-person pricing and confirmed shared **session-draft** price edits. These do not save live prices or automatically feed the separate rate calendar.
+- App TypeScript and production Vite build passed, with existing large-chunk warning.
+- Focused new production UI/model ESLint passed.
+- Full Node suite: 248 pass / 39 fail. All 39 failure names match the baseline, around retired checkout/publication paths and the existing mail-test issue.
+- Shared-meal database tests: 70 passed after independent review hardening.
+- EP/festive isolated tests: 67 pass; combined activation tests146 pass and actual-data tests210 pass. The legacy precision issue caught during the first attempt was fixed; the second atomic activation passed all live-data assertions. See rollout status.
+- Promo database tests: 18 pass with release gate OFF.
+- Meal editor server-render fixture passes. Browser interaction/visual QA is blocked by Chromium socket permissions; no screenshot or interactive pass claimed.
+
+These checks are not a claim that production schema, Edge Functions, GitHub main or Lovable publication has been updated.

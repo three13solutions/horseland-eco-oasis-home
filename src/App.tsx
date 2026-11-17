@@ -67,6 +67,7 @@ import PageManagement from "./pages/admin/PageManagement";
 import FAQManagement from "./pages/admin/FAQManagement";
 import DynamicPage from "./pages/DynamicPage";
 import PricingWorkspace from "./pages/admin/PricingWorkspace";
+import WebsitePromotionSettings from "./components/admin/WebsitePromotionSettings";
 import PricingDashboard from "./pages/admin/PricingDashboard";
 import BaseConfiguration from "./pages/admin/BaseConfiguration";
 import BasePricing from "./pages/admin/BasePricing";
@@ -139,6 +140,7 @@ function App() {
                 <Route path="payments" element={<PaymentManagement />} />
                 <Route path="invoices" element={<InvoiceManagement />} />
                 <Route path="pricing/workspace" element={<PricingWorkspace />} />
+                <Route path="pricing/promotions" element={<div className="p-6"><WebsitePromotionSettings /></div>} />
                 <Route path="pricing" element={<PricingDashboard />} />
                 <Route path="pricing/config" element={<BaseConfiguration />} />
                 <Route path="pricing/rates" element={<BasePricing />} />

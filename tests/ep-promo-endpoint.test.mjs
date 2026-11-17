@@ -1,0 +1,32 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {readFileSync} from 'node:fs';
+import {stripTypeScriptTypes} from 'node:module';
+import vm from 'node:vm';
+import {calculateBookingQuote,assertQuoteMatches,normalizeQuoteRequest,QuoteError} from '../supabase/functions/_shared/bookingQuote.ts';
+import {InventoryPaymentError} from '../supabase/functions/_shared/distributionPaymentCoordinator.ts';
+import {normalizeBookingMetadata,assertResumeMatches} from '../supabase/functions/_shared/distributionCheckout.ts';
+const source=readFileSync(new URL('../supabase/functions/create-razorpay-order-v3/index.ts',import.meta.url),'utf8').replace(/^import .*;\n/gm,'');
+const quoteRequest={room_type_id:'11111111-1111-4111-8111-111111111111',check_in:'2026-11-18',check_out:'2026-11-20',adults_count:2,children_count:0,infants_count:0,meal_plan_code:'FB',cancellation_policy_code:'free',addons:[]};
+const variant={pricing_status:'verified',room_rate:4100,meal_cost:6040,total_price:10140,price_per_night:5070,quote_fingerprint:'base',meal_plan_code:'FB',cancellation_policy_code:'free',nightly_breakdown:[{date:'2026-11-18',room_only:2000},{date:'2026-11-19',room_only:2100}]};
+const config={code:'EP300',label:'300 off',revision:1,amount_per_night:300,is_active:true};
+const guest={first_name:'Test',last_name:'Guest',email:'guest@example.com',phone:'+919999999999'};
+function harness({enabled=true,retained=null}={}) {
+ let handler,prepared=null,lookups=0;
+ const db={rpc:async name=>({data:name==='distribution_checkout_state'?{enabled:true}:true}),from:table=>{lookups++;const result=()=>({data:table==='room_types'?{id:quoteRequest.room_type_id,is_published:true}:table==='website_promo_rollout'?{enabled}:config});const chain={select:()=>chain,eq:()=>chain,maybeSingle:async()=>result(),order:async()=>({data:[{min_amount:0,max_amount:null,gst_percentage:18}]})};return chain}};
+ db.rpc=async name=>({data:name==='calculate_website_rate_variants'?[variant]:name==='distribution_checkout_state'?{enabled:true}:true});
+ const ctx={serve:f=>{handler=f},createClient:()=>db,calculateBookingQuote,assertQuoteMatches,normalizeQuoteRequest,QuoteError,InventoryPaymentError,
+ prepareWebsitePayment:async(_s,_p,intent)=>{prepared=intent;return{id:'order_test',amount:intent.amountPaise,currency:'INR'}},
+ issueCheckoutCapability:async()=>'',verifyCheckoutCapability:async()=> 'owner',normalizeBookingMetadata,assertResumeMatches,
+ classifySavedCheckout:()=>'',admissionIdentity:async()=>({sourceKey:'x',contactKey:'y',sourceVerified:true}),
+ createDistributionStore:()=>({resume:async()=>retained}),getDistributionRazorpayCredentials:async()=>({keyId:'rzp_test_x'}),createDistributionRazorpayProvider:()=>({}),
+ Deno:{env:{get:()=>undefined}},Request,Response,JSON,console};
+ vm.runInNewContext(stripTypeScriptTypes(source),ctx);
+ return{call:async body=>{const response=await handler(new Request('https://test/',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)}));return{status:response.status,body:await response.json()}},get prepared(){return prepared},get lookups(){return lookups}};
+}
+test('offer preview is non-charging and server calculated',async()=>{const h=harness(),r=await h.call({action:'promo',promo_code:'EP300',quote_request:quoteRequest});assert.equal(r.status,200);assert.equal(r.body.quote.total_amount,11257.2);assert.equal(h.prepared,null)});
+test('browser amount cannot replace discounted amount',async()=>{const h=harness(),r=await h.call({action:'prepare',request_id:'11111111-1111-4111-8111-111111111111',checkout_token:'x',promo_code:'EP300',quote_request:quoteRequest,amount:1,quote_fingerprint:'base:promo:EP300:1:600',guest});assert.equal(r.status,409);assert.equal(r.body.code,'QUOTE_CHANGED');assert.equal(h.prepared,null)});
+test('accepted coupon amount and snapshot enter existing atomic payment coordinator',async()=>{const h=harness(),r=await h.call({action:'prepare',request_id:'11111111-1111-4111-8111-111111111111',checkout_token:'x',promo_code:'EP300',quote_request:quoteRequest,amount:11257.2,quote_fingerprint:'base:promo:EP300:1:600',guest});assert.equal(r.status,200);assert.equal(h.prepared.amountPaise,1125720);assert.equal(h.prepared.quoteSnapshot.promotion.discount_amount,600)});
+test('release OFF cannot redeem or create payment intent',async()=>{const h=harness({enabled:false}),r=await h.call({action:'prepare',request_id:'11111111-1111-4111-8111-111111111111',checkout_token:'x',promo_code:'EP300',quote_request:quoteRequest,amount:11257.2,quote_fingerprint:'base:promo:EP300:1:600',guest});assert.equal(r.body.code,'PROMO_UNAVAILABLE');assert.equal(h.prepared,null)});
+test('old test code no longer creates a one-rupee charge',async()=>{const h=harness(),r=await h.call({action:'prepare',request_id:'11111111-1111-4111-8111-111111111111',checkout_token:'x',promo_code:'HLTEST1',quote_request:quoteRequest,amount:1,quote_fingerprint:'base',guest});assert.equal(r.status,409);assert.equal(h.prepared,null)});
+test('retained order preserves accepted coupon snapshot even after gate closes',async()=>{const request=normalizeQuoteRequest({...quoteRequest,promo_code:'EP300'}),metadata=normalizeBookingMetadata(guest,null);const retained={requestId:'11111111-1111-4111-8111-111111111111',quoteSnapshot:{request,promotion:{code:'EP300',discount_amount:600}},bookingMetadata:metadata,amountPaise:1125720,quoteFingerprint:'base:promo:EP300:1:600'};const h=harness({enabled:false,retained});const r=await h.call({action:'prepare',request_id:retained.requestId,checkout_token:'x',promo_code:'EP300',quote_request:quoteRequest,amount:11257.2,quote_fingerprint:retained.quoteFingerprint,guest});assert.equal(r.status,200);assert.equal(h.lookups,0);assert.equal(h.prepared,retained)});

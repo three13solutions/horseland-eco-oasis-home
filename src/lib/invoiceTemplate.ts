@@ -5,8 +5,6 @@ const LOGO = '/lovable-uploads/24f5ee9b-ce5a-4b86-a2d8-7ca42e0a78cf.png';
 const esc = (v: unknown) => DOMPurify.sanitize(String(v ?? ''), { ALLOWED_TAGS: [] });
 const inr = (n: unknown) => `₹${Number(n ?? 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 const date = (d?: string | null) => (d ? new Date(d).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) : '—');
-// Temporary live-test promo. Remove with the HLTEST1 code.
-const PROMO_CODE = 'HLTEST1';
 
 export async function buildInvoiceHtml(invoiceId: string): Promise<string> {
   const { data: inv, error } = await supabase
@@ -20,7 +18,10 @@ export async function buildInvoiceHtml(invoiceId: string): Promise<string> {
   const quote: any = b.rate_breakdown?.validated_quote ?? {};
   const fullTotal = Number(quote.total_amount ?? inv.total_amount);
   const charged = Number(inv.total_amount);
-  const discount = Math.max(0, +(fullTotal - charged).toFixed(2));
+  const legacyAdjustment = Math.max(0, +(fullTotal - charged).toFixed(2));
+  const promotion = quote.promotion;
+  const discount = Number(promotion?.discount_amount ?? 0);
+  const beforeDiscount = Number(quote.subtotal_before_discount ?? quote.subtotal ?? inv.subtotal_amount);
   const nights = b.check_in && b.check_out ? Math.round((+new Date(b.check_out) - +new Date(b.check_in)) / 86400000) : 0;
   const subtotal = Number(quote.subtotal ?? inv.subtotal_amount);
   const tax = Number(quote.tax_amount ?? inv.gst_amount);
@@ -51,13 +52,14 @@ th,td{padding:8px 10px;border-bottom:1px solid #eadfd3}td.r,th.r{text-align:righ
 </div>
 <table><thead><tr><th>Description</th><th>Room Category</th><th class="r">Nights</th><th class="r">Amount</th></tr></thead><tbody>
 <tr><td>${esc(b.room_types?.name ?? 'Accommodation')}${b.room_units?.unit_number ? ` – Room ${esc(b.room_units.unit_number)}` : ''}<br><small>${esc(quote.variant?.meal_plan_name ?? b.meal_plan_code ?? '')}${quote.variant?.cancellation_policy_name ? ' · ' + esc(quote.variant.cancellation_policy_name) : ''}</small></td>
-<td>${esc(b.room_types?.room_categories?.name ?? '—')}</td><td class="r">${nights}</td><td class="r">${inr(subtotal)}</td></tr>
+<td>${esc(b.room_types?.room_categories?.name ?? '—')}</td><td class="r">${nights}</td><td class="r">${inr(beforeDiscount)}</td></tr>
 </tbody></table>
 <table class="tot"><tbody>
+${discount > 0 ? `<tr class="promo"><td class="r">Promo code applied: <b>${esc(promotion.code)}</b></td><td class="r">− ${inr(discount)}</td></tr>` : ''}
 <tr><td class="r" style="width:75%">Subtotal</td><td class="r">${inr(subtotal)}</td></tr>
 <tr><td class="r">GST ${taxRate}</td><td class="r">${inr(tax)}</td></tr>
 <tr><td class="r">Total</td><td class="r">${inr(subtotal + tax)}</td></tr>
-${discount > 0 ? `<tr class="promo"><td class="r">Promo code applied: <b>${PROMO_CODE}</b></td><td class="r">− ${inr(discount)}</td></tr>` : ''}
+${legacyAdjustment > 0 ? `<tr><td class="r">Recorded payment adjustment</td><td class="r">− ${inr(legacyAdjustment)}</td></tr>` : ''}
 <tr class="grand"><td class="r">Amount Payable</td><td class="r">${inr(charged)}</td></tr>
 <tr><td class="r">Amount Paid</td><td class="r">${inr(paid)}</td></tr>
 <tr><td class="r">Balance Due</td><td class="r">${inr(Math.max(0, charged - paid))}</td></tr>

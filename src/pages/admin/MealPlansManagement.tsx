@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { LiveMealPricing } from "@/components/admin/LiveMealPricing";
 import { mealPlanAliasPayload, findMealPlanAliasConflict } from "@/lib/mealPlanAliases";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -77,48 +78,28 @@ const MealPlansManagement = () => {
       if (fields.plan_code === 'RO' && supplement !== 0) throw new Error('Room Only must have a zero meal supplement.');
       const data = { ...fields, ...aliases, supplement_per_person_inr: supplement, supplement_period: 'per_night', supplement_guest_basis: 'all_guests' };
       if (editingPlan) {
+        // Shared prices and linked composition are saved only by the reviewed RPC.
+        const { supplement_per_person_inr: _amount, supplement_period: _period, supplement_guest_basis: _basis, supplement_effective_from: _effective, included_meal_types: _included, preferred_variant: _variant, is_active: _active, ...metadata } = data;
         const { error } = await supabase
           .from('meal_plan_rules')
-          .update(data)
+          .update(metadata)
           .eq('id', editingPlan.id)
           .select('id')
           .single();
         if (error) throw error;
       } else {
-        const { error } = await supabase
-          .from('meal_plan_rules')
-          .insert([data]);
-        if (error) throw error;
+        throw new Error('Use the four canonical plans. Creating additional pricing plans is not supported here.');
       }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['meal-plans'] });
+      queryClient.invalidateQueries({ queryKey: ['shared-meal-pricing-workspace'] });
       queryClient.invalidateQueries({ queryKey: ['meal-supplement-versions'] });
       queryClient.invalidateQueries({ queryKey: ['rate-plan-admin'] });
       queryClient.invalidateQueries({ queryKey: ['rate-variants'] });
       setIsOpen(false);
       resetForm();
       toast.success(editingPlan ? 'Meal plan updated' : 'Meal plan created');
-    },
-    onError: (error: any) => {
-      toast.error(error.message);
-    }
-  });
-
-  const deleteMutation = useMutation({
-    mutationFn: async (id: string) => {
-      const { error } = await supabase
-        .from('meal_plan_rules')
-        .delete()
-        .eq('id', id);
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['meal-plans'] });
-      queryClient.invalidateQueries({ queryKey: ['meal-supplement-versions'] });
-      queryClient.invalidateQueries({ queryKey: ['rate-plan-admin'] });
-      queryClient.invalidateQueries({ queryKey: ['rate-variants'] });
-      toast.success('Meal plan deleted');
     },
     onError: (error: any) => {
       toast.error(error.message);
@@ -182,7 +163,7 @@ const MealPlansManagement = () => {
           <div className="mt-2 p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
             <p className="text-sm text-blue-800 dark:text-blue-200">
               <strong>How It Works:</strong> Meal plans are now independent from cancellation policies in the booking flow. 
-              This screen is the single source for meal names, aliases, inclusions and effective-dated supplements. Verified Rate Plans use these amounts; unclassified legacy rates remain unchanged. Aliases refer to the same plan, not additional plans. Pricing rules are configured separately.
+              Meal Management supplies shared meal prices. Linked required groups below derive the plan supplements. Edit names and aliases separately; linked prices and groups use reviewed, revision-checked saves. Aliases refer to the same plan, not additional plans. Pricing rules are configured separately.
             </p>
           </div>
         </div>
@@ -190,9 +171,7 @@ const MealPlansManagement = () => {
           setIsOpen(open);
           if (!open) resetForm();
         }}>
-          <DialogTrigger asChild>
-            <Button><Plus className="h-4 w-4 mr-2" /> Add Meal Plan</Button>
-          </DialogTrigger>
+          <p className="text-xs text-muted-foreground">Four canonical plans. Edit their linked groups below.</p>
           <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>{editingPlan ? 'Edit' : 'Add'} Meal Plan</DialogTitle>
@@ -244,14 +223,14 @@ const MealPlansManagement = () => {
               <p className="text-xs text-muted-foreground">Separate aliases with commas or new lines. These are alternative names and codes for this plan, not extra plans or website descriptions.</p>
               <div className="rounded-md border p-3 space-y-2">
                 <Label htmlFor="meal-supplement">Meal Supplement per Person (₹)</Label>
-                <Input id="meal-supplement" type="number" min="0" step="0.01"
+                <Input id="meal-supplement" type="number" min="0" step="0.01" disabled={!!editingPlan}
                   value={formData.supplement_amount_text}
                   onChange={(e) => setFormData(prev => ({ ...prev, supplement_amount_text: e.target.value }))}
                   placeholder="Not configured" />
                 <Label htmlFor="supplement-effective-from">Effective for stay nights from</Label>
-                <Input id="supplement-effective-from" type="date" value={formData.supplement_effective_from}
+                <Input id="supplement-effective-from" disabled={!!editingPlan} type="date" value={formData.supplement_effective_from}
                   onChange={(e) => setFormData(prev => ({ ...prev, supplement_effective_from: e.target.value }))} />
-                <p className="text-xs text-muted-foreground">Per person per night. Adults, children and infants currently count at the full rate; Mahesh reconfirmation is pending. Existing paid booking snapshots are preserved.</p>
+                <p className="text-xs text-muted-foreground">Per person per night. All adults, children and infants use the same full meal rate. For existing plans, change linked meals/prices in the panel below; this metadata form cannot change the supplement. Existing booking/payment snapshots are preserved.</p>
                 {editingPlan && Number(formData.supplement_amount_text) !== Number(editingPlan.supplement_per_person_inr) && <div className="rounded border border-amber-400 p-2 text-sm">
                   Price impact: this plan changes by ₹{(Number(formData.supplement_amount_text || 0) - Number(editingPlan.supplement_per_person_inr || 0)).toFixed(2)} per person per night from {formData.supplement_effective_from}. Entered room/package anchors stay fixed. For anchors entered with this plan, the derived RO amount moves by the opposite difference × included guests; for RO anchors, this inclusive plan moves by this difference × guests. Review affected rates in Rate Plans before saving.
                 </div>}
@@ -263,6 +242,7 @@ const MealPlansManagement = () => {
                   {['breakfast', 'lunch', 'dinner'].map(mealType => (
                     <div key={mealType} className="flex items-center space-x-2">
                       <Checkbox 
+                        disabled={!!editingPlan}
                         checked={formData.included_meal_types.includes(mealType)}
                         onCheckedChange={() => handleMealTypeToggle(mealType)}
                       />
@@ -278,6 +258,7 @@ const MealPlansManagement = () => {
                   <select 
                     className="w-full border rounded-md p-2"
                     value={formData.preferred_variant}
+                    disabled={!!editingPlan}
                     onChange={(e) => setFormData(prev => ({ ...prev, preferred_variant: e.target.value }))}
                   >
                     <option value="veg">Veg</option>
@@ -299,6 +280,7 @@ const MealPlansManagement = () => {
                 <div className="flex items-center space-x-2">
                   <Switch 
                     checked={formData.is_active}
+                    disabled={!!editingPlan}
                     onCheckedChange={(checked) => setFormData(prev => ({ ...prev, is_active: checked }))}
                   />
                   <Label>Active</Label>
@@ -324,6 +306,8 @@ const MealPlansManagement = () => {
         </Dialog>
       </div>
 
+      <LiveMealPricing />
+      <p className="text-sm text-muted-foreground">Current public plan metadata and supplements below. Staged prices and groups above do not replace these until coordinated activation.</p>
       <Table>
         <TableHeader>
           <TableRow>
@@ -347,7 +331,7 @@ const MealPlansManagement = () => {
               </TableCell>
               <TableCell>
                 {plan.supplement_per_person_inr == null ? 'Not configured' : `₹${plan.supplement_per_person_inr.toLocaleString('en-IN')}`}
-                <div className="text-xs text-muted-foreground">{plan.supplement_period === 'per_night' ? 'Per night · ' : ''}Used by verified Rate Plans; legacy rates unchanged</div>
+                <div className="text-xs text-muted-foreground">{plan.supplement_period === 'per_night' ? 'Per night · ' : ''}Derived from linked meals; saved booking quotes remain fixed</div>
               </TableCell>
               <TableCell>
                 {plan.included_meal_types?.length > 0 ? (
@@ -369,13 +353,7 @@ const MealPlansManagement = () => {
                   <Button size="sm" variant="outline" onClick={() => handleEdit(plan)}>
                     <Edit className="h-4 w-4" />
                   </Button>
-                  <Button 
-                    size="sm" 
-                    variant="destructive"
-                    onClick={() => deleteMutation.mutate(plan.id)}
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
+                  <span className="text-xs text-muted-foreground self-center">Manage availability above</span>
                 </div>
               </TableCell>
             </TableRow>

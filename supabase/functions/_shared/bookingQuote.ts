@@ -1,3 +1,4 @@
+import { calculateEpPromotion, normalizePromoCode } from './epPromo.ts';
 // One server-side adapter around the canonical database quote engine.
 // Requests contain IDs and quantities only. Never accept client meal/room/addon prices.
 export class QuoteError extends Error {
@@ -30,7 +31,9 @@ export function normalizeQuoteRequest(raw: any) {
     return { type: item.type, id: item.id, quantity: integer(item.quantity, 'Extra quantity', 1, 99) };
   }).sort((a: any, b: any) => `${a.type}:${a.id}`.localeCompare(`${b.type}:${b.id}`));
   if (addons.length > 100) throw new QuoteError('INVALID_QUOTE', 'Too many extras.', 400);
-  return { room_type_id: raw.room_type_id, room_unit_id: raw.room_unit_id || null, check_in: raw.check_in, check_out: raw.check_out, adults_count, children_count, infants_count, meal_plan_code: raw.meal_plan_code, cancellation_policy_code: raw.cancellation_policy_code, addons };
+  let promo_code: string | undefined;
+  try { promo_code = normalizePromoCode(raw.promo_code); } catch { throw new QuoteError('INVALID_PROMO', 'Invalid promotion code.', 400); }
+  return { ...(promo_code ? { promo_code } : {}), room_type_id: raw.room_type_id, room_unit_id: raw.room_unit_id || null, check_in: raw.check_in, check_out: raw.check_out, adults_count, children_count, infants_count, meal_plan_code: raw.meal_plan_code, cancellation_policy_code: raw.cancellation_policy_code, addons };
 }
 
 // Preserve the existing published bedding/fallback transfer tariffs, but validate
@@ -65,10 +68,10 @@ export async function calculateBookingQuote(db: any, raw: any, mode: 'website' |
   if (error) throw new QuoteError('QUOTE_LOOKUP_FAILED', 'The rate could not be calculated. Please refresh.', 503);
   if (mode === 'website' && Array.isArray(variants) && !variants.some(v => v.meal_plan_code === request.meal_plan_code)) throw new QuoteError('MEAL_PLAN_UNAVAILABLE', 'This meal plan is no longer available for the selected room and stay. Please choose an available plan.');
   let variant = Array.isArray(variants) ? variants.find(v => v.meal_plan_code === request.meal_plan_code && v.cancellation_policy_code === request.cancellation_policy_code) : null;
-  if (!variant || !['verified', 'legacy_basis_unverified'].includes(variant.pricing_status) || !variant.quote_fingerprint) throw new QuoteError('RATE_BASIS_UNVERIFIED', 'A server-verified rate is required before booking.');
+  if (!variant || !['verified', 'mixed_basis_unverified', 'legacy_basis_unverified'].includes(variant.pricing_status) || !variant.quote_fingerprint) throw new QuoteError('RATE_BASIS_UNVERIFIED', 'A server-verified rate is required before booking.');
   if (!Number.isFinite(Number(variant.total_price)) || Number(variant.total_price) < 0) throw new QuoteError('INVALID_QUOTE', 'Invalid calculated room price.');
 
-  if (mode === 'manual' && variant.pricing_status === 'legacy_basis_unverified') {
+  if (mode === 'manual' && variant.pricing_status === 'legacy_basis_unverified' && variant.pricing_mode !== 'mixed_verified_and_legacy') {
     const nights = (Date.parse(request.check_out) - Date.parse(request.check_in)) / 86400000;
     const legacyTotal = money(Number(room.base_price) * nights);
     variant = { ...variant, room_rate: legacyTotal, meal_cost: 0, policy_adjustment: 0,
@@ -94,7 +97,7 @@ export async function calculateBookingQuote(db: any, raw: any, mode: 'website' |
       if (itemError) throw new QuoteError('QUOTE_LOOKUP_FAILED', 'Extras could not be verified.', 503);
       if (data) {
         // Do not automatically charge for an included buffet a second time.
-        if (variant.pricing_status === 'verified' && selection.type === 'meal' && variant.included_meals?.includes(data.meal_type) && /buffet/i.test(data.title ?? '')) throw new QuoteError('MEAL_ALREADY_INCLUDED', 'This buffet meal is already included in the chosen plan. Remove the duplicate extra.');
+        if ((['verified', 'mixed_basis_unverified'].includes(variant.pricing_status) || variant.pricing_mode === 'mixed_verified_and_legacy') && selection.type === 'meal' && variant.included_meals?.includes(data.meal_type) && /buffet/i.test(data.title ?? '')) throw new QuoteError('MEAL_ALREADY_INCLUDED', 'This buffet meal is already included in the chosen plan. Remove the duplicate extra.');
         if (selection.type === 'transport' && data.category !== 'transport') throw new QuoteError('EXTRA_UNAVAILABLE', 'Invalid transfer selection.');
         item = { ...data, title: data.title ?? data.name, price: selection.type === 'activity' ? data.price_amount : data.price };
       }
@@ -103,18 +106,35 @@ export async function calculateBookingQuote(db: any, raw: any, mode: 'website' |
     extras.push({ ...selection, title: item.title, price: Number(item.price), total: money(Number(item.price) * selection.quantity) });
   }
   const addon_total = money(extras.reduce((sum, x) => sum + x.total, 0));
-  const subtotal = money(Number(variant.total_price) + addon_total);
+  const subtotal_before_discount = money(Number(variant.total_price) + addon_total);
+  let promotion = null;
+  const originalVariant = variant;
+  if (request.promo_code) {
+    if (mode !== 'website') throw new QuoteError('INVALID_PROMO', 'This offer is for website bookings only.');
+    const { data: gate, error: gateError } = await db.from('website_promo_rollout').select('enabled').eq('id', true).maybeSingle();
+    if (gateError || gate?.enabled !== true) throw new QuoteError('PROMO_UNAVAILABLE', 'Website offers are not active.');
+    const { data: config, error: configError } = await db.from('website_promotions').select('code,revision,amount_per_night,is_active').eq('code', request.promo_code).maybeSingle();
+    if (configError || !config || config.code !== request.promo_code) throw new QuoteError('PROMO_UNAVAILABLE', 'This offer is unavailable.');
+    try { promotion = calculateEpPromotion(variant, request.check_in, request.check_out, config); }
+    catch (error) { throw new QuoteError('PROMO_UNAVAILABLE', error instanceof Error ? error.message : 'This offer is unavailable.'); }
+    variant = { ...variant, room_rate: money(Number(variant.room_rate) - promotion.discount_amount),
+      total_price: money(Number(variant.total_price) - promotion.discount_amount),
+      price_per_night: money((Number(variant.total_price) - promotion.discount_amount) / promotion.nights),
+      quote_fingerprint: `${variant.quote_fingerprint}:promo:${promotion.code}:${promotion.revision}:${promotion.discount_amount}`,
+      promotion };
+  }
+  const subtotal = money(subtotal_before_discount - (promotion?.discount_amount ?? 0));
   let tax_rate = 0.18;
   if (mode === 'website') {
     const { data: tiers, error: taxError } = await db.from('gst_tiers').select('*').eq('is_active', true).order('display_order');
     if (taxError) throw new QuoteError('QUOTE_LOOKUP_FAILED', 'Tax configuration could not be verified.', 503);
-    const tier = tiers?.find((t: any) => Number(variant.price_per_night) >= Number(t.min_amount) && (t.max_amount === null || Number(variant.price_per_night) <= Number(t.max_amount)));
+    const tier = tiers?.find((t: any) => Number(originalVariant.price_per_night) >= Number(t.min_amount) && (t.max_amount === null || Number(originalVariant.price_per_night) <= Number(t.max_amount)));
     if (tier) tax_rate = Number(tier.gst_percentage) / 100;
   }
   // Preserve existing web-tier/manual-18% tax policy until separately approved.
   const tax_amount = money(subtotal * tax_rate);
   const total_amount = money(subtotal + tax_amount);
-  const snapshot = { version: 1, request, variant, extras, addon_total, subtotal, tax_rate, tax_amount, total_amount, currency: 'INR', tax_mode: mode };
+  const snapshot = { version: 1, request, variant, ...(promotion ? { promotion, subtotal_before_discount, original_variant: originalVariant } : {}), extras, addon_total, subtotal, tax_rate, tax_amount, total_amount, currency: 'INR', tax_mode: mode };
   return snapshot;
 }
 

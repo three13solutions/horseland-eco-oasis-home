@@ -15,7 +15,7 @@ The existing draft pricing route now contains **Meal Plans & Choices**. It reads
 
 ## Explicit limits
 
-One-night adult meal preview only: one catalogue unit per adult per selected meal. Catalogue price units must be verified before production use. Non-EP child/infant totals are blocked until an explicit policy is implemented; EP meal totals remain zero. No room occupancy/extras, taxes, discounts, effective-date schedules, cancellation rules, inventory, promo redemption or final payable quote are calculated. Choices may vary per person, not yet per occupied date. This does not guarantee plan-price ordering when OR selections differ.
+One-night meal preview: one catalogue unit per person per selected meal. The user has explicitly approved the same full meal price for adults, children and infants for now; age-specific pricing is deferred. Each person independently selects an alternative. EP meal totals remain zero. No room occupancy/extras, taxes, discounts, effective-date schedules, cancellation rules, inventory, promo redemption or final payable quote are calculated. Choices may vary per person, not yet per occupied date. This does not guarantee plan-price ordering when OR selections differ.
 
 No real shared price is saved to Meal Management. Session changes are lost on refresh/exit unless exported. Other production plan usage and standalone meal-extra usage are not scanned; the impact dialog warns about these limitations. Source `updated_at` is provenance, not a durable price version or guarantee of consistent future-night pricing.
 
@@ -27,6 +27,12 @@ Critically, current non-EP anchors subtract a source supplement to derive accomm
 
 ## Validation
 
-Pure model tests cover required groups, independent unequal choices, EP, unsupported guest policy, inactive/missing/duplicate links, unknown/incomplete choices, money overflow, immutable snapshots and shared-price impact. Source-level safety guards verify read-only scope and acknowledgment conditions; these are not browser interaction tests. Build/typecheck/targeted lint and full suite results are reported with the PR. Browser interaction/visual QA remains blocked by this executor's Chromium socket restrictions; no visual pass is claimed.
+Pure model tests cover required groups, independent unequal choices, EP, equal full-price guest policy and unknown-kind rejection, inactive/missing/duplicate links, unknown/incomplete choices, money overflow, immutable snapshots and shared-price impact. Source-level safety guards verify read-only scope and acknowledgment conditions; these are not browser interaction tests. Build/typecheck/targeted lint and full suite results are reported with the PR. Browser interaction/visual QA remains blocked by this executor's Chromium socket restrictions; no visual pass is claimed.
 
-Final checks for this addition: 16 meal-model tests and 4 source-safety tests pass; full suite 193 pass / 39 fail, exact same failure names as baseline. Production build, app TypeScript, targeted new-code ESLint and diff checks pass. Server-rendered fixture component smoke test passes (not browser interaction). Chromium attempt again fails with socket Operation not permitted.
+Historical checks before the equal-price and batch-impact extension: 16 meal-model tests and 4 source-safety tests pass; full suite 193 pass / 39 fail, exact same failure names as baseline. Production build, app TypeScript, targeted new-code ESLint and diff checks pass. Server-rendered fixture component smoke test passes (not browser interaction). Chromium attempt again fails with socket Operation not permitted.
+
+## Optional connected shared-price batches
+
+`shared-meal-impact.ts` discovers the transitive connected set of explicit OR alternatives, including links across plans. Discovery never applies a price or forces equal prices. The caller must show the connected options and obtain an explicit selected batch of meal IDs and new amounts. Batch impact calculates exact old/new possible plan ranges with all selected changes applied together, not the sum of independent estimates. Actual charges remain based on each person’s selected meal. Invalid/partial plans, duplicate plan codes, missing/inactive IDs, duplicate changes and unsafe amounts block impact; the UI must not silently omit unknown production usage. These helpers do not save, approve or authorize anything.
+
+Equal-price/batch-helper extension validation: 17 meal-choice model tests, 8 shared-batch impact tests and 4 existing workspace source-safety tests pass. Targeted ESLint and app TypeScript pass. This does not constitute database, browser or production quote integration validation.

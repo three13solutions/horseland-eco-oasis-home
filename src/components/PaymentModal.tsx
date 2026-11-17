@@ -123,16 +123,51 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
     bookingDetails.exactStayTotal
   );
 
+  type PromoQuote = { total_amount: number; subtotal: number; tax_amount: number; tax_rate: number;
+    promotion: {code: string; discount_amount: number}; variant: {quote_fingerprint: string} };
   const [promoInput, setPromoInput] = useState('');
   const [promoApplied, setPromoApplied] = useState<string | null>(null);
+  const [promoQuote, setPromoQuote] = useState<PromoQuote | null>(null);
   const [promoMessage, setPromoMessage] = useState<string | null>(null);
-  // TEMPORARY: live test promo. Server validates the code and sets the order to ₹1.
-  const payableAmount = promoApplied ? 1 : paymentBreakdown.totalAmount;
+  const [promoLoading, setPromoLoading] = useState(false);
+  const promoPending = useRef(false);
+  const [appliedSelection, setAppliedSelection] = useState('');
+  const [offers, setOffers] = useState<{code: string; label: string}[]>([]);
+  const promoGeneration = useRef(0);
+  const promoSelection = JSON.stringify([bookingDetails.quoteRequest, bookingDetails.quoteFingerprint, bookingDetails.existingBookingId]);
+  const effectivePromoQuote = appliedSelection === promoSelection ? promoQuote : null;
+  const effectivePromoCode = effectivePromoQuote ? promoApplied : null;
+  const payableAmount = effectivePromoQuote?.total_amount ?? paymentBreakdown.totalAmount;
+  const clearPromo = () => { promoGeneration.current++; promoPending.current=false;setAppliedSelection('');setPromoApplied(null);setPromoQuote(null);setPromoInput('');setPromoMessage(null);setPromoLoading(false); };
+  useEffect(() => {
+    clearPromo();setOffers([]);
+    if (!isOpen || bookingDetails.existingBookingId) return;
+    let active=true;
+    distributionCheckoutEnabled().then(async enabled=>{
+      if(!enabled)return;
+      const {data,error}=await supabase.functions.invoke('create-razorpay-order-v3',{body:{action:'promotions'}});
+      if(active&&!error&&Array.isArray(data?.offers))setOffers(data.offers.filter((o: {code?:unknown;label?:unknown})=>typeof o.code==='string'&&typeof o.label==='string'));
+    }).catch(()=>{/* Offers unavailable must not affect an ordinary checkout. */});
+    const invalidate=()=>{promoGeneration.current++;};
+    return()=>{active=false;invalidate();};
+  }, [isOpen, promoSelection, bookingDetails.existingBookingId]);
   const applyPromo = async () => {
-    const code = promoInput.trim().toUpperCase();
-    const { data } = await supabase.functions.invoke('create-razorpay-order-v3', { body: { action: 'promo', promo_code: code } });
-    if (data?.valid) { setPromoApplied(code); setPromoMessage('Promo applied. Total is now ₹1.'); }
-    else setPromoMessage('This promo code is not valid.');
+    if(promoPending.current||processingRef.current||reviewRequired||!isOpenRef.current)return;
+    promoPending.current=true;
+    const generation=++promoGeneration.current;
+    const code=promoInput.trim().toUpperCase();setPromoLoading(true);setPromoMessage(null);
+    try {
+      if(!await distributionCheckoutEnabled())throw new Error('Offers are not available for this checkout.');
+      const {data,error}=await supabase.functions.invoke('create-razorpay-order-v3',{body:{action:'promo',promo_code:code,quote_request:bookingDetails.quoteRequest}});
+      const q=data?.quote;
+      if(error||!data?.valid||q?.promotion?.code!==code||typeof q?.variant?.quote_fingerprint!=='string'||
+        q?.original_variant?.quote_fingerprint!==bookingDetails.quoteFingerprint||
+        typeof q?.subtotal_before_discount!=='number'||Math.abs(q.subtotal_before_discount-paymentBreakdown.subtotal)>0.01||
+        ![q?.total_amount,q?.subtotal,q?.tax_amount,q?.tax_rate,q?.promotion?.discount_amount].every(n=>typeof n==='number'&&Number.isFinite(n)&&n>=0)||q.total_amount<1)throw new Error('This offer is unavailable or the price has changed. It requires a verified room-only price for every night. Refresh your quote or continue without it.');
+      if(generation!==promoGeneration.current||!isOpenRef.current)return;
+      setPromoApplied(code);setPromoQuote(q);setAppliedSelection(promoSelection);setPromoMessage(`${code} applied: ${formatCurrency(q.promotion.discount_amount)} off accommodation. Meals and extras unchanged.`);
+    } catch(e) {if(generation===promoGeneration.current){setPromoApplied(null);setPromoQuote(null);setPromoMessage(e instanceof Error?e.message:'Offer unavailable.');}}
+    finally {if(generation===promoGeneration.current){promoPending.current=false;setPromoLoading(false);}}
   };
 
   const loadRazorpayScript = (): Promise<boolean> => {
@@ -151,7 +186,7 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
   };
 
   const handlePayment = async () => {
-    if (processingRef.current || confirmationPending) return;
+    if (processingRef.current || confirmationPending || promoPending.current) return;
     processingRef.current = true;
     setIsProcessing(true);
     setPaymentMessage(null);
@@ -201,8 +236,8 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
             email: bookingDetails.guestEmail, phone: bookingDetails.guestPhone,
             gender: bookingDetails.guestGender || null, id_type: bookingDetails.guestIdType || null,
             id_number: bookingDetails.guestIdNumber || null };
-          const request = { amount: payableAmount, currency: 'INR', promo_code: promoApplied || undefined,
-            quote_request: bookingDetails.quoteRequest, quote_fingerprint: bookingDetails.quoteFingerprint,
+          const request = { amount: payableAmount, currency: 'INR', promo_code: effectivePromoCode || undefined,
+            quote_request: {...bookingDetails.quoteRequest, ...(effectivePromoCode ? {promo_code:effectivePromoCode} : {})}, quote_fingerprint: effectivePromoQuote?.variant.quote_fingerprint ?? bookingDetails.quoteFingerprint,
             guest, booking_notes: bookingDetails.bookingNotes || null };
           const selectionKey = await checkoutSelectionKey(request);
           let attempt = getOrCreateWebsiteCheckout(selectionKey);
@@ -234,6 +269,7 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
           updateWebsiteCheckout(attempt.requestId, { state: 'ready', orderId: data.id });
           return data;
         }
+        if(effectivePromoCode) throw new Error('Offers are unavailable on this checkout route. Remove the offer before continuing.');
         const { data, error } = await supabase.functions.invoke('create-razorpay-order-v2', {
           body: { amount: paymentBreakdown.totalAmount, currency: 'INR',
             quote_request: bookingDetails.quoteRequest, quote_fingerprint: bookingDetails.quoteFingerprint,
@@ -413,14 +449,15 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
               </div>
             )}
 
+            {effectivePromoQuote && <div className="flex justify-between text-sm text-green-700"><span>{promoApplied} · accommodation discount</span><span>−{formatCurrency(effectivePromoQuote.promotion.discount_amount)}</span></div>}
             <div className="flex justify-between text-sm">
               <span>Subtotal</span>
-              <span>{formatCurrency(paymentBreakdown.subtotal)}</span>
+              <span>{formatCurrency(effectivePromoQuote?.subtotal ?? paymentBreakdown.subtotal)}</span>
             </div>
 
             <div className="flex justify-between text-sm">
-              <span>GST ({Math.round(gstRate * 100)}%)</span>
-              <span>{formatCurrency(paymentBreakdown.gstAmount)}</span>
+              <span>GST ({Math.round((effectivePromoQuote?.tax_rate ?? gstRate) * 100)}%)</span>
+              <span>{formatCurrency(effectivePromoQuote?.tax_amount ?? paymentBreakdown.gstAmount)}</span>
             </div>
 
             <Separator />
@@ -429,13 +466,15 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
               <span>Total Amount</span>
               <span>{formatCurrency(payableAmount)}</span>
             </div>
-            {!reviewRequired && <div className="space-y-1 pt-2">
+            {!reviewRequired && !bookingDetails.existingBookingId && offers.length>0 && <div className="space-y-1 pt-2">
+              <label className="block text-sm" htmlFor="booking-offer">Available offers</label>
+              <select id="booking-offer" aria-label="Available offers" className="w-full rounded border p-2 text-sm" value={promoInput} disabled={!!promoApplied||isProcessing||promoLoading} onChange={e=>setPromoInput(e.target.value)}><option value="">Choose an offer</option>{offers.map(o=><option key={o.code} value={o.code}>{o.code} · {o.label}</option>)}</select>
               <div className="flex gap-2">
-                <input aria-label="Promo code" value={promoInput} onChange={e => setPromoInput(e.target.value)} disabled={!!promoApplied || isProcessing}
+                <input aria-label="Promo code" value={promoInput} onChange={e => setPromoInput(e.target.value)} disabled={!!promoApplied || isProcessing || promoLoading}
                   placeholder="Promo code" className="flex h-9 w-full rounded-md border border-input bg-background px-3 text-sm uppercase" />
                 {promoApplied
-                  ? <Button type="button" variant="outline" size="sm" onClick={() => { setPromoApplied(null); setPromoInput(''); setPromoMessage(null); }} disabled={isProcessing}>Remove</Button>
-                  : <Button type="button" variant="outline" size="sm" onClick={applyPromo} disabled={!promoInput.trim() || isProcessing}>Apply</Button>}
+                  ? <Button type="button" variant="outline" size="sm" onClick={clearPromo} disabled={isProcessing}>Remove</Button>
+                  : <Button type="button" variant="outline" size="sm" onClick={applyPromo} disabled={!promoInput.trim() || isProcessing || promoLoading}>{promoLoading ? 'Checking…' : 'Apply'}</Button>}
               </div>
               {promoMessage && <p className="text-xs text-muted-foreground">{promoMessage}</p>}
             </div>}
@@ -447,7 +486,7 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
           {/* Payment Button */}
           <Button 
             onClick={handlePayment} 
-            disabled={isProcessing || confirmationPending || reviewLoading || (reviewRequired && (!reviewAccepted || retained?.state !== 'payable'))}
+            disabled={isProcessing || promoLoading || confirmationPending || reviewLoading || (reviewRequired && (!reviewAccepted || retained?.state !== 'payable'))}
             className="w-full"
             size="lg"
           >

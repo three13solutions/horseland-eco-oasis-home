@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import { Plus, Search, Grid, List, Edit, Trash2, ArrowLeft, Clock, DollarSign } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -8,6 +9,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
+import { LiveMealPricing } from '@/components/admin/LiveMealPricing';
 import { 
   Dialog, 
   DialogContent, 
@@ -57,6 +59,7 @@ interface Meal {
 }
 
 const MealsManagement = () => {
+  const queryClient = useQueryClient();
   const navigate = useNavigate();
   const { toast } = useToast();
   const [meals, setMeals] = useState<Meal[]>([]);
@@ -106,6 +109,7 @@ const MealsManagement = () => {
 
       if (error) throw error;
       setMeals(data || []);
+      queryClient.invalidateQueries({ queryKey: ['shared-meal-pricing-workspace'] });
     } catch (error) {
       console.error('Error loading meals:', error);
       toast({
@@ -129,9 +133,10 @@ const MealsManagement = () => {
 
       let result;
       if (editingMeal) {
+        const { price: _price, ...metadata } = mealData;
         result = await (supabase as any)
           .from('meals')
-          .update(mealData)
+          .update(metadata)
           .eq('id', editingMeal.id);
       } else {
         result = await (supabase as any)
@@ -382,6 +387,7 @@ const MealsManagement = () => {
                   <Label htmlFor="price">Price (₹)</Label>
                   <Input
                     id="price"
+                    disabled={!!editingMeal}
                     type="number"
                     min="0"
                     step="0.01"
@@ -391,6 +397,7 @@ const MealsManagement = () => {
                   />
                 </div>
               </div>
+              {editingMeal && <p className="text-sm text-muted-foreground">Change prices through Shared meal prices on this page so linked plans are reviewed and updated securely. This form edits other meal details only.</p>}
 
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
@@ -506,6 +513,8 @@ const MealsManagement = () => {
         </Dialog>
       </div>
 
+      <LiveMealPricing catalogueOnly onSaved={loadMeals} />
+      <p className="text-sm text-muted-foreground mb-4">The catalogue below shows current public records. Staged price edits above are held separately until coordinated activation.</p>
       {/* Controls */}
       <div className="flex justify-between items-center mb-6">
         <div className="flex items-center gap-1 bg-muted rounded-lg p-1">

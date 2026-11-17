@@ -233,7 +233,7 @@ export default function CategoryPricing() {
         <CardHeader>
           <CardTitle>Pricing Matrix</CardTitle>
           <CardDescription>
-            Set weekday and weekend prices for each season. Weekend rates apply to Fri-Sun and all holidays.
+            Set weekday and weekend prices for each season. Weekend days follow the effective-dated definition above; holiday pricing remains separate.
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -302,7 +302,7 @@ export default function CategoryPricing() {
             <h4 className="font-medium mb-1">📅 Day Types</h4>
             <ul className="text-muted-foreground space-y-1 ml-4">
               <li>• <strong>Weekday:</strong> Monday to Thursday</li>
-              <li>• <strong>Weekend:</strong> Friday to Sunday + All holidays and long weekends</li>
+              <li>• <strong>Weekend:</strong> Days selected in the effective-dated weekend definition; seasonal holiday rules also apply</li>
             </ul>
           </div>
           <div>

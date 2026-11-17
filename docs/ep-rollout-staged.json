@@ -1,0 +1,29 @@
+{
+  "status": "staged_not_applied",
+  "proposed_effective_from": "2026-11-17",
+  "last_stay_night": "2027-03-31",
+  "exclude_from": "2026-12-24",
+  "exclude_through": "2027-01-01",
+  "source_plan": "RO",
+  "included_adults": 2,
+  "quoted_nights": 1,
+  "min_nights": 1,
+  "max_nights": null,
+  "priority": 200,
+  "modifier_policy": "none",
+  "promo": "Do not reduce base rates. Separate INR300-per-night EP promo remains separate.",
+  "rooms": [
+    {"name":"Basement Hideouts","id":"8d3f3742-4c4d-4d2e-b25f-a50ed807dbf5","weekday":2000,"weekend":3500,"weekday_adult":900,"weekday_child":600,"weekend_adult":1200,"weekend_child":900},
+    {"name":"Standard","id":"47b2ee9c-bd3b-4cbf-9795-ff9ca4c02d55","weekday":2500,"weekend":4500,"weekday_adult":900,"weekday_child":600,"weekend_adult":1200,"weekend_child":900},
+    {"name":"Deluxe","id":"2fd9b1b5-d067-49af-a47d-64a17ce524eb","weekday":3500,"weekend":6000,"weekday_adult":1000,"weekday_child":600,"weekend_adult":1200,"weekend_child":900},
+    {"name":"Superior","id":"73dbc09f-64c2-4498-b58f-549151605ee4","weekday":5500,"weekend":8000,"weekday_adult":1000,"weekday_child":600,"weekend_adult":1200,"weekend_child":900}
+  ],
+  "notes": [
+    "Current infant accommodation is zero; equal infant meal charging does not imply a new infant accommodation tariff.",
+    "Room extra child tariff source says ages4-9; retain existing classification pending separate age-policy work.",
+    "No new rates for Standard Basement NonAC, Standard NonAC, SuperiorLoft or empty future room types.",
+    "16 RO anchors required: 4 room types x 2 day types x 2 nonfestive ranges.",
+    "Do not apply schema/data to production before coordinated publication authorization.",
+    "Legacy festive values and uncovered-night fallback must be resolved in rollout tests; source contains no festive tariff."
+  ]
+}

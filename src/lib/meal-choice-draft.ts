@@ -1,7 +1,8 @@
 /** Session-draft meal choices only. No booking, anchor, database or price writes.
  * Every required group is AND; one explicitly chosen alternative per group is OR.
- * Catalogue amounts are per adult/per occupied night in integer paise. No age policy
- * is inferred. This is not an authorization or authoritative quote boundary.
+ * Catalogue amounts are per person/per occupied night in integer paise. Current
+ * user-approved policy: adults, children and infants all pay the same full price.
+ * Age-specific pricing is deferred. This is not an authorization or authoritative quote boundary.
  */
 export type MealChoicePlanCode = 'RO' | 'BB' | 'HB' | 'FB';
 export interface MealCatalogueItem {
@@ -98,7 +99,6 @@ export function calculateMealChoices(plan: MealChoicePlan, catalogue: readonly M
     if (guestIds.has(guest.id)) throw new Error('Duplicate guest ID.');
     guestIds.add(guest.id);
     if (!['adult', 'child', 'infant'].includes(guest.kind)) throw new Error('Unknown guest kind; no pricing policy can be inferred.');
-    if (plan.code !== 'RO' && guest.kind !== 'adult') throw new Error('Child and infant meal charging policies are not configured; do not assume the adult price.');
     if (!guest.choices || typeof guest.choices !== 'object' || Array.isArray(guest.choices)) throw new Error('Guest choices are required.');
     const groupIds = new Set(plan.groups.map(group => group.id));
     if (Object.keys(guest.choices).some(id => !groupIds.has(id))) throw new Error('Guest choices contain an unknown group.');

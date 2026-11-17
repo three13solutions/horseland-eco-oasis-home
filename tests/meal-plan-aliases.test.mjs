@@ -14,18 +14,22 @@ test('another plan code, name or alias cannot be reused ambiguously', () => {
  for(const alias of ['bb','breakfast included','continental plan','cp']) assert.equal(findMealPlanAliasConflict([alias],other),alias);
  assert.equal(findMealPlanAliasConflict(['EP'],other),undefined);
 });
-test('add and update use the same editable alias payload', () => {
+test('metadata edits preserve editable alias payload without bypassing shared pricing', () => {
  const source = readFileSync(new URL('../src/pages/admin/MealPlansManagement.tsx',import.meta.url),'utf8');
  assert.match(source,/mealPlanAliasPayload\(alias_names_text, alias_codes_text\)/);
- assert.match(source,/\.update\(data\)/); assert.match(source,/\.insert\(\[data\]\)/);
+ assert.match(source,/\.update\(metadata\)/); assert.match(source,/\.\.\.aliases/);
+ assert.match(source,/supplement_per_person_inr: _amount/);
+ assert.doesNotMatch(source,/\.insert\(/);
  assert.match(source,/id="alias-names" value=\{formData.alias_names_text\}/);
  assert.match(source,/id="alias-codes" value=\{formData.alias_codes_text\}/);
  assert.doesNotMatch(source,/editingPlan && \(/);
 });
-test('admin can save pending supplement without enabling checkout pricing', () => {
+test('existing plan supplements are derived through shared-price review, not metadata edits', () => {
  const source = readFileSync(new URL('../src/pages/admin/MealPlansManagement.tsx',import.meta.url),'utf8');
  assert.match(source,/supplement_per_person_inr: supplement/);
  assert.match(source,/Number\.isFinite\(supplement\)/);
- assert.match(source,/unclassified legacy rates remain unchanged/);
+ assert.match(source,/Linked required groups below derive the plan supplements/);
+ assert.match(source,/included_meal_types: _included/);
+ assert.match(source,/<LiveMealPricing \/>/);
  assert.doesNotMatch(source,/supplement_pricing_enabled: (true|false)/);
 });

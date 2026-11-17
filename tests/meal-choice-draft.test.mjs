@@ -23,8 +23,8 @@ test('EP is zero with no meal groups or extra selections',()=>{
  assert.throws(()=>validateMealChoicePlan({...map,code:'RO'},catalogue),/EP/);
  assert.throws(()=>calculateMealChoices({code:'RO',groups:[]},catalogue,[guests[0]]),/unknown group/);
 });
-test('child and infant prices never silently inherit adult prices',()=>{
- for(const kind of ['child','infant']) assert.throws(()=>calculateMealChoices(map,catalogue,[{...guests[0],kind}]),/policies/);
+test('approved policy charges adults children and infants the same full chosen meal price',()=>{
+ for(const kind of ['adult','child','infant']) assert.equal(calculateMealChoices(map,catalogue,[{...guests[0],kind}]).subtotalPaise,35000);
  for(const kind of ['unknown',undefined]) assert.throws(()=>calculateMealChoices(map,catalogue,[{...guests[0],kind}]),/Unknown guest kind/);
 });
 test('missing, inactive and malformed catalogue items fail closed',()=>{
@@ -104,4 +104,11 @@ test('EP has zero meal addition for known adult, child and infant kinds without 
  assert.deepEqual(result.guestBreakdown.map(g=>g.subtotalPaise),[0,0,0]);
  assert.deepEqual(result.guestBreakdown.map(g=>g.kind),['adult','child','infant']);
  for(const kind of ['unknown',undefined,null,''])assert.throws(()=>calculateMealChoices({code:'RO',groups:[]},[],[{id:'g',label:'Guest',kind,choices:{}}]),/Unknown guest kind/);
+});
+
+test('mixed-age party still chooses independently at the same full-price basis',()=>{
+ const party=[guests[0],{...guests[1],kind:'child'},{...guests[0],id:'infant',label:'Infant',kind:'infant'}];
+ const result=calculateMealChoices(map,catalogue,party);
+ assert.equal(result.subtotalPaise,115000);
+ assert.deepEqual(result.guestBreakdown.map(g=>g.subtotalPaise),[35000,45000,35000]);
 });
