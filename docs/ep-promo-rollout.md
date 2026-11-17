@@ -1,4 +1,4 @@
-# EP300: staged, unpublished website offer
+# EP300: enabled backend, unpublished frontend
 
 ## Scope
 
@@ -26,7 +26,7 @@ Migration creates a default-OFF `website_promo_rollout` gate, inaccessible for w
 4. Deploy reviewed Edge code and coordinate release activation with the approved frontend publication. Syncing GitHub/Lovable code does not deploy Edge Functions or enable the gate automatically.
 5. Read back current gate/configuration and test a non-charging quote before reporting active.
 
-No live deployment or gate activation was performed in this task.
+Update17 November2026: v3 Edge version19 deployed and source-readback verified; release gate enabled under explicit user authorization. New preview validates EP300; old published UI promo-only request rejects400. No frontend Publish action or real payment was performed. See pricing-rollout-status.md for exact evidence.
 
 ## Verification
 

@@ -40,3 +40,19 @@ Migration `20261117124222_ep_promotion_disabled_release` then installed EP300 co
 The original components are retained under `scripts/pricing-migrations` for isolated tests. Only the two actual applied release versions live in `supabase/migrations`, preventing component reapplication by a future migration push.
 
 Checks:70 meal SQL,146 combined representative,210 actual-data pricing assertions,18 promo SQL,19 exact hosted manual-bundle tests pass. Full Node suite248 pass/39 unchanged baseline failures. TypeScript/build pass. Browser interaction QA remains unavailable in this executor.
+
+## Promo completion after explicit activation authorization
+
+The user authorized coupon creation/redemption and live backend operation. `create-razorpay-order-v3` version19 was deployed and all9 submitted source files read back exactly. Existing JWT setting remainsfalse; checkout capabilities, provider secrets and six existing distribution dependencies retain their prior logic. A retained-only normalization keeps previously bound HLTEST1 ₹1 retry requests valid without creating any new test discount.
+
+The EP300 release gate was then enabled. Live non-charging verification:
+- Offers list returns EP300.
+- Old published UI's promo-only request is rejected400, never `valid:true` or ₹1.
+- New canonical two-night CP quote gets₹600 off its room-only component;₹1,080 meals remain unchanged. Verified subtotal₹5,980, tax₹299, total₹6,279.
+- No payment/session/prepare action was invoked for verification. Booking/payment hashes remain unchanged.
+
+The new preview can use EP300 now, and publishing its frontend requires no later promo switch. The new public API is technically reachable before frontend publication, explicitly accepted during activation; the old published UI cannot use its missing full-quote contract. No publication action was performed.
+
+61 focused tests and10 tests against the exact deployment bundle pass. Visual/interactive browser verification remains blocked by the available runtime, and no real transaction has been tested.
+
+Further live checks confirmed five guests still receive₹600 for two nights (not per-person); protected festive/out-of-schedule pricing rejects EP300; HLTEST1 cannot create a new discount. Full suite after retained-request guard update:291 tests,252 pass,39 unchanged baseline failures. Browser worker independently reported unavailable runtime; no visual/interactive pass is claimed.

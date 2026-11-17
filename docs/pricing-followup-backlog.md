@@ -10,7 +10,7 @@ User decisions for the current production integration:
 Deferred, not represented as live functionality:
 1. Collect separate choices for every guest and occupied date, persist selected component/price revisions in authoritative quote and booking snapshots, support unequal OR alternatives end-to-end.
 2. Age-specific child/infant meal pricing after explicit policy approval.
-3. Activate the proposed ₹300/night EP promotion only as a separately configured promotion, not by reducing EP base prices; verify guest display, eligibility and payment quote integration.
+3. EP300 backend is now enabled and live non-charging quotes verified. Complete visual/interactive guest testing and user-reviewed frontend publication; no base-price reduction was made.
 4. Complete the broader EP calendar's durable persistence, override/reset and coverage workflow. Its separate experimental workspace remains explicitly session-only.
 5. Browser interaction and visual QA in an environment where Chromium can run; server-render smoke and source guards are not a substitute.
 

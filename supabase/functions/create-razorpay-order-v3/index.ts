@@ -67,7 +67,13 @@ serve(async(req:Request)=>{
   if((body.currency??'INR')!=='INR')throw new QuoteError('INVALID_CURRENCY','Only INR is supported.',400);
   const store=createDistributionStore(db);
   let intent=await store.resume(body.request_id,ownerScope);
-  if(intent){assertResumeMatches(intent,{request,metadata,amount:body.amount,fingerprint:body.quote_fingerprint});}
+  if(intent){
+   // Old published HLTEST1 checkouts stored no coupon in their quote request.
+   // Preserve only an already-bound one-rupee intent; never grant a new test discount.
+   const retainedRequest = request.promo_code === 'HLTEST1' && !intent.quoteSnapshot.request?.promo_code && intent.amountPaise === 100
+    ? normalizeQuoteRequest({...request,promo_code:undefined}) : request;
+   assertResumeMatches(intent,{request:retainedRequest,metadata,amount:body.amount,fingerprint:body.quote_fingerprint});
+  }
   else{
    const snapshot=await calculateBookingQuote(db,request,'website');
    assertQuoteMatches(snapshot,body.amount,body.quote_fingerprint);
