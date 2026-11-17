@@ -11,15 +11,21 @@ This change is repository-only. No production migrations, edge deployment, main-
 - Day eligibility uses the existing effective-dated, room-aware weekend calendar. Once-per-booking offers cannot select eligible-nights-only behavior. Restricted offers require an explicit whole-stay or eligible-night setting rather than an invented default.
 - Public offers communicate restrictions; the list itself is not stay-filtered. Applying an offer validates the specific booking on the server.
 
-## Deliberately not delivered as approved defaults
+## Extended promo scope, subsequently requested
 
-Optional mockup features are not silently enabled or seeded: room/meal eligibility, total/guest usage caps, minimum stay, arbitrary excluded dates and an admin monetary-price preview. The admin review summarizes terms and status, not a calculated guest quote. Individual guest DOB/meal-choice capture and broader occupancy-control redesign remain outside this change. Existing rates and included-adult values are unchanged.
+The review branch now includes optional room-category and meal-plan eligibility, total/per-email usage caps, minimum stay, excluded occupied dates, and an admin monetary preview of an unsaved draft using the same server quote/tax engine. Fields remain unrestricted/unlimited on existing codes unless deliberately edited. Enabling requires a successful current preview and a terms review in the admin UI.
+
+Usage is reserved atomically in the payment-intent/inventory transaction, before provider order creation, under a promotion row lock. Historical payment-intent promo snapshots are captured into a private usage ledger. Retried intents do not consume another use. Captured bookings mark usage redeemed. Confirmed cancellation does not restore it. An uncertain or still-payable order retains its reservation: there is deliberately no blind timeout release. A quote or admin preview consumes nothing.
+
+Per-guest usage means normalized contact email, not verified human identity. Different email addresses can bypass a per-person interpretation; the UI discloses this. Missing historical email prevents enabling that cap until reconciled. True multi-session concurrency and payment reconciliation must be tested in staging; PGlite queues a single connection and is not production concurrency proof.
+
+Individual meal/DOB choices and broader occupancy redesign remain outside these promo changes. The subsequently requested adult/child/infant meal rates and Veg/Nonveg/Jain plan variants are separate work, not delivered by this branch extension. The child meal rate has NOT been changed to 50%.
 
 ## Deployment prerequisites
 
-1. Review both new migrations against a staging copy of the current database. The age migration guards canonical function text and aborts if its expected pricing implementation has changed; do not remove those guards to force a rollout.
+1. Review all new migrations against a staging copy of the current database. The age migration guards canonical function text and aborts if its expected pricing implementation has changed; do not remove those guards to force a rollout.
 2. Run complete pricing regression cases with real staging rates for normal, Saturday, protected/festive and mixed/fallback dates. Verify actual vs chargeable counts, tax/promo ordering and unchanged historic booking snapshots.
-3. Deploy the reviewed edge checkout code and frontend together with the approved migration sequence. Do not publish this frontend alone: it requires the new policy RPCs. Do not assume a GitHub branch appears in the Lovable production preview.
+3. Deploy the reviewed admin-promotion-preview edge function, checkout code and frontend together with the approved migration sequence. Do not publish this frontend alone: it requires the new policy RPCs. Do not assume a GitHub branch appears in the Lovable production preview.
 4. Test authenticated admin authorization, invalid/overlapping bands, revision races, offer expiry and boundaries in Asia/Kolkata, private offers and mixed stays.
 5. Complete desktop/mobile interactive tests for each entry point, payment interruption/retry, confirmation, and retained-order snapshots. No real booking or payment is needed for quote-only tests.
 
@@ -37,3 +43,7 @@ The baseline repository suite has 39 existing failures (297 tests: 258 passing).
 - Final full test run with both isolated PostgreSQL modules enabled: **317 tests, 278 passed, 39 failed, 0 skipped**. The failing test names match the baseline; new tests pass.
 - The promo isolated PostgreSQL migration test passed authorization, existing-code preservation, revision, invalid-setting, calendar, audit and privilege checks. Set `PROMO_PGLITE_MODULE` to the same temporary PGlite module to include it.
 - Full ESLint is not green: **482 errors and 59 warnings**, identical totals on the unchanged baseline checkout. This branch does not claim repository-wide lint cleanliness.
+
+## Promo extension validation checkpoint
+
+The full suite with isolated SQL enabled now has **347 tests: 308 passed, 39 baseline failures, no skips**. Application TypeScript and production build passed. The SQL wrapper chain for all three promotion migrations was executed in isolated PostgreSQL, including cap edits and omission/clearing behavior. Separate actual trigger tests verify reservations, rollback on cap rejection, retry idempotency, historical usage, normalized email, policy changes and still-payable-state retention. Admin preview accepts an explicit simulated booking date, so future scheduled offers can be reviewed without bypassing production date windows.

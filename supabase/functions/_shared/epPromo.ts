@@ -2,7 +2,7 @@
  * Discounts accommodation only, once per occupied night, never per guest.
  * Meals/extras and cancellation-policy adjustment are not discounted.
  */
-export type EpPromotion = { code: string; revision: number; amount_per_night: number; amount_per_booking?: number; is_active: boolean; label?: string; discount_kind?: string; discount_value?: number; discount_basis?: string; booking_from?: string | null; booking_to?: string | null; stay_from?: string | null; stay_to?: string | null; day_scope?: string; mixed_stay_mode?: string | null; is_public?: boolean };
+export type EpPromotion = { code: string; revision: number; amount_per_night: number; amount_per_booking?: number; is_active: boolean; label?: string; discount_kind?: string; discount_value?: number; discount_basis?: string; booking_from?: string | null; booking_to?: string | null; stay_from?: string | null; stay_to?: string | null; day_scope?: string; mixed_stay_mode?: string | null; is_public?: boolean; eligible_room_category_ids?: string[] | null; eligible_meal_plan_codes?: string[] | null; min_stay_nights?: number | null; excluded_stay_dates?: string[] };
 export function normalizePromoCode(value: unknown): string | undefined {
   if (value === undefined || value === null || value === '') return undefined;
   if (typeof value !== 'string' || !/^[A-Z0-9_-]{3,30}$/.test(value.trim().toUpperCase())) throw new Error('Invalid promotion code.');
@@ -23,7 +23,7 @@ export function calculateEpPromotion(variant: Record<string, unknown>, checkIn: 
     if (!Number.isInteger(nights) || nights < 1 || nights > 365) throw new Error('Invalid stay dates.');
     const discount = Math.min(100000, cents(variant.room_rate), cents(variant.total_price));
     if (!discount) throw new Error('This offer cannot be applied to the current room price.');
-    return { code: promotion.code, revision: promotion.revision, basis: 'FLAT_PER_BOOKING', amount_per_night: 0,
+    return { eligible_dates: eligibleDates, code: promotion.code, revision: promotion.revision, basis: 'FLAT_PER_BOOKING', amount_per_night: 0,
       amount_per_booking: 1000, nights, discount_amount: discount / 100, nightly_discounts: [] };
   }
   if (!promotion.is_active || !Number.isSafeInteger(promotion.revision) || promotion.revision < 1 || promotion.amount_per_night !== 300 || promotion.code !== 'EP300') throw new Error('This promotion is unavailable.');
@@ -39,7 +39,7 @@ export function calculateEpPromotion(variant: Record<string, unknown>, checkIn: 
   const discount = breakdown.reduce((sum, row) => sum + cents(row.discount), 0);
   // Do not use a promotion to offset a negative policy total / consume meals.
   if (!discount || discount > cents(variant.room_rate) || discount > cents(variant.total_price)) throw new Error('This offer cannot be applied to the current room price.');
-  return { code: promotion.code, revision: promotion.revision, basis: 'EP_PER_ROOM_PER_NIGHT', amount_per_night: 300,
+  return { eligible_dates: eligibleDates, code: promotion.code, revision: promotion.revision, basis: 'EP_PER_ROOM_PER_NIGHT', amount_per_night: 300,
     nights: count, discount_amount: discount / 100, nightly_discounts: breakdown };
 }
 
@@ -52,10 +52,12 @@ export function eligiblePromotionDates(checkIn: string, checkOut: string, p: EpP
   const count = (Date.parse(checkOut) - Date.parse(checkIn)) / 86400000;
   if (!Number.isInteger(count) || count < 1 || count > 365) throw new Error('Invalid stay dates.');
   const all = Array.from({length: count}, (_, i) => new Date(Date.parse(checkIn) + i * 86400000).toISOString().slice(0,10));
-  const restricted = (p.day_scope && p.day_scope !== 'both') || p.stay_from || p.stay_to;
+  if (p.min_stay_nights != null && (!Number.isInteger(p.min_stay_nights) || p.min_stay_nights < 1 || p.min_stay_nights > 365 || count < p.min_stay_nights)) throw new Error('This stay does not meet the promotion minimum nights.');
+  if (p.excluded_stay_dates != null && (!Array.isArray(p.excluded_stay_dates) || p.excluded_stay_dates.some(d => !validPromotionDate(d)))) throw new Error('Invalid promotion excluded dates.');
+  const restricted = !!p.excluded_stay_dates?.length || (p.day_scope && p.day_scope !== 'both') || p.stay_from || p.stay_to;
   if (restricted && !['all_nights','eligible_nights'].includes(p.mixed_stay_mode ?? '')) throw new Error('This promotion requires an explicit mixed-stay policy.');
   if (p.day_scope && p.day_scope !== 'both' && !context.eligibleDates) throw new Error('Promotion day eligibility could not be verified.');
-  const eligible = all.filter(d => (!p.stay_from || d >= p.stay_from) && (!p.stay_to || d <= p.stay_to) && (!p.day_scope || p.day_scope === 'both' || context.eligibleDates!.includes(d)));
+  const eligible = all.filter(d => !p.excluded_stay_dates?.includes(d) && (!p.stay_from || d >= p.stay_from) && (!p.stay_to || d <= p.stay_to) && (!p.day_scope || p.day_scope === 'both' || context.eligibleDates!.includes(d)));
   if (!eligible.length || (p.mixed_stay_mode === 'all_nights' && eligible.length !== all.length)) throw new Error('This stay is not eligible for this promotion.');
   // A once-per-booking discount must never be silently prorated over mixed nights.
   const flat = p.code === 'DIRECT1000' || p.discount_basis === 'booking';
@@ -85,5 +87,18 @@ function calculateManagedPromotion(v: Record<string, unknown>, checkIn: string, 
   }
   discount = Math.min(discount, cents(v.room_rate), cents(v.total_price));
   if (!discount) throw new Error('This offer cannot be applied to the current room price.');
-  return {code:p.code, revision:p.revision, basis:p.discount_basis === 'night' ? 'ACCOMMODATION_PER_NIGHT' : 'FLAT_PER_BOOKING', amount_per_night:p.discount_basis === 'night' && p.discount_kind === 'fixed' ? value : 0, amount_per_booking:p.discount_basis === 'booking' && p.discount_kind === 'fixed' ? value : 0, nights, discount_amount:discount/100, nightly_discounts:nightly};
+  return {eligible_dates:eligible,code:p.code, revision:p.revision, basis:p.discount_basis === 'night' ? 'ACCOMMODATION_PER_NIGHT' : 'FLAT_PER_BOOKING', amount_per_night:p.discount_basis === 'night' && p.discount_kind === 'fixed' ? value : 0, amount_per_booking:p.discount_basis === 'booking' && p.discount_kind === 'fixed' ? value : 0, nights, discount_amount:discount/100, nightly_discounts:nightly};
+}
+
+export function validPromotionDate(value: unknown): value is string {
+  return typeof value === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(value) && Number.isFinite(Date.parse(value)) && new Date(value).toISOString().slice(0,10) === value;
+}
+/** Use only server-resolved room/unit category, never a category from the request. */
+export function assertPromotionBookingEligibility(p: EpPromotion, categoryId: string | null | undefined, mealPlanCode: string) {
+  if (p.eligible_room_category_ids != null) {
+    if (!Array.isArray(p.eligible_room_category_ids) || !p.eligible_room_category_ids.length || !categoryId || !p.eligible_room_category_ids.includes(categoryId)) throw new Error('This room category is not eligible for this promotion.');
+  }
+  if (p.eligible_meal_plan_codes != null) {
+    if (!Array.isArray(p.eligible_meal_plan_codes) || !p.eligible_meal_plan_codes.length || !p.eligible_meal_plan_codes.includes(mealPlanCode)) throw new Error('This meal plan is not eligible for this promotion.');
+  }
 }

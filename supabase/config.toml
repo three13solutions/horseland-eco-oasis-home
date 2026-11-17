@@ -107,3 +107,6 @@ verify_jwt = false
 
 [functions.reconcile-distribution-hold]
 verify_jwt = true
+
+[functions.admin-promotion-preview]
+verify_jwt = true

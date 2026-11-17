@@ -51,7 +51,7 @@ serve(async(req:Request)=>{
    if(gateError||gate?.enabled!==true)return reply({offers:[]});
    const {data,error}=await db.from('website_promotions').select('*').eq('is_active',true);
    if(error)return reply({error:'Offers could not be loaded.'},503);
-   return reply({offers:(data??[]).filter(p=>p.is_public!==false && promotionBookingOpen(p)).map(p=>({code:p.code,label:p.label,amount_per_night:p.amount_per_night,booking_from:p.booking_from,booking_to:p.booking_to,stay_from:p.stay_from,stay_to:p.stay_to,day_scope:p.day_scope,mixed_stay_mode:p.mixed_stay_mode}))});
+   return reply({offers:(data??[]).filter(p=>p.is_public!==false && promotionBookingOpen(p)).map(p=>({code:p.code,label:p.label,amount_per_night:p.amount_per_night,booking_from:p.booking_from,booking_to:p.booking_to,stay_from:p.stay_from,stay_to:p.stay_to,day_scope:p.day_scope,mixed_stay_mode:p.mixed_stay_mode,eligible_room_category_ids:p.eligible_room_category_ids,eligible_meal_plan_codes:p.eligible_meal_plan_codes,min_stay_nights:p.min_stay_nights,excluded_stay_dates:p.excluded_stay_dates,total_usage_limit:p.total_usage_limit,per_guest_usage_limit:p.per_guest_usage_limit}))});
   }
   if(body.action==='promo') {
    const quote=await calculateBookingQuote(db,{...body.quote_request,promo_code:body.promo_code},'website');

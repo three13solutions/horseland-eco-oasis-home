@@ -1,4 +1,4 @@
-import { calculateEpPromotion, normalizePromoCode } from './epPromo.ts';
+import { calculateEpPromotion, normalizePromoCode, assertPromotionBookingEligibility } from './epPromo.ts';
 // One server-side adapter around the canonical database quote engine.
 // Requests contain IDs and quantities only. Never accept client meal/room/addon prices.
 export class QuoteError extends Error {
@@ -51,14 +51,16 @@ const FALLBACK_TRANSPORT: Record<string, number> = {
   'twoway-mumbai-sedan': 7500, 'twoway-mumbai-suv': 9500, 'twoway-pune-sedan': 4500, 'twoway-pune-suv': 5500,
 };
 
-export async function calculateBookingQuote(db: any, raw: any, mode: 'website' | 'manual' = 'website') {
+export async function calculateBookingQuote(db: any, raw: any, mode: 'website' | 'manual' = 'website', internalOptions: { promotionPreview?: import('./epPromo.ts').EpPromotion; promotionPreviewNow?: Date } = {}) {
   const request = normalizeQuoteRequest(raw);
-  const { data: room, error: roomError } = await db.from('room_types').select('id,is_published,base_price').eq('id', request.room_type_id).maybeSingle();
+  const { data: room, error: roomError } = await db.from('room_types').select('id,is_published,base_price,category_id').eq('id', request.room_type_id).maybeSingle();
   if (roomError) throw new QuoteError('QUOTE_LOOKUP_FAILED', 'Room could not be verified.', 503);
   if (!room || (mode === 'website' && room.is_published !== true)) throw new QuoteError('ROOM_TYPE_NOT_PUBLISHED', 'This room is not available for website booking.');
+  let roomCategoryId = room.category_id;
   if (request.room_unit_id) {
-    const { data: unit, error } = await db.from('room_units').select('id,room_type_id,is_active,status').eq('id', request.room_unit_id).maybeSingle();
+    const { data: unit, error } = await db.from('room_units').select('id,room_type_id,is_active,status,category_id').eq('id', request.room_unit_id).maybeSingle();
     if (error || !unit || unit.room_type_id !== room.id || !unit.is_active || (unit.status === 'maintenance' || (unit.status === 'management_block' || unit.status === 'reserved'))) throw new QuoteError('ROOM_SELECTION_MISMATCH', 'The selected room unit is unavailable.');
+    roomCategoryId = unit.category_id ?? roomCategoryId;
   }
   const { data: variants, error } = await db.rpc(mode === 'website' ? 'calculate_website_rate_variants' : 'calculate_rate_variants_v2', {
     p_room_type_id: request.room_type_id, p_room_unit_id: request.room_unit_id,
@@ -114,17 +116,26 @@ export async function calculateBookingQuote(db: any, raw: any, mode: 'website' |
   const originalVariant = variant;
   if (request.promo_code) {
     if (mode !== 'website') throw new QuoteError('INVALID_PROMO', 'This offer is for website bookings only.');
-    const { data: gate, error: gateError } = await db.from('website_promo_rollout').select('enabled').eq('id', true).maybeSingle();
-    if (gateError || gate?.enabled !== true) throw new QuoteError('PROMO_UNAVAILABLE', 'Website offers are not active.');
-    const { data: config, error: configError } = await db.from('website_promotions').select('*').eq('code', request.promo_code).maybeSingle();
-    if (configError || !config || config.code !== request.promo_code) throw new QuoteError('PROMO_UNAVAILABLE', 'This offer is unavailable.');
+    // Only the authenticated admin preview endpoint may provide this internal argument.
+    // Nothing in the public raw request can populate it. Preview skips only the release gate.
+    let config = internalOptions.promotionPreview;
+    if (!config) {
+      const { data: gate, error: gateError } = await db.from('website_promo_rollout').select('enabled').eq('id', true).maybeSingle();
+      if (gateError || gate?.enabled !== true) throw new QuoteError('PROMO_UNAVAILABLE', 'Website offers are not active.');
+      const { data, error: configError } = await db.from('website_promotions').select('*').eq('code', request.promo_code).maybeSingle();
+      if (configError || !data) throw new QuoteError('PROMO_UNAVAILABLE', 'This offer is unavailable.');
+      config = data;
+    }
+    if (!config || config.code !== request.promo_code) throw new QuoteError('PROMO_UNAVAILABLE', 'This offer is unavailable.');
+    try { assertPromotionBookingEligibility(config, roomCategoryId, request.meal_plan_code); }
+    catch (error) { throw new QuoteError('PROMO_UNAVAILABLE', error instanceof Error ? error.message : 'This offer is unavailable.'); }
     let eligibleDates: string[] | undefined;
     if (config.day_scope && config.day_scope !== 'both') {
       const { data, error } = await db.rpc('website_promotion_eligible_dates', { p_room_type_id: request.room_type_id, p_check_in: request.check_in, p_check_out: request.check_out, p_day_scope: config.day_scope });
       if (error || !Array.isArray(data)) throw new QuoteError('PROMO_UNAVAILABLE', 'Promotion day eligibility could not be verified.');
       eligibleDates = data;
     }
-    try { promotion = calculateEpPromotion(variant, request.check_in, request.check_out, config, { eligibleDates }); }
+    try { promotion = calculateEpPromotion(variant, request.check_in, request.check_out, config, { eligibleDates, ...(internalOptions.promotionPreview ? { now: internalOptions.promotionPreviewNow } : {}) }); }
     catch (error) { throw new QuoteError('PROMO_UNAVAILABLE', error instanceof Error ? error.message : 'This offer is unavailable.'); }
     variant = { ...variant, room_rate: money(Number(variant.room_rate) - promotion.discount_amount),
       total_price: money(Number(variant.total_price) - promotion.discount_amount),
