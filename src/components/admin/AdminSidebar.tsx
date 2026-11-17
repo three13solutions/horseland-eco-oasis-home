@@ -88,6 +88,7 @@ const distributionMenuItems = [
 ];
 
 const pricingMenuItems = [
+  { icon: Calendar, label: 'EP Workspace (Draft)', path: '/admin/pricing/workspace', description: 'Calendar, plan previews and promo drafts' },
   { icon: DollarSign, label: 'Rate Plans', path: '/admin/pricing/rate-plans', description: 'One price, all meal options' },
   { 
     icon: BarChart3, 

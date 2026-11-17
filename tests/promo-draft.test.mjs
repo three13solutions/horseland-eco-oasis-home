@@ -1,0 +1,10 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { validatePromoDraft, previewPromo } from '../src/lib/promo-draft.ts';
+const draft = { id: '1', code: 'DIRECT10', type: 'percentage', value: '10', bookingFrom: '2026-11-17', bookingTo: '2026-11-30', stayFrom: '2026-12-01', stayTo: '2026-12-31', limit: '100', oncePerGuest: true };
+test('valid offer and percent arithmetic', () => { assert.deepEqual(validatePromoDraft(draft, []), []); assert.deepEqual(previewPromo(draft, '2500'), { originalPaise: 250000, discountPaise: 25000, totalPaise: 225000 }); });
+test('reject percentage above 100 and negative amount', () => { assert.ok(validatePromoDraft({ ...draft, value: '101' }, []).length); assert.equal(previewPromo(draft, '-10'), null); });
+test('fixed discount capped at subtotal', () => { assert.equal(previewPromo({ ...draft, type: 'fixed', value: '5000' }, '2500').totalPaise, 0); });
+test('duplicate rejected but edit retains own code', () => { assert.ok(validatePromoDraft({ ...draft, id: '2' }, [draft]).length); assert.deepEqual(validatePromoDraft(draft, [draft]), []); });
+test('reject invalid dates, reversed periods and fractional usage', () => { for (const patch of [{ stayFrom: '2026-02-30' }, { bookingTo: '2026-11-01' }, { limit: '1.5' }, { value: '1e2' }, { value: '' }]) assert.ok(validatePromoDraft({ ...draft, ...patch }, []).length); });
+test('no monetary preview until complete valid offer', () => { assert.equal(previewPromo({ ...draft, bookingFrom: '' }, '2500'), null); assert.equal(previewPromo(draft, ''), null); });
