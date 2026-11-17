@@ -11,6 +11,7 @@ interface RateVariantSelectorProps {
   nights: number;
   adultsCount?: number;
   childrenCount?: number;
+  infantsCount?: number;
 }
 
 export const RateVariantSelector: React.FC<RateVariantSelectorProps> = ({ 
@@ -19,6 +20,7 @@ export const RateVariantSelector: React.FC<RateVariantSelectorProps> = ({
   onSelect,
   nights,
   adultsCount = 2,
+  infantsCount = 0,
   childrenCount = 0
 }) => {
   const [sortBy, setSortBy] = useState<'price' | 'savings' | 'popular'>('popular');
@@ -88,6 +90,7 @@ export const RateVariantSelector: React.FC<RateVariantSelectorProps> = ({
             nights={nights}
             adultsCount={adultsCount}
             childrenCount={childrenCount}
+            infantsCount={infantsCount}
           />
         ))}
       </div>

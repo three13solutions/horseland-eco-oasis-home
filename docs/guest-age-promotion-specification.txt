@@ -1,0 +1,66 @@
+ARCHIVED PLANNING INPUT
+The owner subsequently authorized implementation on GitHub. The planning-only restrictions below describe the earlier Lovable submission attempt, not the scope of this review branch. Live deployment remains unauthorized. See guest-age-promotion-rollout.md for implemented scope and validation.
+
+HORSELAND — DRAFT SPECIFICATION FOR REVIEW ONLY (17 November 2026)
+PLAN MODE ONLY. Ali asked to draft the dynamic age/pricing changes and promotion management and sync the draft with this Lovable project. Discuss/record this specification and return an implementation plan. DO NOT edit source, push commits, apply migrations, alter live data, deploy functions, publish, create sample promotions, or change project knowledge. This is not approval to implement or deploy.
+
+Project: Horseland eco oasis home; repository three13solutions/horseland-eco-oasis-home. Existing main includes tested DIRECT1000 commit 55078d33b5ef52fd9295e044eaf0cd6b04bcf752. Preserve existing unrelated changes. Some prior draft UI is session-only and must not be described as live persistence.
+
+A. CONFIRMED USER INTENT AND CURRENT POLICY
+1. Make guest-age definitions dynamic from admin, rather than hardcoded across the flow.
+2. Current desired bands: under 4 (0–3 inclusive), children 4–9 inclusive, adults 10+. Under 4 has no automatic accommodation OR meal-plan charges. Still record all guests including under-fours.
+3. Children use the existing child accommodation rates; adults use the existing adult accommodation rates. Do not invent a new percentage or automatically change the current child ₹600 weekday / ₹900 Saturday accommodation charge in the covered EP scope. Retain existing adult/child meal prices; the latest free-under4 instruction supersedes the earlier instruction to charge all age bands equal meals.
+4. Separately selected extra services/extra beds/spa/transport remain independent of guest age, as Ali explicitly confirmed. Do not make those automatically free. Do not silently reprice existing bookings/payments or overwrite their snapshots.
+5. Existing selectors are category counts, not DOB or individual guest-age capture. Keep that approach; no request to collect DOB or develop individual meal choices.
+6. Promo-management must support validity, weekdays/weekends/both, individual settings for each code, and enabling/disabling. User wants prior mockup concept consolidated, not its illustrative values activated.
+7. Existing EP300 and DIRECT1000 must retain current live settings. EP300 ₹300 off accommodation per occupied room-night; DIRECT1000 ₹1,000 off accommodation once per booking, capped to eligible amount. No stacking; meals/extras unchanged. Do not introduce expiry, minimum spend, usage cap, or day restriction to these existing codes. Do not change base rates to simulate a discount.
+
+B. PROPOSED ADMIN DESIGN FOR AGE POLICY (PROPOSAL, NOT A BUILT FEATURE)
+Suggested location: Pricing Settings → Guest Age & Pricing Policy, linked from Rate Plans/Dynamic Rules/manual booking. One authoritative policy supplies every label and pricing category.
+- Editable inclusive band boundaries with adult upper end open; reject negative/noninteger ages, gaps, overlap, duplicate/ambiguous bands. Show the generated labels before save.
+- Each band references accommodation pricing and meal-plan pricing behavior; initial settings under4=zero both, children=existing child accommodation plus current child meals, adults=adult accommodation plus adult meals.
+- Avoid hardcoding 'under4' into engine logic: use the free band from the policy so later approved boundaries propagate.
+- A preview must show resulting bands and example guest totals, distinguish accommodation from meals, and explain future-quote impact. Preserve actual headcount separately from chargeable meal/adult/child counts.
+- Version/effective-date policy and preserve booking quote snapshot so later changes do not reinterpret old bookings. Exact effective-date/admin-save workflow is a proposed safeguard to settle before implementation.
+- Do not expose a second conflicting source of truth or imply existing 'Base Guest Count' legacy rule controls modern rate anchors.
+- Adult base occupancy is a separate concept: existing Rate Plans 'Included adults' is rate/date/scope-specific (currently 2), not maximum room capacity. Preserve current values. A clearer 'Base occupancy: 1 / 2 adults' control and explicit website 'includes X adults' label, fixing minimum-two per-person assumptions, are proposed display/control improvements. Changing age bands must not halve base rates or change included occupancy implicitly. Do not revive previously deferred wider occupancy redesign without review.
+
+C. FULL AGE/PRICING INTEGRATION MAP
+Frontend: shared GuestSelector used by home/HeroSection, availability search, room details, booking. Replace overlapping 0–2/2–9 labels and 'every guest including infants pays full meals' copy. CategoryBookingModal currently converts guests+extraMattress to adults and sets children/infants zero: carry separate counts to search and checkout, without treating a mattress as a guest. Keep capacity validations and operational headcounts explicit.
+Admin: ManualBookingModal inputs/quotes/stored counts; GuestCompositionTab obsolete 'child half adult' wording and infant charges; RatePlans infant charge editing and meal text; PricingRules/PricingDashboard; LiveRateCard clearly identifies its occupancy assumption. Future overrides must not introduce charges for the free band.
+Authoritative backend: calculate_rate_variants_v2 normal anchors, preserved EP/festive branch and mixed/fallback paths; calculate_website_rate_variants; calculate_dynamic_price and retained legacy helpers; calculate_meal_plan_cost and every caller. Current v2 multiplies meals by adults+children+infants; separate actual headcount from chargeable headcount. Existing legacy child-half-adult behavior differs from configured modern child rates: inventory and resolve without inventing new business rates.
+Checkout: supabase/functions/_shared/bookingQuote.ts guest normalization, price snapshots, promo and tax computations; create-razorpay-order-v3 and still-supported legacy v2; create-manual-booking all use consistent policy/revision. Revalidate stale quotes without rewriting confirmed historic amounts.
+Display: Booking, AvailableRoomCard, RateVariantCard, RateVariantSelector, PriceBreakdown, PaymentModal, public/print BookingConfirmation. Show correct guest category counts, eligible meal quantities, meaningful per-person divisors, discounts/taxes; no forced minimum-two divisor. Confirmations/invoices/emails use saved booking totals and policy labels rather than current repricing.
+Draft preview: lib/meal-choice-draft.ts and admin MealChoiceDrafts must not claim all categories pay full meals or conflict with current bands. Individual guest-specific meal choice remains deferred.
+Evidence from read-only audit: Standard Nov22–23 quote, 2 adults AP meal total ₹3,020; adding an infant raised meals to ₹4,530 with no accommodation increment. The intended new policy must remove that automatic ₹1,510 increment, not merely change text.
+
+D. PROMOTION MANAGEMENT DRAFT
+Suggested admin module: Promotions within Pricing, connected to real authoritative promotions only when later implementation is approved.
+Required controls: per-code editable configuration, validity, weekday/weekend/both scope, clear active/inactive control, all synchronized to website offer eligibility and server redemption. Avoid global settings that accidentally change all codes.
+Prior mockup concepts to include in the REVIEW draft, not treat as finalized commercial rules:
+- Searchable code list/status; fixed ₹ or percentage discount on accommodation.
+- Separate booking-time validity and stay-date validity.
+- Room-category and meal-plan eligibility.
+- Optional total-use cap and one-use-per-guest setting.
+- Non-combinability, minimum stay, excluded dates.
+- Guest-price preview and review-before-enabling.
+- Base rates remain unchanged.
+Recommendations beyond original mockup, explicitly optional/unapproved:
+- Publicly listed vs private code.
+- Per-booking vs per-room-night discount basis (existing two codes already need distinct preserved bases).
+- Change history/audit log.
+Do not silently activate mockup sample codes, example amounts, dates, caps, exclusions, or room/plan choices. Preserve real EP300/DIRECT1000 records and statuses exactly.
+Validity/day semantics must be explicit in the draft: booking date versus each occupied stay night, local hotel timezone, boundary inclusivity and checkout exclusion. Saturday-only is current weekend definition; use existing effective-dated weekend policy, not hardcoded Fri/Sat/Sun, and respect protected-date behavior. Decide mixed weekday/weekend stays explicitly: per-night discount on eligible nights vs whole-booking eligibility for flat codes is unresolved, not an assumed default. Expired/disabled codes must be rejected at authoritative quote/order, not merely hidden on screen.
+Proposed technical safeguards for eventual implementation: server-calculated eligible amount, nonnegative price cap, money precision, single-code enforcement, rate/config revision checking, transactional usage reservation/redemption and release for canceled/failed/expired attempts, retry idempotency and authenticated admin authorization. These are implementation safeguards, not new business conditions or approval to create schemas now.
+Admin preview should explain discount before/after and ineligibility reasons using same engine as booking. Public offer list must reflect code settings and show usable terms. Historical paid bookings retain original promo snapshot.
+
+E. PROTECTION, ACCEPTANCE TESTS, AND STAGED RELEASE
+Do not modify existing EP anchors, linked meal catalogue values, protected festive rates, weekend data, bookings, payments, promo statuses or other pricing work in this planning turn.
+Before eventual release, test:
+- Age bands boundaries 3/4 and 9/10, future changed-band examples, invalid overlaps/gaps.
+- Same composition and price on home/search/room/category/direct booking/admin; under4 kept in real headcount but zero automatic room/meals.
+- RO/CP/MAP/AP, weekday/Saturday, festive/protected/mixed/fallback nights, adult occupancy1/2, room capacity limits.
+- Saved booking snapshots unchanged; stale quote behavior; current EP300 and DIRECT1000 cap/nonstacking, meals excluded, tax calculation unchanged except legitimate changed taxable quote.
+- Each promo's enabled/disabled/scheduled/expired state, booking/stay windows, relevant timezone boundaries, weekday/weekend/both and mixed nights once semantics approved, room/plan restrictions, caps if approved, repeated apply/remove and retries, concurrent usage, no leakage of private codes if selected.
+- Desktop/mobile and actual interactive admin/booking browser checks; do not call code inspection alone visual verification.
+Return a plan with confirmed requirements, proposals and unresolved decisions clearly separated, files/services impacted, migration/backward-compatibility approach for later approval, and test plan. Report no implementation/publication performed.

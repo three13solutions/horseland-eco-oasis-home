@@ -1,9 +1,14 @@
+import type { GuestAgePolicy } from '@/lib/guest-age-policy';
+import { useGuestAgePolicy } from '@/hooks/useGuestAgePolicy';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { format } from 'date-fns';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 
 interface RateVariant {
+  guest_age_policy?: GuestAgePolicy;
+  actual_guest_count?: number;
+  chargeable_meal_guests?: number;
   pricing_status?: string;
   quote_fingerprint?: string;
   nightly_breakdown?: unknown[];
@@ -62,8 +67,9 @@ export const useDynamicPricing = ({
   enabled = true,
   website = false
 }: UseDynamicPricingParams) => {
+  const agePolicy = useGuestAgePolicy();
   const query = useQuery({
-    queryKey: [website ? 'website-rate-variants' : 'rate-variants', roomTypeId, roomUnitId, checkIn, checkOut, adultsCount, childrenCount, infantsCount, bookingChannel],
+    queryKey: [website ? 'website-rate-variants' : 'rate-variants', roomTypeId, roomUnitId, checkIn, checkOut, adultsCount, childrenCount, infantsCount, bookingChannel, agePolicy.data?.revision],
     queryFn: async () => {
       if (!roomTypeId || !checkIn || !checkOut) {
         throw new Error('Missing required parameters');
@@ -84,14 +90,14 @@ export const useDynamicPricing = ({
       
       return (data || []) as unknown as RateVariant[];
     },
-    enabled: enabled && !!roomTypeId && !!checkIn && !!checkOut,
+    enabled: enabled && !!agePolicy.data && !!roomTypeId && !!checkIn && !!checkOut,
     staleTime: website ? 0 : 1000 * 60 * 5,
     refetchOnWindowFocus: true,
     refetchOnReconnect: true,
   });
   // Website offers must never fall back to stale cached options on a failed or
   // in-flight eligibility check. Admin pricing keeps its existing behavior.
-  return website ? { ...query, data: query.isError || query.isFetching ? undefined : query.data, isLoading: query.isFetching } : query;
+  return website ? { ...query, data: !agePolicy.data || query.isError || query.isFetching ? undefined : query.data, isLoading: query.isFetching || agePolicy.isLoading } : {...query, data: agePolicy.data ? query.data : undefined};
 };
 
 export type { RateVariant };

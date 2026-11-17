@@ -1,0 +1,17 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {readFileSync} from 'node:fs';
+import {calculateEpPromotion,eligiblePromotionDates,promotionBookingOpen} from '../supabase/functions/_shared/epPromo.ts';
+const p={code:'NEW100',revision:1,is_active:true,amount_per_night:0,amount_per_booking:0,discount_kind:'fixed',discount_basis:'booking',discount_value:100,day_scope:'both'};
+const v={pricing_status:'verified',room_rate:2000,total_price:4000,nightly_breakdown:[{date:'2026-11-20',room_only:1000},{date:'2026-11-21',room_only:1000}]};
+const calc=(changes={},context={})=>calculateEpPromotion(v,'2026-11-20','2026-11-22',{...p,...changes},context);
+test('new fixed per-booking and percentage discounts exclude meals',()=>{assert.equal(calc().discount_amount,100);assert.equal(calc({discount_kind:'percentage',discount_value:10}).discount_amount,200)});
+test('nightly fixed and percent use verified room only',()=>{assert.equal(calc({discount_basis:'night'}).discount_amount,200);assert.equal(calc({discount_basis:'night',discount_kind:'percentage',discount_value:25}).discount_amount,500)});
+test('money cap and invalid configuration fail closed',()=>{assert.equal(calc({discount_value:9999}).discount_amount,2000);for(const d of [{discount_value:0},{discount_value:-1},{discount_kind:'percentage',discount_value:101},{discount_basis:'unknown'},{revision:0}])assert.throws(()=>calc(d))});
+test('booking dates inclusive in hotel timezone',()=>{const q={...p,booking_from:'2026-11-20',booking_to:'2026-11-20'};assert.equal(promotionBookingOpen(q,new Date('2026-11-19T18:30:00Z')),true);assert.equal(promotionBookingOpen(q,new Date('2026-11-20T18:30:00Z')),false)});
+test('restricted days require authoritative context and explicit policy',()=>{assert.throws(()=>calc({day_scope:'weekend'}));assert.throws(()=>calc({day_scope:'weekend',mixed_stay_mode:'all_nights'}));assert.throws(()=>calc({day_scope:'weekend',mixed_stay_mode:'all_nights'},{eligibleDates:['2026-11-21']}))});
+test('nightly partial rule is explicitly selectable, booking partial is refused',()=>{const d={day_scope:'weekend',mixed_stay_mode:'eligible_nights'};assert.equal(calc({...d,discount_basis:'night'},{eligibleDates:['2026-11-21']}).discount_amount,100);assert.throws(()=>calc(d,{eligibleDates:['2026-11-21']}))});
+test('checkout date is not an occupied night and stay end inclusive',()=>{assert.deepEqual(eligiblePromotionDates('2026-11-20','2026-11-22',{...p,stay_to:'2026-11-21',mixed_stay_mode:'all_nights'}),['2026-11-20','2026-11-21'])});
+test('expired and disabled unavailable',()=>{assert.throws(()=>calc({is_active:false}));assert.throws(()=>calc({booking_to:'2000-01-01'}))});
+test('management migration locks permissions, revisions, and explicit mixed mode',()=>{const s=readFileSync(new URL('../supabase/migrations/20261118000200_managed_website_promotions.sql',import.meta.url),'utf8');assert.match(s,/is_admin_new/);assert.match(s,/for update/);assert.match(s,/p_expected_revision is distinct from v.revision/);assert.match(s,/discount_basis is distinct from 'booking'/);assert.match(s,/is_pricing_weekend\(d::date,array\[0,5,6\],p_room_type_id\)/);assert.doesNotMatch(s,/update public.website_promotions set is_active=true/)});
+test('public endpoint does not expose private codes or full admin config',()=>{const s=readFileSync(new URL('../supabase/functions/create-razorpay-order-v3/index.ts',import.meta.url),'utf8');assert.match(s,/is_public!==false && promotionBookingOpen/);assert.match(s,/map\(p=>\(\{code:p.code,label:p.label/)});

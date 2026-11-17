@@ -12,6 +12,7 @@ interface RateVariantCardProps {
   nights: number;
   adultsCount?: number;
   childrenCount?: number;
+  infantsCount?: number;
 }
 
 const getMealIcon = (mealType: string) => {
@@ -29,6 +30,7 @@ export const RateVariantCard: React.FC<RateVariantCardProps> = ({
   onSelect,
   nights,
   adultsCount = 2,
+  infantsCount = 0,
   childrenCount = 0
 }) => {
   // Apply meal plan adjustment to get the actual price
@@ -60,7 +62,7 @@ export const RateVariantCard: React.FC<RateVariantCardProps> = ({
         <div className="mb-4">
           <div className="text-3xl font-bold">₹{adjustedTotal.toLocaleString()}</div>
           <div className="text-sm text-muted-foreground">
-            ₹{Math.round(adjustedPerNight / (adultsCount + childrenCount)).toLocaleString()} /guest/night × {nights} nights
+            ₹{Math.round(adjustedPerNight / Math.max(1, adultsCount + childrenCount + infantsCount)).toLocaleString()} /guest/night (party average) × {nights} nights
           </div>
           {adjustment !== 0 && (
             <div className="text-sm text-primary font-medium mt-1">

@@ -21,6 +21,8 @@ export function normalizeQuoteRequest(raw: any) {
   const adults_count = integer(raw.adults_count, 'Adults', 1);
   const children_count = integer(raw.children_count, 'Children');
   const infants_count = integer(raw.infants_count, 'Infants');
+  if (adults_count + children_count + infants_count > 100) throw new QuoteError('INVALID_QUOTE', 'Too many guests.', 400);
+  const guest_age_policy_revision = raw.guest_age_policy_revision === undefined ? undefined : integer(raw.guest_age_policy_revision, 'Guest age policy revision', 1, Number.MAX_SAFE_INTEGER);
   if (!Array.isArray(raw.addons ?? [])) throw new QuoteError('INVALID_QUOTE', 'Invalid extras.', 400);
   const seen = new Set<string>();
   const addons = (raw.addons ?? []).map((item: any) => {
@@ -33,7 +35,7 @@ export function normalizeQuoteRequest(raw: any) {
   if (addons.length > 100) throw new QuoteError('INVALID_QUOTE', 'Too many extras.', 400);
   let promo_code: string | undefined;
   try { promo_code = normalizePromoCode(raw.promo_code); } catch { throw new QuoteError('INVALID_PROMO', 'Invalid promotion code.', 400); }
-  return { ...(promo_code ? { promo_code } : {}), room_type_id: raw.room_type_id, room_unit_id: raw.room_unit_id || null, check_in: raw.check_in, check_out: raw.check_out, adults_count, children_count, infants_count, meal_plan_code: raw.meal_plan_code, cancellation_policy_code: raw.cancellation_policy_code, addons };
+  return { ...(guest_age_policy_revision === undefined ? {} : { guest_age_policy_revision }), ...(promo_code ? { promo_code } : {}), room_type_id: raw.room_type_id, room_unit_id: raw.room_unit_id || null, check_in: raw.check_in, check_out: raw.check_out, adults_count, children_count, infants_count, meal_plan_code: raw.meal_plan_code, cancellation_policy_code: raw.cancellation_policy_code, addons };
 }
 
 // Preserve the existing published bedding/fallback transfer tariffs, but validate
@@ -69,6 +71,7 @@ export async function calculateBookingQuote(db: any, raw: any, mode: 'website' |
   if (mode === 'website' && Array.isArray(variants) && !variants.some(v => v.meal_plan_code === request.meal_plan_code)) throw new QuoteError('MEAL_PLAN_UNAVAILABLE', 'This meal plan is no longer available for the selected room and stay. Please choose an available plan.');
   let variant = Array.isArray(variants) ? variants.find(v => v.meal_plan_code === request.meal_plan_code && v.cancellation_policy_code === request.cancellation_policy_code) : null;
   if (!variant || !['verified', 'mixed_basis_unverified', 'legacy_basis_unverified'].includes(variant.pricing_status) || !variant.quote_fingerprint) throw new QuoteError('RATE_BASIS_UNVERIFIED', 'A server-verified rate is required before booking.');
+  if (request.guest_age_policy_revision !== undefined && variant.guest_age_policy?.revision !== request.guest_age_policy_revision) throw new QuoteError('AGE_POLICY_CHANGED', 'Guest age bands have changed. Refresh and review your guest selection before booking.');
   if (!Number.isFinite(Number(variant.total_price)) || Number(variant.total_price) < 0) throw new QuoteError('INVALID_QUOTE', 'Invalid calculated room price.');
 
   if (mode === 'manual' && variant.pricing_status === 'legacy_basis_unverified' && variant.pricing_mode !== 'mixed_verified_and_legacy') {
@@ -113,9 +116,15 @@ export async function calculateBookingQuote(db: any, raw: any, mode: 'website' |
     if (mode !== 'website') throw new QuoteError('INVALID_PROMO', 'This offer is for website bookings only.');
     const { data: gate, error: gateError } = await db.from('website_promo_rollout').select('enabled').eq('id', true).maybeSingle();
     if (gateError || gate?.enabled !== true) throw new QuoteError('PROMO_UNAVAILABLE', 'Website offers are not active.');
-    const { data: config, error: configError } = await db.from('website_promotions').select('code,revision,amount_per_night,amount_per_booking,is_active').eq('code', request.promo_code).maybeSingle();
+    const { data: config, error: configError } = await db.from('website_promotions').select('*').eq('code', request.promo_code).maybeSingle();
     if (configError || !config || config.code !== request.promo_code) throw new QuoteError('PROMO_UNAVAILABLE', 'This offer is unavailable.');
-    try { promotion = calculateEpPromotion(variant, request.check_in, request.check_out, config); }
+    let eligibleDates: string[] | undefined;
+    if (config.day_scope && config.day_scope !== 'both') {
+      const { data, error } = await db.rpc('website_promotion_eligible_dates', { p_room_type_id: request.room_type_id, p_check_in: request.check_in, p_check_out: request.check_out, p_day_scope: config.day_scope });
+      if (error || !Array.isArray(data)) throw new QuoteError('PROMO_UNAVAILABLE', 'Promotion day eligibility could not be verified.');
+      eligibleDates = data;
+    }
+    try { promotion = calculateEpPromotion(variant, request.check_in, request.check_out, config, { eligibleDates }); }
     catch (error) { throw new QuoteError('PROMO_UNAVAILABLE', error instanceof Error ? error.message : 'This offer is unavailable.'); }
     variant = { ...variant, room_rate: money(Number(variant.room_rate) - promotion.discount_amount),
       total_price: money(Number(variant.total_price) - promotion.discount_amount),

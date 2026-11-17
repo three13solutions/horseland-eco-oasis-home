@@ -5,7 +5,7 @@ import { normalizeQuoteRequest, calculateBookingQuote, assertQuoteMatches, snaps
 const id='11111111-1111-4111-8111-111111111111', addon='22222222-2222-4222-8222-222222222222';
 const request={room_type_id:id,room_unit_id:null,check_in:'2026-11-07',check_out:'2026-11-09',adults_count:2,children_count:0,infants_count:1,meal_plan_code:'FB',cancellation_policy_code:'credit_voucher',addons:[]};
 function db(config={}) {
- const variant={meal_plan_code:'FB',cancellation_policy_code:'credit_voucher',pricing_status:config.status??'verified',quote_fingerprint:'v1',total_price:17020,price_per_night:8510,room_rate:7960,meal_cost:9060,included_meals:['breakfast','lunch','dinner']};
+ const variant={...(config.ageRevision ? {guest_age_policy:{revision:config.ageRevision,bands:[]}} : {}),meal_plan_code:'FB',cancellation_policy_code:'credit_voucher',pricing_status:config.status??'verified',quote_fingerprint:'v1',total_price:17020,price_per_night:8510,room_rate:7960,meal_cost:9060,included_meals:['breakfast','lunch','dinner']};
  class Query { constructor(t){this.t=t} select(){return this} eq(){return this} order(){return this} limit(){return this} maybeSingle(){return this.result()} then(r,j){return this.result().then(r,j)} async result(){
  if(this.t==='room_types')return{data:{id,is_published:config.published??true,base_price:5000}};
  if(this.t==='gst_tiers')return{data:[{min_amount:0,max_amount:7500,gst_percentage:5},{min_amount:7500.01,max_amount:null,gst_percentage:18}]};
@@ -50,4 +50,15 @@ test('checkout passes structured inputs; manual path no longer directly inserts 
  const booking=readFileSync(new URL('../src/pages/Booking.tsx',import.meta.url),'utf8');
  const manual=readFileSync(new URL('../src/components/admin/ManualBookingModal.tsx',import.meta.url),'utf8');
  assert.match(booking,/quoteRequest: buildQuoteRequest/);assert.match(manual,/invoke\('create-manual-booking'/);assert.doesNotMatch(manual,/\.insert\(\[bookingData\]\)/);
+});
+
+test('age policy revision must match reviewed guest bands',async()=>{
+ await assert.rejects(calculateBookingQuote(db({ageRevision:2}),{...request,guest_age_policy_revision:1}),e=>e.code==='AGE_POLICY_CHANGED');
+ const quote=await calculateBookingQuote(db({ageRevision:2}),{...request,guest_age_policy_revision:2});
+ assert.equal(quote.variant.guest_age_policy.revision,2);
+ assert.equal(snapshotBookingFields(quote).guests_count,3);
+ assert.equal(snapshotBookingFields(quote).rate_breakdown.guest_age_policy.revision,2);
+});
+test('missing authoritative policy cannot validate a reviewed revision',async()=>{
+ await assert.rejects(calculateBookingQuote(db(),{...request,guest_age_policy_revision:1}),e=>e.code==='AGE_POLICY_CHANGED');
 });

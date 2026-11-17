@@ -1,3 +1,4 @@
+import { useGuestAgePolicy } from '@/hooks/useGuestAgePolicy';
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
@@ -28,6 +29,7 @@ const GuestSelector: React.FC<GuestSelectorProps> = ({
   open: controlledOpen,
   onOpenChange: controlledOnOpenChange
 }) => {
+  const agePolicy = useGuestAgePolicy();
   const [adults, setAdults] = useState(Math.max(1, adultsCount ?? totalGuests ?? 2));
   const [children, setChildren] = useState(childrenCount ?? 0);
   const [infants, setInfants] = useState(infantsCount ?? 0);
@@ -63,7 +65,7 @@ const GuestSelector: React.FC<GuestSelectorProps> = ({
     onGuestsChange(adults + children, adults, children, newInfants);
   };
 
-  const total = adults + children;
+  const total = adults + children + infants;
 
   const guestBreakdown = [
     adults > 0 && `${adults} Adult${adults !== 1 ? 's' : ''}`,
@@ -108,7 +110,7 @@ const GuestSelector: React.FC<GuestSelectorProps> = ({
             <div className="flex items-center justify-between py-2">
               <div>
                 <div className="font-medium">Adults</div>
-                <div className="text-xs text-muted-foreground">10+ Years</div>
+                <div className="text-xs text-muted-foreground">{agePolicy.label('adult')}</div>
               </div>
               <div className="flex items-center gap-3">
                 <Button
@@ -116,7 +118,7 @@ const GuestSelector: React.FC<GuestSelectorProps> = ({
                   size="icon"
                   className="h-8 w-8 rounded-full"
                   onClick={() => handleAdultsChange(-1)}
-                  disabled={adults <= 1}
+                  disabled={!agePolicy.data || adults <= 1}
                 >
                   <Minus className="h-3 w-3" />
                 </Button>
@@ -126,7 +128,7 @@ const GuestSelector: React.FC<GuestSelectorProps> = ({
                   size="icon"
                   className="h-8 w-8 rounded-full"
                   onClick={() => handleAdultsChange(1)}
-                  disabled={adults >= 20}
+                  disabled={!agePolicy.data || adults >= 20}
                 >
                   <Plus className="h-3 w-3" />
                 </Button>
@@ -137,7 +139,7 @@ const GuestSelector: React.FC<GuestSelectorProps> = ({
             <div className="flex items-center justify-between py-2">
               <div>
                 <div className="font-medium">Children</div>
-                <div className="text-xs text-muted-foreground">2-9 Years</div>
+                <div className="text-xs text-muted-foreground">{agePolicy.label('child')}</div>
               </div>
               <div className="flex items-center gap-3">
                 <Button
@@ -145,7 +147,7 @@ const GuestSelector: React.FC<GuestSelectorProps> = ({
                   size="icon"
                   className="h-8 w-8 rounded-full"
                   onClick={() => handleChildrenChange(-1)}
-                  disabled={children <= 0}
+                  disabled={!agePolicy.data || children <= 0}
                 >
                   <Minus className="h-3 w-3" />
                 </Button>
@@ -155,7 +157,7 @@ const GuestSelector: React.FC<GuestSelectorProps> = ({
                   size="icon"
                   className="h-8 w-8 rounded-full"
                   onClick={() => handleChildrenChange(1)}
-                  disabled={children >= 15}
+                  disabled={!agePolicy.data || children >= 15}
                 >
                   <Plus className="h-3 w-3" />
                 </Button>
@@ -165,8 +167,8 @@ const GuestSelector: React.FC<GuestSelectorProps> = ({
             {/* Infants */}
             <div className="flex items-center justify-between py-2">
               <div>
-                <div className="font-medium">Infants</div>
-                <div className="text-xs text-muted-foreground">0-2 Years</div>
+                <div className="font-medium">Young children</div>
+                <div className="text-xs text-muted-foreground">{agePolicy.label('infant')}</div>
               </div>
               <div className="flex items-center gap-3">
                 <Button
@@ -174,7 +176,7 @@ const GuestSelector: React.FC<GuestSelectorProps> = ({
                   size="icon"
                   className="h-8 w-8 rounded-full"
                   onClick={() => handleInfantsChange(-1)}
-                  disabled={infants <= 0}
+                  disabled={!agePolicy.data || infants <= 0}
                 >
                   <Minus className="h-3 w-3" />
                 </Button>
@@ -184,7 +186,7 @@ const GuestSelector: React.FC<GuestSelectorProps> = ({
                   size="icon"
                   className="h-8 w-8 rounded-full"
                   onClick={() => handleInfantsChange(1)}
-                  disabled={infants >= 10}
+                  disabled={!agePolicy.data || infants >= 10}
                 >
                   <Plus className="h-3 w-3" />
                 </Button>
@@ -195,7 +197,7 @@ const GuestSelector: React.FC<GuestSelectorProps> = ({
           <div className="pt-3 border-t">
             <p className="text-xs text-muted-foreground">
               Accommodation charges depend on the selected room and guest ages.
-              Meal supplements currently apply at the full rate to every guest, including children and infants.
+              {agePolicy.data ? agePolicy.data.bands.map(b => `${agePolicy.label(b.key)}: ${b.accommodation_rule === 'free' ? 'no accommodation charge' : b.accommodation_rule + ' accommodation rate'}, ${b.meal_rule === 'free' ? 'no automatic meal charge' : 'full meal rate'}.`).join(' ') : 'Age policy could not yet be verified. Please retry before choosing guests.'}
               Please provide the right number of guests for the best options and prices.
             </p>
           </div>

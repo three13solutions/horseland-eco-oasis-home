@@ -230,7 +230,7 @@ const MealPlansManagement = () => {
                 <Label htmlFor="supplement-effective-from">Effective for stay nights from</Label>
                 <Input id="supplement-effective-from" disabled={!!editingPlan} type="date" value={formData.supplement_effective_from}
                   onChange={(e) => setFormData(prev => ({ ...prev, supplement_effective_from: e.target.value }))} />
-                <p className="text-xs text-muted-foreground">Per person per night. All adults, children and infants use the same full meal rate. For existing plans, change linked meals/prices in the panel below; this metadata form cannot change the supplement. Existing booking/payment snapshots are preserved.</p>
+                <p className="text-xs text-muted-foreground">Per person per night. Automatic meal quantities follow Guest Age & Pricing Policy. For existing plans, change linked meals/prices in the panel below; this metadata form cannot change the supplement. Existing booking/payment snapshots are preserved.</p>
                 {editingPlan && Number(formData.supplement_amount_text) !== Number(editingPlan.supplement_per_person_inr) && <div className="rounded border border-amber-400 p-2 text-sm">
                   Price impact: this plan changes by ₹{(Number(formData.supplement_amount_text || 0) - Number(editingPlan.supplement_per_person_inr || 0)).toFixed(2)} per person per night from {formData.supplement_effective_from}. Entered room/package anchors stay fixed. For anchors entered with this plan, the derived RO amount moves by the opposite difference × included guests; for RO anchors, this inclusive plan moves by this difference × guests. Review affected rates in Rate Plans before saving.
                 </div>}

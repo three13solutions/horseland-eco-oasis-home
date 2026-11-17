@@ -231,7 +231,7 @@ export const AvailableRoomCard: React.FC<AvailableRoomCardProps> = ({
                     <div className="text-2xl font-bold">₹{Math.round(selectedVariant.price_per_night).toLocaleString()}</div>
                     <div className="text-sm text-muted-foreground">per night</div>
                     <div className="text-xs text-muted-foreground mt-1">
-                      ₹{Math.round(selectedVariant.price_per_night / Math.max(guests, 2)).toLocaleString()}/guest/night
+                      ₹{Math.round(selectedVariant.price_per_night / Math.max(adults + children + infants, 1)).toLocaleString()}/guest/night (party average)
                     </div>
                   </div>
                   <div className="text-right">

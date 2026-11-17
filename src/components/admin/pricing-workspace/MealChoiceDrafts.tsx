@@ -1,3 +1,4 @@
+import { useGuestAgePolicy } from '@/hooks/useGuestAgePolicy';
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
@@ -42,6 +43,7 @@ export default function MealChoiceDrafts() {
       }));
     },
   });
+  const agePolicy = useGuestAgePolicy();
   const [plans, setPlans] = useState(initialPlans);
   const [code, setCode] = useState<MealChoicePlan['code']>('HB');
   const [guests, setGuests] = useState(initialGuests);
@@ -61,7 +63,8 @@ export default function MealChoiceDrafts() {
   let previewError = '';
   let combined: number | undefined;
   try {
-    quote = calculateMealChoices(plan, catalogue, guests);
+    if (!agePolicy.data) throw new Error('Guest age policy must load before a meal preview can be calculated.');
+    quote = calculateMealChoices(plan, catalogue, guests, agePolicy.data);
     if (ep.trim()) {
       combined = parseRupeesToPaise(ep) + quote.subtotalPaise;
       if (!Number.isSafeInteger(combined)) throw new Error('Combined total exceeds the supported amount.');
@@ -148,7 +151,7 @@ export default function MealChoiceDrafts() {
       </>}
     </CardContent></Card>
     <Card><CardHeader><CardTitle className="font-serif">Per-person selection & price preview</CardTitle><p className="text-sm text-muted-foreground">One night. Actual chosen alternatives are charged at their linked catalogue prices. This is a meal subtotal, not a final booking quote.</p></CardHeader><CardContent className="space-y-4">
-      <p className="text-sm border rounded p-3">Current approved preview basis: one catalogue unit per person per selected meal for one night. Adults, children and infants all pay the same full meal price; age-specific pricing is deferred. Each person selects independently. EP contains no meals, so its meal addition stays zero for every guest. Accommodation, extra-person room charges, taxes and discounts are not included.</p>
+      <p className="text-sm border rounded p-3">Current approved preview basis: one catalogue unit per person per selected meal for one night. Guest category meal charges follow Guest Age & Pricing Policy. Free bands retain their guest count but have no automatic meal charge. Each person selects independently. EP contains no meals, so its meal addition stays zero for every guest. Accommodation, extra-person room charges, taxes and discounts are not included.</p>
       <div className="grid lg:grid-cols-2 gap-4">{guests.map((person, personIndex) => <fieldset key={person.id} className="rounded-lg border p-4 space-y-3"><legend className="font-semibold px-1">{person.label}</legend>
         <div className="flex gap-3 items-end"><label className="grid gap-1 text-sm flex-1">Guest type<select className={selectClass} aria-label={`${person.label} type`} value={person.kind} onChange={e => setGuests(previous => previous.map(g => g.id === person.id ? { ...g, kind: e.target.value as MealChoiceGuest['kind'] } : g))}><option value="adult">Adult</option><option value="child">Child (full price)</option><option value="infant">Infant (full price)</option></select></label><Button variant="ghost" disabled={guests.length <= 1} onClick={() => setGuests(previous => previous.filter(g => g.id !== person.id))}>Remove person {personIndex + 1}</Button></div>
         {plan.groups.map(g => <label key={g.id} className="grid gap-1 text-sm">{g.label || 'Unnamed group'}<select className={selectClass} aria-label={`${person.label}: ${g.label || 'Unnamed group'}`} value={person.choices[g.id] ?? ''} onChange={e => setGuests(previous => previous.map(p => p.id === person.id ? { ...p, choices: e.target.value ? { ...p.choices, [g.id]: e.target.value } : Object.fromEntries(Object.entries(p.choices).filter(([id]) => id !== g.id)) } : p))}><option value="">Choose one alternative</option>{g.mealIds.map(id => { const meal = catalogue.find(item => item.id === id); return <option key={id} value={id} disabled={!meal?.isActive}>{meal ? `${meal.title} (${meal.variant}) · ${money(meal.pricePaise)}${!meal.isActive ? ' · inactive' : ''}` : 'Missing meal record'}</option>; })}</select></label>)}

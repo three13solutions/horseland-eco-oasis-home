@@ -12,6 +12,7 @@ interface PriceBreakdownProps {
   addonsTotal?: number;
   nights: number;
   guestCount: number;
+  chargeableMealCount?: number;
   mealPlanName: string;
   includedMeals: string[];
   addons?: Array<{ name: string; quantity: number; price: number }>;
@@ -24,6 +25,7 @@ export const PriceBreakdown: React.FC<PriceBreakdownProps> = ({
   addonsTotal = 0,
   nights,
   guestCount,
+  chargeableMealCount,
   mealPlanName,
   includedMeals,
   addons = []
@@ -52,13 +54,9 @@ export const PriceBreakdown: React.FC<PriceBreakdownProps> = ({
             <span className="font-medium">₹{roomSubtotal.toLocaleString()}</span>
           </div>
           <div className="flex justify-between text-xs text-muted-foreground pl-3">
-            <span>≈ ₹{Math.round(roomSubtotal / guestCount).toLocaleString()} / person for {nights} {nights === 1 ? 'night' : 'nights'}</span>
+            <span>≈ ₹{Math.round(roomSubtotal / Math.max(1, guestCount)).toLocaleString()} / guest (average) for {nights} {nights === 1 ? 'night' : 'nights'}</span>
           </div>
-          {guestCount >= 2 && (
-            <div className="text-xs text-muted-foreground pl-3">
-              Minimum charge for {Math.max(2, guestCount)} {Math.max(2, guestCount) === 1 ? 'guest' : 'guests'}
-            </div>
-          )}
+
         </div>
 
         {mealCost > 0 && (
@@ -78,7 +76,7 @@ export const PriceBreakdown: React.FC<PriceBreakdownProps> = ({
             <CollapsibleContent className="pt-2 pl-4 space-y-1">
               {includedMeals.map((meal, idx) => (
                 <div key={idx} className="text-xs text-muted-foreground flex justify-between">
-                  <span className="capitalize">{meal} × {guestCount} {guestCount === 1 ? 'guest' : 'guests'} × {nights} {nights === 1 ? 'night' : 'nights'}</span>
+                  <span className="capitalize">{meal}{chargeableMealCount === undefined ? ' (chargeable guests per server quote)' : ` × ${chargeableMealCount} chargeable guests`} × {nights} {nights === 1 ? 'night' : 'nights'}</span>
                 </div>
               ))}
             </CollapsibleContent>

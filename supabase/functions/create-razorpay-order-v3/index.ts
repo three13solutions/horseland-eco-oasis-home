@@ -1,3 +1,4 @@
+import { promotionBookingOpen } from '../_shared/epPromo.ts';
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import { calculateBookingQuote, assertQuoteMatches, normalizeQuoteRequest, QuoteError } from '../_shared/bookingQuote.ts';
@@ -48,9 +49,9 @@ serve(async(req:Request)=>{
   if(body.action==='promotions') {
    const {data:gate,error:gateError}=await db.from('website_promo_rollout').select('enabled').eq('id',true).maybeSingle();
    if(gateError||gate?.enabled!==true)return reply({offers:[]});
-   const {data,error}=await db.from('website_promotions').select('code,label,amount_per_night').eq('is_active',true);
+   const {data,error}=await db.from('website_promotions').select('*').eq('is_active',true);
    if(error)return reply({error:'Offers could not be loaded.'},503);
-   return reply({offers:data??[]});
+   return reply({offers:(data??[]).filter(p=>p.is_public!==false && promotionBookingOpen(p)).map(p=>({code:p.code,label:p.label,amount_per_night:p.amount_per_night,booking_from:p.booking_from,booking_to:p.booking_to,stay_from:p.stay_from,stay_to:p.stay_to,day_scope:p.day_scope,mixed_stay_mode:p.mixed_stay_mode}))});
   }
   if(body.action==='promo') {
    const quote=await calculateBookingQuote(db,{...body.quote_request,promo_code:body.promo_code},'website');

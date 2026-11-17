@@ -1,0 +1,28 @@
+import React, { useEffect, useState } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
+import type { SupabaseClient } from '@supabase/supabase-js';
+import { supabase } from '@/integrations/supabase/client';
+import { useGuestAgePolicy } from '@/hooks/useGuestAgePolicy';
+import { ageBandLabel, validateGuestAgeBands, type GuestAgeBand } from '@/lib/guest-age-policy';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { toast } from 'sonner';
+export default function GuestAgePricingPolicy() {
+  const policy=useGuestAgePolicy(); const client=useQueryClient();
+  const [bands,setBands]=useState<GuestAgeBand[]>([]); const [revision,setRevision]=useState(0); const [review,setReview]=useState(false); const [saving,setSaving]=useState(false);
+  useEffect(()=>{ if(policy.data && !revision) {setBands(policy.data.bands);setRevision(policy.data.revision);} },[policy.data,revision]);
+  const change=(key:string,patch:Partial<GuestAgeBand>)=>{setBands(old=>old.map(b=>b.key===key?{...b,...patch}:b));setReview(false);};
+  const error=validateGuestAgeBands(bands);
+  async function save() {setSaving(true);try {
+    const {data,error}=await (supabase as SupabaseClient).rpc('save_guest_age_policy',{p_expected_revision:revision,p_bands:bands});if(error)throw error;
+    if (!data || !Array.isArray(data.bands) || validateGuestAgeBands(data.bands)) throw new Error('Saved response could not be verified. Reload the policy.');setBands(data.bands);setRevision(data.revision);setReview(false);await client.invalidateQueries({queryKey:['guest-age-policy']});await client.invalidateQueries({queryKey:['rate-variants']});await client.invalidateQueries({queryKey:['website-rate-variants']});toast.success('Guest age policy saved for new quotes.');
+  }catch(e){toast.error(e instanceof Error?e.message:'Policy was not saved. Refresh to check the latest revision.');}finally{setSaving(false);}}
+  return <main className="p-6 space-y-5 max-w-5xl"><h1 className="text-2xl font-semibold">Guest Age &amp; Pricing Policy</h1><p>One policy for website and admin bookings. Age ranges are inclusive; guests are entered as counts, not dates of birth. Changes affect new quotes only, never saved booking/payment amounts. Extra services remain separately priced.</p>
+    {policy.isLoading&&<p>Loading policy…</p>}{policy.isError&&<p role="alert">Cannot load the authoritative policy. No fallback rules will be saved. <Button onClick={()=>policy.refetch()}>Retry</Button></p>}
+    {bands.map(b=><fieldset key={b.key} className="border rounded p-4 space-y-3"><legend className="capitalize font-semibold">{b.key==='infant'?'Young children':b.key} · {ageBandLabel(b)}</legend><div className="grid sm:grid-cols-4 gap-3"><label>Minimum age<Input type="number" min={0} step={1} value={b.min_age} onChange={e=>change(b.key,{min_age:Number(e.target.value)})}/></label><label>Maximum age{b.key==='adult'?<p>No upper limit</p>:<Input type="number" min={0} step={1} value={b.max_age??''} onChange={e=>change(b.key,{max_age:Number(e.target.value)})}/>}</label><label>Accommodation<select className="block border rounded p-2 w-full" value={b.accommodation_rule} onChange={e=>change(b.key,{accommodation_rule:e.target.value as GuestAgeBand['accommodation_rule']})}>{(b.key==='adult'?['adult']:['child','free']).map(v=><option key={v} value={v}>{v==='free'?'No charge':`${v} rate`}</option>)}</select></label><label>Automatic meal plans<select className="block border rounded p-2 w-full" value={b.meal_rule} onChange={e=>change(b.key,{meal_rule:e.target.value as GuestAgeBand['meal_rule']})}><option value="full">Full meal rate</option><option value="free">No charge</option></select></label></div></fieldset>)}
+    <p className="text-sm">Child/adult accommodation amounts remain in Rate Plans. Included adults and maximum room capacity are separate settings and are not changed here.</p>
+    {error&&bands.length>0&&<p role="alert" className="text-red-700">{error}</p>}
+    {review&&<section className="border rounded p-4"><h2 className="font-semibold">Review revision {revision} changes</h2>{bands.map(b=><p key={b.key}>{ageBandLabel(b)}: {b.accommodation_rule==='free'?'no accommodation charge':`${b.accommodation_rule} accommodation rate`}; {b.meal_rule==='free'?'no automatic meal charge':'full automatic meal rate'}.</p>)}<p>No rate amount, extra-service charge or existing booking changes. Confirm only after checking all bands.</p></section>}
+    <Button disabled={!!error||!policy.data||saving} onClick={()=>review?save():setReview(true)}>{saving?'Saving…':review?'Confirm and save policy':'Review changes'}</Button> <Button variant="outline" disabled={saving} onClick={async()=>{const result=await policy.refetch();if(result.data){setBands(result.data.bands);setRevision(result.data.revision);setReview(false);}}}>Reload saved policy</Button>
+  </main>;
+}

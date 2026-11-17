@@ -1,3 +1,4 @@
+import { useGuestAgePolicy } from '@/hooks/useGuestAgePolicy';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { readWebsiteCheckout, clearConfirmedWebsiteCheckout, type WebsiteCheckoutContext } from '@/lib/websiteCheckoutAttempt';
 import { websiteTypeAvailability } from '@/lib/websiteInventory';
@@ -105,6 +106,7 @@ interface BeddingOption {
 }
 
 const Booking = () => {
+  const agePolicy = useGuestAgePolicy();
   const [searchParams, setSearchParams] = useSearchParams();
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -175,7 +177,7 @@ const Booking = () => {
     phone: '',
     idType: '',
     idNumber: '',
-    specialRequests: ''
+    specialRequests: searchParams.get('specialRequests') || ''
   });
   const [selectedPickup, setSelectedPickup] = useState<PickupService | null>(null);
   const [selectedBedding, setSelectedBedding] = useState<BeddingOption[]>([]);
@@ -245,7 +247,7 @@ const Booking = () => {
 
   // Fetch rate variants when room type and dates are selected
   const { data: rateVariantsData, isFetching: websiteRatesChecking, isError: websiteRatesError } = useQuery({
-    queryKey: ['website-rate-variants', selectedRoomType?.id, checkIn, checkOut, adultsCount, childrenCount, infantsCount],
+    queryKey: ['website-rate-variants', selectedRoomType?.id, checkIn, checkOut, adultsCount, childrenCount, infantsCount, agePolicy.data?.revision],
     queryFn: async () => {
       if (!selectedRoomType?.id || !checkIn || !checkOut) return null;
       
@@ -264,14 +266,14 @@ const Booking = () => {
       }
       return data;
     },
-    enabled: !!selectedRoomType?.id && !!checkIn && !!checkOut,
+    enabled: !!agePolicy.data && !!selectedRoomType?.id && !!checkIn && !!checkOut,
     staleTime: 0, refetchOnWindowFocus: true, refetchOnReconnect: true
   });
 
   // Keep the selected quote tied to the currently returned plan/policy variants.
   const rateVariants = React.useMemo<RateVariant[]>(() =>
-    !websiteRatesChecking && !websiteRatesError && Array.isArray(rateVariantsData) ? rateVariantsData as unknown as RateVariant[] : [],
-    [rateVariantsData, websiteRatesChecking, websiteRatesError]
+    !!agePolicy.data && !websiteRatesChecking && !websiteRatesError && Array.isArray(rateVariantsData) ? rateVariantsData as unknown as RateVariant[] : [],
+    [rateVariantsData, websiteRatesChecking, websiteRatesError, agePolicy.data]
   );
 
   // Do not render or charge a cached selection while its eligibility is stale.
@@ -1240,6 +1242,7 @@ const Booking = () => {
     adults_count: adultsCount,
     children_count: childrenCount,
     infants_count: infantsCount,
+    guest_age_policy_revision: selectedVariant?.guest_age_policy?.revision ?? agePolicy.data?.revision,
     meal_plan_code: selectedMealPlan,
     cancellation_policy_code: selectedCancellationPolicy,
     addons: [
@@ -1337,7 +1340,7 @@ const Booking = () => {
         room_type_id: selectedRoomType?.id || null,
         check_in: checkIn || null,
         check_out: checkOut || null,
-        guests_count: (adultsCount || 0) + (childrenCount || 0) + (infantsCount || 0), // Meal supplements currently include every guest.
+        guests_count: (adultsCount || 0) + (childrenCount || 0) + (infantsCount || 0), // Actual headcount, including guests whose automatic meals are free.
         total_amount: calculateTotal() || 0,
         // Store meal plan information
         meal_plan_code: selectedMealPlan || 'RO',
@@ -1659,7 +1662,7 @@ const Booking = () => {
                       <div className="flex-1">
                         <h3 className="font-semibold">{selectedRoomType.name}</h3>
                         <p className="text-sm text-muted-foreground">Up to {selectedRoomType.max_guests} guests</p>
-                        <p className="text-sm text-muted-foreground mt-1">₹{Math.round(selectedRoomType.base_price / Math.max(2, guests)).toLocaleString()}/guest/night</p>
+                        <p className="text-sm text-muted-foreground mt-1">₹{Math.round(selectedRoomType.base_price / Math.max(1, adultsCount + childrenCount + infantsCount)).toLocaleString()}/guest/night</p>
                       </div>
                       <Button variant="outline" onClick={() => {
                         // Navigate to search availability with current dates and guests
@@ -2412,10 +2415,10 @@ const Booking = () => {
                         {infantsCount > 0 && (
                           <div className="flex justify-between gap-2 text-sm">
                             <span className="text-muted-foreground">
-                              {infantsCount} {infantsCount === 1 ? 'Infant' : 'Infants'}
+                              {infantsCount} young {infantsCount === 1 ? 'child' : 'children'} ({agePolicy.label('infant')})
                             </span>
                             <span className="font-medium text-right">
-                              Meals follow selected plan
+                              {agePolicy.band('infant')?.accommodation_rule === 'free' && agePolicy.band('infant')?.meal_rule === 'free' ? 'No automatic room or meal charge' : 'Charges follow guest age policy'}
                             </span>
                           </div>
                         )}

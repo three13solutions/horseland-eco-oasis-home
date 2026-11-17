@@ -132,7 +132,7 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
   const [promoLoading, setPromoLoading] = useState(false);
   const promoPending = useRef(false);
   const [appliedSelection, setAppliedSelection] = useState('');
-  const [offers, setOffers] = useState<{code: string; label: string}[]>([]);
+  const [offers, setOffers] = useState<{code: string; label: string; booking_from?: string; booking_to?: string; stay_from?: string; stay_to?: string; day_scope?: string; mixed_stay_mode?: string}[]>([]);
   const promoGeneration = useRef(0);
   const promoSelection = JSON.stringify([bookingDetails.quoteRequest, bookingDetails.quoteFingerprint, bookingDetails.existingBookingId]);
   const effectivePromoQuote = appliedSelection === promoSelection ? promoQuote : null;
@@ -469,6 +469,8 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
             {!reviewRequired && !bookingDetails.existingBookingId && offers.length>0 && <div className="space-y-1 pt-2">
               <label className="block text-sm" htmlFor="booking-offer">Available offers</label>
               <select id="booking-offer" aria-label="Available offers" className="w-full rounded border p-2 text-sm" value={promoInput} disabled={!!promoApplied||isProcessing||promoLoading} onChange={e=>setPromoInput(e.target.value)}><option value="">Choose an offer</option>{offers.map(o=><option key={o.code} value={o.code}>{o.code} · {o.label}</option>)}</select>
+              <p className="text-xs text-muted-foreground">Listed offers may have stay restrictions. Apply the code to verify eligibility and the exact discount for this booking.</p>
+              {offers.filter(o=>o.code===promoInput).map(o=><p key={o.code} className="text-xs">Booking dates: {o.booking_from||'no start limit'} to {o.booking_to||'no end limit'} (India time). Occupied stay nights: {o.stay_from||'no start limit'} to {o.stay_to||'no end limit'}. {o.day_scope==='weekday'?'Weekdays only. ':o.day_scope==='weekend'?'Weekends only. ':'All day types. '}{o.mixed_stay_mode==='eligible_nights'?'Discount only on qualifying nights.':o.mixed_stay_mode==='all_nights'?'Every occupied night must qualify.':''} Checkout day is excluded.</p>)}
               <div className="flex gap-2">
                 <input aria-label="Promo code" value={promoInput} onChange={e => setPromoInput(e.target.value)} disabled={!!promoApplied || isProcessing || promoLoading}
                   placeholder="Promo code" className="flex h-9 w-full rounded-md border border-input bg-background px-3 text-sm uppercase" />

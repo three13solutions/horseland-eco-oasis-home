@@ -1,0 +1,48 @@
+// Isolated PostgreSQL migration validation, not a complete Supabase upgrade test.
+// Install @electric-sql/pglite@0.3.14 in a temporary directory, then run:
+// PROMO_PGLITE_MODULE=/tmp/horseland-age-dbtest/node_modules/@electric-sql/pglite/dist/index.js node --test tests/managed-promotions-db.test.mjs
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {readFileSync,existsSync} from 'node:fs';
+const modulePath=process.env.PROMO_PGLITE_MODULE;
+test('isolated PostgreSQL promotion migration, authorization, preservation and revisions',{skip:(!modulePath||!existsSync(modulePath))&&'Set PROMO_PGLITE_MODULE to an installed PGlite module'},async()=>{
+ const {PGlite}=await import(modulePath);const db=new PGlite();
+ try{
+ await db.exec(`create role anon; create role authenticated; create role service_role;
+ create schema auth;
+ create function auth.uid() returns uuid language sql stable as $$select nullif(current_setting('test.uid',true),'')::uuid$$;
+ create function public.is_admin_new() returns boolean language sql stable as $$select nullif(current_setting('test.admin',true),'')::boolean$$;
+ create function public.is_pricing_weekend(date,integer[],uuid) returns boolean language sql stable as $$select extract(dow from $1)=6$$;
+ create table public.website_promo_rollout(id boolean primary key,enabled boolean);insert into website_promo_rollout values(true,true);
+ create table public.website_promotions(code text primary key,label text not null,amount_per_night numeric not null,amount_per_booking numeric not null,is_active boolean not null,revision integer not null default 1,updated_at timestamptz not null default now(),updated_by uuid,
+ constraint website_promotions_discount_policy_check check((code='EP300' and amount_per_night=300 and amount_per_booking=0) or(code='DIRECT1000' and amount_per_night=0 and amount_per_booking=1000)));
+ insert into website_promotions(code,label,amount_per_night,amount_per_booking,is_active)values('EP300','EP offer',300,0,true),('DIRECT1000','Direct offer',0,1000,true);
+ create table audit_fixture(code text);
+ create function record_activity_log() returns trigger language plpgsql as $$begin insert into audit_fixture values(new.code);return new;end$$;
+ create trigger zz_activity_log after insert or update on website_promotions for each row execute function record_activity_log();
+ alter table website_promotions enable row level security;`);
+ const before=(await db.query('select code,label,amount_per_night,amount_per_booking,is_active,revision,updated_at from website_promotions order by code')).rows;
+ await db.exec(readFileSync(new URL('../supabase/migrations/20261118000200_managed_website_promotions.sql',import.meta.url),'utf8'));
+ assert.deepEqual((await db.query('select code,label,amount_per_night,amount_per_booking,is_active,revision,updated_at from website_promotions order by code')).rows,before);
+ const config={code:'TEST100',label:'Test only',discount_kind:'fixed',discount_basis:'booking',discount_value:100,day_scope:'both',mixed_stay_mode:null,is_active:false,is_public:false,booking_from:null,booking_to:null,stay_from:null,stay_to:null};
+ const save=(c=config,revision=null)=>db.query('select save_managed_website_promotion($1::jsonb,$2::integer) as value',[JSON.stringify(c),revision]);
+ await assert.rejects(save(),/Administrator required/);
+ await db.exec(`set test.uid='00000000-0000-0000-0000-000000000001';`);
+ await assert.rejects(save(),/Administrator required/); // null admin result
+ await assert.rejects(db.query('select website_promotion_settings()'),/Administrator required/);
+ await db.exec(`set test.admin='false';`);await assert.rejects(save(),/Administrator required/);
+ await db.exec(`set test.admin='true';`);
+ const made=(await save()).rows[0].value;assert.equal(made.code,'TEST100');assert.equal(made.is_active,false);assert.equal(made.is_public,false);
+ const edited=(await save({...config,is_active:true},made.revision)).rows[0].value;assert.equal(edited.revision,made.revision+1);assert.equal(edited.is_active,true);
+ await assert.rejects(save(config,made.revision),/Promotion changed/);
+ for(const change of [{day_scope:'weekend'},{day_scope:'weekend',mixed_stay_mode:'eligible_nights'},{discount_kind:'percentage',discount_value:101},{discount_value:null},{booking_from:'2026-11-22',booking_to:'2026-11-20'}])await assert.rejects(save({...config,...change},edited.revision));
+ const legacy=(await db.query("select * from website_promotions where code='DIRECT1000'")).rows[0];
+ const preserved=(await save({...legacy,amount_per_booking:99999,discount_value:99999,discount_kind:'percentage',discount_basis:'night'},legacy.revision)).rows[0].value;
+ assert.equal(preserved.amount_per_booking,1000);assert.equal(preserved.discount_kind,'legacy');assert.equal(preserved.discount_value,null);
+ const days=(await db.query("select website_promotion_eligible_dates('00000000-0000-0000-0000-000000000001','2026-11-20','2026-11-23','weekend') as days")).rows[0].days;
+ assert.deepEqual(days,['2026-11-21']);
+ assert.ok((await db.query("select count(*)::integer as n from audit_fixture")).rows[0].n>=3);
+ const grants=(await db.query("select has_function_privilege('anon','save_managed_website_promotion(jsonb,integer)','execute') as anonymous_write,has_function_privilege('authenticated','website_promotion_eligible_dates(uuid,date,date,text)','execute') as client_calendar")).rows[0];
+ assert.equal(grants.anonymous_write,false);assert.equal(grants.client_calendar,false);
+ }finally{await db.close()}
+});

@@ -1,3 +1,4 @@
+import { useGuestAgePolicy } from '@/hooks/useGuestAgePolicy';
 import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -37,6 +38,7 @@ export const ManualBookingModal: React.FC<ManualBookingModalProps> = ({
   preSelectedDates,
   onBookingCreated
 }) => {
+  const agePolicy = useGuestAgePolicy();
   const [checkInDate, setCheckInDate] = useState<Date | undefined>(preSelectedDates?.checkIn);
   const [checkOutDate, setCheckOutDate] = useState<Date | undefined>(preSelectedDates?.checkOut);
   const [guestName, setGuestName] = useState('');
@@ -529,6 +531,7 @@ export const ManualBookingModal: React.FC<ManualBookingModalProps> = ({
             room_type_id: roomTypeId, room_unit_id: roomUnitId,
             check_in: format(checkInDate, 'yyyy-MM-dd'), check_out: format(checkOutDate, 'yyyy-MM-dd'),
             adults_count: guestsCount, children_count: childrenCount, infants_count: infantsCount,
+            guest_age_policy_revision: selectedRate.guest_age_policy?.revision ?? agePolicy.data?.revision,
             meal_plan_code: mealPlanCode, cancellation_policy_code: policyCode,
             addons: [
               ...selectedMeals.map(m => ({ id: m.id, type: 'meal', quantity: m.quantity || 1 })),
@@ -683,8 +686,8 @@ export const ManualBookingModal: React.FC<ManualBookingModalProps> = ({
                 {[...new Map(rateVariants.map(v => [v.cancellation_policy_code, v])).values()].map(v => <SelectItem key={v.cancellation_policy_code} value={v.cancellation_policy_code}>{v.cancellation_policy_name}</SelectItem>)}
               </SelectContent></Select>
             </div>
-            <div className="space-y-2"><Label>Children</Label><Input type="number" min={0} value={childrenCount} onChange={e => setChildrenCount(Math.max(0, parseInt(e.target.value) || 0))} /></div>
-            <div className="space-y-2"><Label>Infants</Label><Input type="number" min={0} value={infantsCount} onChange={e => setInfantsCount(Math.max(0, parseInt(e.target.value) || 0))} /></div>
+            <div className="space-y-2"><Label>Children ({agePolicy.label('child')})</Label><Input type="number" min={0} value={childrenCount} onChange={e => setChildrenCount(Math.max(0, parseInt(e.target.value) || 0))} /></div>
+            <div className="space-y-2"><Label>Young children ({agePolicy.label('infant')})</Label><Input type="number" min={0} value={infantsCount} onChange={e => setInfantsCount(Math.max(0, parseInt(e.target.value) || 0))} /></div>
             <p className="sm:col-span-2 text-sm text-muted-foreground">{quoteLoading ? 'Refreshing server quote…' : selectedRate ? `Room and extra accommodation: ₹${selectedRate.room_rate.toLocaleString()}; meals: ₹${selectedRate.meal_cost.toLocaleString()}; policy adjustment: ₹${selectedRate.policy_adjustment.toLocaleString()}.` : 'Select dates and guests to obtain a quote.'} {legacyManualRate ? ' Existing manual room pricing is retained while its meal basis awaits confirmation.' : ''} Manual booking tax remains 18% pending separate policy review.</p>
           </div>
 
@@ -785,7 +788,7 @@ export const ManualBookingModal: React.FC<ManualBookingModalProps> = ({
 
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="guestsCount">Adults</Label>
+                <Label htmlFor="guestsCount">Adults ({agePolicy.label('adult')})</Label>
                 <Input
                   id="guestsCount"
                   type="number"

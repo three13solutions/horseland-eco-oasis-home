@@ -1,8 +1,9 @@
+import type { GuestAgePolicy } from './guest-age-policy';
 /** Session-draft meal choices only. No booking, anchor, database or price writes.
  * Every required group is AND; one explicitly chosen alternative per group is OR.
  * Catalogue amounts are per person/per occupied night in integer paise. Current
- * user-approved policy: adults, children and infants all pay the same full price.
- * Age-specific pricing is deferred. This is not an authorization or authoritative quote boundary.
+ * Policy is supplied by the authoritative guest age configuration.
+ * No individual choices are saved to bookings here. This is not an authorization or authoritative quote boundary.
  */
 export type MealChoicePlanCode = 'RO' | 'BB' | 'HB' | 'FB';
 export interface MealCatalogueItem {
@@ -87,7 +88,7 @@ export function validateMealChoicePlan(plan: MealChoicePlan, catalogue: readonly
 /** One occupied night. No implicit choice, cheapest fallback, adult-count multiplier
  * or room price. Every person gets an independent choice for every required group.
  */
-export function calculateMealChoices(plan: MealChoicePlan, catalogue: readonly MealCatalogueItem[], guests: readonly MealChoiceGuest[]) {
+export function calculateMealChoices(plan: MealChoicePlan, catalogue: readonly MealCatalogueItem[], guests: readonly MealChoiceGuest[], agePolicy?: GuestAgePolicy) {
   const map = catalogueMap(catalogue);
   validatePlan(plan, map);
   if (!Array.isArray(guests) || !guests.length || guests.length > 100) throw new Error('Provide 1–100 guests.');
@@ -107,9 +108,11 @@ export function calculateMealChoices(plan: MealChoicePlan, catalogue: readonly M
       const mealId = Object.prototype.hasOwnProperty.call(guest.choices, group.id) ? guest.choices[group.id] : undefined;
       if (typeof mealId !== 'string' || !group.mealIds.includes(mealId)) throw new Error(`${guest.label}: choose exactly one option for ${group.label}.`);
       const meal = map.get(mealId)!;
-      guestSubtotal = add(guestSubtotal, meal.pricePaise);
+      const free = agePolicy?.bands.find(b => b.key === guest.kind)?.meal_rule === 'free';
+      const chargedPrice = free ? 0 : meal.pricePaise;
+      guestSubtotal = add(guestSubtotal, chargedPrice);
       return { groupId: group.id, groupLabel: group.label, mealId: meal.id, title: meal.title,
-        mealType: meal.mealType, variant: meal.variant, pricePaise: meal.pricePaise, revision: meal.revision };
+        mealType: meal.mealType, variant: meal.variant, pricePaise: chargedPrice, revision: meal.revision };
     });
     subtotalPaise = add(subtotalPaise, guestSubtotal);
     return { guestId: guest.id, label: guest.label, kind: guest.kind, subtotalPaise: guestSubtotal, choices };

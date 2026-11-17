@@ -16,8 +16,9 @@ test('shared price requires confirmation, valid changed amount and clears acknow
   assert.match(ui,/function closePrice\(\) \{ setEditingId\(null\); setConfirmed\(false\)/);
   assert.match(ui,/setNextPrice\(e.target.value\); setConfirmed\(false\)/);
 });
-test('actual choices are calculated independently; incomplete impacts are disclosed',()=>{
-  assert.match(ui,/calculateMealChoices\(plan, catalogue, guests\)/);
+test('actual choices use authoritative age policy independently; incomplete impacts are disclosed',()=>{
+  assert.match(ui,/calculateMealChoices\(plan, catalogue, guests, agePolicy.data\)/);
+  assert.match(ui,/if \(!agePolicy.data\) throw new Error/);
   assert.match(ui,/Full plan range unavailable/);
   assert.match(ui,/Ranges describe allowed alternatives, not a chosen price/);
   assert.match(ui,/linked in another group/);

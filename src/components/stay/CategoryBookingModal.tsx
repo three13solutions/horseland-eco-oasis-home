@@ -1,3 +1,5 @@
+import GuestSelector from '@/components/GuestSelector';
+import { useNavigate } from 'react-router-dom';
 import { variantStillOffered } from '@/lib/mealPlanVisibility';
 import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
@@ -28,6 +30,9 @@ type Props = {
 };
 
 const CategoryBookingModal: React.FC<Props> = ({ open, onOpenChange, category }) => {
+  const navigate = useNavigate();
+  const [children, setChildren] = useState(0);
+  const [infants, setInfants] = useState(0);
   const [date, setDate] = React.useState<DateRange | undefined>();
   const [guests, setGuests] = React.useState<number>(2);
   const [extraMattress, setExtraMattress] = React.useState<number>(0);
@@ -46,18 +51,16 @@ const CategoryBookingModal: React.FC<Props> = ({ open, onOpenChange, category })
     ? Math.ceil((date.to.getTime() - date.from.getTime()) / (1000 * 60 * 60 * 24))
     : 0;
   
-  const minGuests = 2; // Default minimum guests
-  const totalGuests = guests + extraMattress;
-  const guestsForPricing = Math.max(totalGuests, minGuests);
+  const totalGuests = guests + children + infants;
   
   const { data: variants = [], isLoading: variantsLoading, isError: variantError } = useDynamicPricing({
     website: true,
     roomTypeId: category?.id,
     checkIn: date?.from,
     checkOut: date?.to,
-    adultsCount: guests + extraMattress, // Using total guests as adults for backwards compatibility
-    childrenCount: 0,
-    infantsCount: 0,
+    adultsCount: guests,
+    childrenCount: children,
+    infantsCount: infants,
     enabled: !!date?.from && !!date?.to && availableUnits > 0
   });
 
@@ -156,18 +159,9 @@ const CategoryBookingModal: React.FC<Props> = ({ open, onOpenChange, category })
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <Label htmlFor="guests" className="text-sm font-medium">Number of Guests</Label>
-                <Select value={guests.toString()} onValueChange={(value) => setGuests(Number(value))}>
-                  <SelectTrigger className="mt-1.5">
-                    <SelectValue placeholder="Select guests" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {Array.from({ length: baseOccupancy }, (_, i) => i + 1).map((num) => (
-                      <SelectItem key={num} value={num.toString()}>
-                        {num} {num === 1 ? 'Guest' : 'Guests'}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <GuestSelector totalGuests={guests + children} adultsCount={guests} childrenCount={children}
+                infantsCount={infants} open={guestSelectorOpen} onOpenChange={setGuestSelectorOpen} onGuestsChange={(_, a, c, i = 0) => {setGuests(a);setChildren(c);setInfants(i);setSelectedVariant(null);}} />
+                {totalGuests > category.maxGuests && <p role="alert" className="text-red-700">The party exceeds this room's maximum occupancy. Choose another room or reduce the party.</p>}
               </div>
 
               {maxExtraMattress > 0 && (
@@ -186,7 +180,7 @@ const CategoryBookingModal: React.FC<Props> = ({ open, onOpenChange, category })
                     </SelectContent>
                   </Select>
                   <div className="text-xs text-muted-foreground mt-1">
-                    Max total: {category.maxGuests} guests
+                    Separately priced request; not included in this quote. Max occupancy: {category.maxGuests} guests
                   </div>
                 </div>
               )}
@@ -289,15 +283,6 @@ const CategoryBookingModal: React.FC<Props> = ({ open, onOpenChange, category })
             <div className="space-y-4">
               <h3 className="font-semibold text-base">Select Rate Plan</h3>
               
-              {totalGuests < minGuests && (
-                <Alert>
-                  <Info className="h-4 w-4" />
-                  <AlertDescription>
-                    This room accommodates a minimum of {minGuests} guests. Pricing is calculated for {minGuests} guests.
-                  </AlertDescription>
-                </Alert>
-              )}
-              
               {variantError && <p role="alert">Meal-plan availability could not be verified. Please refresh before continuing.</p>}
               {selectionInvalidated && <p role="status" className="text-sm text-amber-700">Your earlier plan or quote is no longer available. Choose an offered plan and review the total; no alternative was selected.</p>}
               <RateVariantSelector
@@ -305,25 +290,27 @@ const CategoryBookingModal: React.FC<Props> = ({ open, onOpenChange, category })
                 selectedVariant={selectedVariant}
                 onSelect={variant => { setSelectedVariant(variant); setSelectionInvalidated(false); }}
                 nights={nights}
-                adultsCount={guestsForPricing}
-                childrenCount={0}
+                adultsCount={guests}
+                childrenCount={children}
+                infantsCount={infants}
               />
               
               {selectedVariant && !variantsLoading && !variantError && variantStillOffered(selectedVariant, variants) && (() => {
                 const { adjustedTotal } = applyMealPlanAdjustment(
                   selectedVariant.total_price,
                   selectedVariant.meal_plan_code,
-                  guestsForPricing,
-                  0,
+                  guests,
+                  children,
                   nights
                 );
                 return (
                   <PriceBreakdown
-                    roomRate={adjustedTotal}
-                    mealCost={0}
-                    policyAdjustment={0}
+                    roomRate={selectedVariant.room_rate}
+                    mealCost={selectedVariant.meal_cost}
+                    policyAdjustment={selectedVariant.policy_adjustment}
                     nights={nights}
                     guestCount={totalGuests}
+                    chargeableMealCount={selectedVariant.chargeable_meal_guests}
                     mealPlanName={selectedVariant.meal_plan_name}
                     includedMeals={selectedVariant.included_meals || []}
                   />
@@ -350,9 +337,15 @@ const CategoryBookingModal: React.FC<Props> = ({ open, onOpenChange, category })
               Cancel
             </Button>
             <Button 
-              onClick={() => onOpenChange(false)} 
+              onClick={() => {
+                if (!date?.from || !date?.to || !selectedVariant) return;
+                const params = new URLSearchParams({ roomTypeId:category.id, checkIn:format(date.from,'yyyy-MM-dd'), checkOut:format(date.to,'yyyy-MM-dd'), guests:String(guests+children), adults:String(guests), children:String(children), infants:String(infants), mealPlan:selectedVariant.meal_plan_code, cancellationPolicy:selectedVariant.cancellation_policy_code });
+                // A mattress is a separately priced request, never an additional guest.
+                if (notes || extraMattress) params.set('specialRequests', [notes, extraMattress ? `${extraMattress} extra mattress requested; availability and separate charge to be confirmed` : ''].filter(Boolean).join('\n'));
+                onOpenChange(false);navigate(`/booking?${params}`);
+              }}
               className="sm:flex-1"
-              disabled={!date?.from || !date?.to || availableUnits === 0 || loading || variantsLoading || !selectedVariant || !variantStillOffered(selectedVariant, variants)}
+              disabled={totalGuests > category.maxGuests || !date?.from || !date?.to || availableUnits === 0 || loading || variantsLoading || !selectedVariant || !variantStillOffered(selectedVariant, variants)}
             >
               {!selectedVariant && date?.from && date?.to && availableUnits > 0 
                 ? 'Select a Rate Plan' 

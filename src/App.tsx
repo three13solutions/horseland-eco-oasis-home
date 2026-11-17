@@ -76,6 +76,7 @@ import LiveRateCard from "./pages/admin/LiveRateCard";
 import GSTConfiguration from "./pages/admin/GSTConfiguration";
 import RateOverrides from "./pages/admin/RateOverrides";
 import RatePlans from "./pages/admin/RatePlans";
+import GuestAgePricingPolicy from "./pages/admin/GuestAgePricingPolicy";
 import { Navigate } from 'react-router-dom';
 // Old imports kept for backwards compatibility within consolidated pages
 import CategoryPricing from "./pages/admin/CategoryPricing";
@@ -151,6 +152,7 @@ function App() {
                 <Route path="pricing/gst" element={<GSTConfiguration />} />
                 <Route path="pricing/overrides" element={<RateOverrides />} />
                 <Route path="pricing/rate-plans" element={<RatePlans />} />
+                <Route path="pricing/guest-age-policy" element={<GuestAgePricingPolicy />} />
                 
                 {/* Redirects for backwards compatibility */}
                 <Route path="pricing/categories" element={<Navigate to="/admin/pricing/rates?tab=categories" replace />} />
