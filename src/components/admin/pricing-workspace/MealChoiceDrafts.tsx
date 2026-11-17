@@ -1,3 +1,5 @@
+import type { SupabaseClient } from '@supabase/supabase-js';
+import { mealAgeRuleError, type MealAgePolicy } from '@/lib/meal-age-pricing';
 import { useGuestAgePolicy } from '@/hooks/useGuestAgePolicy';
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
@@ -44,6 +46,11 @@ export default function MealChoiceDrafts() {
     },
   });
   const agePolicy = useGuestAgePolicy();
+  const mealAgePolicy = useQuery({queryKey:['meal-age-pricing-policy'],queryFn:async()=>{
+    const {data,error}=await (supabase as SupabaseClient).rpc('get_meal_age_pricing_policy');
+    if(error)throw error;const policy=data as MealAgePolicy;
+    if(!policy||mealAgeRuleError(policy.rules))throw new Error('Meal age pricing policy is invalid.');return policy;
+  },staleTime:0,refetchOnWindowFocus:true});
   const [plans, setPlans] = useState(initialPlans);
   const [code, setCode] = useState<MealChoicePlan['code']>('HB');
   const [guests, setGuests] = useState(initialGuests);
@@ -64,6 +71,8 @@ export default function MealChoiceDrafts() {
   let combined: number | undefined;
   try {
     if (!agePolicy.data) throw new Error('Guest age policy must load before a meal preview can be calculated.');
+    if (!mealAgePolicy.data || mealAgePolicy.isError || mealAgePolicy.isFetching) throw new Error('The current plan age-pricing policy must be verified before previewing.');
+    if (plan.code !== 'RO' && mealAgePolicy.data.rules.some(r => r.plan_code === plan.code && guests.some(g => g.kind === r.band_key) && agePolicy.band(r.band_key)?.meal_rule !== 'free' && r.mode !== 'full')) throw new Error('This independent-choice simulation does not support custom plan age rates. Use Meal Plans Management for an age-rate preview; no misleading total is calculated here.');
     quote = calculateMealChoices(plan, catalogue, guests, agePolicy.data);
     if (ep.trim()) {
       combined = parseRupeesToPaise(ep) + quote.subtotalPaise;
@@ -113,7 +122,7 @@ export default function MealChoiceDrafts() {
     const blob = new Blob([JSON.stringify({ status: 'DRAFT_NOT_APPROVED_NOT_LIVE', scope: 'ONE_NIGHT_MEAL_CHOICES',
       catalogueCapturedAt: catalogueQuery.dataUpdatedAt ? new Date(catalogueQuery.dataUpdatedAt).toISOString() : null,
       catalogue, sharedDraftPrices: draftPrices, plans, preview: { planCode: code, guests, epInputRupees: ep, quote: previewError ? null : quote },
-      exclusions: ['No checkout integration', 'No effective-date policy', 'Age-specific pricing deferred; all guests currently full price', 'No accommodation extras or taxes'],
+      exclusions: ['No checkout integration', 'No effective-date policy', 'Custom plan age prices block this independent-choice preview; use Meal Plans Management', 'No accommodation extras or taxes'],
     }, null, 2)], { type: 'application/json' });
     const url = URL.createObjectURL(blob); const a = document.createElement('a');
     a.href = url; a.download = 'horseland-meal-choice-draft.json'; a.click(); URL.revokeObjectURL(url);
@@ -151,9 +160,9 @@ export default function MealChoiceDrafts() {
       </>}
     </CardContent></Card>
     <Card><CardHeader><CardTitle className="font-serif">Per-person selection & price preview</CardTitle><p className="text-sm text-muted-foreground">One night. Actual chosen alternatives are charged at their linked catalogue prices. This is a meal subtotal, not a final booking quote.</p></CardHeader><CardContent className="space-y-4">
-      <p className="text-sm border rounded p-3">Current approved preview basis: one catalogue unit per person per selected meal for one night. Guest category meal charges follow Guest Age & Pricing Policy. Free bands retain their guest count but have no automatic meal charge. Each person selects independently. EP contains no meals, so its meal addition stays zero for every guest. Accommodation, extra-person room charges, taxes and discounts are not included.</p>
+      <p className="text-sm border rounded p-3">Current approved preview basis: one catalogue unit per person per selected meal for one night. Guest category meal charges follow Guest Age & Pricing Policy. Free bands retain their guest count but have no automatic meal charge. This session-only simulation is not a booking feature. If custom plan age rates apply, this simulation is blocked; use Meal Plans Management for the current price preview. EP contains no meals, so its meal addition stays zero for every guest. Accommodation, extra-person room charges, taxes and discounts are not included.</p>
       <div className="grid lg:grid-cols-2 gap-4">{guests.map((person, personIndex) => <fieldset key={person.id} className="rounded-lg border p-4 space-y-3"><legend className="font-semibold px-1">{person.label}</legend>
-        <div className="flex gap-3 items-end"><label className="grid gap-1 text-sm flex-1">Guest type<select className={selectClass} aria-label={`${person.label} type`} value={person.kind} onChange={e => setGuests(previous => previous.map(g => g.id === person.id ? { ...g, kind: e.target.value as MealChoiceGuest['kind'] } : g))}><option value="adult">Adult</option><option value="child">Child (full price)</option><option value="infant">Infant (full price)</option></select></label><Button variant="ghost" disabled={guests.length <= 1} onClick={() => setGuests(previous => previous.filter(g => g.id !== person.id))}>Remove person {personIndex + 1}</Button></div>
+        <div className="flex gap-3 items-end"><label className="grid gap-1 text-sm flex-1">Guest type<select className={selectClass} aria-label={`${person.label} type`} value={person.kind} onChange={e => setGuests(previous => previous.map(g => g.id === person.id ? { ...g, kind: e.target.value as MealChoiceGuest['kind'] } : g))}><option value="adult">Adult</option><option value="child">Child</option><option value="infant">Young child</option></select></label><Button variant="ghost" disabled={guests.length <= 1} onClick={() => setGuests(previous => previous.filter(g => g.id !== person.id))}>Remove person {personIndex + 1}</Button></div>
         {plan.groups.map(g => <label key={g.id} className="grid gap-1 text-sm">{g.label || 'Unnamed group'}<select className={selectClass} aria-label={`${person.label}: ${g.label || 'Unnamed group'}`} value={person.choices[g.id] ?? ''} onChange={e => setGuests(previous => previous.map(p => p.id === person.id ? { ...p, choices: e.target.value ? { ...p.choices, [g.id]: e.target.value } : Object.fromEntries(Object.entries(p.choices).filter(([id]) => id !== g.id)) } : p))}><option value="">Choose one alternative</option>{g.mealIds.map(id => { const meal = catalogue.find(item => item.id === id); return <option key={id} value={id} disabled={!meal?.isActive}>{meal ? `${meal.title} (${meal.variant}) · ${money(meal.pricePaise)}${!meal.isActive ? ' · inactive' : ''}` : 'Missing meal record'}</option>; })}</select></label>)}
         {quote?.guestBreakdown.find(g => g.guestId === person.id) && <p className="font-semibold text-sm">Meal addition: {money(quote.guestBreakdown.find(g => g.guestId === person.id)!.subtotalPaise)}</p>}
       </fieldset>)}</div>

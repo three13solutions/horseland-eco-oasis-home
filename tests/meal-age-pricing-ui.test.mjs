@@ -1,0 +1,16 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {readFileSync} from 'node:fs';
+import {mealAgeRuleError,mealAgeAmount} from '../src/lib/meal-age-pricing.ts';
+const rules=['RO','BB','HB','FB'].flatMap(plan_code=>['adult','child','infant'].map(band_key=>({plan_code,band_key,mode:plan_code==='RO'?'free':'full',value:null})));
+test('preserved full child rules, no sample50, and all plan/band combinations required',()=>{assert.equal(mealAgeRuleError(rules),null);assert.ok(mealAgeRuleError(rules.slice(1)));assert.ok(mealAgeRuleError([...rules.slice(1),rules[1]]));});
+test('percentage follows current adult; fixed independent; global free always overrides',()=>{const rule={plan_code:'HB',band_key:'child',mode:'percentage',value:50};assert.equal(mealAgeAmount(920,rule,false),460);assert.equal(mealAgeAmount(1000,rule,false),500);assert.equal(mealAgeAmount(1000,{...rule,mode:'fixed',value:450},false),450);assert.equal(mealAgeAmount(1000,rule,true),0);assert.equal(mealAgeAmount(1000,{...rule,plan_code:'RO'},false),0);});
+test('percentage bounds fixed decimal precision and adult/EP invariants',()=>{for(const patch of [{mode:'percentage',value:101},{mode:'fixed',value:-1},{mode:'fixed',value:2.333},{mode:'percentage',value:null}]){const copy=structuredClone(rules);Object.assign(copy[4],patch);assert.ok(mealAgeRuleError(copy));}const copy=structuredClone(rules);copy[3].mode='free';assert.ok(mealAgeRuleError(copy));});
+const age=readFileSync(new URL('../src/components/admin/MealPlanAgePricing.tsx',import.meta.url),'utf8');
+const variants=readFileSync(new URL('../src/components/admin/MealPlanDietaryVariants.tsx',import.meta.url),'utf8');
+test('admin reviews revision checked saves and only reads shared adult rates',()=>{assert.match(age,/p_expected_revision:policy.revision/);assert.match(age,/Confirm age-price rules/);assert.match(age,/fetchMealPricingWorkspace/);assert.match(age,/value:null/);assert.doesNotMatch(age,/value:50/);});
+test('dietary variants explicitly config-only with existing library images and independent optimistic revision',()=>{assert.match(variants,/NOT used by current booking prices/);assert.match(variants,/Individual guest choices are deferred/);assert.match(variants,/<MediaPicker/);assert.match(variants,/gallery_image_id:data\[0\].id/);assert.match(variants,/p_expected_revision:form.revision/);assert.match(variants,/No live quote or booking impact/);assert.doesNotMatch(variants,/create-razorpay|calculate_website_rate/);});
+
+test('percentage half-paise rounds like SQL numeric, never binary float ties',()=>{const rule={plan_code:'HB',band_key:'child',mode:'percentage',value:50};assert.equal(mealAgeAmount(1.15,rule,false),0.58);assert.equal(mealAgeAmount(0.01,rule,false),0.01);assert.equal(mealAgeAmount(1.13,rule,false),0.57);assert.throws(()=>mealAgeAmount(Number.MAX_SAFE_INTEGER,rule,false));});
+
+test('save binds reviewed age and adult-workspace revisions and refuses changed band policy',()=>{assert.match(age,/p_expected_guest_age_revision:reviewAgeRevision/);assert.match(age,/p_expected_meal_workspace_revision:workspaceRevision/);assert.match(age,/setWorkspaceRevision\(workspace.revision\)/);assert.match(age,/age.data\?\.revision!==reviewAgeRevision/);assert.match(age,/setReviewAgeRevision\(age.data.revision\)/);});

@@ -4,9 +4,12 @@ import { readFileSync } from 'node:fs';
 const ui=readFileSync(new URL('../src/components/admin/pricing-workspace/MealChoiceDrafts.tsx',import.meta.url),'utf8');
 const workspace=readFileSync(new URL('../src/pages/admin/PricingWorkspace.tsx',import.meta.url),'utf8');
 // Source guards only, not browser interaction tests.
-test('meal workspace reads catalogue only and never writes backend or calls quote RPC',()=>{
+test('meal workspace reads catalogue and age policy without writes or quote RPC',()=>{
   assert.match(ui,/\.from\('meals'\)/);
-  assert.doesNotMatch(ui,/\.(insert|update|upsert|delete|rpc)\(/);
+  assert.doesNotMatch(ui,/\.(insert|update|upsert|delete)\(/);
+  assert.match(ui,/rpc\('get_meal_age_pricing_policy'\)/);
+  assert.match(ui,/r.mode !== 'full'/);
+  assert.match(ui,/no misleading total is calculated here/);
   assert.doesNotMatch(ui,/\.from\(['"](?:rate_plan_anchors|bookings|meal_plan_rules|meal_supplement_versions)/);
   assert.match(ui,/DRAFT_NOT_APPROVED_NOT_LIVE/);
   assert.match(ui,/Session simulation only/);

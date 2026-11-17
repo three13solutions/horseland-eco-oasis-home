@@ -197,7 +197,7 @@ const GuestSelector: React.FC<GuestSelectorProps> = ({
           <div className="pt-3 border-t">
             <p className="text-xs text-muted-foreground">
               Accommodation charges depend on the selected room and guest ages.
-              {agePolicy.data ? agePolicy.data.bands.map(b => `${agePolicy.label(b.key)}: ${b.accommodation_rule === 'free' ? 'no accommodation charge' : b.accommodation_rule + ' accommodation rate'}, ${b.meal_rule === 'free' ? 'no automatic meal charge' : 'full meal rate'}.`).join(' ') : 'Age policy could not yet be verified. Please retry before choosing guests.'}
+              {agePolicy.data ? agePolicy.data.bands.map(b => `${agePolicy.label(b.key)}: ${b.accommodation_rule === 'free' ? 'no accommodation charge' : b.accommodation_rule + ' accommodation rate'}, ${b.meal_rule === 'free' ? 'no automatic meal charge' : 'meal charges follow selected plan age rates'}.`).join(' ') : 'Age policy could not yet be verified. Please retry before choosing guests.'}
               Please provide the right number of guests for the best options and prices.
             </p>
           </div>

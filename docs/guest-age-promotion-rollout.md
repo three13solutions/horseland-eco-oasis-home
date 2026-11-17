@@ -1,6 +1,6 @@
 # Guest age policy and promotion management: review branch
 
-This change is repository-only. No production migrations, edge deployment, main-branch merge, or website publication were performed. The owner authorized GitHub implementation after the archived planning input was drafted.
+This change is repository-only. No production migrations, edge deployment, or website publication were performed. The owner subsequently authorized syncing the completed source to main. The owner authorized GitHub implementation after the archived planning input was drafted.
 
 ## Implemented scope
 
@@ -19,7 +19,7 @@ Usage is reserved atomically in the payment-intent/inventory transaction, before
 
 Per-guest usage means normalized contact email, not verified human identity. Different email addresses can bypass a per-person interpretation; the UI discloses this. Missing historical email prevents enabling that cap until reconciled. True multi-session concurrency and payment reconciliation must be tested in staging; PGlite queues a single connection and is not production concurrency proof.
 
-Individual meal/DOB choices and broader occupancy redesign remain outside these promo changes. The subsequently requested adult/child/infant meal rates and Veg/Nonveg/Jain plan variants are separate work, not delivered by this branch extension. The child meal rate has NOT been changed to 50%.
+Individual meal/DOB choices and broader occupancy redesign remain outside these promo changes. The subsequently requested meal administration is described in docs/meal-age-variants-rollout.md. The child meal rate has NOT been changed to 50%.
 
 ## Deployment prerequisites
 

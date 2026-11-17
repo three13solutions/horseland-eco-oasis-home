@@ -1,3 +1,5 @@
+import { MealPlanAgePricing } from "@/components/admin/MealPlanAgePricing";
+import { MealPlanDietaryVariants } from "@/components/admin/MealPlanDietaryVariants";
 import { useState } from "react";
 import { LiveMealPricing } from "@/components/admin/LiveMealPricing";
 import { mealPlanAliasPayload, findMealPlanAliasConflict } from "@/lib/mealPlanAliases";
@@ -307,6 +309,8 @@ const MealPlansManagement = () => {
       </div>
 
       <LiveMealPricing />
+      <MealPlanAgePricing />
+      <MealPlanDietaryVariants plans={mealPlans || []} />
       <p className="text-sm text-muted-foreground">Current public plan metadata and supplements below. Staged prices and groups above do not replace these until coordinated activation.</p>
       <Table>
         <TableHeader>
