@@ -113,7 +113,7 @@ export async function calculateBookingQuote(db: any, raw: any, mode: 'website' |
     if (mode !== 'website') throw new QuoteError('INVALID_PROMO', 'This offer is for website bookings only.');
     const { data: gate, error: gateError } = await db.from('website_promo_rollout').select('enabled').eq('id', true).maybeSingle();
     if (gateError || gate?.enabled !== true) throw new QuoteError('PROMO_UNAVAILABLE', 'Website offers are not active.');
-    const { data: config, error: configError } = await db.from('website_promotions').select('code,revision,amount_per_night,is_active').eq('code', request.promo_code).maybeSingle();
+    const { data: config, error: configError } = await db.from('website_promotions').select('code,revision,amount_per_night,amount_per_booking,is_active').eq('code', request.promo_code).maybeSingle();
     if (configError || !config || config.code !== request.promo_code) throw new QuoteError('PROMO_UNAVAILABLE', 'This offer is unavailable.');
     try { promotion = calculateEpPromotion(variant, request.check_in, request.check_out, config); }
     catch (error) { throw new QuoteError('PROMO_UNAVAILABLE', error instanceof Error ? error.message : 'This offer is unavailable.'); }

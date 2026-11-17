@@ -2,7 +2,7 @@
  * Discounts accommodation only, once per occupied night, never per guest.
  * Meals/extras and cancellation-policy adjustment are not discounted.
  */
-export type EpPromotion = { code: string; revision: number; amount_per_night: number; is_active: boolean };
+export type EpPromotion = { code: string; revision: number; amount_per_night: number; amount_per_booking?: number; is_active: boolean };
 export function normalizePromoCode(value: unknown): string | undefined {
   if (value === undefined || value === null || value === '') return undefined;
   if (typeof value !== 'string' || !/^[A-Z0-9_-]{3,30}$/.test(value.trim().toUpperCase())) throw new Error('Invalid promotion code.');
@@ -15,6 +15,15 @@ const cents = (value: unknown) => {
   return Math.round(n * 100);
 };
 export function calculateEpPromotion(variant: Record<string, unknown>, checkIn: string, checkOut: string, promotion: EpPromotion) {
+  if (promotion.code === 'DIRECT1000') {
+    if (!promotion.is_active || !Number.isSafeInteger(promotion.revision) || promotion.revision < 1 || Number(promotion.amount_per_booking) !== 1000 || Number(promotion.amount_per_night) !== 0) throw new Error('This promotion is unavailable.');
+    const nights = (Date.parse(checkOut) - Date.parse(checkIn)) / 86400000;
+    if (!Number.isInteger(nights) || nights < 1 || nights > 365) throw new Error('Invalid stay dates.');
+    const discount = Math.min(100000, cents(variant.room_rate), cents(variant.total_price));
+    if (!discount) throw new Error('This offer cannot be applied to the current room price.');
+    return { code: promotion.code, revision: promotion.revision, basis: 'FLAT_PER_BOOKING', amount_per_night: 0,
+      amount_per_booking: 1000, nights, discount_amount: discount / 100, nightly_discounts: [] };
+  }
   if (!promotion.is_active || !Number.isSafeInteger(promotion.revision) || promotion.revision < 1 || promotion.amount_per_night !== 300 || promotion.code !== 'EP300') throw new Error('This promotion is unavailable.');
   const count = (Date.parse(checkOut) - Date.parse(checkIn)) / 86400000;
   const rows = variant.nightly_breakdown;
