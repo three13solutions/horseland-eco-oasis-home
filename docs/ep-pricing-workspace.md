@@ -28,7 +28,11 @@ Validation on this branch:
 - Production Vite build passes (pre-existing large-chunk warning).
 - TypeScript app check passes.
 - Targeted ESLint for all newly added implementation files passes.
-- New focused tests: 30 pass.
-- Complete existing + new suite: 155 pass, 39 fail; baseline main: 125 pass, the same 39 fail. Existing failures are around retired checkout/publication paths, not introduced by this branch.
+- New focused tests: 48 pass (30 workspace + 7 draft-store contract + 11 stay-subtotal).
+- Complete existing + new suite: 173 pass, 39 fail; baseline main: 125 pass, the same 39 fail. Existing failures are around retired checkout/publication paths, not introduced by this branch.
 - Full repository ESLint fails with 483 errors and 59 warnings; same counts on baseline main.
 - Browser QA attempted using local Chromium, blocked by environment socket permission / runtime unavailability. No screenshot or interactive pass is claimed.
+
+## Further isolated groundwork
+
+See `ep-persistence-groundwork.md` and `ep-quote-groundwork.md`. These add independently tested contracts/calculation modules only. They are not wired to this workspace, existing Edge Functions, live booking/payment paths, or a database. Real durable persistence and backend activation remain blocked pending isolated database/security/integration testing and confirmed rate/policy inputs.

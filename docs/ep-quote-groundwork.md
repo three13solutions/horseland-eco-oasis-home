@@ -1,0 +1,15 @@
+# Isolated EP stay subtotal groundwork
+
+`src/lib/ep-stay-quote.ts` is a pure, unused integration seam. It accepts IDs, stay dates, a plan and complete guest counts, then requires a caller-supplied trusted resolver for every checkout-exclusive night. Each result must explicitly match category/date/occupancy and supply approval, rate and policy revision metadata. It reuses the EP arithmetic helper, sums integer paise, rejects missing dates/supplements, wrong bases, mismatches and overflow, and captures per-night provenance and manual override reasons.
+
+This is **not an authoritative endpoint by itself**: approval strings are not authentication or proof of approval. An eventual server adapter must load them from authorized, versioned database records. Never deserialize `ApprovedNight` objects from a guest or admin request, and never invoke this with the UI draft state. It must use a consistent database snapshot across the entire stay, not unrelated reads that race an update. Inputs are cloned and resolver context frozen; output is an independent snapshot, not a signed or immutable persisted booking quote.
+
+Output is deliberately named `room-meal-subtotal`, not a payable quote. No assumed occupancy multipliers, child/infant policy, weekday/weekend rules, holiday rates, cancellation adjustments, taxes, addons, promo discounts or inventory are implemented. The resolver must return an EP amount and meal totals already appropriate to the exact guest counts and date. Manual overrides must likewise be resolved under an approved occupancy-specific policy. Out-of-order plan amounts retain the existing helper's warning behavior; release needs an explicit hotel policy for whether to block these.
+
+## Compatibility and integration blockers
+
+Current production path remains `create-razorpay-order-v3` -> `_shared/bookingQuote.ts` -> canonical database quote RPC. That adapter accepts quantities/IDs only and verifies the server quote fingerprint; it also handles extras, taxes and snapshot storage. Nothing in this patch replaces it. Its rupee amounts must not be confused with this module's integer paise. Its manual-booking fallback, `legacy_basis_unverified` behavior and existing booking snapshots must not be relabelled as EP or retroactively recalculated.
+
+Before wiring this seam: approve rates and effective periods; define occupancy and meal rules; resolve category-to-room-type mapping; implement revision-consistent trusted reads and authorization; include revisions and all adjustments in quote fingerprints; preserve inventory admission/payment idempotency; test repricing between preview/payment, existing-booking immutability, payment totals and refunds. EP policy migration must remain isolated until those checks pass.
+
+Validation: 11 focused Node tests pass (cross-year nights and changing policies, missing festive dates, approval/revision guards, category/date/occupancy binding, no AP conversion, missing meals, date/length/guest checks, override provenance, overflow, snapshot independence and resolver mutation rejection). No database, Deno endpoint or production integration test is claimed.
