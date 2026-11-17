@@ -1842,6 +1842,7 @@ export type Database = {
           included_meal_types: Json
           is_active: boolean
           is_featured: boolean | null
+          meal_choice_groups: Json
           plan_code: string
           plan_name: string
           preferred_variant: string | null
@@ -1865,6 +1866,7 @@ export type Database = {
           included_meal_types?: Json
           is_active?: boolean
           is_featured?: boolean | null
+          meal_choice_groups?: Json
           plan_code: string
           plan_name: string
           preferred_variant?: string | null
@@ -1888,6 +1890,7 @@ export type Database = {
           included_meal_types?: Json
           is_active?: boolean
           is_featured?: boolean | null
+          meal_choice_groups?: Json
           plan_code?: string
           plan_name?: string
           preferred_variant?: string | null
@@ -2465,6 +2468,95 @@ export type Database = {
             columns: ["room_unit_id"]
             isOneToOne: false
             referencedRelation: "room_units"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      pricing_day_rules: {
+        Row: {
+          based_on_revision: number
+          created_at: string
+          created_by: string | null
+          effective_from: string
+          effective_to: string | null
+          revision: number
+          weekend_days: number[]
+        }
+        Insert: {
+          based_on_revision: number
+          created_at?: string
+          created_by?: string | null
+          effective_from: string
+          effective_to?: string | null
+          revision?: never
+          weekend_days: number[]
+        }
+        Update: {
+          based_on_revision?: number
+          created_at?: string
+          created_by?: string | null
+          effective_from?: string
+          effective_to?: string | null
+          revision?: never
+          weekend_days?: number[]
+        }
+        Relationships: []
+      }
+      pricing_preservation_periods: {
+        Row: {
+          end_date: string
+          fb_constraint_rate: number
+          id: string
+          is_active: boolean
+          meal_version_snapshot: Json
+          name: string
+          preservation_mode: string
+          preserve_legacy_days: boolean
+          preserve_legacy_ep: boolean
+          room_type_id: string
+          source_meal_rate: number
+          source_meal_version: string | null
+          source_snapshot: Json
+          start_date: string
+        }
+        Insert: {
+          end_date: string
+          fb_constraint_rate: number
+          id?: string
+          is_active?: boolean
+          meal_version_snapshot?: Json
+          name: string
+          preservation_mode?: string
+          preserve_legacy_days?: boolean
+          preserve_legacy_ep?: boolean
+          room_type_id: string
+          source_meal_rate: number
+          source_meal_version?: string | null
+          source_snapshot: Json
+          start_date: string
+        }
+        Update: {
+          end_date?: string
+          fb_constraint_rate?: number
+          id?: string
+          is_active?: boolean
+          meal_version_snapshot?: Json
+          name?: string
+          preservation_mode?: string
+          preserve_legacy_days?: boolean
+          preserve_legacy_ep?: boolean
+          room_type_id?: string
+          source_meal_rate?: number
+          source_meal_version?: string | null
+          source_snapshot?: Json
+          start_date?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pricing_preservation_periods_room_type_id_fkey"
+            columns: ["room_type_id"]
+            isOneToOne: false
+            referencedRelation: "room_types"
             referencedColumns: ["id"]
           },
         ]
@@ -3457,6 +3549,51 @@ export type Database = {
           },
         ]
       }
+      website_promo_rollout: {
+        Row: {
+          enabled: boolean
+          id: boolean
+        }
+        Insert: {
+          enabled?: boolean
+          id?: boolean
+        }
+        Update: {
+          enabled?: boolean
+          id?: boolean
+        }
+        Relationships: []
+      }
+      website_promotions: {
+        Row: {
+          amount_per_night: number
+          code: string
+          is_active: boolean
+          label: string
+          revision: number
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          amount_per_night?: number
+          code: string
+          is_active?: boolean
+          label?: string
+          revision?: number
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          amount_per_night?: number
+          code?: string
+          is_active?: boolean
+          label?: string
+          revision?: number
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
@@ -3563,6 +3700,20 @@ export type Database = {
               total_amount: number
             }[]
           }
+      calculate_legacy_rate_night_context: {
+        Args: {
+          p_adults_count: number
+          p_booking_channel: string
+          p_check_in: string
+          p_check_out: string
+          p_children_count: number
+          p_infants_count: number
+          p_pricing_date: string
+          p_room_type_id: string
+          p_room_unit_id: string
+        }
+        Returns: number
+      }
       calculate_meal_plan_cost: {
         Args: {
           p_guests_count: number
@@ -3752,6 +3903,11 @@ export type Database = {
         Args: { p_guest_id: string }
         Returns: number
       }
+      get_meal_pricing_workspace: { Args: never; Returns: Json }
+      get_pricing_preservation_policy: {
+        Args: { p_date: string; p_room_type_id: string }
+        Returns: Json
+      }
       get_room_type_pricing_cleanup_preview: {
         Args: { p_type_id: string }
         Returns: Json
@@ -3765,6 +3921,19 @@ export type Database = {
       }
       is_admin: { Args: never; Returns: boolean }
       is_admin_new: { Args: never; Returns: boolean }
+      is_pricing_weekend:
+        | {
+            Args: { p_date: string; p_legacy_days?: number[] }
+            Returns: boolean
+          }
+        | {
+            Args: {
+              p_date: string
+              p_legacy_days: number[]
+              p_room_type_id: string
+            }
+            Returns: boolean
+          }
       is_super_admin: { Args: never; Returns: boolean }
       is_super_admin_new: { Args: never; Returns: boolean }
       list_website_meal_visibility_rules: { Args: never; Returns: Json }
@@ -3779,6 +3948,10 @@ export type Database = {
         Returns: undefined
       }
       prepare_guest_email_reminders: { Args: never; Returns: undefined }
+      preserved_meal_version: {
+        Args: { p_date: string; p_plan_code: string; p_policy: Json }
+        Returns: Json
+      }
       rate_override_disabled: { Args: { p_id: string }; Returns: boolean }
       resolve_distribution_channel_id: {
         Args: { p_channel: string }
@@ -3789,11 +3962,57 @@ export type Database = {
         Args: { p_changes: Json; p_request_id: string }
         Returns: Json
       }
+      save_meal_plan_groups: {
+        Args: {
+          p_expected_revision: number
+          p_groups: Json
+          p_plan_id: string
+          p_reason: string
+        }
+        Returns: Json
+      }
+      save_pricing_day_rule: {
+        Args: {
+          p_effective_from: string
+          p_effective_to: string
+          p_expected_revision: number
+          p_weekend_days: number[]
+        }
+        Returns: number
+      }
+      save_shared_meal_price: {
+        Args: {
+          p_expected_revision: number
+          p_meal_id: string
+          p_price: number
+          p_reason: string
+        }
+        Returns: Json
+      }
+      save_shared_meal_prices: {
+        Args: { p_expected_revision: number; p_prices: Json; p_reason: string }
+        Returns: Json
+      }
       save_website_meal_visibility_rule: {
         Args: { p_expected_revision?: number; p_rule: Json }
         Returns: Json
       }
+      save_website_promotion: {
+        Args: { p_active: boolean; p_code: string; p_expected_revision: number }
+        Returns: Json
+      }
+      set_meal_plan_active: {
+        Args: {
+          p_expected_revision: number
+          p_is_active: boolean
+          p_plan_id: string
+          p_reason: string
+        }
+        Returns: Json
+      }
+      shared_meal_pricing_is_live: { Args: never; Returns: boolean }
       unit_has_direct_pricing: { Args: { p_unit: string }; Returns: boolean }
+      website_promotion_settings: { Args: never; Returns: Json }
     }
     Enums: {
       app_role: "super_admin" | "admin" | "content_editor"
