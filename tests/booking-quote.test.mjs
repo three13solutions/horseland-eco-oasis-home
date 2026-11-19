@@ -62,3 +62,16 @@ test('age policy revision must match reviewed guest bands',async()=>{
 test('missing authoritative policy cannot validate a reviewed revision',async()=>{
  await assert.rejects(calculateBookingQuote(db(),{...request,guest_age_policy_revision:1}),e=>e.code==='AGE_POLICY_CHANGED');
 });
+
+test('old clients keep legacy quotes while staged but must refresh after age activation',async()=>{
+ const old=await calculateBookingQuote(db(),request);
+ assert.equal(old.variant.quote_fingerprint,'v1');
+ await assert.rejects(calculateBookingQuote(db({ageRevision:1}),request),e=>e.code==='AGE_POLICY_CHANGED');
+ await assert.rejects(calculateBookingQuote(db({ageRevision:1}),request,'manual'),e=>e.code==='AGE_POLICY_CHANGED');
+});
+test('saved-intent prepare branch still resumes without re-quoting against new age policy',()=>{
+ const source=readFileSync(new URL('../supabase/functions/create-razorpay-order-v3/index.ts',import.meta.url),'utf8');
+ const resume=source.slice(source.indexOf('if(intent){'),source.indexOf('else{',source.indexOf('if(intent){')));
+ assert.match(resume,/assertResumeMatches/);
+ assert.doesNotMatch(resume,/calculateBookingQuote/);
+});

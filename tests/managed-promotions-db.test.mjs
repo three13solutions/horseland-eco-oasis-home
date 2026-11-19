@@ -23,8 +23,8 @@ test('isolated PostgreSQL promotion migration, authorization, preservation and r
  create trigger zz_activity_log after insert or update on website_promotions for each row execute function record_activity_log();
  alter table website_promotions enable row level security;`);
  const before=(await db.query('select code,label,amount_per_night,amount_per_booking,is_active,revision,updated_at from website_promotions order by code')).rows;
- await db.exec(readFileSync(new URL('../supabase/migrations/20261118000200_managed_website_promotions.sql',import.meta.url),'utf8'));
- await db.exec(readFileSync(new URL('../supabase/migrations/20261118000300_promotion_booking_restrictions.sql',import.meta.url),'utf8'));
+ await db.exec(readFileSync(new URL('../supabase/migrations/20261119081007_managed_website_promotions.sql',import.meta.url),'utf8'));
+ await db.exec(readFileSync(new URL('../supabase/migrations/20261119081023_promotion_booking_restrictions.sql',import.meta.url),'utf8'));
  assert.deepEqual((await db.query('select code,label,amount_per_night,amount_per_booking,is_active,revision,updated_at from website_promotions order by code')).rows,before);
  const config={code:'TEST100',label:'Test only',discount_kind:'fixed',discount_basis:'booking',discount_value:100,day_scope:'both',mixed_stay_mode:null,is_active:false,is_public:false,booking_from:null,booking_to:null,stay_from:null,stay_to:null};
  const save=(c=config,revision=null)=>db.query('select save_managed_website_promotion($1::jsonb,$2::integer) as value',[JSON.stringify(c),revision]);
@@ -59,7 +59,7 @@ test('isolated PostgreSQL promotion migration, authorization, preservation and r
 
  // Execute the real 002 -> 003 -> 004 wrapper chain, not only standalone stubs.
  await db.exec(`create schema distribution_private;create table distribution_private.payment_intents(request_id uuid primary key,intent jsonb,state text,created_at timestamptz default now());`);
- await db.exec(readFileSync(new URL('../supabase/migrations/20261118000400_promo_usage_caps.sql',import.meta.url),'utf8'));
+ await db.exec(readFileSync(new URL('../supabase/migrations/20261119081050_promo_usage_caps.sql',import.meta.url),'utf8'));
  const capped=(await save({...config,total_usage_limit:10,per_guest_usage_limit:1},cleared.revision)).rows[0].value;
  assert.equal(capped.total_usage_limit,10);assert.equal(capped.per_guest_usage_limit,1);
  const capRetained=(await save(config,capped.revision)).rows[0].value;

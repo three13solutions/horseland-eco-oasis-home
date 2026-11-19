@@ -6,7 +6,8 @@ export function useGuestAgePolicy() {
   const query=useQuery({queryKey:['guest-age-policy'],queryFn:async()=>{
     const {data,error}=await (supabase as SupabaseClient).rpc('get_guest_age_policy');
     if(error) throw error;
-    const policy=data as GuestAgePolicy;
+    const policy=data as GuestAgePolicy & {active?:boolean};
+    if(policy?.active === false) throw new Error('Guest age pricing is staged, not active. The matching website release must be published and activated first.');
     if(!policy || !Number.isInteger(policy.revision) || policy.revision < 1 || !Array.isArray(policy.bands) || validateGuestAgeBands(policy.bands)) throw new Error('Guest age policy is unavailable or invalid.');
     return policy;
   },staleTime:0,refetchOnWindowFocus:true});

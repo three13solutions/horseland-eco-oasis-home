@@ -20,7 +20,7 @@ test('cap migration reserves/redeems atomically, backfills, fences retries and e
  const uuid=i=>`00000000-0000-4000-8000-${String(i).padStart(12,'0')}`;
  const intent=(code,email='Guest@Example.com',revision=1,change={})=>({bookingMetadata:{guest:{email}},quoteSnapshot:{promotion:{code,revision},request:{promo_code:code,room_type_id:'00000000-0000-0000-0000-000000000001',check_in:'2027-02-01',check_out:'2027-02-03',meal_plan_code:'RO',...change}},selection:{roomTypeId:'00000000-0000-0000-0000-000000000001',checkIn:'2027-02-01',checkOut:'2027-02-03'}});
  await db.query('insert into distribution_private.payment_intents(request_id,intent,state) values($1,$2,\'confirmed\')',[uuid(1),JSON.stringify(intent('HIST'))]);
- await db.exec(readFileSync(new URL('../supabase/migrations/20261118000400_promo_usage_caps.sql',import.meta.url),'utf8'));
+ await db.exec(readFileSync(new URL('../supabase/migrations/20261119081050_promo_usage_caps.sql',import.meta.url),'utf8'));
  const count=async(table)=>Number((await db.query(`select count(*) as n from distribution_private.${table}`)).rows[0].n);
  assert.equal(await count('promotion_uses'),1);
  assert.equal((await db.query("select state from distribution_private.promotion_uses")).rows[0].state,'redeemed');

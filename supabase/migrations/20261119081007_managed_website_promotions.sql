@@ -1,3 +1,4 @@
+SET LOCAL lock_timeout='5s';
 -- Repository-only migration. No changes to existing promotion amounts, status or dates.
 alter table public.website_promotions
  add column discount_kind text not null default 'legacy' check(discount_kind in ('legacy','fixed','percentage')),

@@ -1,3 +1,5 @@
+> Historical implementation checkpoint. For the current deployed backend and deliberately pending activation, see [19 November backend release](backend-release-2026-11-19.md).
+
 # Guest age policy and promotion management: review branch
 
 This change is repository-only. No production migrations, edge deployment, or website publication were performed. The owner subsequently authorized syncing the completed source to main. The owner authorized GitHub implementation after the archived planning input was drafted.

@@ -1,3 +1,4 @@
+SET LOCAL lock_timeout='5s';
 -- ADMIN CONFIGURATION ONLY. No pricing function, quote, booking, or meal source is
 -- changed by this migration. No default dietary variant is selected or seeded.
 create table public.meal_plan_dietary_variants (

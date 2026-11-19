@@ -1,3 +1,4 @@
+SET LOCAL lock_timeout='5s';
 -- Repository-only release; existing promotions remain unrestricted.
 alter table public.website_promotions
  add column eligible_room_category_ids uuid[],

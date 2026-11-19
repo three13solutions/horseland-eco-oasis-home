@@ -1,3 +1,4 @@
+SET LOCAL lock_timeout='5s';
 -- Staged only. Unlimited existing offers retain NULL caps. No sample codes or live activation.
 alter table public.website_promotions
  add column usage_serial bigint not null default 0,

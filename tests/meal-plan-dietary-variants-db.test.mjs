@@ -2,7 +2,7 @@
 // PROMO_PGLITE_MODULE=/tmp/horseland-age-dbtest/node_modules/@electric-sql/pglite/dist/index.js node --test tests/meal-plan-dietary-variants-db.test.mjs
 import test from 'node:test';import assert from 'node:assert/strict';import {readFileSync,existsSync} from 'node:fs';
 const path=process.env.PROMO_PGLITE_MODULE;
-const migration=readFileSync(new URL('../supabase/migrations/20261118000600_meal_plan_dietary_variants.sql',import.meta.url),'utf8');
+const migration=readFileSync(new URL('../supabase/migrations/20261119081146_meal_plan_dietary_variants.sql',import.meta.url),'utf8');
 test('dietary config is not wired to live prices or guest allocation',()=>{
  assert.doesNotMatch(migration,/create or replace function.*calculate_|update public\.(meal_plan_rules|bookings|payments)|insert into public\.meal_plan_dietary_variants[^\n]*values\s*\('/i);
  assert.match(migration,/ADMIN CONFIGURATION ONLY/);assert.match(migration,/create trigger zz_activity_log/);

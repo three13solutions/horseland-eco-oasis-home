@@ -5,7 +5,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 const modulePath=process.env.AGE_POLICY_PGLITE_MODULE;
-const migration=readFileSync(new URL('../supabase/migrations/20261117163903_dynamic_guest_age_policy.sql',import.meta.url),'utf8');
+const migration=readFileSync(new URL('../supabase/migrations/20261119081127_dynamic_guest_age_policy_dormant.sql',import.meta.url),'utf8');
 // Read-only pg_get_functiondef capture from Horseland before the change; no guest data.
 const definitions=JSON.parse(readFileSync(new URL('./fixtures/age-policy-pricing-pre-migration.json',import.meta.url),'utf8'));
 
@@ -43,6 +43,9 @@ test('isolated Postgres executes policy schema, guarded patches, revision and au
  set check_function_bodies=off;`);
  for(const {definition} of definitions) await db.exec(definition);
  await db.exec(migration);
+ await db.exec(readFileSync(new URL('../supabase/migrations/20261119081136_meal_age_pricing_policy_dormant.sql',import.meta.url),'utf8'));
+ await db.exec("set horseland.guest_age_meal_release='frontend-ready'");
+ await db.exec(readFileSync(new URL('../scripts/activate-guest-age-meal-pricing.sql',import.meta.url),'utf8'));
  await db.exec('set check_function_bodies=on');
  const scalar=async(sql,params=[]) => (await db.query(sql,params)).rows[0].value;
  // Synthetic rates, not production data. Exercise the real patched canonical function.
@@ -66,7 +69,7 @@ test('isolated Postgres executes policy schema, guarded patches, revision and au
     const meal={RO:0,BB:270,HB:920,FB:1510}[code];
     assert.equal(f.room_rate,base);assert.equal(f.meal_cost,meal*2);assert.equal(f.total_price,b.total_price);
     assert.equal(c.room_rate,base+childRate);assert.equal(c.meal_cost,meal*3);
-    assert.equal(f.actual_guest_count,4);assert.equal(f.chargeable_meal_guests,2);
+    assert.equal(f.actual_guest_count,4);assert.equal(f.chargeable_meal_guests,code==='RO'?0:2);
    }
  }
  const mixed=(await quote('2026-12-24',2,0,1,'2026-12-26')).find(x=>x.meal_plan_code==='FB');
@@ -104,7 +107,7 @@ test('isolated Postgres executes policy schema, guarded patches, revision and au
  // Canonical patched SQL includes normal AND preserved-EP branches; headcount guard unchanged.
  const patched=await scalar("select pg_get_functiondef('public.calculate_rate_variants_v2(uuid,date,date,uuid,integer,integer,integer,text)'::regprocedure) as value");
  assert.doesNotMatch(patched,/v_target_rate\*v_all_guests|p_infants_count\*v_anchor.extra_infant_per_night/);
- assert.match(patched,/v_total_meal:=v_total_meal\+v_target_rate\*v_meal_guests/);
+ assert.match(patched,/v_total_meal:=v_total_meal\+\(public.calculate_meal_age_charge/);
  assert.match(patched,/v_all_guests>100/);
  assert.equal((patched.match(/return public.attach_guest_age_policy/g)||[]).length,2);
  // New public table is read-only and no unauthenticated save endpoint is exposed.

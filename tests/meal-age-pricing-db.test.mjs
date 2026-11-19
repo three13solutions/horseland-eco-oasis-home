@@ -3,7 +3,10 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 const modulePath=process.env.AGE_POLICY_PGLITE_MODULE;
-const migration=readFileSync(new URL('../supabase/migrations/20261118000500_meal_age_pricing_policy.sql',import.meta.url),'utf8');
+const migration=readFileSync(new URL('../supabase/migrations/20261119081136_meal_age_pricing_policy_dormant.sql',import.meta.url),'utf8');
+const activation=readFileSync(new URL('../scripts/activate-guest-age-meal-pricing.sql',import.meta.url),'utf8');
+// Compare the old age-only pricing stage to the complete active meal engine.
+const ageOnlyPatch=activation.slice(activation.indexOf('do $patch$'),activation.indexOf('end $patch$;')+'end $patch$;'.length);
 const definitions=JSON.parse(readFileSync(new URL('./fixtures/age-policy-pricing-pre-migration.json',import.meta.url),'utf8'));
 test('meal-age migration defaults preserve existing prices; configured percentages/fixed/free and safety guards work',{skip:!modulePath&&'Set AGE_POLICY_PGLITE_MODULE to run PostgreSQL integration'},async()=>{
  const {PGlite}=await import(modulePath);const db=new PGlite();try{
@@ -23,7 +26,8 @@ test('meal-age migration defaults preserve existing prices; configured percentag
  create function public.is_pricing_weekend(date,integer[],uuid) returns boolean language sql stable as $$select extract(dow from $1)=6$$;
  set check_function_bodies=off;`);
  for(const {definition} of definitions) await db.exec(definition);
- await db.exec(readFileSync(new URL('../supabase/migrations/20261117163903_dynamic_guest_age_policy.sql',import.meta.url),'utf8'));
+ await db.exec(readFileSync(new URL('../supabase/migrations/20261119081127_dynamic_guest_age_policy_dormant.sql',import.meta.url),'utf8'));
+ await db.exec(ageOnlyPatch);
  await db.exec('set check_function_bodies=on');
  const scalar=async(sql,params=[]) => (await db.query(sql,params)).rows[0].value;
  // Synthetic rates, not production data. Exercise the real patched canonical function.
@@ -44,7 +48,15 @@ test('meal-age migration defaults preserve existing prices; configured percentag
  await db.exec("update cancellation_policy_rules set adjustment_value=-5;update meal_supplement_versions set amount=270.005 where plan_code='BB'");
  const cases=[['2026-11-22',2,1,1,null],['2026-11-21',2,2,2,null],['2026-12-25',2,1,1,null],['2026-12-24',1,1,2,'2026-12-26']];
  const before=[];for(const args of cases)before.push(await quote(...args));
+ // Restore exact pre-activation functions so the complete release script validates
+ // its real deployment preconditions, before re-installing the isolated fallback.
+ await db.exec('set check_function_bodies=off');
+ for(const {definition} of definitions) await db.exec(definition);
  await db.exec(migration);
+ await db.exec("set horseland.guest_age_meal_release='frontend-ready'");
+ await db.exec(activation);
+ await db.exec('set check_function_bodies=on');
+ await db.exec(`create or replace function public.calculate_legacy_rate_night_context(p_room_type_id uuid,p_check_in date,p_check_out date,p_room_unit_id uuid,p_adults_count integer,p_children_count integer,p_infants_count integer,p_booking_channel text,p_pricing_date date) returns numeric language sql stable as $$select 5000+public.guest_policy_charge_count('child',p_adults_count,p_children_count,p_infants_count)*600$$;`);
  const monetary=rows=>rows.map(v=>[v.meal_plan_code,v.room_rate,v.meal_cost,v.policy_adjustment,v.total_price,v.price_per_night]);
  for(let i=0;i<cases.length;i++) {
    const after=await quote(...cases[i]);assert.deepEqual(monetary(after),monetary(before[i]));

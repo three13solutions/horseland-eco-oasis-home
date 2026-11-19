@@ -1,3 +1,4 @@
+SET LOCAL lock_timeout='5s';
 -- Repository-only change. Default full child rates and global free-infant rule are preserved.
 -- No booking/payment snapshots, adult catalogue prices or historical versions are rewritten.
 create function public.validate_meal_age_pricing_rules(p_rules jsonb) returns boolean
@@ -40,7 +41,7 @@ insert into public.meal_age_pricing_versions(revision,rules)
  from unnest(array['RO','BB','HB','FB']) plan cross join unnest(array['adult','child','infant']) band;
 create function public.get_meal_age_pricing_policy() returns jsonb
 language sql stable security invoker set search_path=public,pg_temp as $$
- select jsonb_build_object('revision',revision,'rules',rules,'updated_at',updated_at) from public.meal_age_pricing_versions order by revision desc limit 1;
+ select jsonb_build_object('revision',revision,'rules',rules,'updated_at',updated_at,'active',public.guest_age_meal_pricing_active()) from public.meal_age_pricing_versions order by revision desc limit 1;
 $$;
 revoke all on function public.get_meal_age_pricing_policy() from public;
 grant execute on function public.get_meal_age_pricing_policy() to anon,authenticated,service_role;
@@ -49,6 +50,9 @@ language plpgsql security definer set search_path=public,pg_temp as $$
 declare previous integer; guest_revision integer; meal_revision bigint;
 begin
  if auth.uid() is null or not coalesce(public.is_admin_new(),false) then raise exception 'Administrator required' using errcode='42501'; end if;
+ -- Keep configuration writes from claiming live behavior before frontend activation.
+ perform 1 from guest_pricing_private.release_state where id and active for share;
+ if not found then raise exception 'GUEST_PRICING_NOT_ACTIVE: age and meal pricing are staged; publish and activate the matching booking frontend before editing'; end if;
  if not public.validate_meal_age_pricing_rules(p_rules) then raise exception 'Invalid meal age pricing: configure all plans and bands, retain linked adult prices and free RO'; end if;
  select revision into meal_revision from meal_pricing_private.state where id for share;
  if p_expected_meal_workspace_revision is distinct from meal_revision then raise exception 'MEAL_CATALOGUE_CHANGED: reload adult prices and review before saving'; end if;
@@ -134,44 +138,8 @@ end $$;
 revoke all on function public.legacy_meal_age_supported(text,integer,integer,integer) from public;
 grant execute on function public.legacy_meal_age_supported(text,integer,integer,integer) to anon,authenticated,service_role;
 
-do $patch$
-declare d text; f text; old_loop text:=E'FOR v_meal_plan IN SELECT * FROM meal_plan_rules WHERE is_active = true ORDER BY display_order\n  LOOP';
-begin
- d:=pg_get_functiondef('public.calculate_rate_variants_v2(uuid,date,date,uuid,integer,integer,integer,text)'::regprocedure);
- if strpos(d,'v_target_rate*v_meal_guests')=0 or strpos(d,'v_meal:=v_target_rate*v_meal_guests;')=0
- or strpos(d,'''meal_guests'',v_meal_guests')=0 or strpos(d,'v_total_room:=v_total_room+v_legacy_night;')=0 or strpos(d,'for v_plan in select * from public.meal_plan_rules')=0 then raise exception 'Meal age quote patch precondition failed'; end if;
- d:=replace(d,'for v_plan in select * from public.meal_plan_rules','<<meal_plan_loop>> for v_plan in select * from public.meal_plan_rules');
- d:=replace(d,'v_target_rate*v_meal_guests','(public.calculate_meal_age_charge(v_plan.plan_code,v_target_rate,p_adults_count,p_children_count,p_infants_count)->>''total'')::numeric');
- d:=replace(d,'''meal_guests'',v_meal_guests', '''meal_guests'',(public.calculate_meal_age_charge(v_plan.plan_code,v_target_rate,p_adults_count,p_children_count,p_infants_count)->>''chargeable_guest_count'')::integer,''meal_age_pricing'',public.calculate_meal_age_charge(v_plan.plan_code,v_target_rate,p_adults_count,p_children_count,p_infants_count)');
- -- Guard only opaque fallback nights. Preserved EP has a known selected adult meal rate.
- d:=replace(d,'v_total_room:=v_total_room+v_legacy_night;', E'v_total_room:=v_total_room+v_legacy_night;\n       if v_preservation is null or coalesce(v_preservation->>''preservation_mode'','''')<>''ep_only'' or not coalesce((v_preservation->>''preserve_legacy_ep'')::boolean,false) then if not public.legacy_meal_age_supported(v_plan.plan_code,p_adults_count,p_children_count,p_infants_count) then continue meal_plan_loop; end if; end if;');
- execute d;
- foreach f in array array['calculate_rate_variants','calculate_rate_variants_legacy_20261025'] loop
-  d:=pg_get_functiondef(format('public.%I(uuid,date,date,uuid,integer,integer,integer,text)',f)::regprocedure);
-  if strpos(d,old_loop)=0 then raise exception 'Meal age legacy guard precondition failed for %',f; end if;
-  d:=replace(d,old_loop,old_loop||E'\n    if not public.legacy_meal_age_supported(v_meal_plan.plan_code,p_adults_count,p_children_count,p_infants_count) then continue; end if;');
-  execute d;
- end loop;
-end $patch$;
-
--- Append immutable policy snapshots and include policy revisions in stale-quote checks.
-alter function public.attach_guest_age_policy(jsonb,integer,integer,integer) rename to attach_guest_age_policy_before_meal_rates;
-create function public.attach_guest_age_policy(p_variants jsonb,p_adults integer,p_children integer,p_infants integer)
-returns jsonb language plpgsql stable security invoker set search_path=public,pg_temp as $$
-declare base jsonb; v jsonb; result jsonb:='[]'; policy jsonb:=public.get_meal_age_pricing_policy(); charge jsonb;
-begin
- if policy is null then raise exception 'Meal age policy unavailable'; end if;
- base:=public.attach_guest_age_policy_before_meal_rates(p_variants,p_adults,p_children,p_infants);
- for v in select value from jsonb_array_elements(base) loop
-  select x->'meal_age_pricing' into charge from jsonb_array_elements(coalesce(v->'nightly_breakdown','[]')) x where x ? 'meal_age_pricing' limit 1;
-  result:=result||jsonb_build_array(v||jsonb_build_object('meal_age_pricing_policy',policy,
-   'chargeable_meal_guests',coalesce((charge->>'chargeable_guest_count')::integer,(v->>'chargeable_meal_guests')::integer),
-   'quote_fingerprint',md5(jsonb_build_array(v->>'quote_fingerprint',policy)::text)));
- end loop;
- return result;
-end $$;
-revoke all on function public.attach_guest_age_policy(jsonb,integer,integer,integer) from public;
-grant execute on function public.attach_guest_age_policy(jsonb,integer,integer,integer) to anon,authenticated,service_role;
+-- Engine patches and snapshot wrapper are intentionally deferred to
+-- scripts/activate-guest-age-meal-pricing.sql. Helpers below are not live pricing.
 
 create or replace function public.calculate_guest_meal_plan_cost(p_meal_plan_code text,p_adults_count integer,p_children_count integer,p_infants_count integer,p_nights integer,p_preferred_variant text default 'veg')
 returns table(meal_cost numeric,included_meals jsonb,meal_breakdown jsonb)

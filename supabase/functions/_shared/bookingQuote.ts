@@ -73,6 +73,10 @@ export async function calculateBookingQuote(db: any, raw: any, mode: 'website' |
   if (mode === 'website' && Array.isArray(variants) && !variants.some(v => v.meal_plan_code === request.meal_plan_code)) throw new QuoteError('MEAL_PLAN_UNAVAILABLE', 'This meal plan is no longer available for the selected room and stay. Please choose an available plan.');
   let variant = Array.isArray(variants) ? variants.find(v => v.meal_plan_code === request.meal_plan_code && v.cancellation_policy_code === request.cancellation_policy_code) : null;
   if (!variant || !['verified', 'mixed_basis_unverified', 'legacy_basis_unverified'].includes(variant.pricing_status) || !variant.quote_fingerprint) throw new QuoteError('RATE_BASIS_UNVERIFIED', 'A server-verified rate is required before booking.');
+  // Only activated engines attach policy metadata. Legacy published clients remain
+  // compatible while staged, but must refresh their guest selection after activation.
+  // Retained payment intents resume upstream without recalculating this new quote.
+  if (variant.guest_age_policy && request.guest_age_policy_revision === undefined) throw new QuoteError('AGE_POLICY_CHANGED', 'Guest age bands have changed. Refresh and review your guest selection before booking.');
   if (request.guest_age_policy_revision !== undefined && variant.guest_age_policy?.revision !== request.guest_age_policy_revision) throw new QuoteError('AGE_POLICY_CHANGED', 'Guest age bands have changed. Refresh and review your guest selection before booking.');
   if (!Number.isFinite(Number(variant.total_price)) || Number(variant.total_price) < 0) throw new QuoteError('INVALID_QUOTE', 'Invalid calculated room price.');
 

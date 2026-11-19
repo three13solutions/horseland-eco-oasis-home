@@ -1,3 +1,28 @@
+SET LOCAL lock_timeout='5s';
+-- Backend-first staging: this flag is status, not a runtime pricing switch.
+-- Only the reviewed activation script may change it, together with engine bodies.
+create schema guest_pricing_private;
+revoke all on schema guest_pricing_private from public,anon,authenticated,service_role;
+create table guest_pricing_private.release_state (
+ id boolean primary key default true check(id), active boolean not null default false,
+ activated_at timestamptz
+);
+alter table guest_pricing_private.release_state enable row level security;
+revoke all on guest_pricing_private.release_state from public,anon,authenticated,service_role;
+insert into guest_pricing_private.release_state(id,active) values(true,false);
+create table guest_pricing_private.pre_activation_functions (
+ signature text primary key, definition text not null, captured_at timestamptz not null default now()
+);
+alter table guest_pricing_private.pre_activation_functions enable row level security;
+revoke all on guest_pricing_private.pre_activation_functions from public,anon,authenticated,service_role;
+-- Deliberately public boolean-only status, not an admin operation or configuration data.
+create function public.guest_age_meal_pricing_active() returns boolean
+language sql stable security definer set search_path='' as $$
+ select coalesce((select active from guest_pricing_private.release_state where id),false);
+$$;
+revoke all on function public.guest_age_meal_pricing_active() from public;
+grant execute on function public.guest_age_meal_pricing_active() to anon,authenticated,service_role;
+
 -- Repository-only release: apply in staging and verify before any production rollout.
 -- New quotes use the latest policy. Existing booking and payment snapshots are never rewritten.
 create function public.validate_guest_age_bands(p_bands jsonb) returns boolean
@@ -48,7 +73,7 @@ insert into public.guest_age_policy_versions(revision,bands) values(1,'[
 
 create function public.get_guest_age_policy() returns jsonb
 language sql stable security invoker set search_path=public,pg_temp as $$
- select jsonb_build_object('revision',revision,'bands',bands,'updated_at',updated_at)
+ select jsonb_build_object('revision',revision,'bands',bands,'updated_at',updated_at,'active',public.guest_age_meal_pricing_active())
  from public.guest_age_policy_versions order by revision desc limit 1;
 $$;
 revoke all on function public.get_guest_age_policy() from public;
@@ -60,6 +85,9 @@ language plpgsql security definer set search_path=public,pg_temp as $$
 declare current_revision integer;
 begin
  if auth.uid() is null or not coalesce(public.is_admin_new(),false) then raise exception 'Administrator required'; end if;
+ -- Keep configuration writes from claiming live behavior before frontend activation.
+ perform 1 from guest_pricing_private.release_state where id and active for share;
+ if not found then raise exception 'GUEST_PRICING_NOT_ACTIVE: age and meal pricing are staged; publish and activate the matching booking frontend before editing'; end if;
  if not public.validate_guest_age_bands(p_bands) then raise exception 'Age bands must be complete, contiguous and non-overlapping with valid pricing rules'; end if;
  perform pg_advisory_xact_lock(hashtext('guest_age_policy_versions'));
  select max(revision) into current_revision from public.guest_age_policy_versions;
@@ -105,39 +133,9 @@ end $$;
 revoke all on function public.attach_guest_age_policy(jsonb,integer,integer,integer) from public;
 grant execute on function public.attach_guest_age_policy(jsonb,integer,integer,integer) to anon,authenticated,service_role;
 
--- Guarded updates preserve all live rate/date/meal/modifier policies and fail closed
--- if the canonical engine has changed since this release was prepared.
-do $patch$
-declare d text; f record; before_d text;
-begin
- d:=pg_get_functiondef('public.calculate_rate_variants_v2(uuid,date,date,uuid,integer,integer,integer,text)'::regprocedure);
- if strpos(d,'v_all_guests int:=p_adults_count+p_children_count+p_infants_count;')=0
- or strpos(d,'v_target_rate*v_all_guests')=0
- or strpos(d,'+p_children_count*coalesce(v_anchor.extra_child_per_night,0)+p_infants_count*v_anchor.extra_infant_per_night')=0
- or strpos(d,'return v_result;')=0 then raise exception 'Guest policy canonical pricing patch precondition failed'; end if;
- d:=replace(d,'v_all_guests int:=p_adults_count+p_children_count+p_infants_count;',
- 'v_all_guests int:=p_adults_count+p_children_count+p_infants_count; v_chargeable_children int:=public.guest_policy_charge_count(''child'',p_adults_count,p_children_count,p_infants_count); v_meal_guests int:=public.guest_policy_charge_count(''meal'',p_adults_count,p_children_count,p_infants_count);');
- d:=replace(d,'v_target_rate*v_all_guests','v_target_rate*v_meal_guests');
- d:=replace(d,'''meal_guests'',v_all_guests','''meal_guests'',v_meal_guests');
- d:=replace(d,'p_children_count>0 and v_anchor.extra_child_per_night is null','v_chargeable_children>0 and v_anchor.extra_child_per_night is null');
- d:=replace(d,'+p_children_count*coalesce(v_anchor.extra_child_per_night,0)+p_infants_count*v_anchor.extra_infant_per_night',
- '+v_chargeable_children*coalesce(v_anchor.extra_child_per_night,0)');
- d:=replace(d,'''extra_children'',p_children_count','''extra_children'',v_chargeable_children');
- d:=replace(d,'return v_result;','return public.attach_guest_age_policy(v_result,p_adults_count,p_children_count,p_infants_count);');
- execute d;
- -- Existing dynamic/legacy children rates are preserved; only which bands incur
- -- that rate changes. No fabricated adult-rate percentage or festive price.
- for f in select oid,proname from pg_proc where pronamespace='public'::regnamespace and proname in
-  ('calculate_dynamic_price','calculate_dynamic_price_legacy_20261025','calculate_rate_variants','calculate_rate_variants_legacy_20261025','calculate_legacy_rate_night_context') loop
-   d:=pg_get_functiondef(f.oid);before_d:=d;
-   if strpos(d,'p_children_count')=0 then continue; end if;
-   d:=replace(d,'v_extra_children := p_children_count;', 'v_extra_children := public.guest_policy_charge_count(''child'',p_adults_count,p_children_count,p_infants_count);');
-   d:=replace(d,'v_extra_children integer:=p_children_count;', 'v_extra_children integer:=public.guest_policy_charge_count(''child'',p_adults_count,p_children_count,p_infants_count);');
-   -- These functions expose original headcounts for operational use, not charge quantities.
-   if d=before_d then raise exception 'Guest policy legacy pricing patch precondition failed for %',f.oid::regprocedure; end if;
-   execute d;
- end loop;
-end $patch$;
+-- Live pricing entrypoints intentionally remain unchanged in this migration.
+-- Activate only with the matching published frontend via
+-- scripts/activate-guest-age-meal-pricing.sql after regression testing.
 
 -- The old aggregate meal function remains for existing callers: its p_guests_count
 -- means chargeable guests. New callers with category counts use this explicit adapter.

@@ -1,3 +1,5 @@
+> Historical implementation checkpoint. For the current deployed backend and deliberately pending activation, see [19 November backend release](backend-release-2026-11-19.md).
+
 # Meal age rates and dietary variants: review branch
 
 Repository-only implementation. No migration, live rate edit, deployment or website publication was performed. This is a separate checkpoint after promotion management.
