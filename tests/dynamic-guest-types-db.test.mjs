@@ -41,6 +41,14 @@ before(async()=>{
  insert into rate_plan_anchors(id,name,room_type_id,amount,source_meal_plan_code,quoted_nights,included_adults,min_nights,day_type,extra_adult_per_night,extra_child_per_night,extra_infant_per_night,priority,is_active,verified_basis,guest_type_charges) values('${id}','EP Base','${id}',3000,'RO',1,2,1,'all',1000,500,0,1,true,true,'{"toddler":{"mode":"fixed","amount":350},"senior":{"mode":"same_as_adult"}}');
  insert into meal_plan_rules(id,plan_code,plan_name,included_meal_types,is_active,display_order) values('${id}','RO','Room Only','{}',true,1),('22222222-2222-4222-8222-222222222222','FB','Full Board','{}',true,2);
  insert into meal_supplement_versions(meal_plan_id,plan_code,amount,effective_from) values('${id}','RO',0,'2026-01-01'),('22222222-2222-4222-8222-222222222222','FB',1000,'2026-01-01');`);
+ await db.exec(`create schema guest_pricing_private;
+ create function guest_pricing_private.get_booking_guest_policy() returns jsonb language sql as $$select public.get_booking_guest_policy()$$;
+ create function guest_pricing_private.guest_type_accommodation_charge(jsonb,jsonb) returns jsonb language sql as $$select public.guest_type_accommodation_charge($1,$2)$$;
+ create table guest_composition_rules(id uuid default gen_random_uuid(),is_active boolean,room_type_id uuid,created_at timestamptz default now(),extra_adult_charge numeric,guest_type_charges jsonb);
+ create table tactical_overrides(id uuid default gen_random_uuid(),is_active boolean,guest_type_key text,occupancy_type text,start_date date,end_date date,min_nights integer,max_nights integer,day_type text,meal_plan_code text,room_unit_id uuid,room_type_id uuid,room_category_id uuid,created_at timestamptz default now(),adjustment_type text,adjustment_value numeric);
+ create function public.rate_override_disabled(uuid) returns boolean language sql as $$select false$$;`);
+ const scoped=readFileSync(new URL('../supabase/migrations/20261120191936_c781140e-8d70-4d68-abd2-b74fa2559278.sql',import.meta.url),'utf8');
+ await db.exec(scoped.slice(0,scoped.indexOf('REVOKE ALL')));
 });
 after(async()=>{if(db)await db.close();});
 const scalar=async(sql,params=[]) => (await db.query(sql,params)).rows[0]?.value;
@@ -69,4 +77,16 @@ test('canonical SQL engine prices a custom guest over two nights without client 
 test('unmapped nonzero custom quantities are rejected instead of priced free',options,async()=>{
  await db.exec("begin;update rate_plan_anchors set guest_type_charges='{}'");
  await assert.rejects(scalar('select guest_type_accommodation_charge((select to_jsonb(a) from rate_plan_anchors a limit 1),$1) value',[JSON.stringify({adult:2,toddler:1})]),/GUEST_TYPE_RATE_NOT_CONFIGURED/);await db.exec('rollback');
+});
+test('scoped custom rates use unit override before type override and preserve exact source',options,async()=>{
+ await db.exec('begin');
+ try {
+  const unit='33333333-3333-4333-8333-333333333333';
+  await db.exec(`insert into room_units values('${unit}','${id}',null); insert into guest_composition_rules(is_active,room_type_id,guest_type_charges) values(true,'${id}','{"toddler":{"mode":"fixed","amount":400}}');
+  insert into tactical_overrides(id,is_active,guest_type_key,occupancy_type,start_date,end_date,room_type_id,room_unit_id,adjustment_type,adjustment_value) values('${id}',true,'toddler','extra_toddler','2026-12-10','2026-12-10','${id}',null,'fixed',500),('44444444-4444-4444-8444-444444444444',true,'toddler','extra_toddler','2026-12-10','2026-12-10','${id}','${unit}','fixed',600);`);
+  const quote=async(date,u)=>scalar("select guest_pricing_private.scoped_guest_accommodation((select to_jsonb(a) from rate_plan_anchors a limit 1),'{\"adult\":2,\"toddler\":1}',$1,$2,$3,2,'RO') value",[id,u,date]);
+  const applied=await quote('2026-12-10',unit);assert.equal(Number(applied.total),600);assert.equal(applied.bands.find(b=>b.guest_type_key==='toddler').override_id,'44444444-4444-4444-8444-444444444444');
+  assert.equal(Number((await quote('2026-12-10',null)).total),500);
+  assert.equal(Number((await quote('2026-12-11',null)).total),400);
+ } finally {await db.exec('rollback');}
 });

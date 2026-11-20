@@ -6,14 +6,14 @@ import vm from 'node:vm';
 import { QuoteError } from '../supabase/functions/_shared/bookingQuote.ts';
 const source=readFileSync(new URL('../supabase/functions/create-razorpay-order-v2/index.ts',import.meta.url),'utf8');
 // Avoid network and credential loading while exercising the actual order handler.
-const stubbed=source.replace(/async function getRazorpayCredentials\(\) \{[\s\S]*?\nserve\(/, "async function getRazorpayCredentials() { return {keyId:'test-local',secret:'local-test'} }\nserve(");
+const stubbed=source.replace(/async function getRazorpayCredentials\(\) \{[\s\S]*?\nserve\(/, "async function getRazorpayCredentials() { return {keyId:'rzp_test_local',secret:'local-test'} }\nserve(");
 const runnable=stripTypeScriptTypes(stubbed.replace(/^import .*\n/gm,''),{mode:'strip'});
 async function run(config={}){
  let handler;const calls=[];
  const db={auth:{getUser:async()=>({data:{user:{id:'staff'}}})},rpc:async()=>({data:true}),from:table=>({
  select:()=>({eq:()=>({maybeSingle:async()=>({data:config.booking})}),contains:()=>({maybeSingle:async()=>({data:config.pending??null})})}),
  insert:async payload=>{calls.push({table,payload});return{error:config.saveError?{}:null}}})};
- const context=vm.createContext({serve:fn=>handler=fn,createClient:()=>db,QuoteError,
+ const context=vm.createContext({serve:fn=>handler=fn,createClient:()=>db,QuoteError,legacyCheckoutAdmission:async()=> 'legacy_allowed',
   Deno:{env:{get:()=>''}},Response,Request,Date,Math,Number,btoa,
   console:{error:()=>{}},
   calculateBookingQuote:async()=>{if(config.quoteError)throw new QuoteError('RATE_BASIS_UNVERIFIED','Unavailable');return{request:{},total_amount:120,variant:{quote_fingerprint:'v1'}}},
