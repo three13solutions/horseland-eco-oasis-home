@@ -35,14 +35,15 @@ export function CatalogueGuestMealPrices({
   const synchronized = !!rates.data && !!policy.data && rates.data.guest_policy_revision === policy.data.revision;
   const currentRow = meal && rates.data ? rates.data.prices[meal.id] : undefined;
   const current = draft?.mealId === meal?.id ? draft : undefined;
-  const dirty = !!current;
   const stale = !!current && (!synchronized || current.snapshot.revision !== rates.data?.revision
     || current.snapshot.guest_policy_revision !== rates.data?.guest_policy_revision);
   const canEdit = !!meal && synchronized && !rates.isError && !rates.isFetching && !policy.isFetching;
   const valueOf = (key: string) => current && Object.prototype.hasOwnProperty.call(current.values, key) ? current.values[key] :
     currentRow && Object.prototype.hasOwnProperty.call(currentRow, key) ? String(currentRow[key]) : '';
-  useEffect(() => { setDraft(undefined); setError(''); setSaved(false); }, [meal?.id]);
-  useEffect(() => { onPendingChanges(dirty); return () => onPendingChanges(false); }, [dirty, onPendingChanges]);
+  useEffect(() => {
+    setDraft(undefined); setError(''); setSaved(false);
+    return () => onPendingChanges(false);
+  }, [meal?.id, onPendingChanges]);
   function changePrice(key: string, value: string) {
     if (!meal || !rates.data || !canEdit || stale || busy) return;
     setSaved(false);
@@ -50,6 +51,7 @@ export function CatalogueGuestMealPrices({
     const snapshot = rates.data;
     const values = Object.fromEntries(bands.filter(editable).map(band => [band.key, valueOf(band.key)]));
     setDraft({ mealId: meal.id, snapshot, values: { ...values, [key]: value } });
+    onPendingChanges(true);
   }
   async function savePrices() {
     if (!current || !canEdit || stale || busy || disabled) return;
@@ -62,6 +64,7 @@ export function CatalogueGuestMealPrices({
       const result = await saveCatalogueGuestMealPrices(current.mealId, prices, current.snapshot);
       client.setQueryData(catalogueGuestMealPricesKey, result);
       setDraft(undefined);
+      onPendingChanges(false);
       setSaved(true);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Prices were not saved. Reload and try again.');
@@ -72,6 +75,7 @@ export function CatalogueGuestMealPrices({
   }
   function reloadPrices() {
     setDraft(undefined); setError(''); setSaved(false);
+    onPendingChanges(false);
     void policy.refetch();
     if (meal) void rates.refetch();
   }

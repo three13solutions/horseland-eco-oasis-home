@@ -73,6 +73,7 @@ const MealsManagement = () => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [guestPriceSaveInProgress, setGuestPriceSaveInProgress] = useState(false);
   const [guestPriceDirty, setGuestPriceDirty] = useState(false);
+  const [confirmDiscardGuestPrices, setConfirmDiscardGuestPrices] = useState(false);
   const [metadataSaveInProgress, setMetadataSaveInProgress] = useState(false);
   const [editingMeal, setEditingMeal] = useState<Meal | null>(null);
   const [formData, setFormData] = useState<{
@@ -236,6 +237,23 @@ const MealsManagement = () => {
     setEditingMeal(null);
   };
 
+  const closeMealEditor = () => {
+    setConfirmDiscardGuestPrices(false);
+    setGuestPriceDirty(false);
+    setIsDialogOpen(false);
+  };
+
+  const handleMealDialogOpenChange = (open: boolean) => {
+    if (guestPriceSaveInProgress || metadataSaveInProgress) return;
+    if (open) {
+      setIsDialogOpen(true);
+    } else if (guestPriceDirty) {
+      setConfirmDiscardGuestPrices(true);
+    } else {
+      closeMealEditor();
+    }
+  };
+
   const filteredMeals = meals.filter(meal => {
     const matchesSearch = meal.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          meal.description?.toLowerCase().includes(searchTerm.toLowerCase());
@@ -375,7 +393,7 @@ const MealsManagement = () => {
           </div>
         </div>
 
-        <Dialog open={isDialogOpen} onOpenChange={open => { if (!guestPriceSaveInProgress && !metadataSaveInProgress) setIsDialogOpen(open); }}>
+        <Dialog open={isDialogOpen} onOpenChange={handleMealDialogOpenChange}>
           <DialogTrigger asChild>
             <Button onClick={resetForm}>
               <Plus className="w-4 h-4 mr-2" />
@@ -505,7 +523,7 @@ const MealsManagement = () => {
                   type="button"
                   variant="outline"
                   disabled={guestPriceSaveInProgress || metadataSaveInProgress}
-                  onClick={() => setIsDialogOpen(false)}
+                  onClick={() => handleMealDialogOpenChange(false)}
                 >
                   Cancel
                 </Button>
@@ -513,6 +531,20 @@ const MealsManagement = () => {
             </form>
           </DialogContent>
         </Dialog>
+        <AlertDialog open={confirmDiscardGuestPrices} onOpenChange={setConfirmDiscardGuestPrices}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Discard unsaved guest-type prices?</AlertDialogTitle>
+              <AlertDialogDescription>
+                Your guest-type price changes have not been saved. Keep editing to save them, or discard them and close the meal editor.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Keep editing</AlertDialogCancel>
+              <AlertDialogAction onClick={closeMealEditor}>Discard changes</AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </div>
 
       <LiveMealPricing catalogueOnly onSaved={loadMeals} />
@@ -619,7 +651,7 @@ const MealsManagement = () => {
       {filteredMeals.length === 0 ? (
         <div className="text-center py-12">
           <p className="text-muted-foreground mb-4">No meals found</p>
-          <Dialog open={isDialogOpen} onOpenChange={open => { if (!guestPriceSaveInProgress && !metadataSaveInProgress) setIsDialogOpen(open); }}>
+          <Dialog open={isDialogOpen} onOpenChange={handleMealDialogOpenChange}>
             <DialogTrigger asChild>
               <Button onClick={resetForm}>
                 <Plus className="w-4 h-4 mr-2" />

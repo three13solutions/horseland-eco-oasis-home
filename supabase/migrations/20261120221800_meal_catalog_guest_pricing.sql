@@ -165,7 +165,7 @@ GRANT EXECUTE ON FUNCTION public.save_meal_guest_prices(uuid,jsonb,bigint,bigint
 -- group contributes once; all its OR choices must have the same amount.
 -- NULL means no safe price can be derived. Explicit 0 is a configured rate.
 CREATE FUNCTION meal_catalog_pricing_private.resolve_plan_unit_price(
-  p_groups jsonb, p_guest_key text, p_night date
+  p_groups jsonb, p_guest_key text, p_night date, p_max_revision bigint DEFAULT NULL
 )
 RETURNS numeric LANGUAGE plpgsql STABLE SECURITY INVOKER SET search_path = '' AS $$
 DECLARE
@@ -203,6 +203,7 @@ BEGIN
         FROM meal_catalog_pricing_private.meal_guest_price_versions v
         JOIN public.meals m ON m.id = v.meal_id AND m.is_active
         WHERE v.meal_id = v_id AND v.effective_from <= p_night
+          AND (p_max_revision IS NULL OR v.revision <= p_max_revision)
         ORDER BY v.effective_from DESC, v.revision DESC LIMIT 1;
       END IF;
       IF v_price IS NULL OR v_price < 0 OR v_price > 99999999.99 OR v_price <> round(v_price, 2) THEN
@@ -217,4 +218,4 @@ BEGIN
   RETURN v_total;
 END;
 $$;
-REVOKE ALL ON FUNCTION meal_catalog_pricing_private.resolve_plan_unit_price(jsonb,text,date) FROM PUBLIC, anon, authenticated;
+REVOKE ALL ON FUNCTION meal_catalog_pricing_private.resolve_plan_unit_price(jsonb,text,date,bigint) FROM PUBLIC, anon, authenticated;
