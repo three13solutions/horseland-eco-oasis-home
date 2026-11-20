@@ -37,6 +37,9 @@ const selectClass = 'h-9 w-full min-w-0 rounded-md border border-input bg-backgr
 const noteClass = 'text-xs leading-relaxed text-muted-foreground';
 const sectionClass = 'min-w-0 space-y-2.5 border-t pt-3';
 const fieldGrid = 'grid min-w-0 gap-2.5 sm:grid-cols-2';
+const discountGrid = 'grid min-w-0 items-start gap-2.5 grid-cols-[repeat(auto-fit,minmax(min(100%,14rem),1fr))]';
+const eligibilityGrid = 'grid min-w-0 items-start gap-2.5 grid-cols-[repeat(auto-fit,minmax(min(100%,12rem),1fr))]';
+const visibilityGrid = 'grid min-w-0 gap-2.5 grid-cols-[repeat(auto-fit,minmax(min(100%,16rem),1fr))]';
 const modes = [['RO','Room Only (EP)'], ['BB','Bed & Breakfast (CP)'], ['HB','Half Board (MAP)'], ['FB','Full Board (AP)']] as const;
 function Field({ id, label, children }: { id: string; label: string; children: ReactNode }) {
  return <div className="min-w-0 space-y-1"><Label htmlFor={id}>{label}</Label>{children}</div>;
@@ -252,24 +255,22 @@ export default function WebsitePromotionSettings(){
       <Field id="promo-code" label="Code"><Input id="promo-code" className={inputClass} autoCapitalize="characters" spellCheck={false} disabled={!!form.revision||unavailable} value={form.code} onChange={e=>change('code',e.target.value.toUpperCase())}/></Field>
       <Field id="promo-description" label="Guest-facing description"><Input id="promo-description" className={inputClass} value={form.label} onChange={e=>change('label',e.target.value)}/></Field>
      </div>
-     {form.discount_kind==='legacy'?<p className="rounded-md bg-muted px-3 py-2 text-sm">Existing discount preserved: {form.code==='EP300'?'₹300 per verified room-only night':'₹1,000 per booking, accommodation only'}.</p>:<>
+     {form.discount_kind==='legacy'?<p className="rounded-md bg-muted px-3 py-2 text-sm">Existing discount preserved: {form.code==='EP300'?'₹300 per verified room-only night':'₹1,000 per booking, accommodation only'}.</p>:<div className={discountGrid} data-promo-layout="discount">
       <fieldset className="min-w-0 space-y-1.5">
-       <legend className="text-sm font-medium">Discount type</legend>
+       <legend className="mb-1 text-sm font-medium leading-5">Discount type</legend>
        <div className="grid grid-cols-2 gap-2">
         {([['percentage','Percentage'],['fixed','Fixed amount']] as const).map(([value,label])=><Button key={value} size="sm" type="button" aria-pressed={form.discount_kind===value} variant={form.discount_kind===value?'default':'outline'} onClick={()=>change('discount_kind',value)}>{label}</Button>)}
        </div>
       </fieldset>
-      <div className={fieldGrid}>
        <Field id="promo-value" label={form.discount_kind==='percentage'?'Discount (%)':'Discount (₹)'}><Input id="promo-value" className={inputClass} type="number" min="0.01" step="0.01" value={form.discount_value??''} onChange={e=>change('discount_value',e.target.value===''?null:Number(e.target.value))}/></Field>
        <fieldset className="min-w-0 space-y-1.5">
-        <legend className="text-sm font-medium">Apply discount</legend>
+        <legend className="mb-1 text-sm font-medium leading-5">Apply discount</legend>
         <div className="grid grid-cols-2 gap-2">
          {([['booking','Per booking'],['night','Per night']] as const).map(([value,label])=><Button key={value} size="sm" type="button" aria-pressed={form.discount_basis===value} variant={form.discount_basis===value?'default':'outline'} onClick={()=>change('discount_basis',value)}>{label}</Button>)}
         </div>
         <p className={noteClass}>Per-night rates must be verified room-only rates.</p>
        </fieldset>
-      </div>
-     </>}
+     </div>}
      <p className={noteClass}>Discount applies to room charges only. Room categories and meal plans below determine which bookings qualify. Meals aren’t discounted.</p>
      <section className={sectionClass} aria-labelledby="promo-eligibility">
       <h3 id="promo-eligibility" className="text-sm font-semibold">Room and meal eligibility</h3>
@@ -310,34 +311,38 @@ export default function WebsitePromotionSettings(){
       </div>
      </section>
      <section className={sectionClass} aria-labelledby="promo-dates">
-      <h3 id="promo-dates" className="text-sm font-semibold">Dates and day eligibility</h3>
-      <div className={fieldGrid}>
+      <h3 id="promo-dates" className="text-sm font-semibold">Date and stay eligibility</h3>
+      <div className={eligibilityGrid} data-promo-layout="eligibility">
        {([['Booking dates','booking_from','booking_to'],['Eligible stay dates','stay_from','stay_to']] as const).map(([title,from,to])=>
         <PromoDateRange key={title} id={`promo-${from}-range`} label={title} today={today} disabled={unavailable}
          value={{ from: form[from], to: form[to] }} onChange={dates=>{
           setReview(false);
           setForm(current=>current?{...current,[from]:dates.from,[to]:dates.to}:current);
          }}/>)}
-      </div>
-      <p className={noteClass}>Booking dates control when the reservation is made. Stay dates control which occupied nights qualify, not checkout day. Dates are inclusive in Asia/Kolkata. Choose Any date for no limit.</p>
-      <div className={fieldGrid}>
        <fieldset className="min-w-0 space-y-1.5">
-        <legend className="text-sm font-medium">Applicable days</legend>
+        <legend className="mb-1 text-sm font-medium leading-5">Applicable days</legend>
         <div className="flex flex-wrap gap-1.5">
          {([['both','All days'],['weekday','Weekdays'],['weekend','Weekends']] as const).map(([value,label])=><Button key={value} size="sm" type="button" aria-pressed={form.day_scope===value} variant={form.day_scope===value?'default':'outline'} onClick={()=>change('day_scope',value)}>{label}</Button>)}
         </div>
        </fieldset>
+       <Field id="promo-minimum-nights" label="Stay length (minimum nights)"><Input id="promo-minimum-nights" className={inputClass} type="number" min="1" step="1" placeholder="No minimum" value={form.min_stay_nights??''} onChange={e=>change('min_stay_nights',e.target.value===''?null:Number(e.target.value))}/></Field>
+       <fieldset className="min-w-0 space-y-1.5">
+        <legend className="mb-1 text-sm font-medium leading-5">Excluded nights</legend>
+        <div className="flex flex-wrap items-center gap-2">
+         <Input id="promo-excluded-date" aria-label="Date to exclude" type="date" className={`${inputClass} w-full max-w-48 flex-1 basis-28`} value={excludedDate} onChange={e=>setExcludedDate(e.target.value)}/>
+         <Button size="sm" type="button" variant="outline" disabled={!validDate(excludedDate)||form.excluded_stay_dates.includes(excludedDate)} onClick={()=>{if(validDate(excludedDate)&&!form.excluded_stay_dates.includes(excludedDate)){change('excluded_stay_dates',[...form.excluded_stay_dates,excludedDate]);setExcludedDate('');}}}>Add date</Button>
+        </div>
+        {form.excluded_stay_dates.length>0&&<ul className="flex flex-wrap gap-1.5">{form.excluded_stay_dates.map((date,index)=><li key={`${date}-${index}`}><Button size="sm" type="button" variant="outline" aria-label={`Remove excluded night ${date}`} onClick={()=>change('excluded_stay_dates',form.excluded_stay_dates.filter((_,i)=>i!==index))}>{date} <span aria-hidden="true">×</span></Button></li>)}</ul>}
+        {form.excluded_stay_dates.some(date=>!validDate(date))&&<Field id="promo-exclusions" label="Correct existing date values"><Textarea id="promo-exclusions" rows={2} className="min-h-16 text-sm" placeholder="One YYYY-MM-DD date per line" value={form.excluded_stay_dates.join('\n')} onChange={e=>change('excluded_stay_dates',e.target.value===''?[]:e.target.value.split(/[\n,]/).map(v=>v.trim()))}/></Field>}
+        <p className={noteClass}>Block particular nights even if they fall in the eligible stay window.</p>
+       </fieldset>
+      </div>
+      <p className={noteClass}>Booking dates control when the reservation is made. Stay dates control which occupied nights qualify, not checkout day. Dates are inclusive in Asia/Kolkata. Choose Any date for no limit.</p>
        {(restricted||(flat&&form.mixed_stay_mode==='eligible_nights'))&&<Field id="promo-stay-mode" label="Stay eligibility policy">
         <select id="promo-stay-mode" className={selectClass} value={form.mixed_stay_mode??''} onChange={e=>change('mixed_stay_mode',e.target.value||null)}><option value="">Choose a stay policy</option><option value="all_nights">All occupied nights must qualify</option>{!flat&&<option value="eligible_nights">Discount only eligible nights</option>}</select>
        </Field>}
-      </div>
       <p className={noteClass}>Weekend eligibility follows the hotel’s date-specific rules, including protected periods.{flat?' All nights must qualify for once-per-booking offers.':''}</p>
      </section>
-     <section className={sectionClass} aria-labelledby="promo-stay-limits">
-      <h3 id="promo-stay-limits" className="text-sm font-semibold">Stay length</h3>
-       <Field id="promo-minimum-nights" label="Minimum occupied nights"><Input id="promo-minimum-nights" className={inputClass} type="number" min="1" step="1" placeholder="No minimum" value={form.min_stay_nights??''} onChange={e=>change('min_stay_nights',e.target.value===''?null:Number(e.target.value))}/></Field>
-     </section>
-
      <section className={sectionClass} aria-labelledby="promo-limits">
       <h3 id="promo-limits" className="text-sm font-semibold">Usage limits</h3>
       <div className={fieldGrid}>
@@ -351,22 +356,12 @@ export default function WebsitePromotionSettings(){
        </fieldset>
       </div>
       <p className={noteClass}>Limits count completed redemptions and reserved checkout attempts, not quotes. Per-email limits use the booking email, not a verified person. Cancellations do not automatically restore a completed use.</p>
-       <fieldset className="min-w-0 space-y-1.5">
-        <legend className="text-sm font-medium">Excluded nights</legend>
-        <div className="flex flex-wrap items-center gap-2">
-         <Input id="promo-excluded-date" aria-label="Date to exclude" type="date" className={`${inputClass} w-auto`} value={excludedDate} onChange={e=>setExcludedDate(e.target.value)}/>
-         <Button size="sm" type="button" variant="outline" disabled={!validDate(excludedDate)||form.excluded_stay_dates.includes(excludedDate)} onClick={()=>{if(validDate(excludedDate)&&!form.excluded_stay_dates.includes(excludedDate)){change('excluded_stay_dates',[...form.excluded_stay_dates,excludedDate]);setExcludedDate('');}}}>Add date</Button>
-        </div>
-        {form.excluded_stay_dates.length>0&&<ul className="flex flex-wrap gap-1.5">{form.excluded_stay_dates.map((date,index)=><li key={`${date}-${index}`}><Button size="sm" type="button" variant="outline" aria-label={`Remove excluded night ${date}`} onClick={()=>change('excluded_stay_dates',form.excluded_stay_dates.filter((_,i)=>i!==index))}>{date} <span aria-hidden="true">×</span></Button></li>)}</ul>}
-        {form.excluded_stay_dates.some(date=>!validDate(date))&&<Field id="promo-exclusions" label="Correct existing date values"><Textarea id="promo-exclusions" rows={2} className="min-h-16 text-sm" placeholder="One YYYY-MM-DD date per line" value={form.excluded_stay_dates.join('\n')} onChange={e=>change('excluded_stay_dates',e.target.value===''?[]:e.target.value.split(/[\n,]/).map(v=>v.trim()))}/></Field>}
-       </fieldset>
-       <p className={noteClass}>Block particular nights even if they fall in the eligible stay window. The selected stay eligibility policy still applies.</p>
      </section>
      <section className={sectionClass} aria-labelledby="promo-visibility">
       <h3 id="promo-visibility" className="text-sm font-semibold">Visibility and activation</h3>
-      <div className="space-y-1.5">
-       <div className="flex min-h-9 items-center justify-between gap-3"><Label htmlFor="promo-public">List publicly in booking offers</Label><Switch id="promo-public" disabled={unavailable} checked={form.is_public} onCheckedChange={checked=>change('is_public',checked)}/></div>
-       <div className="flex min-h-9 items-center justify-between gap-3"><Label htmlFor="promo-active">Enable for eligible new checkouts</Label><Switch id="promo-active" disabled={unavailable} checked={form.is_active} onCheckedChange={checked=>change('is_active',checked)}/></div>
+      <div className={visibilityGrid} data-promo-layout="visibility">
+       <div className="flex min-w-0 min-h-9 items-center justify-between gap-3 rounded-md border px-2.5 py-1.5"><Label htmlFor="promo-public">List publicly in booking offers</Label><Switch id="promo-public" disabled={unavailable} checked={form.is_public} onCheckedChange={checked=>change('is_public',checked)}/></div>
+       <div className="flex min-w-0 min-h-9 items-center justify-between gap-3 rounded-md border px-2.5 py-1.5"><Label htmlFor="promo-active">Enable for eligible new checkouts</Label><Switch id="promo-active" disabled={unavailable} checked={form.is_active} onCheckedChange={checked=>change('is_active',checked)}/></div>
       </div>
      </section>
      {!canSave&&<p className={`text-xs ${restrictionsError||customEmailIncomplete?'text-destructive':'text-muted-foreground'}`}>{restrictionsError || (customEmailIncomplete?'Enter the custom per-email limit or choose Unlimited.':'Complete the required fields. Date ranges must be ordered, and stay restrictions need a stay policy.')}</p>}
@@ -385,4 +380,3 @@ export default function WebsitePromotionSettings(){
   </Tabs>
  </section>;
 }
-
