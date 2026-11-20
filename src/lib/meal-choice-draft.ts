@@ -20,7 +20,7 @@ export interface MealChoicePlan { code: MealChoicePlanCode; groups: MealChoiceGr
 export interface MealChoiceGuest {
   id: string;
   label: string;
-  kind: 'adult' | 'child' | 'infant';
+  kind: string;
   choices: Record<string, string>;
 }
 export interface MealChoiceLine {
@@ -99,7 +99,7 @@ export function calculateMealChoices(plan: MealChoicePlan, catalogue: readonly M
     text(guest.id, 'Guest ID'); text(guest.label, 'Guest label');
     if (guestIds.has(guest.id)) throw new Error('Duplicate guest ID.');
     guestIds.add(guest.id);
-    if (!['adult', 'child', 'infant'].includes(guest.kind)) throw new Error('Unknown guest kind; no pricing policy can be inferred.');
+    if (!(agePolicy ? agePolicy.bands.some(b => b.key === guest.kind && b.enabled !== false) : ['adult', 'child', 'infant'].includes(guest.kind))) throw new Error('Unknown guest kind; no pricing policy can be inferred.');
     if (!guest.choices || typeof guest.choices !== 'object' || Array.isArray(guest.choices)) throw new Error('Guest choices are required.');
     const groupIds = new Set(plan.groups.map(group => group.id));
     if (Object.keys(guest.choices).some(id => !groupIds.has(id))) throw new Error('Guest choices contain an unknown group.');

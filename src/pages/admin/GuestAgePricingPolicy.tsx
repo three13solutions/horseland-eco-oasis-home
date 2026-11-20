@@ -1,7 +1,8 @@
 import React, { useMemo, useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import type { SupabaseClient } from '@supabase/supabase-js';
-import { Pencil, Plus, Trash2 } from 'lucide-react';
+import { Pencil, Plus, Trash2, ChevronRight, ChevronDown } from 'lucide-react';
+import { GuestLinkedPricing } from '@/components/admin/GuestLinkedPricing';
 import { supabase } from '@/integrations/supabase/client';
 import { useGuestAgePolicy } from '@/hooks/useGuestAgePolicy';
 import { validateGuestAgeBands, pendingGuestDraft, duplicateGuestName, ageBandLabel, guestPolicySaveError, guestTypeChargeRule, guestTypeName, guestTypeKey, sameGuestPolicy, alternateGuestPolicy, type GuestAgeBand } from '@/lib/guest-age-policy';
@@ -33,6 +34,7 @@ export default function GuestAgePricingPolicy() {
   const [formError, setFormError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [toggling, setToggling] = useState(false);
+  const [expanded, setExpanded] = useState<string[]>([]);
   const live = policy.data?.active !== false;
   const drafts = useQuery({
     queryKey: ['guest-policy-drafts'], enabled: !!policy.data,
@@ -195,8 +197,9 @@ export default function GuestAgePricingPolicy() {
             </TableHeader>
             <TableBody>
               {rows.map((r) => (
+                <React.Fragment key={r.id}>
                 <TableRow key={r.id} className={r.active ? '' : 'text-muted-foreground'}>
-                  <TableCell className="font-medium">{guestTypeName(r)}</TableCell>
+                  <TableCell className="font-medium"><div className="flex items-center gap-1"><Button variant="ghost" size="icon" aria-label={`Linked pricing for ${guestTypeName(r)} ${r.draft ? 'draft' : `revision ${r.revision}`}`} aria-expanded={expanded.includes(r.id)} onClick={()=>setExpanded(previous=>previous.includes(r.id)?previous.filter(id=>id!==r.id):[...previous,r.id])}>{expanded.includes(r.id)?<ChevronDown className="h-4 w-4"/>:<ChevronRight className="h-4 w-4"/>}</Button>{guestTypeName(r)}</div></TableCell>
                   <TableCell>{r.min_age}</TableCell>
                   <TableCell>{r.max_age ?? 'No limit'}</TableCell>
                   <TableCell>{accLabel(r.accommodation_rule)}</TableCell>
@@ -214,6 +217,8 @@ export default function GuestAgePricingPolicy() {
                     </div>
                   </TableCell>
                 </TableRow>
+                {expanded.includes(r.id)&&<TableRow><TableCell colSpan={7} className="bg-muted/30"><GuestLinkedPricing band={r} staged={!live || !!r.draft}/></TableCell></TableRow>}
+                </React.Fragment>
               ))}
             </TableBody>
           </Table>

@@ -1,4 +1,4 @@
-import { useGuestAgePolicy } from '@/hooks/useGuestAgePolicy';
+import { useConfiguredGuestTypes } from '@/hooks/useConfiguredGuestTypes';
 import { guestTypeName } from '@/lib/guest-age-policy';
 import { validateGuestTypeCharges } from '@/lib/guest-type-charges';
 import { GuestTypeChargeInput } from '@/components/admin/GuestTypeChargeInput';
@@ -21,7 +21,7 @@ import { EmptyRuleState } from './EmptyRuleState';
 
 export function GuestCompositionTab() {
   const queryClient = useQueryClient();
-  const agePolicy=useGuestAgePolicy({allowInactive:true});
+  const agePolicy=useConfiguredGuestTypes();
   const [guestCharges, setGuestCharges] = useState<GuestTypeCharges>({});
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingRule, setEditingRule] = useState<any>(null);
@@ -202,7 +202,7 @@ export function GuestCompositionTab() {
                   <p className="text-xs text-muted-foreground">Per adult beyond base count; age band follows Guest Age & Pricing Policy</p>
                 </div>
                 <div className="grid grid-cols-2 gap-4">
-                  {(agePolicy.data?.bands ?? [{key:'child'},{key:'infant'}]).filter(b=>b.key!=='adult').map(b => {
+                  {agePolicy.types.filter(b=>b.key!=='adult').map(b => {
                     const key=b.key;const column=key==='child'?'extra_child_charge':key==='infant'?'extra_infant_charge':null;
                     const saved=guestCharges[key];const value=column?formData[column]:saved?.mode==='fixed'?String(saved.amount):'';
                     return <GuestTypeChargeInput key={key} label={`${guestTypeName(b)} Accommodation (₹)`}

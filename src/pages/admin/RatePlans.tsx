@@ -1,7 +1,7 @@
 import { GuestTypeChargeInput } from '@/components/admin/GuestTypeChargeInput';
 import { guestTypeName } from '@/lib/guest-age-policy';
 import { validateGuestTypeCharges } from '@/lib/guest-type-charges';
-import { useGuestAgePolicy } from '@/hooks/useGuestAgePolicy';
+import { useConfiguredGuestTypes } from '@/hooks/useConfiguredGuestTypes';
 import { guestTypeChargeAmount, type GuestTypeCharges } from '@/lib/guest-type-charges';
 import WebsiteMealPlanVisibility from '@/components/admin/WebsiteMealPlanVisibility';
 import { useEffect, useMemo, useState } from 'react';
@@ -38,7 +38,7 @@ const nullableNumber = (value: string) => value.trim() === '' ? null : Number(va
 
 export default function RatePlans() {
   const client = useQueryClient();
-  const agePolicy = useGuestAgePolicy({ allowInactive: true });
+  const agePolicy = useConfiguredGuestTypes();
   const [searchParams, setSearchParams] = useSearchParams();
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<RatePlanAnchor | null>(null);
@@ -203,7 +203,7 @@ export default function RatePlans() {
         <div className="grid gap-4 sm:grid-cols-4"><div><Label htmlFor="start-date">First stay night</Label><Input id="start-date" type="date" value={form.start} onChange={e=>field('start',e.target.value)}/></div><div><Label htmlFor="end-date">Last stay night (inclusive)</Label><Input id="end-date" type="date" value={form.end} onChange={e=>field('end',e.target.value)}/></div><div><Label htmlFor="min-nights">Minimum stay</Label><Input id="min-nights" required type="number" min="1" value={form.min} onChange={e=>field('min',e.target.value)}/></div><div><Label htmlFor="max-nights">Maximum stay</Label><Input id="max-nights" type="number" min="1" placeholder="No limit" value={form.max} onChange={e=>field('max',e.target.value)}/></div></div>
         <div className="grid gap-4 sm:grid-cols-2"><div><Label htmlFor="rate-days">Stay nights</Label><select id="rate-days" className={selectClass} value={form.day} onChange={e=>field('day',e.target.value)}><option value="all">All days</option><option value="weekday">Weekday</option><option value="weekend">Weekend</option></select></div><div><Label htmlFor="rate-priority">Priority within scope</Label><Input id="rate-priority" required type="number" step="1" value={form.priority} onChange={e=>field('priority',e.target.value)}/></div></div>
         <fieldset className="rounded border p-4"><legend className="px-2 font-medium text-sm">Optional length-of-stay discount</legend><div className="grid gap-4 sm:grid-cols-3"><div><Label htmlFor="los-type">Discount method</Label><select id="los-type" className={selectClass} value={form.losType} disabled={Number(form.quotedNights)>1} onChange={e=>field('losType',e.target.value)}><option value="">No additional discount</option><option value="fixed">Fixed ₹ per eligible night</option><option value="percentage">Percentage per eligible night</option></select></div>{form.losType&&<><div><Label htmlFor="los-min">Minimum qualifying nights</Label><Input id="los-min" required type="number" min="2" value={form.losMin} onChange={e=>field('losMin',e.target.value)}/></div><div><Label htmlFor="los-value">Discount {form.losType==='fixed'?'(₹)':'(%)'}</Label><Input id="los-value" required type="number" min="0" max={form.losType==='percentage'?100:undefined} step="0.01" value={form.losValue} onChange={e=>field('losValue',e.target.value)}/></div></>}</div><p className="text-xs text-muted-foreground mt-2">Applies to every eligible night of a qualifying stay, on the entered base package before meal conversion. Extra-person accommodation and separately added meals are excluded. Package tiers covering more than one quoted night cannot stack another stay discount.</p></fieldset>
-        <fieldset className="rounded border p-4"><legend className="px-2 font-medium text-sm">Extra-person accommodation only, per night</legend><div className="grid gap-4 sm:grid-cols-3"><div><Label htmlFor="extra-adult">Extra adult (₹)</Label><Input id="extra-adult" type="number" min="0" step="0.01" value={form.extraAdult} onChange={e=>field('extraAdult',e.target.value)}/></div>{(agePolicy.data?.bands ?? [{key:'child'}, {key:'infant'}]).filter(b => b.key !== 'adult').map(b => {
+        <fieldset className="rounded border p-4"><legend className="px-2 font-medium text-sm">Extra-person accommodation only, per night</legend><div className="grid gap-4 sm:grid-cols-3"><div><Label htmlFor="extra-adult">Extra adult (₹)</Label><Input id="extra-adult" type="number" min="0" step="0.01" value={form.extraAdult} onChange={e=>field('extraAdult',e.target.value)}/></div>{agePolicy.types.filter(b => b.key !== 'adult').map(b => {
           const key = b.key; const formKey = key === 'infant' ? 'extraInfant' : key === 'child' ? 'extraChild' : null;
           const saved=form.guestCharges[key]; const value=formKey ? form[formKey] : saved?.mode==='fixed' ? String(saved.amount) : '';
           return <GuestTypeChargeInput key={key} label={`${guestTypeName(b)} Accommodation (₹)`} value={value} adultValue={form.extraAdult} sameAsAdult={form.guestCharges[key]?.mode === 'same_as_adult'}
