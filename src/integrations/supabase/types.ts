@@ -3312,6 +3312,7 @@ export type Database = {
           created_by: string | null
           day_type: string | null
           end_date: string
+          guest_charge_mode: string
           id: string
           is_active: boolean | null
           max_adults: number | null
@@ -3338,6 +3339,7 @@ export type Database = {
           created_by?: string | null
           day_type?: string | null
           end_date: string
+          guest_charge_mode?: string
           id?: string
           is_active?: boolean | null
           max_adults?: number | null
@@ -3364,6 +3366,7 @@ export type Database = {
           created_by?: string | null
           day_type?: string | null
           end_date?: string
+          guest_charge_mode?: string
           id?: string
           is_active?: boolean | null
           max_adults?: number | null

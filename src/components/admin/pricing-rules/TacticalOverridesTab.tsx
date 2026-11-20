@@ -1,3 +1,4 @@
+import { GuestTypeChargeInput } from '@/components/admin/GuestTypeChargeInput';
 import { useState, useMemo } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import type { SupabaseClient } from '@supabase/supabase-js';
@@ -27,6 +28,7 @@ interface RateRow {
   double: string;
   extraAdult: string;
   extraChild: string;
+  childSameAsAdult: string;
 }
 
 interface RoomCategoryRates {
@@ -62,7 +64,7 @@ const initialFormData: FormData = {
   categoryRates: []
 };
 
-const emptyRateRow: RateRow = { double: '', extraAdult: '', extraChild: '' };
+const emptyRateRow: RateRow = { double: '', extraAdult: '', extraChild: '', childSameAsAdult: 'no' };
 
 const emptyRates = {
   oneNightWeekday: { ...emptyRateRow },
@@ -331,7 +333,7 @@ export function TacticalOverridesTab() {
   const updateRateValue = (
     id: string, 
     duration: 'oneNightWeekday' | 'oneNightWeekend' | 'twoNightsWeekday' | 'twoNightsWeekend', 
-    field: 'double' | 'extraAdult' | 'extraChild', 
+    field: 'double' | 'extraAdult' | 'extraChild' | 'childSameAsAdult', 
     value: string
   ) => {
     setFormData(prev => ({
@@ -354,7 +356,7 @@ export function TacticalOverridesTab() {
         : [rates.oneNightWeekday, rates.oneNightWeekend, rates.twoNightsWeekday, rates.twoNightsWeekend];
       
       for (const rateRow of ratesToCheck) {
-        if (rateRow.double && (!rateRow.extraAdult || !rateRow.extraChild)) {
+        if (rateRow.double && (!rateRow.extraAdult || (rateRow.childSameAsAdult !== 'yes' && !rateRow.extraChild))) {
           if (!categoriesWithMissingCharges.includes(name)) {
             categoriesWithMissingCharges.push(name);
           }
@@ -420,12 +422,13 @@ export function TacticalOverridesTab() {
         });
       }
       
-      if (rateRow.extraChild) {
+      if (rateRow.extraChild || rateRow.childSameAsAdult === 'yes') {
         payloads.push({
           ...basePayload,
           reason: `${reason} - Extra Child`,
           adjustment_type: 'fixed',
-          adjustment_value: parseFloat(rateRow.extraChild),
+          adjustment_value: parseFloat(rateRow.childSameAsAdult === 'yes' ? rateRow.extraAdult : rateRow.extraChild),
+          guest_charge_mode: rateRow.childSameAsAdult === 'yes' ? 'same_as_adult' : 'fixed',
           min_children: 1,
           occupancy_type: 'extra_child',
         });
@@ -740,7 +743,7 @@ export function TacticalOverridesTab() {
                               <Input type="number" placeholder="—" className="h-8 text-center text-sm" value={categoryRate.rates.oneNightWeekday.extraAdult} onChange={(e) => updateRateValue(categoryRate.id, 'oneNightWeekday', 'extraAdult', e.target.value)} />
                             </TableCell>
                             <TableCell className="py-1 px-2">
-                              <Input type="number" placeholder="—" className="h-8 text-center text-sm" value={categoryRate.rates.oneNightWeekday.extraChild} onChange={(e) => updateRateValue(categoryRate.id, 'oneNightWeekday', 'extraChild', e.target.value)} />
+                              <GuestTypeChargeInput label="Child Accommodation (₹)" value={categoryRate.rates.oneNightWeekday.extraChild} adultValue={categoryRate.rates.oneNightWeekday.extraAdult} sameAsAdult={categoryRate.rates.oneNightWeekday.childSameAsAdult === 'yes'} onModeChange={same=>updateRateValue(categoryRate.id,'oneNightWeekday','childSameAsAdult',same?'yes':'no')} onValueChange={value=>updateRateValue(categoryRate.id,'oneNightWeekday','extraChild',value)} />
                             </TableCell>
                           </TableRow>
                           <TableRow>
@@ -752,7 +755,7 @@ export function TacticalOverridesTab() {
                               <Input type="number" placeholder="—" className="h-8 text-center text-sm" value={categoryRate.rates.twoNightsWeekday.extraAdult} onChange={(e) => updateRateValue(categoryRate.id, 'twoNightsWeekday', 'extraAdult', e.target.value)} />
                             </TableCell>
                             <TableCell className="py-1 px-2">
-                              <Input type="number" placeholder="—" className="h-8 text-center text-sm" value={categoryRate.rates.twoNightsWeekday.extraChild} onChange={(e) => updateRateValue(categoryRate.id, 'twoNightsWeekday', 'extraChild', e.target.value)} />
+                              <GuestTypeChargeInput label="Child Accommodation (₹)" value={categoryRate.rates.twoNightsWeekday.extraChild} adultValue={categoryRate.rates.twoNightsWeekday.extraAdult} sameAsAdult={categoryRate.rates.twoNightsWeekday.childSameAsAdult === 'yes'} onModeChange={same=>updateRateValue(categoryRate.id,'twoNightsWeekday','childSameAsAdult',same?'yes':'no')} onValueChange={value=>updateRateValue(categoryRate.id,'twoNightsWeekday','extraChild',value)} />
                             </TableCell>
                           </TableRow>
                         </TableBody>
@@ -788,7 +791,7 @@ export function TacticalOverridesTab() {
                             <Input type="number" placeholder="—" className="h-8 text-center text-sm" value={categoryRate.rates.oneNightWeekday.extraAdult} onChange={(e) => updateRateValue(categoryRate.id, 'oneNightWeekday', 'extraAdult', e.target.value)} />
                           </TableCell>
                           <TableCell className="py-1 px-1">
-                            <Input type="number" placeholder="—" className="h-8 text-center text-sm" value={categoryRate.rates.oneNightWeekday.extraChild} onChange={(e) => updateRateValue(categoryRate.id, 'oneNightWeekday', 'extraChild', e.target.value)} />
+                            <GuestTypeChargeInput label="Child Accommodation (₹)" value={categoryRate.rates.oneNightWeekday.extraChild} adultValue={categoryRate.rates.oneNightWeekday.extraAdult} sameAsAdult={categoryRate.rates.oneNightWeekday.childSameAsAdult === 'yes'} onModeChange={same=>updateRateValue(categoryRate.id,'oneNightWeekday','childSameAsAdult',same?'yes':'no')} onValueChange={value=>updateRateValue(categoryRate.id,'oneNightWeekday','extraChild',value)} />
                           </TableCell>
                           <TableCell className="py-1 px-1 border-l">
                             <Input type="number" placeholder="—" className="h-8 text-center text-sm" value={categoryRate.rates.oneNightWeekend.double} onChange={(e) => updateRateValue(categoryRate.id, 'oneNightWeekend', 'double', e.target.value)} />
@@ -797,7 +800,7 @@ export function TacticalOverridesTab() {
                             <Input type="number" placeholder="—" className="h-8 text-center text-sm" value={categoryRate.rates.oneNightWeekend.extraAdult} onChange={(e) => updateRateValue(categoryRate.id, 'oneNightWeekend', 'extraAdult', e.target.value)} />
                           </TableCell>
                           <TableCell className="py-1 px-1">
-                            <Input type="number" placeholder="—" className="h-8 text-center text-sm" value={categoryRate.rates.oneNightWeekend.extraChild} onChange={(e) => updateRateValue(categoryRate.id, 'oneNightWeekend', 'extraChild', e.target.value)} />
+                            <GuestTypeChargeInput label="Child Accommodation (₹)" value={categoryRate.rates.oneNightWeekend.extraChild} adultValue={categoryRate.rates.oneNightWeekend.extraAdult} sameAsAdult={categoryRate.rates.oneNightWeekend.childSameAsAdult === 'yes'} onModeChange={same=>updateRateValue(categoryRate.id,'oneNightWeekend','childSameAsAdult',same?'yes':'no')} onValueChange={value=>updateRateValue(categoryRate.id,'oneNightWeekend','extraChild',value)} />
                           </TableCell>
                         </TableRow>
                         <TableRow>
@@ -809,7 +812,7 @@ export function TacticalOverridesTab() {
                             <Input type="number" placeholder="—" className="h-8 text-center text-sm" value={categoryRate.rates.twoNightsWeekday.extraAdult} onChange={(e) => updateRateValue(categoryRate.id, 'twoNightsWeekday', 'extraAdult', e.target.value)} />
                           </TableCell>
                           <TableCell className="py-1 px-1">
-                            <Input type="number" placeholder="—" className="h-8 text-center text-sm" value={categoryRate.rates.twoNightsWeekday.extraChild} onChange={(e) => updateRateValue(categoryRate.id, 'twoNightsWeekday', 'extraChild', e.target.value)} />
+                            <GuestTypeChargeInput label="Child Accommodation (₹)" value={categoryRate.rates.twoNightsWeekday.extraChild} adultValue={categoryRate.rates.twoNightsWeekday.extraAdult} sameAsAdult={categoryRate.rates.twoNightsWeekday.childSameAsAdult === 'yes'} onModeChange={same=>updateRateValue(categoryRate.id,'twoNightsWeekday','childSameAsAdult',same?'yes':'no')} onValueChange={value=>updateRateValue(categoryRate.id,'twoNightsWeekday','extraChild',value)} />
                           </TableCell>
                           <TableCell className="py-1 px-1 border-l">
                             <Input type="number" placeholder="—" className="h-8 text-center text-sm" value={categoryRate.rates.twoNightsWeekend.double} onChange={(e) => updateRateValue(categoryRate.id, 'twoNightsWeekend', 'double', e.target.value)} />
@@ -818,7 +821,7 @@ export function TacticalOverridesTab() {
                             <Input type="number" placeholder="—" className="h-8 text-center text-sm" value={categoryRate.rates.twoNightsWeekend.extraAdult} onChange={(e) => updateRateValue(categoryRate.id, 'twoNightsWeekend', 'extraAdult', e.target.value)} />
                           </TableCell>
                           <TableCell className="py-1 px-1">
-                            <Input type="number" placeholder="—" className="h-8 text-center text-sm" value={categoryRate.rates.twoNightsWeekend.extraChild} onChange={(e) => updateRateValue(categoryRate.id, 'twoNightsWeekend', 'extraChild', e.target.value)} />
+                            <GuestTypeChargeInput label="Child Accommodation (₹)" value={categoryRate.rates.twoNightsWeekend.extraChild} adultValue={categoryRate.rates.twoNightsWeekend.extraAdult} sameAsAdult={categoryRate.rates.twoNightsWeekend.childSameAsAdult === 'yes'} onModeChange={same=>updateRateValue(categoryRate.id,'twoNightsWeekend','childSameAsAdult',same?'yes':'no')} onValueChange={value=>updateRateValue(categoryRate.id,'twoNightsWeekend','extraChild',value)} />
                           </TableCell>
                         </TableRow>
                       </TableBody>
