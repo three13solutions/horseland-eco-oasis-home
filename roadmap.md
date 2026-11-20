@@ -1,5 +1,9 @@
 # Roadmap
 
+- [ ] Add administrator-only policy drafts without changing active age policies.
+- [ ] Preview and atomically activate an edited policy with compatible drafts, rejecting gaps, overlaps, ambiguity, and stale changes.
+- [ ] Verify draft persistence and coordinated activation; preserve custom-pricing rollout guards.
+
 - [x] Diagnose Guest Type Policy save failures, match live validation in the edit form, and preserve authoritative error messages.
 - [x] Verify live-mode rejection and valid save/read-back without changing connected live policies: 18 tests and isolated desktop/mobile UI checks passed; connected signed-in verification remains blocked as noted below.
 
