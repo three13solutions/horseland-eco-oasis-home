@@ -185,7 +185,6 @@ export default function WebsitePromotionSettings(){
     <p className="mt-1 text-sm text-muted-foreground">Manage accommodation discounts without changing room rates. One code per checkout.</p>
     <p className="mt-1 text-sm text-muted-foreground">View and apply available promo codes in the <Link to="/admin/pricing/rate-card" className="rounded-sm font-medium text-foreground underline underline-offset-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">Live Rate Card</Link>.</p>
    </div>
-   <Badge variant={enabled?'default':'secondary'}>{enabled?'Offer release enabled':'Offer release off'}</Badge>
   </header>
   <p className={noteClass}>{enabled?'Changes apply to new quotes only. Existing bookings and payment snapshots are not repriced.':'This page cannot enable the offer release. Existing bookings and payment snapshots are not repriced.'}</p>
   {!ready&&<p role="status" className={noteClass}>Promotion-management migration is not installed. Settings are read-only.</p>}
