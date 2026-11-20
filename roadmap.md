@@ -1,10 +1,11 @@
 # Roadmap
 
-- [ ] Move Guest Type Policy activation into per-row status toggles with version-safe saves.
-- [ ] Prevent deactivation without a compatible alternate policy and switch replacements atomically.
-- [ ] Allow typed guest-type names and optional maximum ages, including segmented adult age groups.
-- [ ] Offer No Charge / Guest Type Charge and linked-adult or custom accommodation/meal rates.
-- [ ] Verify policy and rate rules; report any authenticated-check limitation.
+- [x] Move Guest Type Policy activation into per-row status toggles with version-safe saves.
+- [x] Prevent deactivation without a compatible alternate policy and switch replacements atomically.
+- [x] Allow typed guest-type names and optional maximum ages, including segmented adult age groups.
+- [x] Offer No Charge / Guest Type Charge and linked-adult or custom accommodation/meal rate configuration; custom guest checkout pricing remains staged pending its matching guest-selection/quote release.
+- [x] Verify policy and rate rules: 30 tests passed, including 7 isolated PostgreSQL tests; desktop/mobile isolated policy save/read-back passed; latest preview build passed.
+- [ ] Verify signed-in policy/rate editing against the connected service (blocked: external unmanaged authentication does not provide a test admin session).
 
 - [x] Replace live-rate coupon section with an auto-applying Promo Codes dropdown beside Room Status, defaulting to No Promo Codes; focused tests and isolated desktop/mobile selection checks passed.
 

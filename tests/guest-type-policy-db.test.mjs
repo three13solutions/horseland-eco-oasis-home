@@ -12,6 +12,7 @@ before(async()=>{
  await db.exec(`create role anon;create role authenticated;create role service_role;create schema auth;
  create function auth.uid() returns uuid language sql as $$select nullif(current_setting('test.uid',true),'')::uuid$$;
  create function public.is_admin_new() returns boolean language sql as $$select coalesce(nullif(current_setting('test.admin',true),''),'false')::boolean$$;
+ create function public.guest_age_meal_pricing_active() returns boolean language sql as $$select false$$;
  create table guest_age_policy_versions(revision integer primary key,bands jsonb,updated_at timestamptz default now(),updated_by uuid);
  grant select on guest_age_policy_versions to authenticated;
  create function get_guest_age_policy() returns jsonb language sql as $$select jsonb_build_object('revision',revision,'bands',bands,'active',false,'updated_at',updated_at) from guest_age_policy_versions order by revision desc limit 1$$;
@@ -24,7 +25,7 @@ before(async()=>{
  if not found then raise exception 'GUEST_PRICING_NOT_ACTIVE: age and meal pricing are staged; publish and activate the matching booking frontend before editing'; end if;
  return p_rules;end$$;`);
  await db.query('insert into guest_age_policy_versions(revision,bands) values(1,$1)',[JSON.stringify(bands)]);
- for(const file of ['20261120173258_405372e3-36c0-421a-9ab7-eb2252bf6198.sql','20261120173535_e31c57c3-8c2a-4b25-9a75-a491f6cc05be.sql','20261120174609_1de4fedf-4125-46e8-9900-316ebed22d9e.sql','20261120174853_f07f3b33-b4d0-4664-a328-06e69abdcdd4.sql','20261120175306_245ac7e3-be68-46d8-8957-368276eb3672.sql']) await db.exec(readFileSync(new URL('../supabase/migrations/'+file,import.meta.url),'utf8'));
+ for(const file of ['20261120173258_405372e3-36c0-421a-9ab7-eb2252bf6198.sql','20261120173535_e31c57c3-8c2a-4b25-9a75-a491f6cc05be.sql','20261120174609_1de4fedf-4125-46e8-9900-316ebed22d9e.sql','20261120174853_f07f3b33-b4d0-4664-a328-06e69abdcdd4.sql','20261120175306_245ac7e3-be68-46d8-8957-368276eb3672.sql','20261120175550_cb17fc8c-da47-4a31-950a-9c2a2c975917.sql']) await db.exec(readFileSync(new URL('../supabase/migrations/'+file,import.meta.url),'utf8'));
  await db.exec('set check_function_bodies=on');
 });
 after(async()=>{if(db)await db.close();});
@@ -55,6 +56,9 @@ test('database accepts typed adult segments but rejects overlapping active range
 test('non-admins cannot save or change guest policy status',options,async()=>{
  await db.exec("select set_config('test.admin','false',true)");
  await assert.rejects(db.query('select save_guest_age_policy(1,$1)',[JSON.stringify(bands)]),/Administrator required/);
+});
+test('full policy save cannot bypass the alternate-policy safeguard',options,async()=>{
+ await assert.rejects(db.query('select save_guest_age_policy(1,$1)',[JSON.stringify(bands.map(b=>b.key==='child'?{...b,enabled:false}:b))]),/alternate policy/);
 });
 test('both accommodation tables keep Same as Adult linked after adult edits',options,async()=>{
  for(const [table,adult,child,infant] of [['rate_plan_anchors','extra_adult_per_night','extra_child_per_night','extra_infant_per_night'],['guest_composition_rules','extra_adult_charge','extra_child_charge','extra_infant_charge']]){
