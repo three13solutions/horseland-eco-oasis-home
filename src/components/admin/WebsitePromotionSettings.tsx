@@ -11,7 +11,10 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Switch } from '@/components/ui/switch';
 import { Textarea } from '@/components/ui/textarea';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Plus, Search } from 'lucide-react';
+import { Calendar } from '@/components/ui/calendar';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { ArrowLeft, CalendarDays, Plus, Search } from 'lucide-react';
 
 type Offer = PromotionRestrictions & {code:string;label:string;revision?:number;is_active:boolean;is_public:boolean;discount_kind:string;discount_basis:string|null;discount_value:number|null;amount_per_night?:number;amount_per_booking?:number;booking_from:string|null;booking_to:string|null;stay_from:string|null;stay_to:string|null;day_scope:string;mixed_stay_mode:string|null};
 const api = supabase as unknown as {rpc:(name:string,args?:Record<string,unknown>)=>Promise<{data:unknown;error:{message:string}|null}>};
@@ -38,6 +41,80 @@ const modes = [['RO','Room Only (EP)'], ['BB','Bed & Breakfast (CP)'], ['HB','Ha
 function Field({ id, label, children }: { id: string; label: string; children: ReactNode }) {
  return <div className="min-w-0 space-y-1"><Label htmlFor={id}>{label}</Label>{children}</div>;
 }
+type DateWindow = { from: string | null; to: string | null };
+
+function calendarDate(value: string | null) {
+ if (!value || !validDate(value)) return undefined;
+ const [year, month, day] = value.split('-').map(Number);
+ const local = new Date(2000, 0, 1, 12);
+ local.setFullYear(year, month - 1, day);
+ return local;
+}
+function calendarValue(date: Date) {
+ return [String(date.getFullYear()).padStart(4, '0'), String(date.getMonth() + 1).padStart(2, '0'), String(date.getDate()).padStart(2, '0')].join('-');
+}
+const rangeFormatter = new Intl.DateTimeFormat('en-IN', { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'UTC' });
+function displayRange({ from, to }: DateWindow) {
+ const format = (value: string) => validDate(value) ? rangeFormatter.format(new Date(value + 'T00:00:00Z')) : value;
+ if (from && to) return from === to ? format(from) : `${format(from)} to ${format(to)}`;
+ if (from) return `From ${format(from)}`;
+ if (to) return `Through ${format(to)}`;
+ return 'Any date';
+}
+
+function PromoDateRange({ id, label, value, today, disabled, onChange }: {
+ id: string; label: string; value: DateWindow; today: string; disabled: boolean; onChange: (range: DateWindow) => void;
+}) {
+ const [open, setOpen] = useState(false);
+ const [draft, setDraft] = useState<DateWindow>(value);
+ const indiaToday = calendarDate(today);
+ const start = calendarDate(draft.from);
+ const end = calendarDate(draft.to);
+ const selected = !start && !end ? undefined : { from: start ?? end, to: start && end ? end : start ? undefined : end };
+ const selectDay = (day: Date) => {
+  const picked = calendarValue(day);
+  setDraft(current => {
+   if (!!current.from === !!current.to) return { from: picked, to: null };
+   const other = current.from ?? current.to!;
+   return picked <= other ? { from: picked, to: other } : { from: other, to: picked };
+  });
+ };
+ return <Field id={id} label={label}>
+  <Popover open={open} onOpenChange={next => {
+   if (next) setDraft(value);
+   setOpen(next);
+  }}>
+   <PopoverTrigger asChild>
+    <Button id={id} type="button" size="sm" variant="outline" disabled={disabled} aria-label={`${label}: ${displayRange(value)}`} className="w-full justify-start px-2.5 text-left font-normal">
+     <CalendarDays aria-hidden="true" className="mr-1 h-4 w-4 shrink-0 text-muted-foreground"/>
+     <span className="min-w-0 truncate">{displayRange(value)}</span>
+    </Button>
+   </PopoverTrigger>
+   <PopoverContent align="start" className="w-auto max-w-[calc(100vw-1rem)] p-0" aria-label={`${label} calendar`}>
+    <div className="space-y-1 border-b px-3 py-2">
+     <p className="text-sm font-medium">{label}</p>
+     <p className={noteClass}>Pick two dates, the same date twice for one day, or leave either end open.</p>
+    </div>
+    <Calendar mode="range" defaultMonth={start ?? end ?? indiaToday} today={indiaToday} initialFocus
+     selected={selected} onDayClick={selectDay} showOutsideDays={false} className="p-2"
+     classNames={{ month: 'space-y-2', head_cell: 'w-9 text-xs font-medium text-muted-foreground', row: 'mt-1 flex w-full', cell: 'relative h-9 w-9 p-0 text-center text-sm [&:has([aria-selected])]:bg-accent', day: 'h-9 w-9 rounded-md p-0 text-sm font-medium hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring', day_hidden: 'invisible' }}/>
+    <div className="space-y-2 border-t p-2">
+     <p className="px-1 text-xs" aria-live="polite">{displayRange(draft)}</p>
+     <div className="flex flex-wrap gap-1">
+      <Button type="button" size="sm" variant="ghost" disabled={!draft.from} onClick={()=>setDraft(current=>({...current, from:null}))}>Clear start</Button>
+      <Button type="button" size="sm" variant="ghost" disabled={!draft.to} onClick={()=>setDraft(current=>({...current, to:null}))}>Clear end</Button>
+      <Button type="button" size="sm" variant="ghost" disabled={!draft.from&&!draft.to} onClick={()=>setDraft({from:null,to:null})}>Any date</Button>
+     </div>
+     <div className="flex justify-end gap-1">
+      <Button type="button" variant="outline" size="sm" onClick={()=>setOpen(false)}>Cancel</Button>
+      <Button type="button" size="sm" onClick={()=>{if(draft.from!==value.from||draft.to!==value.to)onChange(draft);setOpen(false);}}>Apply dates</Button>
+     </div>
+    </div>
+   </PopoverContent>
+  </Popover>
+ </Field>;
+}
+
 export default function WebsitePromotionSettings(){
  const [offers,setOffers]=useState<Offer[]>([]),[enabled,setEnabled]=useState(false),[ready,setReady]=useState(false),[error,setError]=useState(''),[busy,setBusy]=useState(false),[search,setSearch]=useState(''),[form,setForm]=useState<Offer|null>(initial),[review,setReview]=useState(false);
  async function load(){const {data,error}=await api.rpc('website_promotion_settings');if(error)throw Error(error.message);const r=data as {enabled:boolean;offers:Offer[]};if(!Array.isArray(r?.offers))throw Error('Invalid promotion settings');setOffers(r.offers.map(o=>({...unrestrictedPromotion(),...o})));setEnabled(r.enabled);setReady(r.offers.every(o=>typeof o.day_scope==='string'&&'total_usage_limit' in o&&'eligible_room_category_ids' in o));}
@@ -48,22 +125,37 @@ export default function WebsitePromotionSettings(){
  const today=promoToday();
  const visibleOffers=offers.filter(o=>(o.code+' '+o.label).toLowerCase().includes(query)&&
    (statusFilter==='all'||promotionStatus(o, today)===statusFilter));
- const [categories,setCategories]=useState<{id:string;name:string}[]>([]);
- const [roomSearch,setRoomSearch]=useState('');
+ const [categories,setCategories]=useState<{id:string;name:string;is_active:boolean}[]>([]);
  const [excludedDate,setExcludedDate]=useState('');
  const [customEmail,setCustomEmail]=useState(false);
  const editorRef=useRef<HTMLHeadingElement>(null);
+ const manageRef=useRef<HTMLButtonElement>(null);
+ const [tab,setTab]=useState<'manage'|'editor'>('manage');
+ const focusView=useRef<'manage'|'editor'|null>(null);
+ useEffect(()=>{
+  if(focusView.current!==tab||busy)return;
+  const frame=requestAnimationFrame(()=>{
+   const target=tab==='manage'?manageRef.current:editorRef.current;
+   if(target&&focusView.current===tab){target.focus();focusView.current=null;}
+  });
+  return ()=>cancelAnimationFrame(frame);
+ },[tab,form?.revision,busy]);
+ const goToManage=()=>{
+  focusView.current='manage';
+  setTab('manage');
+ };
  const editOffer=(offer: Offer = initial())=>{
   setReview(false);
   setForm({...offer});
-  setRoomSearch('');setExcludedDate('');setCustomEmail(false);
-  requestAnimationFrame(()=>editorRef.current?.focus());
+  focusView.current='editor';
+  setTab('editor');
+  setExcludedDate('');setCustomEmail(false);
  };
  useEffect(()=>{
   let active=true;
   void (async()=>{
    try {
-    const {data,error}=await supabase.from('room_categories').select('id,name').order('name');
+    const {data,error}=await supabase.from('room_categories').select('id,name,is_active').order('name');
     if(error)throw Error(error.message);
     if(active)setCategories(data??[]);
    } catch {
@@ -79,8 +171,12 @@ export default function WebsitePromotionSettings(){
  const customEmailIncomplete=customEmail&&form?.per_guest_usage_limit==null;
  const canSave=valid&&!customEmailIncomplete;
  const emailMode=customEmail||(form?.per_guest_usage_limit!=null&&form.per_guest_usage_limit!==1)?'custom':form?.per_guest_usage_limit===1?'once':'unlimited';
- const filteredCategories=categories.filter(c=>c.name.toLowerCase().includes(roomSearch.trim().toLowerCase()));
- async function save(){if(!form||!canSave||!ready||busy)return;setBusy(true);setError('');try{const {error}=await api.rpc('save_managed_website_promotion',{p_settings:form,p_expected_revision:form.revision??null});if(error)throw Error(error.message);await load();setForm(initial());setReview(false);setRoomSearch('');setExcludedDate('');setCustomEmail(false);}catch(e){setError(e instanceof Error?e.message:'Save failed');}finally{setBusy(false)}}
+ const activeCategories=categories.filter(c=>c.is_active);
+ const activeCategoryIds=activeCategories.map(c=>c.id);
+ const roomSelection=form?.eligible_room_category_ids??activeCategoryIds;
+ const savedInactiveIds=(form?.eligible_room_category_ids??[]).filter(id=>!activeCategoryIds.includes(id));
+ const planSelection=form?.eligible_meal_plan_codes??modes.map(([code])=>code);
+ async function save(){if(!form||!canSave||!ready||busy)return;setBusy(true);setError('');try{const {error}=await api.rpc('save_managed_website_promotion',{p_settings:form,p_expected_revision:form.revision??null});if(error)throw Error(error.message);await load();setForm(initial());setReview(false);setExcludedDate('');setCustomEmail(false);goToManage();}catch(e){setError(e instanceof Error?e.message:'Save failed');}finally{setBusy(false)}}
  const unavailable = !ready || busy;
  return <section aria-label="Website promotions" className="space-y-3">
   <header className="flex flex-wrap items-start justify-between gap-2">
@@ -94,7 +190,12 @@ export default function WebsitePromotionSettings(){
   <p className={noteClass}>{enabled?'Changes apply to new quotes only. Existing bookings and payment snapshots are not repriced.':'This page cannot enable the offer release. Existing bookings and payment snapshots are not repriced.'}</p>
   {!ready&&<p role="status" className={noteClass}>Promotion-management migration is not installed. Settings are read-only.</p>}
   {error&&<p role="alert" className="rounded-md border border-destructive/30 px-3 py-2 text-sm text-destructive">{error}</p>}
-  <div className="grid min-w-0 gap-3 xl:grid-cols-[minmax(0,1fr)_minmax(0,1.05fr)] xl:items-start">
+  <Tabs value={tab} activationMode="manual" onValueChange={value=>{if(value==='manage'||value==='editor')setTab(value);}} className="min-w-0">
+   <TabsList aria-label="Promotion code views">
+    <TabsTrigger ref={manageRef} value="manage" disabled={busy}>Manage Codes</TabsTrigger>
+    <TabsTrigger value="editor" disabled={unavailable}>{form?.revision?'Edit Code':'New Code'}</TabsTrigger>
+   </TabsList>
+   <TabsContent value="manage" className="min-w-0">
    <Card className="min-w-0">
     <CardHeader className="p-3 sm:p-4">
      <div className="flex flex-wrap items-center justify-between gap-2">
@@ -133,10 +234,18 @@ export default function WebsitePromotionSettings(){
      </div>}
     </CardContent>
    </Card>
+   </TabsContent>
 
-   <Card className="min-w-0 xl:col-start-2">
+   <TabsContent value="editor" className="min-w-0">
+   <Card className="min-w-0">
     <CardHeader className="p-3 sm:p-4">
-     <h2 tabIndex={-1} ref={editorRef} className="text-lg font-semibold leading-tight">{form?.revision?`Edit ${form.code}`:'Create promo code'}</h2>
+     <div className="flex flex-wrap items-center justify-between gap-2">
+      <h2 tabIndex={-1} ref={editorRef} className="text-lg font-semibold leading-tight">{form?.revision?`Edit ${form.code}`:'Create promo code'}</h2>
+      <div className="flex flex-wrap items-center gap-2">
+       <Button type="button" size="sm" variant="ghost" disabled={busy} onClick={goToManage}><ArrowLeft aria-hidden="true" className="mr-1 h-4 w-4"/> Back to Manage Codes</Button>
+       {form?.revision&&<Button type="button" size="sm" variant="outline" disabled={unavailable} onClick={()=>editOffer()}><Plus aria-hidden="true" className="mr-1 h-4 w-4"/> New Code</Button>}
+      </div>
+     </div>
     </CardHeader>
     <CardContent className="px-3 pb-3 sm:px-4 sm:pb-4">{form&&<fieldset disabled={unavailable} className="min-w-0 space-y-3">
      <legend className="sr-only">Promo code settings</legend>
@@ -158,21 +267,60 @@ export default function WebsitePromotionSettings(){
         <div className="grid grid-cols-2 gap-2">
          {([['booking','Per booking'],['night','Per night']] as const).map(([value,label])=><Button key={value} size="sm" type="button" aria-pressed={form.discount_basis===value} variant={form.discount_basis===value?'default':'outline'} onClick={()=>change('discount_basis',value)}>{label}</Button>)}
         </div>
-        <p className={noteClass}>Accommodation only. Per-night rates must be verified room-only rates.</p>
+        <p className={noteClass}>Per-night rates must be verified room-only rates.</p>
        </fieldset>
       </div>
      </>}
+     <p className={noteClass}>Discount applies to room charges only. Room categories and meal plans below determine which bookings qualify. Meals aren’t discounted.</p>
+     <section className={sectionClass} aria-labelledby="promo-eligibility">
+      <h3 id="promo-eligibility" className="text-sm font-semibold">Room and meal eligibility</h3>
+      <div className={fieldGrid}>
+       <fieldset className="min-w-0 space-y-1.5">
+        <legend className="text-sm font-medium">Room categories</legend>
+        <div className="space-y-1 rounded-md border p-2.5">
+         <div className="flex min-h-7 items-center gap-2">
+          <Checkbox id="promo-all-rooms" disabled={unavailable||activeCategoryIds.length===0} checked={form.eligible_room_category_ids===null||activeCategoryIds.every(id=>roomSelection.includes(id))} onCheckedChange={checked=>{
+           change('eligible_room_category_ids',checked===true?(savedInactiveIds.length>0?[...activeCategoryIds,...savedInactiveIds]:null):savedInactiveIds);
+          }}/>
+          <Label htmlFor="promo-all-rooms">All active rooms</Label>
+         </div>
+         {activeCategories.map(c=><div key={c.id} className="flex min-h-7 items-center gap-2">
+          <Checkbox id={`promo-category-${c.id}`} disabled={unavailable} checked={roomSelection.includes(c.id)} onCheckedChange={checked=>change('eligible_room_category_ids',checked===true?[...roomSelection,c.id]:roomSelection.filter(id=>id!==c.id))}/>
+          <Label htmlFor={`promo-category-${c.id}`}>{c.name}</Label>
+         </div>)}
+         {activeCategories.length===0&&<p className={noteClass}>No active room categories available.</p>}
+         {savedInactiveIds.map(id=><div key={id} className="flex min-h-7 flex-wrap items-center gap-2">
+          <span className={noteClass}>{categories.find(c=>c.id===id)?.name??id} (saved inactive or unavailable category)</span>
+          <Button size="sm" type="button" variant="ghost" aria-label={`Remove saved room category ${categories.find(c=>c.id===id)?.name??id}`} onClick={()=>change('eligible_room_category_ids',roomSelection.filter(value=>value!==id))}>Remove</Button>
+         </div>)}
+        </div>
+       </fieldset>
+       <fieldset className="min-w-0 space-y-1.5">
+        <legend className="text-sm font-medium">Meal plans</legend>
+        <div className="space-y-1 rounded-md border p-2.5">
+         <div className="flex min-h-7 items-center gap-2">
+          <Checkbox id="promo-all-plans" disabled={unavailable} checked={form.eligible_meal_plan_codes===null||modes.every(([code])=>planSelection.includes(code))} onCheckedChange={checked=>change('eligible_meal_plan_codes',checked===true?null:[])}/>
+          <Label htmlFor="promo-all-plans">All plans</Label>
+         </div>
+         {modes.map(([code,label])=><div key={code} className="flex min-h-7 items-center gap-2">
+          <Checkbox id={`promo-plan-${code}`} disabled={unavailable} checked={planSelection.includes(code)} onCheckedChange={checked=>change('eligible_meal_plan_codes',checked===true?[...planSelection,code]:planSelection.filter(value=>value!==code))}/>
+          <Label htmlFor={`promo-plan-${code}`}>{label}</Label>
+         </div>)}
+        </div>
+       </fieldset>
+      </div>
+     </section>
      <section className={sectionClass} aria-labelledby="promo-dates">
       <h3 id="promo-dates" className="text-sm font-semibold">Dates and day eligibility</h3>
-      <div className="grid min-w-0 gap-2">
-       {([['Booking dates','booking_from','booking_to'],['Eligible stay dates','stay_from','stay_to']] as const).map(([title,from,to])=><fieldset key={title} className="min-w-0 space-y-1 rounded-md border px-2.5 pb-2">
-        <legend className="px-1 text-xs font-medium">{title} <span className="text-muted-foreground">(optional)</span></legend>
-        <div className="grid min-w-0 grid-cols-1 gap-2 min-[400px]:grid-cols-2">{([[from,'Start'],[to,'End']] as const).map(([key,label])=><Field id={`promo-${key}`} key={key} label={label}>
-         <Input id={`promo-${key}`} className={inputClass} aria-label={`${title}: ${label}`} type="date" value={form[key]??''} onChange={e=>change(key,e.target.value||null)}/>
-        </Field>)}</div>
-       </fieldset>)}
+      <div className={fieldGrid}>
+       {([['Booking dates','booking_from','booking_to'],['Eligible stay dates','stay_from','stay_to']] as const).map(([title,from,to])=>
+        <PromoDateRange key={title} id={`promo-${from}-range`} label={title} today={today} disabled={unavailable}
+         value={{ from: form[from], to: form[to] }} onChange={dates=>{
+          setReview(false);
+          setForm(current=>current?{...current,[from]:dates.from,[to]:dates.to}:current);
+         }}/>)}
       </div>
-      <p className={noteClass}>Booking dates control when the reservation is made. Stay dates control which occupied nights qualify, not checkout day. Dates are inclusive in Asia/Kolkata. Leave blank for no limit.</p>
+      <p className={noteClass}>Booking dates control when the reservation is made. Stay dates control which occupied nights qualify, not checkout day. Dates are inclusive in Asia/Kolkata. Choose Any date for no limit.</p>
       <div className={fieldGrid}>
        <fieldset className="min-w-0 space-y-1.5">
         <legend className="text-sm font-medium">Applicable days</legend>
@@ -186,50 +334,9 @@ export default function WebsitePromotionSettings(){
       </div>
       <p className={noteClass}>Weekend eligibility follows the hotel’s date-specific rules, including protected periods.{flat?' All nights must qualify for once-per-booking offers.':''}</p>
      </section>
-     <section className={sectionClass} aria-labelledby="promo-eligibility">
-      <h3 id="promo-eligibility" className="text-sm font-semibold">Room and meal eligibility</h3>
-      <fieldset className="min-w-0 space-y-1.5">
-       <legend className="text-sm font-medium">Room categories</legend>
-       <div className="rounded-md border p-2.5">
-        <div className="flex flex-wrap items-center gap-2">
-         <Button size="sm" type="button" aria-pressed={form.eligible_room_category_ids===null} variant={form.eligible_room_category_ids===null?'default':'outline'} onClick={()=>change('eligible_room_category_ids',null)}>All rooms</Button>
-         <Input className={`${inputClass} min-w-32 flex-1`} aria-label="Search room categories" placeholder="Search room categories" value={roomSearch} onChange={e=>setRoomSearch(e.target.value)}/>
-        </div>
-        <p className={`mt-1 ${noteClass}`}>{form.eligible_room_category_ids===null?'All categories are eligible. Select specific rooms to limit this code.':`${form.eligible_room_category_ids.length} selected`}</p>
-        <div className="mt-2 flex max-h-32 flex-wrap gap-x-3 gap-y-1 overflow-y-auto">
-         {filteredCategories.map(c=><div key={c.id} className="flex min-h-7 items-center gap-2">
-          <Checkbox id={`promo-category-${c.id}`} disabled={unavailable} checked={form.eligible_room_category_ids?.includes(c.id)??false} onCheckedChange={checked=>{const ids=form.eligible_room_category_ids??[];change('eligible_room_category_ids',checked===true?[...ids,c.id]:ids.filter(id=>id!==c.id));}}/>
-          <Label htmlFor={`promo-category-${c.id}`}>{c.name}</Label>
-         </div>)}
-         {filteredCategories.length===0&&<p className={noteClass}>{roomSearch?'No matching room categories.':'No room categories available.'}</p>}
-        </div>
-        {(form.eligible_room_category_ids??[]).filter(id=>!categories.some(c=>c.id===id)).map(id=><div key={id} className="mt-1 flex flex-wrap items-center gap-2">
-         <span className={noteClass}>Saved category not in the current list: {id}</span>
-         <Button size="sm" type="button" variant="ghost" onClick={()=>change('eligible_room_category_ids',form.eligible_room_category_ids!.filter(value=>value!==id))}>Remove</Button>
-        </div>)}
-       </div>
-      </fieldset>
-      <fieldset className="min-w-0 space-y-1.5">
-       <legend className="text-sm font-medium">Meal plans</legend>
-       <div className="flex flex-wrap gap-1.5">
-        <Button size="sm" type="button" aria-pressed={form.eligible_meal_plan_codes===null} variant={form.eligible_meal_plan_codes===null?'default':'outline'} onClick={()=>change('eligible_meal_plan_codes',null)}>All plans</Button>
-        {modes.map(([code,label])=>{const selected=form.eligible_meal_plan_codes??[];const checked=selected.includes(code);return <Button key={code} size="sm" type="button" aria-pressed={checked} variant={checked?'default':'outline'} onClick={()=>change('eligible_meal_plan_codes',checked?selected.filter(value=>value!==code):[...selected,code])}>{label}</Button>})}
-       </div>
-      </fieldset>
-     </section>
      <section className={sectionClass} aria-labelledby="promo-stay-limits">
-      <h3 id="promo-stay-limits" className="text-sm font-semibold">Stay length and excluded nights</h3>
+      <h3 id="promo-stay-limits" className="text-sm font-semibold">Stay length</h3>
        <Field id="promo-minimum-nights" label="Minimum occupied nights"><Input id="promo-minimum-nights" className={inputClass} type="number" min="1" step="1" placeholder="No minimum" value={form.min_stay_nights??''} onChange={e=>change('min_stay_nights',e.target.value===''?null:Number(e.target.value))}/></Field>
-       <fieldset className="min-w-0 space-y-1.5">
-        <legend className="text-sm font-medium">Excluded nights</legend>
-        <div className="flex flex-wrap items-center gap-2">
-         <Input id="promo-excluded-date" aria-label="Date to exclude" type="date" className={`${inputClass} w-auto`} value={excludedDate} onChange={e=>setExcludedDate(e.target.value)}/>
-         <Button size="sm" type="button" variant="outline" disabled={!validDate(excludedDate)||form.excluded_stay_dates.includes(excludedDate)} onClick={()=>{if(validDate(excludedDate)&&!form.excluded_stay_dates.includes(excludedDate)){change('excluded_stay_dates',[...form.excluded_stay_dates,excludedDate]);setExcludedDate('');}}}>Add date</Button>
-        </div>
-        {form.excluded_stay_dates.length>0&&<ul className="flex flex-wrap gap-1.5">{form.excluded_stay_dates.map((date,index)=><li key={`${date}-${index}`}><Button size="sm" type="button" variant="outline" aria-label={`Remove excluded night ${date}`} onClick={()=>change('excluded_stay_dates',form.excluded_stay_dates.filter((_,i)=>i!==index))}>{date} <span aria-hidden="true">×</span></Button></li>)}</ul>}
-        {form.excluded_stay_dates.some(date=>!validDate(date))&&<Field id="promo-exclusions" label="Correct existing date values"><Textarea id="promo-exclusions" rows={2} className="min-h-16 text-sm" placeholder="One YYYY-MM-DD date per line" value={form.excluded_stay_dates.join('\n')} onChange={e=>change('excluded_stay_dates',e.target.value===''?[]:e.target.value.split(/[\n,]/).map(v=>v.trim()))}/></Field>}
-       </fieldset>
-       <p className={noteClass}>Block particular nights even if they fall in the eligible stay window. The selected stay eligibility policy still applies.</p>
      </section>
 
      <section className={sectionClass} aria-labelledby="promo-limits">
@@ -245,6 +352,16 @@ export default function WebsitePromotionSettings(){
        </fieldset>
       </div>
       <p className={noteClass}>Limits count completed redemptions and reserved checkout attempts, not quotes. Per-email limits use the booking email, not a verified person. Cancellations do not automatically restore a completed use.</p>
+       <fieldset className="min-w-0 space-y-1.5">
+        <legend className="text-sm font-medium">Excluded nights</legend>
+        <div className="flex flex-wrap items-center gap-2">
+         <Input id="promo-excluded-date" aria-label="Date to exclude" type="date" className={`${inputClass} w-auto`} value={excludedDate} onChange={e=>setExcludedDate(e.target.value)}/>
+         <Button size="sm" type="button" variant="outline" disabled={!validDate(excludedDate)||form.excluded_stay_dates.includes(excludedDate)} onClick={()=>{if(validDate(excludedDate)&&!form.excluded_stay_dates.includes(excludedDate)){change('excluded_stay_dates',[...form.excluded_stay_dates,excludedDate]);setExcludedDate('');}}}>Add date</Button>
+        </div>
+        {form.excluded_stay_dates.length>0&&<ul className="flex flex-wrap gap-1.5">{form.excluded_stay_dates.map((date,index)=><li key={`${date}-${index}`}><Button size="sm" type="button" variant="outline" aria-label={`Remove excluded night ${date}`} onClick={()=>change('excluded_stay_dates',form.excluded_stay_dates.filter((_,i)=>i!==index))}>{date} <span aria-hidden="true">×</span></Button></li>)}</ul>}
+        {form.excluded_stay_dates.some(date=>!validDate(date))&&<Field id="promo-exclusions" label="Correct existing date values"><Textarea id="promo-exclusions" rows={2} className="min-h-16 text-sm" placeholder="One YYYY-MM-DD date per line" value={form.excluded_stay_dates.join('\n')} onChange={e=>change('excluded_stay_dates',e.target.value===''?[]:e.target.value.split(/[\n,]/).map(v=>v.trim()))}/></Field>}
+       </fieldset>
+       <p className={noteClass}>Block particular nights even if they fall in the eligible stay window. The selected stay eligibility policy still applies.</p>
      </section>
      <section className={sectionClass} aria-labelledby="promo-visibility">
       <h3 id="promo-visibility" className="text-sm font-semibold">Visibility and activation</h3>
@@ -265,8 +382,8 @@ export default function WebsitePromotionSettings(){
      </div>}
     </fieldset>}</CardContent>
    </Card>
-
-  </div>
+   </TabsContent>
+  </Tabs>
  </section>;
 }
 
