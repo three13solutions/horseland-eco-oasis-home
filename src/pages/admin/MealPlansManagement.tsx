@@ -1,3 +1,7 @@
+import { useGuestAgePolicy } from "@/hooks/useGuestAgePolicy";
+import { CatalogueGuestMealRollup } from "@/components/admin/CatalogueGuestMealRollup";
+import { useCatalogueGuestMealPrices } from "@/lib/catalogue-guest-meal-pricing-client";
+import { catalogueMealBands, catalogueMealBandName, catalogueMealIsAdultOnly, catalogueMealPriceForGuest, currencyForMealGuestPrice } from "@/lib/catalogue-guest-meal-pricing";
 import { MealPlanAgePricing } from "@/components/admin/MealPlanAgePricing";
 import { MealPlanDietaryVariants } from "@/components/admin/MealPlanDietaryVariants";
 import { type ReactNode, useEffect, useId, useRef, useState } from "react";
@@ -140,7 +144,13 @@ function CatalogueVariants({
   workspace: ReturnType<typeof useMealVariantWorkspace>;
   onEdit: () => void;
 }) {
-  const pricedPlan = workspace.data?.plans.find(item => item.id === plan.id);
+  const policy = useGuestAgePolicy({ allowInactive: true });
+  const guestPrices = useCatalogueGuestMealPrices();
+  const bands = catalogueMealBands(policy.data?.bands);
+  const guestPriceAvailability = policy.isError || guestPrices.isError ? 'error' : policy.isPending || guestPrices.isPending ? 'loading'
+    : !guestPrices.data ? 'missing' : guestPrices.data.guest_policy_revision !== policy.data?.revision ? 'mismatch' : 'ready';
+  const verifiedGuestPrices = guestPriceAvailability === 'ready' ? guestPrices.data ?? undefined : undefined;
+  const pricedPlan = !workspace.isError ? workspace.data?.plans.find(item => item.id === plan.id) : undefined;
   const linkedIds = new Set(pricedPlan?.groups.flatMap(group => group.meal_ids) ?? []);
   const workspaceMeals = new Map(workspace.data?.meals.map(item => [item.id, item]) ?? []);
   const catalogueIds = new Set(meals.data?.map(item => item.id) ?? []);
@@ -162,6 +172,8 @@ function CatalogueVariants({
       </div>
       {!roomOnly && <Button type="button" variant="outline" size="sm" disabled={!membershipKnown || workspace.isFetching} onClick={onEdit}>Edit linked variants</Button>}
     </div>
+    <CatalogueGuestMealRollup plan={pricedPlan} meals={workspaceMeals} bands={bands} prices={verifiedGuestPrices}
+      staged={workspace.data?.mode === 'staged'} availability={guestPriceAvailability} />
     {plan.preferred_variant && <p className="text-xs text-muted-foreground">Saved legacy preference: {dietaryLabels[plan.preferred_variant] ?? formatMealsText(plan.preferred_variant)}.</p>}
     {!roomOnly && (meals.isError || workspace.isError) && <div role="alert" className="flex flex-wrap items-center gap-2 text-sm text-destructive">
       {meals.isError ? 'Could not load variants from Services → Meals.' : 'Could not verify which variants are linked.'}
@@ -187,7 +199,14 @@ function CatalogueVariants({
                 <div className="min-w-0 flex-1">
                   <Label htmlFor={`plan-meal-${meal.id}`} className="break-words text-sm leading-5">{meal.title} · {name}</Label>
                   <div id={descriptionId} className="text-xs leading-relaxed text-muted-foreground">
-                    <p>{formatCataloguePrice(meal.price)} per person{!meal.is_active ? ' · Inactive in Services' : ''}</p>
+                    <p>Adult: {formatCataloguePrice(meal.price)} per guest{!meal.is_active ? ' · Inactive in Services' : ''}</p>
+                    {bands.filter(band => band.key !== 'adult').map(band => {
+                      const amount = catalogueMealPriceForGuest(meal, band, verifiedGuestPrices);
+                      const state = catalogueMealIsAdultOnly(meal.id, guestPrices.data ?? undefined) ? 'Not applicable'
+                        : guestPriceAvailability !== 'ready' ? 'Not verified'
+                        : amount === undefined ? 'Not configured' : currencyForMealGuestPrice(amount);
+                      return <p key={band.key}>{catalogueMealBandName(band)}: {state}</p>;
+                    })}
                     {workspace.data?.mode === 'staged' && workspaceMeal && workspaceMeal.price !== meal.price && <p>Staged price: {formatCataloguePrice(workspaceMeal.price)} per person</p>}
                     {meal.description && <p className="break-words">{meal.description}</p>}
                   </div>
@@ -514,7 +533,7 @@ const MealPlansManagement = () => {
           <ConfigurationSection title="Linked meal-plan pricing and availability" help="Meal Management is the shared price source. Required meal groups and alternatives determine supplements. Changes use reviewed, revision-checked saves.">
             <LiveMealPricing groupEditorRef={groupEditor} catalogueDetails={catalogueDetails} />
           </ConfigurationSection>
-          <ConfigurationSection title="Meal prices by guest type" help="Set meal charges by age band. A globally free guest band remains free, and saved bookings are unchanged.">
+          <ConfigurationSection title="Existing plan-level age rules" help="This keeps existing plan-level configuration available during rollout. Set the new per-variant guest prices in Services → Meals; their preview above does not change checkout.">
             <MealPlanAgePricing />
           </ConfigurationSection>
         </TabsContent>}
@@ -524,3 +543,4 @@ const MealPlansManagement = () => {
 };
 
 export default MealPlansManagement;
+
