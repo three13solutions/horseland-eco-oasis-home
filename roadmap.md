@@ -1,8 +1,8 @@
 # Roadmap
 
-- [ ] Add administrator-only policy drafts without changing active age policies.
-- [ ] Preview and atomically activate an edited policy with compatible drafts, rejecting gaps, overlaps, ambiguity, and stale changes.
-- [ ] Verify draft persistence and coordinated activation; preserve custom-pricing rollout guards.
+- [x] Add administrator-only policy drafts without changing active age policies.
+- [x] Preview and atomically activate an edited policy with compatible drafts, rejecting gaps, overlaps, ambiguity, and stale changes.
+- [x] Verify draft persistence and coordinated activation: 32 tests passed, including 14 isolated PostgreSQL tests; isolated desktop/mobile draft save/read-back, cancellation and activation passed; deployed access grants verified and live revision unchanged. Unsupported custom guest segments remain draft-only while current pricing is live.
 
 - [x] Diagnose Guest Type Policy save failures, match live validation in the edit form, and preserve authoritative error messages.
 - [x] Verify live-mode rejection and valid save/read-back without changing connected live policies: 18 tests and isolated desktop/mobile UI checks passed; connected signed-in verification remains blocked as noted below.

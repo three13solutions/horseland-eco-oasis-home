@@ -4,7 +4,7 @@ import type { SupabaseClient } from '@supabase/supabase-js';
 import { Pencil, Plus } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useGuestAgePolicy } from '@/hooks/useGuestAgePolicy';
-import { validateGuestAgePolicySave, guestPolicySaveError, guestTypeChargeRule, guestTypeName, guestTypeKey, sameGuestPolicy, alternateGuestPolicy, type GuestAgeBand } from '@/lib/guest-age-policy';
+import { validateGuestAgeBands, ageBandLabel, guestPolicySaveError, guestTypeChargeRule, guestTypeName, guestTypeKey, sameGuestPolicy, alternateGuestPolicy, type GuestAgeBand } from '@/lib/guest-age-policy';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Switch } from '@/components/ui/switch';
@@ -17,8 +17,14 @@ const accLabel = (r: string) => (r === 'free' ? 'No Charge' : 'Guest Type Charge
 const mealLabel = accLabel;
 const sameBand = sameGuestPolicy;
 
-type Row = GuestAgeBand & { id: string; revision: number; active: boolean; current: boolean };
-type FormState = { mode: 'edit' | 'new'; band: GuestAgeBand };
+type Draft = { id: string; band: GuestAgeBand; updated_at: string };
+type ActivationPlan = { bands: GuestAgeBand[]; drafts: Draft[] };
+type Row = GuestAgeBand & { id: string; revision: number; active: boolean; current: boolean; draft?: Draft };
+type FormState = { mode: 'edit' | 'new'; band: GuestAgeBand; draft?: Draft };
+const rowBand = (row: Row): GuestAgeBand => {
+  const { id: _i, revision: _r, active: _a, current: _c, draft: _d, ...band } = row;
+  return band;
+};
 
 export default function GuestAgePricingPolicy() {
   const policy = useGuestAgePolicy({ allowInactive: true });
@@ -28,6 +34,14 @@ export default function GuestAgePricingPolicy() {
   const [saving, setSaving] = useState(false);
   const [toggling, setToggling] = useState(false);
   const live = policy.data?.active !== false;
+  const drafts = useQuery({
+    queryKey: ['guest-policy-drafts'], enabled: !!policy.data,
+    queryFn: async () => {
+      const { data, error } = await (supabase as SupabaseClient).rpc('list_guest_policy_drafts');
+      if (error) throw error;
+      return (data ?? []) as Draft[];
+    },
+  });
 
   const history = useQuery({
     queryKey: ['guest-age-policy-history', policy.data?.revision],
@@ -47,25 +61,28 @@ export default function GuestAgePricingPolicy() {
       const selected = current.find((c) => sameBand(c, b));
       out.push({ ...b, id: `${v.revision}-${b.key}`, revision: v.revision, current: !!selected, active: !!selected && selected.enabled !== false });
     }
+    for (const draft of drafts.data ?? []) out.push({ ...draft.band, id: draft.id, revision: 0, current: false, active: false, draft });
     return out.sort((a, b) => a.min_age - b.min_age || Number(b.active) - Number(a.active) || b.revision - a.revision);
-  }, [history.data, policy.data]);
+  }, [history.data, policy.data, drafts.data]);
 
   async function refresh() {
-    await Promise.all(['guest-age-policy', 'guest-age-policy-history', 'rate-variants', 'website-rate-variants'].map((k) => client.invalidateQueries({ queryKey: [k] })));
+    await Promise.all(['guest-age-policy', 'guest-age-policy-history', 'guest-policy-drafts', 'rate-variants', 'website-rate-variants'].map((k) => client.invalidateQueries({ queryKey: [k] })));
   }
 
   async function applyBand(band: GuestAgeBand) {
     if (!policy.data) return false;
-    const exists = policy.data.bands.some(b => b.key === band.key);
-    const bands = exists ? policy.data.bands.map((b) => (b.key === band.key ? { ...band, enabled: true } : b)) : [...policy.data.bands, { ...band, enabled: true }];
-    const err = validateGuestAgePolicySave(bands, live);
-    if (err) { setFormError(err); return false; }
     setSaving(true);
     try {
-      const { error } = await (supabase as SupabaseClient).rpc('save_guest_age_policy', { p_expected_revision: policy.data.revision, p_bands: bands });
+      const args = { p_expected_revision: policy.data.revision, p_band: band };
+      const { data, error: previewError } = await (supabase as SupabaseClient).rpc('apply_guest_policy_with_drafts', { ...args, p_activate: false });
+      if (previewError) throw previewError;
+      const plan = data as ActivationPlan;
+      const changes = plan.bands.filter(b => !policy.data.bands.some(current => sameBand(current, b)));
+      if (!window.confirm(`Activate these policies together?\n\n${changes.map(b => `${guestTypeName(b)}: ${ageBandLabel(b)}`).join('\n')}\n\n${plan.drafts.length} matching draft(s) will also activate. Replaced policies will become deactivated.`)) return false;
+      const { error } = await (supabase as SupabaseClient).rpc('apply_guest_policy_with_drafts', { ...args, p_activate: true, p_expected_plan: plan });
       if (error) throw error;
       await refresh();
-      toast.success(`${guestTypeName(band)} policy saved.`);
+      toast.success(`${guestTypeName(band)} and matching policies activated together.`);
       return true;
     } catch (e) {
       const message = guestPolicySaveError(e);
@@ -75,14 +92,21 @@ export default function GuestAgePricingPolicy() {
     } finally { setSaving(false); }
   }
 
-  async function submit() {
+  async function submit(asDraft: boolean) {
     if (!form) return;
     setFormError(null);
     const b = form.band;
     if (!b.name?.trim() || !/^[a-z][a-z0-9_]*$/.test(b.key)) { setFormError('Enter a guest type name beginning with a letter.'); return; }
     if (!Number.isInteger(b.min_age) || b.min_age < 0 || (b.max_age !== null && (!Number.isInteger(b.max_age) || b.max_age < b.min_age))) { setFormError('Enter valid whole-number ages; maximum must be at least the minimum.'); return; }
-    if (form.mode === 'new' && rows.some((r) => r.active && r.key === b.key)) {
-      setFormError(`An active ${guestTypeName(b)} policy already exists. Edit it instead, or reactivate a different one.`);
+    const invalid = validateGuestAgeBands([{ ...b, enabled: true }]);
+    if (invalid) { setFormError(invalid); return; }
+    if (asDraft) {
+      setSaving(true);
+      try {
+        const { error } = await (supabase as SupabaseClient).rpc('save_guest_policy_draft', { p_band: b, p_id: form.draft?.id ?? null, p_expected_updated_at: form.draft?.updated_at ?? null });
+        if (error) throw error;
+        await refresh(); setForm(null); toast.success('Draft saved. Active policies are unchanged.');
+      } catch (e) { setFormError(guestPolicySaveError(e)); } finally { setSaving(false); }
       return;
     }
     if (await applyBand(b)) setForm(null);
@@ -93,10 +117,12 @@ export default function GuestAgePricingPolicy() {
     if (!on) {
       const alternate = alternateGuestPolicy(row, rows, policy.data.bands);
       if (!alternate) { toast.error('An alternate policy covering the same ages is required before deactivation.'); return; }
+      const draftAlternate = rows.find(r => r.draft && sameBand(r, alternate));
+      if (draftAlternate) { await applyBand(rowBand(draftAlternate)); return; }
       if (!window.confirm(`Deactivate this policy and activate the alternate ${guestTypeName(alternate)} policy for the same ages?`)) return;
     }
-    if (on && !row.current && !window.confirm(`Activate this ${guestTypeName(row)} policy and deactivate its current version?`)) return;
-    const { id: _i, revision: _r, active: _a, current: _c, ...band } = row;
+    if (on) { await applyBand(rowBand(row)); return; }
+    const band = rowBand(row);
     setToggling(true);
     try {
       const { error } = await (supabase as SupabaseClient).rpc('set_guest_type_policy_status', { p_expected_revision: policy.data.revision, p_band: band, p_enabled: on });
@@ -122,6 +148,7 @@ export default function GuestAgePricingPolicy() {
 
       {policy.isLoading && <p>Loading policy…</p>}
       {history.isError && <p role="alert" className="text-destructive">Could not load policy history. <Button size="sm" onClick={() => history.refetch()}>Try again</Button></p>}
+      {drafts.isError && <p role="alert" className="text-destructive">Could not load draft policies. <Button size="sm" onClick={() => drafts.refetch()}>Try again</Button></p>}
       {policy.isError && <p role="alert">Could not load the saved policy. <Button size="sm" onClick={() => policy.refetch()}>Try again</Button></p>}
 
       {policy.data && (
@@ -141,11 +168,11 @@ export default function GuestAgePricingPolicy() {
                   <TableCell>{r.max_age ?? 'No limit'}</TableCell>
                   <TableCell>{accLabel(r.accommodation_rule)}</TableCell>
                   <TableCell>{mealLabel(r.meal_rule)}</TableCell>
-                  <TableCell><div className="flex items-center gap-2 whitespace-nowrap"><Switch aria-label={`${r.active ? 'Deactivate' : 'Activate'} ${guestTypeName(r)} policy revision ${r.revision}`} checked={r.active} disabled={saving || toggling || (r.active && !alternateGuestPolicy(r, rows, policy.data.bands))} title={r.active && !alternateGuestPolicy(r, rows, policy.data.bands) ? 'An alternate policy for the same ages is required before deactivation' : undefined} onCheckedChange={(on) => setActive(r, on)} /><span className="text-sm">{r.active ? 'Active' : 'Deactivated'}</span></div></TableCell>
+                  <TableCell><div className="flex items-center gap-2 whitespace-nowrap"><Switch aria-label={`${r.active ? 'Deactivate' : 'Activate'} ${guestTypeName(r)} ${r.draft ? 'draft' : `policy revision ${r.revision}`}`} checked={r.active} disabled={saving || toggling || (r.active && !alternateGuestPolicy(r, rows, policy.data.bands))} title={r.active && !alternateGuestPolicy(r, rows, policy.data.bands) ? 'An alternate policy for the same ages is required before deactivation' : undefined} onCheckedChange={(on) => setActive(r, on)} /><span className="text-sm">{r.draft ? 'Draft' : r.active ? 'Active' : 'Deactivated'}</span></div></TableCell>
                   <TableCell className="text-right">
-                    {r.current && (
-                      <Button size="icon" variant="ghost" aria-label={`Edit ${guestTypeName(r)} policy`} disabled={saving || toggling}
-                        onClick={() => { setFormError(null); const { id: _i, revision: _r, active: _a, current: _c, ...band } = r; setForm({ mode: 'edit', band: { ...band, name: guestTypeName(band) } }); }}>
+                    {(r.current || r.draft) && (
+                      <Button size="icon" variant="ghost" aria-label={`Edit ${guestTypeName(r)} ${r.draft ? 'draft' : 'policy'}`} disabled={saving || toggling}
+                        onClick={() => { setFormError(null); const band = rowBand(r); setForm({ mode: 'edit', band: { ...band, name: guestTypeName(band) }, draft: r.draft }); }}>
                         <Pencil className="h-4 w-4" />
                       </Button>
                     )}
@@ -161,7 +188,7 @@ export default function GuestAgePricingPolicy() {
         <DialogContent>
           <DialogHeader>
             <DialogTitle>{form?.mode === 'new' ? 'New Policy' : `Edit ${form ? guestTypeName(form.band) : ''} Policy`}</DialogTitle>
-            <DialogDescription>{live ? 'Live pricing requires continuous age ranges and an Adult policy with no upper age limit.' : 'This policy is staged and is not applied to live prices.'}</DialogDescription>
+            <DialogDescription>{form?.draft ? 'Draft' : live ? 'Live pricing' : 'Staged pricing'}</DialogDescription>
           </DialogHeader>
           {form && (
             <div className="grid gap-3">
@@ -189,8 +216,9 @@ export default function GuestAgePricingPolicy() {
             </div>
           )}
           <DialogFooter>
-            <Button variant="outline" onClick={() => setForm(null)}>Cancel</Button>
-            <Button disabled={saving} onClick={submit}>{saving ? 'Saving…' : 'Save'}</Button>
+            <Button disabled={saving} variant="outline" onClick={() => setForm(null)}>Cancel</Button>
+            <Button disabled={saving} variant="outline" onClick={() => submit(true)}>Save Draft</Button>
+            <Button disabled={saving} onClick={() => submit(false)}>{saving ? 'Saving…' : 'Save & Activate'}</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

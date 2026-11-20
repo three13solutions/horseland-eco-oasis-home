@@ -1,0 +1,13 @@
+REVOKE ALL ON guest_policy_private.guest_policy_drafts FROM authenticated;
+DROP POLICY guest_policy_drafts_admin_read ON guest_policy_private.guest_policy_drafts;
+ALTER FUNCTION public.save_guest_policy_draft(jsonb,uuid,timestamptz) SET SCHEMA guest_policy_private;
+ALTER FUNCTION public.apply_guest_policy_with_drafts(integer,jsonb,boolean,jsonb) SET SCHEMA guest_policy_private;
+ALTER FUNCTION public.list_guest_policy_drafts() SET SCHEMA guest_policy_private;
+ALTER FUNCTION guest_policy_private.save_guest_policy_draft(jsonb,uuid,timestamptz) SECURITY DEFINER;
+ALTER FUNCTION guest_policy_private.apply_guest_policy_with_drafts(integer,jsonb,boolean,jsonb) SECURITY DEFINER;
+ALTER FUNCTION guest_policy_private.list_guest_policy_drafts() SECURITY DEFINER;
+CREATE FUNCTION public.save_guest_policy_draft(p_band jsonb,p_id uuid DEFAULT NULL,p_expected_updated_at timestamptz DEFAULT NULL) RETURNS jsonb LANGUAGE sql SECURITY INVOKER SET search_path='' AS $$SELECT guest_policy_private.save_guest_policy_draft(p_band,p_id,p_expected_updated_at)$$;
+CREATE FUNCTION public.apply_guest_policy_with_drafts(p_expected_revision integer,p_band jsonb,p_activate boolean DEFAULT false,p_expected_plan jsonb DEFAULT NULL) RETURNS jsonb LANGUAGE sql SECURITY INVOKER SET search_path='' AS $$SELECT guest_policy_private.apply_guest_policy_with_drafts(p_expected_revision,p_band,p_activate,p_expected_plan)$$;
+CREATE FUNCTION public.list_guest_policy_drafts() RETURNS jsonb LANGUAGE sql SECURITY INVOKER SET search_path='' AS $$SELECT guest_policy_private.list_guest_policy_drafts()$$;
+REVOKE ALL ON FUNCTION public.save_guest_policy_draft(jsonb,uuid,timestamptz),public.apply_guest_policy_with_drafts(integer,jsonb,boolean,jsonb),public.list_guest_policy_drafts() FROM public,anon;
+GRANT EXECUTE ON FUNCTION public.save_guest_policy_draft(jsonb,uuid,timestamptz),public.apply_guest_policy_with_drafts(integer,jsonb,boolean,jsonb),public.list_guest_policy_drafts() TO authenticated,service_role;
