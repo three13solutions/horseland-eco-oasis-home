@@ -1,7 +1,8 @@
 import { MealPlanAgePricing } from "@/components/admin/MealPlanAgePricing";
 import { MealPlanDietaryVariants } from "@/components/admin/MealPlanDietaryVariants";
 import { type ReactNode, useEffect, useId, useRef, useState } from "react";
-import { LiveMealPricing } from "@/components/admin/LiveMealPricing";
+import { LiveMealPricing, type MealGroupEditor } from "@/components/admin/LiveMealPricing";
+import { fetchMealPricingWorkspace, mealPricingQueryKey } from "@/lib/meal-pricing-client";
 import { mealPlanAliasPayload, findMealPlanAliasConflict } from "@/lib/mealPlanAliases";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -107,6 +108,107 @@ function ConfigurationSection({ title, help, children }: { title: string; help: 
   </details>;
 }
 
+type ServiceMealVariant = {
+  id: string;
+  title: string;
+  meal_type: string;
+  variant: string;
+  price: number;
+  description: string | null;
+  featured_media: string | null;
+  is_active: boolean;
+};
+const mealTypeLabels: Record<string, string> = { breakfast: 'Breakfast', lunch: 'Lunch', high_tea: 'High tea', dinner: 'Dinner' };
+const dietaryLabels: Record<string, string> = { veg: 'Veg', non_veg: 'Non-Veg', nonveg: 'Non-Veg', jain: 'Jain' };
+const formatMealsText = (value: string) => value.replace(/[_-]/g, ' ');
+const formatCataloguePrice = (value: number) => value.toLocaleString('en-IN', { style: 'currency', currency: 'INR' });
+
+async function fetchServiceMealVariants(): Promise<ServiceMealVariant[]> {
+  const { data, error } = await supabase
+    .from('meals')
+    .select('id,title,meal_type,variant,price,description,featured_media,is_active')
+    .order('title');
+  if (error) throw error;
+  return data ?? [];
+}
+
+function CatalogueVariants({
+  plan, meals, workspace, onEdit,
+}: {
+  plan: MealPlan;
+  meals: ReturnType<typeof useServiceMealVariants>;
+  workspace: ReturnType<typeof useMealVariantWorkspace>;
+  onEdit: () => void;
+}) {
+  const pricedPlan = workspace.data?.plans.find(item => item.id === plan.id);
+  const linkedIds = new Set(pricedPlan?.groups.flatMap(group => group.meal_ids) ?? []);
+  const workspaceMeals = new Map(workspace.data?.meals.map(item => [item.id, item]) ?? []);
+  const catalogueIds = new Set(meals.data?.map(item => item.id) ?? []);
+  const mealTypes = new Set(plan.included_meal_types ?? []);
+  for (const id of linkedIds) {
+    const linkedMeal = workspaceMeals.get(id) ?? meals.data?.find(item => item.id === id);
+    if (linkedMeal) mealTypes.add(linkedMeal.meal_type);
+  }
+  const typeOrder = ['breakfast', 'lunch', 'high_tea', 'dinner'];
+  const types = Array.from(mealTypes).sort((a, b) => (typeOrder.includes(a) ? typeOrder.indexOf(a) : 10) - (typeOrder.includes(b) ? typeOrder.indexOf(b) : 10) || a.localeCompare(b));
+  const missing = Array.from(linkedIds).filter(id => !catalogueIds.has(id));
+  const roomOnly = plan.plan_code === 'RO';
+  const membershipKnown = !!pricedPlan && !workspace.error;
+  return <section className="min-w-0 space-y-2.5" aria-labelledby="meal-variants-heading">
+    <div className="flex flex-wrap items-center justify-between gap-2">
+      <div className="flex items-center gap-1">
+        <h4 id="meal-variants-heading" className="text-sm font-semibold">Variants</h4>
+        <FieldHelp label="Variants">Titles, descriptions, images and prices come from Services → Meals. Checkmarks show meal records linked to this plan. Use Edit linked variants for reviewed changes; this does not enable variant selection at booking.</FieldHelp>
+      </div>
+      {!roomOnly && <Button type="button" variant="outline" size="sm" disabled={!membershipKnown || workspace.isFetching} onClick={onEdit}>Edit linked variants</Button>}
+    </div>
+    {plan.preferred_variant && <p className="text-xs text-muted-foreground">Saved legacy preference: {dietaryLabels[plan.preferred_variant] ?? formatMealsText(plan.preferred_variant)}.</p>}
+    {!roomOnly && (meals.isError || workspace.isError) && <div role="alert" className="flex flex-wrap items-center gap-2 text-sm text-destructive">
+      {meals.isError ? 'Could not load variants from Services → Meals.' : 'Could not verify which variants are linked.'}
+      <Button type="button" variant="outline" size="sm" onClick={() => { if (meals.isError) void meals.refetch(); if (workspace.isError) void workspace.refetch(); }}>Reload variants</Button>
+    </div>}
+    {roomOnly ? <p className="text-sm text-muted-foreground">Room Only has no included meal variants.</p> : meals.isPending || workspace.isPending ? <p role="status" className="text-sm text-muted-foreground">Loading meal variants…</p> : <>
+      {!workspace.error && !pricedPlan && <p className="text-sm text-muted-foreground">No saved meal groups were found for this plan. Selection cannot be verified.</p>}
+      {workspace.data?.mode === 'staged' && pricedPlan && <p className="text-xs text-muted-foreground">Checkmarks show staged links. Services prices are shown first; a different staged price is labelled separately.</p>}
+      {!types.length && <p className="text-sm text-muted-foreground">No meals are included. Add a group using Edit linked variants.</p>}
+      <div className="grid min-w-0 items-start gap-3 sm:grid-cols-2">
+        {types.map(type => {
+          const records = (meals.data ?? []).filter(item => item.meal_type === type);
+          return <fieldset key={type} className="min-w-0 space-y-2 rounded-md border px-2.5 pb-2.5">
+            <legend className="px-1 text-sm font-medium capitalize">{mealTypeLabels[type] ?? formatMealsText(type)}</legend>
+            {!records.length && !meals.isError && <p className="text-xs text-muted-foreground">No variants in Services → Meals for this meal.</p>}
+            {records.map(meal => {
+              const workspaceMeal = workspaceMeals.get(meal.id);
+              const name = dietaryLabels[meal.variant] ?? formatMealsText(meal.variant);
+              const descriptionId = `plan-meal-details-${meal.id}`;
+              return <div key={meal.id} className="flex min-w-0 items-start gap-2">
+                <Checkbox id={`plan-meal-${meal.id}`} checked={membershipKnown ? linkedIds.has(meal.id) : 'indeterminate'} disabled aria-describedby={descriptionId} />
+                {meal.featured_media && <img src={meal.featured_media} alt="" loading="lazy" className="h-9 w-12 shrink-0 rounded object-cover" />}
+                <div className="min-w-0 flex-1">
+                  <Label htmlFor={`plan-meal-${meal.id}`} className="break-words text-sm leading-5">{meal.title} · {name}</Label>
+                  <div id={descriptionId} className="text-xs leading-relaxed text-muted-foreground">
+                    <p>{formatCataloguePrice(meal.price)} per person{!meal.is_active ? ' · Inactive in Services' : ''}</p>
+                    {workspace.data?.mode === 'staged' && workspaceMeal && workspaceMeal.price !== meal.price && <p>Staged price: {formatCataloguePrice(workspaceMeal.price)} per person</p>}
+                    {meal.description && <p className="break-words">{meal.description}</p>}
+                  </div>
+                </div>
+              </div>;
+            })}
+          </fieldset>;
+        })}
+      </div>
+      {missing.length > 0 && !meals.isError && <p role="status" className="text-xs text-muted-foreground">{missing.length === 1 ? 'One linked meal is' : `${missing.length} linked meals are`} missing from Services → Meals. No replacement has been assumed.</p>}
+    </>}
+  </section>;
+}
+
+function useServiceMealVariants(enabled: boolean) {
+  return useQuery({ queryKey: ['meal-plan-service-variants'], queryFn: fetchServiceMealVariants, enabled, refetchOnMount: 'always' });
+}
+function useMealVariantWorkspace(enabled: boolean) {
+  return useQuery({ queryKey: mealPricingQueryKey, queryFn: fetchMealPricingWorkspace, enabled, refetchOnWindowFocus: false });
+}
+
 const MealPlansManagement = () => {
   const queryClient = useQueryClient();
   const [tab, setTab] = useState<'manage' | 'editor'>('manage');
@@ -121,6 +223,12 @@ const MealPlansManagement = () => {
   }, [tab]);
   const [editingPlan, setEditingPlan] = useState<MealPlan | null>(null);
   const [formData, setFormData] = useState(emptyMetadata);
+  const groupEditor = useRef<MealGroupEditor>(null);
+  const variantsEnabled = tab === 'editor' && !!editingPlan;
+  const serviceMeals = useServiceMealVariants(variantsEnabled);
+  const variantWorkspace = useMealVariantWorkspace(variantsEnabled);
+  const catalogueDetails = new Map(serviceMeals.data?.map(meal => [meal.id, meal]) ?? []);
+
 
   const { data: mealPlans, isLoading, error: listError, refetch } = useQuery({
     queryKey: ['meal-plans'],
@@ -316,11 +424,8 @@ const MealPlansManagement = () => {
             <CardContent className="px-3 pb-3 sm:px-4 sm:pb-4">
               {!editingPlan ? <div className="space-y-2 rounded-md border bg-muted/40 p-3 text-sm">
                 <p>Booking pricing supports four built-in plans: Room Only (EP), Breakfast (CP), Half Board (MAP), and Full Board (AP). New plans cannot be created here.</p>
-                <p className="text-muted-foreground">Choose Edit beside a plan in Manage Plans to update its details. Use the sections below to manage linked pricing, availability, guest-type prices, or dietary variants.</p>
-              </div> : <form className="min-w-0 space-y-3" onSubmit={event => {
-                event.preventDefault();
-                if (!saveMutation.isPending && !metadataStale) saveMutation.mutate({ form: formData, plan: editingPlan });
-              }}>
+                <p className="text-muted-foreground">Choose Edit beside a plan in Manage Plans to update its details. Use the sections below to manage linked pricing, availability, or guest-type prices. Dietary variants are available when editing a plan.</p>
+              </div> : <div className="min-w-0 space-y-3">
                 <fieldset disabled={saveMutation.isPending || metadataStale} className="min-w-0 space-y-3">
                   <legend className="sr-only">Meal plan settings</legend>
                   <div className={fieldGrid}>
@@ -367,15 +472,13 @@ const MealPlansManagement = () => {
                           ))}
                         </div>
                       </fieldset>
-                      <Field id="meal-preferred-variant" label="Preferred Variant" help="The saved preference is read-only here. Configure meal alternatives in Linked meal-plan pricing or dietary variants below.">
-                        <select id="meal-preferred-variant" className="h-9 w-full min-w-0 rounded-md border border-input bg-background px-2.5 text-sm disabled:cursor-not-allowed disabled:opacity-50" value={editingPlan.preferred_variant ?? ''} disabled>
-                          <option value="" disabled>Not configured</option>
-                          <option value="veg">Veg</option>
-                          <option value="non_veg">Non-Veg</option>
-                          <option value="jain">Jain</option>
-                        </select>
-                      </Field>
                     </div>
+                    <CatalogueVariants plan={editingPlan} meals={serviceMeals} workspace={variantWorkspace} onEdit={() => {
+                      if (!groupEditor.current?.open(editingPlan.id)) toast.error('Could not open the current linked groups. Reload linked pricing and try again.');
+                    }} />
+                    <ConfigurationSection title="Saved plan-level variant settings" help="Optional admin-only overrides recorded for this plan. They are separate from the Services catalogue above and do not affect guest selection or checkout.">
+                      <MealPlanDietaryVariants key={editingPlan.id} plans={[editingPlan]} />
+                    </ConfigurationSection>
                   </section>
 
                   <section className={sectionClass} aria-labelledby="meal-plan-availability-heading">
@@ -400,22 +503,19 @@ const MealPlansManagement = () => {
                 {saveError && <p role="alert" className="text-sm text-destructive">{saveError}</p>}
                 {metadataStale && <p role="alert" className="text-sm text-destructive">Saved plan details have changed. Refresh this plan before editing or saving again.</p>}
                 <div className="flex flex-wrap gap-2 border-t pt-3">
-                  <Button type="submit" size="sm" disabled={saveMutation.isPending || metadataStale}>{saveMutation.isPending ? 'Saving…' : 'Update Meal Plan'}</Button>
+                  <Button type="button" size="sm" disabled={saveMutation.isPending || metadataStale} onClick={() => saveMutation.mutate({ form: formData, plan: editingPlan })}>{saveMutation.isPending ? 'Saving…' : 'Update Meal Plan'}</Button>
                   <Button type="button" size="sm" variant="outline" disabled={saveMutation.isPending} onClick={() => goToManage()}>Cancel</Button>
                   {(metadataStale || saveError) && <Button type="button" size="sm" variant="outline" disabled={saveMutation.isPending} onClick={() => void reloadSelectedPlan()}>Refresh plan & discard edits</Button>}
                 </div>
-              </form>}
+              </div>}
             </CardContent>
           </Card>
 
           <ConfigurationSection title="Linked meal-plan pricing and availability" help="Meal Management is the shared price source. Required meal groups and alternatives determine supplements. Changes use reviewed, revision-checked saves.">
-            <LiveMealPricing />
+            <LiveMealPricing groupEditorRef={groupEditor} catalogueDetails={catalogueDetails} />
           </ConfigurationSection>
           <ConfigurationSection title="Meal prices by guest type" help="Set meal charges by age band. A globally free guest band remains free, and saved bookings are unchanged.">
             <MealPlanAgePricing />
-          </ConfigurationSection>
-          <ConfigurationSection title="Dietary variants" help="Configure Veg, Non-Veg and Jain descriptions, images and reference prices. Dietary variants are not used by current booking prices or guest selection.">
-            <MealPlanDietaryVariants plans={mealPlans || []} />
           </ConfigurationSection>
         </TabsContent>}
       </Tabs>
