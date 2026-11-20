@@ -33,3 +33,6 @@
 - [x] Wire /v2 routes in App.tsx
 - [x] Fix typecheck/build errors
 - [x] Verify V2 pages render with no CMS calls
+
+- [x] Live Rate Card: filters below the cards, date/nights descriptor above the table.
+- [x] Live Rate Card: remove the Refresh button (rates already update automatically).
