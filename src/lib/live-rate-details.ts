@@ -38,3 +38,16 @@ export function promoMatchesLiveRate(quote: PromoQuote | null | undefined, code:
     [quote.variant?.total_price, quote.variant?.price_per_night, quote.promotion.discount_amount]
       .every(n => typeof n === 'number' && Number.isFinite(n) && n >= 0);
 }
+
+export function couponPreviewUnavailable(
+  room: { is_published: boolean; room_categories: { is_active: boolean } | null },
+  variant: { meal_plan_code: string; cancellation_policy_code: string; quote_fingerprint?: string },
+  websiteVariants: { meal_plan_code: string; cancellation_policy_code: string; quote_fingerprint?: string }[],
+) {
+  if (!room.is_published) return 'This room type is unpublished; website coupons are not applicable.';
+  if (room.room_categories?.is_active === false) return 'This category is inactive; website coupons are not applicable.';
+  const available = websiteVariants.find(v => v.meal_plan_code === variant.meal_plan_code && v.cancellation_policy_code === variant.cancellation_policy_code);
+  if (!available) return 'This meal plan or cancellation policy is unavailable for website booking.';
+  if (!available.quote_fingerprint || available.quote_fingerprint !== variant.quote_fingerprint) return 'The website rate has changed. Refresh to check again.';
+  return null;
+}

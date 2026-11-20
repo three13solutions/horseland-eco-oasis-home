@@ -1,6 +1,6 @@
 # Architecture
 
-- Live Rate Card uses canonical variant snapshots for every stay and the existing read-only promo action for coupon previews; never create payment orders or infer applied overrides from overlapping dates.
+- Live Rate Card uses canonical variant snapshots and the read-only promo action after checking publication, active category and website-visible variants; retain base rates on preview rejection, never create payment orders or infer applied overrides from overlapping dates.
 - Live rate breakdowns link to the exact override via `override_id`, or the owning rate-plan room type; policy settings stay protected by their existing admin pages.
 
 - Mount shared scroll navigation at the application root, scoped to admin routes and explicitly marked `data-admin-media-gallery` containers (including Radix viewports), so only admin media galleries and selectors receive accessible arrows without changing saved content.

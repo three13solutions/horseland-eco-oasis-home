@@ -12,7 +12,7 @@ import { format } from 'date-fns';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar as CalendarComponent } from '@/components/ui/calendar';
 import { cn } from '@/lib/utils';
-import { appliedOverrideIds, stayDateRange, promoMatchesLiveRate, type NightlyRateDetail } from '@/lib/live-rate-details';
+import { appliedOverrideIds, stayDateRange, promoMatchesLiveRate, couponPreviewUnavailable, type NightlyRateDetail } from '@/lib/live-rate-details';
 
 interface RateVariant {
   meal_plan_code: string;
@@ -31,6 +31,7 @@ interface RateVariant {
   promotion?: { code: string; discount_amount: number };
   couponError?: string;
   original_variant?: RateVariant;
+  guest_age_policy?: { revision: number };
 }
 interface RoomType {
   id: string;
@@ -122,13 +123,30 @@ export default function LiveRateCard() {
       const { data, error } = await supabase.rpc('calculate_rate_variants_v2', { p_room_type_id: room.id, p_check_in: checkInDate, p_check_out: checkOutDate, p_adults_count: 2, p_children_count: 0, p_infants_count: 0, p_booking_channel: 'direct' });
       if (error) throw error;
       const baseVariants = (Array.isArray(data) ? data : []) as unknown as RateVariant[];
+      let websiteVariants: RateVariant[] = [];
+      let eligibilityError = '';
+      if (coupon && room.is_published && room.room_categories?.is_active !== false) {
+        try {
+          const { data: websiteData, error: websiteError } = await supabase.rpc('calculate_website_rate_variants', { p_room_type_id: room.id, p_room_unit_id: null, p_check_in: checkInDate, p_check_out: checkOutDate, p_adults_count: 2, p_children_count: 0, p_infants_count: 0, p_booking_channel: 'direct' });
+          if (websiteError) eligibilityError = 'Website meal availability could not be verified. Rates remain unchanged.';
+          else websiteVariants = (Array.isArray(websiteData) ? websiteData : []) as unknown as RateVariant[];
+        } catch {
+          eligibilityError = 'Website meal availability could not be verified. Rates remain unchanged.';
+        }
+      }
       const variants = !coupon ? baseVariants : await Promise.all(baseVariants.map(async base => {
-        const { data: result, error: quoteError } = await supabase.functions.invoke('create-razorpay-order-v3', { body: { action: 'promo', promo_code: coupon, quote_request: { room_type_id: room.id, room_unit_id: null, check_in: checkInDate, check_out: checkOutDate, adults_count: 2, children_count: 0, infants_count: 0, meal_plan_code: base.meal_plan_code, cancellation_policy_code: base.cancellation_policy_code, addons: [] } } });
+        const unavailable = eligibilityError || couponPreviewUnavailable(room, base, websiteVariants);
+        if (unavailable) return { ...base, couponError: unavailable };
+        try {
+        const { data: result, error: quoteError } = await supabase.functions.invoke('create-razorpay-order-v3', { body: { action: 'promo', promo_code: coupon, quote_request: { room_type_id: room.id, room_unit_id: null, check_in: checkInDate, check_out: checkOutDate, adults_count: 2, children_count: 0, infants_count: 0, meal_plan_code: base.meal_plan_code, cancellation_policy_code: base.cancellation_policy_code, ...(base.guest_age_policy ? { guest_age_policy_revision: base.guest_age_policy.revision } : {}), addons: [] } } });
         const quote = result?.quote;
         if (quoteError || !result?.valid || !promoMatchesLiveRate(quote, coupon, base.quote_fingerprint)) {
           return { ...base, couponError: result?.error || 'Unavailable for this rate, or the price changed. Refresh to check again.' };
         }
         return { ...quote.variant, promotion: quote.promotion, original_variant: quote.original_variant } as RateVariant;
+        } catch {
+          return { ...base, couponError: 'Coupon preview unavailable. The original rate has been retained.' };
+        }
       }));
       return { room, variants };
     })),

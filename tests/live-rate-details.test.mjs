@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { appliedOverrideIds, stayDateRange, promoMatchesLiveRate } from '../src/lib/live-rate-details.ts';
+import { appliedOverrideIds, stayDateRange, promoMatchesLiveRate, couponPreviewUnavailable } from '../src/lib/live-rate-details.ts';
 
 test('show only applied overrides, once across a multi-night stay', () => {
   assert.deepEqual(appliedOverrideIds([
@@ -20,4 +20,19 @@ test('accept only a server coupon quote matching the displayed variant', () => {
   assert.equal(promoMatchesLiveRate(quote, 'DIRECT1000', 'stale'), false);
   assert.equal(promoMatchesLiveRate(quote, 'DIRECT1000', undefined), false);
   assert.equal(promoMatchesLiveRate({ ...quote, variant: { total_price: -1, price_per_night: 0 } }, 'DIRECT1000', 'current'), false);
+});
+const published = { is_published: true, room_categories: { is_active: true } };
+const variant = { meal_plan_code: 'RO', cancellation_policy_code: 'refundable_credit', quote_fingerprint: 'current' };
+test('unpublished room types cannot request website coupon quotes', () => {
+  assert.match(couponPreviewUnavailable({ ...published, is_published: false }, variant, [variant]), /unpublished/);
+});
+test('inactive categories cannot request website coupon quotes', () => {
+  assert.match(couponPreviewUnavailable({ ...published, room_categories: { is_active: false } }, variant, [variant]), /inactive/);
+});
+test('hidden meal plans cannot request website coupon quotes', () => {
+  assert.match(couponPreviewUnavailable(published, { ...variant, meal_plan_code: 'FB' }, [variant]), /unavailable/);
+});
+test('only the current website variant is eligible for coupon preview', () => {
+  assert.equal(couponPreviewUnavailable(published, variant, [variant]), null);
+  assert.match(couponPreviewUnavailable(published, variant, [{ ...variant, quote_fingerprint: 'changed' }]), /changed/);
 });

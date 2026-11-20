@@ -1,5 +1,7 @@
 # Roadmap
 
+- [x] Prevent live-rate coupon previews for unpublished rooms and unavailable meal plans; verify rejected previews retain the table with 17 passing tests and isolated browser checks.
+
 - [x] Simplify Live Rate Card summary, expose applied override policies and coupon previews, and explain stay-night calculations.
 - [x] Identify unpublished room types and inactive categories in the live rates table.
 - [x] Verify 13 pricing tests and isolated desktop/mobile rate-card controls; preview build passes.
