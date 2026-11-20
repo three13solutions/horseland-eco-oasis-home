@@ -11,7 +11,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Switch } from '@/components/ui/switch';
 import { Textarea } from '@/components/ui/textarea';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { ChevronDown, Plus, Search } from 'lucide-react';
+import { Plus, Search } from 'lucide-react';
 
 type Offer = PromotionRestrictions & {code:string;label:string;revision?:number;is_active:boolean;is_public:boolean;discount_kind:string;discount_basis:string|null;discount_value:number|null;amount_per_night?:number;amount_per_booking?:number;booking_from:string|null;booking_to:string|null;stay_from:string|null;stay_to:string|null;day_scope:string;mixed_stay_mode:string|null};
 const api = supabase as unknown as {rpc:(name:string,args?:Record<string,unknown>)=>Promise<{data:unknown;error:{message:string}|null}>};
@@ -21,7 +21,7 @@ const selectClass = 'h-9 w-full min-w-0 rounded-md border border-input bg-backgr
 const noteClass = 'text-xs leading-relaxed text-muted-foreground';
 const sectionClass = 'min-w-0 space-y-2.5 border-t pt-3';
 const fieldGrid = 'grid min-w-0 gap-2.5 sm:grid-cols-2';
-const modes = [['RO','EP'], ['BB','CP'], ['HB','MAP'], ['FB','AP']] as const;
+const modes = [['RO','Room Only (EP)'], ['BB','Bed & Breakfast (CP)'], ['HB','Half Board (MAP)'], ['FB','Full Board (AP)']] as const;
 function Field({ id, label, children }: { id: string; label: string; children: ReactNode }) {
  return <div className="min-w-0 space-y-1"><Label htmlFor={id}>{label}</Label>{children}</div>;
 }
@@ -148,7 +148,7 @@ export default function WebsitePromotionSettings(){
         </Field>)}</div>
        </fieldset>)}
       </div>
-      <p className={noteClass}>Dates are inclusive in Asia/Kolkata. Stay dates count occupied nights, not checkout. Leave dates blank for no limit.</p>
+      <p className={noteClass}>Booking dates control when the reservation is made. Stay dates control which occupied nights qualify, not checkout day. Dates are inclusive in Asia/Kolkata. Leave blank for no limit.</p>
       <div className={fieldGrid}>
        <Field id="promo-day-scope" label="Day eligibility">
         <select id="promo-day-scope" className={selectClass} value={form.day_scope} onChange={e=>change('day_scope',e.target.value)}><option value="both">Weekdays and weekends</option><option value="weekday">Weekdays only</option><option value="weekend">Weekends only</option></select>
@@ -178,21 +178,17 @@ export default function WebsitePromotionSettings(){
        </div>)}
       </div></fieldset>}
      </section>
-     <details key={form.code&&form.revision?form.code:'create'} className="group rounded-md border">
-      <summary className="flex min-h-9 cursor-pointer list-none items-center justify-between gap-2 px-2.5 text-sm font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring [&::-webkit-details-marker]:hidden">
-       <span>Advanced conditions{(form.min_stay_nights || form.excluded_stay_dates.length>0)&&<span className="ml-2 text-xs text-muted-foreground">Configured</span>}</span>
-       <ChevronDown aria-hidden="true" className="h-4 w-4 shrink-0 text-muted-foreground group-open:rotate-180"/>
-      </summary>
-      <div className="space-y-2 border-t p-2.5">
+     <section className={sectionClass} aria-labelledby="promo-stay-limits">
+      <h3 id="promo-stay-limits" className="text-sm font-semibold">Stay length and excluded nights</h3>
        <Field id="promo-minimum-nights" label="Minimum occupied nights"><Input id="promo-minimum-nights" className={inputClass} type="number" min="1" step="1" placeholder="No minimum" value={form.min_stay_nights??''} onChange={e=>change('min_stay_nights',e.target.value===''?null:Number(e.target.value))}/></Field>
-       <Field id="promo-exclusions" label="Excluded occupied dates"><Textarea id="promo-exclusions" rows={2} className="min-h-16 text-sm" placeholder="One YYYY-MM-DD date per line" value={form.excluded_stay_dates.join('\n')} onChange={e=>change('excluded_stay_dates',e.target.value===''?[]:e.target.value.split(/[\n,]/).map(v=>v.trim()))}/></Field>
-       <p className={noteClass}>Excluded dates follow the selected stay eligibility policy. Checkout day is not an occupied night.</p>
-      </div>
-     </details>
+       <Field id="promo-exclusions" label="Excluded nights"><Textarea id="promo-exclusions" rows={2} className="min-h-16 text-sm" placeholder="One YYYY-MM-DD date per line" value={form.excluded_stay_dates.join('\n')} onChange={e=>change('excluded_stay_dates',e.target.value===''?[]:e.target.value.split(/[\n,]/).map(v=>v.trim()))}/></Field>
+       <p className={noteClass}>Block particular nights even if they fall in the eligible stay window. The selected stay eligibility policy still applies.</p>
+     </section>
+
      <section className={sectionClass} aria-labelledby="promo-limits">
       <h3 id="promo-limits" className="text-sm font-semibold">Usage limits</h3>
       <div className={fieldGrid}>{([['total_usage_limit','Total reserved + completed uses'],['per_guest_usage_limit','Uses per booking email']] as const).map(([key,label])=><Field key={key} id={`promo-${key}`} label={label}><Input id={`promo-${key}`} className={inputClass} type="number" min="1" step="1" placeholder="Unlimited" value={form[key]??''} onChange={e=>change(key,e.target.value===''?null:Number(e.target.value))}/></Field>)}</div>
-      <details className={noteClass}><summary className="w-fit cursor-pointer rounded-sm underline underline-offset-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">How limits are counted</summary><p className="mt-1">Set per-email limit to 1 for one use per booking email. Email addresses are normalized, not ownership-verified; alternate addresses can bypass a real-person limit. Limits count completed uses plus reserved or still-payable checkout intents. Quotes and previews do not reserve usage; the authoritative check occurs at payment preparation. Uncertain provider orders retain their reservation until reconciliation. Completed uses are not automatically restored after cancellation. Changing limits does not reprice existing bookings.</p></details>
+      <p className={noteClass}>Limits count completed redemptions and reserved checkout attempts, not quotes. Per-email limits use the booking email, not a verified person. Cancellations do not automatically restore a completed use.</p>
      </section>
      <section className={sectionClass} aria-labelledby="promo-visibility">
       <h3 id="promo-visibility" className="text-sm font-semibold">Visibility and activation</h3>
@@ -205,7 +201,7 @@ export default function WebsitePromotionSettings(){
      {review?<div className="space-y-2 rounded-md border bg-muted/40 p-2.5 text-sm">
       <p className="font-medium">Review {form.code}</p>
       <p>{form.is_active?'Enabled':'Disabled'} · {form.is_public?'Public':'Private'} · {form.day_scope}. Booking and stay windows above apply. Existing bookings remain unchanged.</p>
-      <p className={noteClass}>Total limit: {form.total_usage_limit??'unlimited'}; per-email limit: {form.per_guest_usage_limit??'unlimited'}. Minimum nights: {form.min_stay_nights??'none'}. Categories: {form.eligible_room_category_ids===null?'all':form.eligible_room_category_ids.map(id=>categories.find(c=>c.id===id)?.name??id).join(', ')}. Plans: {form.eligible_meal_plan_codes?.join(', ')??'all'}. Excluded nights: {form.excluded_stay_dates.join(', ')||'none'}.</p>
+      <p className={noteClass}>Total limit: {form.total_usage_limit??'unlimited'}; per-email limit: {form.per_guest_usage_limit??'unlimited'}. Minimum nights: {form.min_stay_nights??'none'}. Categories: {form.eligible_room_category_ids===null?'all':form.eligible_room_category_ids.map(id=>categories.find(c=>c.id===id)?.name??id).join(', ')}. Plans: {form.eligible_meal_plan_codes?.map(code=>modes.find(([value])=>value===code)?.[1]??code).join(', ')??'all'}. Excluded nights: {form.excluded_stay_dates.join(', ')||'none'}.</p>
       <div className="flex flex-wrap gap-2"><Button type="button" size="sm" disabled={unavailable||!valid} onClick={()=>void save()}>{busy?'Saving…':form.is_active?'Confirm and enable':form.revision?'Save disabled code':'Save draft'}</Button><Button type="button" size="sm" variant="outline" disabled={unavailable} onClick={()=>setReview(false)}>Back</Button></div>
      </div>:<div className="flex flex-wrap gap-2 border-t pt-3">
       {!form.revision&&!form.is_active&&<Button type="button" size="sm" variant="outline" disabled={unavailable||!valid} onClick={()=>void save()}>{busy?'Saving…':'Save draft'}</Button>}
