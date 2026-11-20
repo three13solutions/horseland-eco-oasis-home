@@ -95,7 +95,6 @@ const pricingMenuItems = [
     path: '/admin/pricing/rate-card', 
     description: 'View computed pricing' 
   },
-  { icon: Users, label: 'Guest Age & Pricing Policy', path: '/admin/pricing/guest-age-policy', description: 'Age bands and accommodation/meal rules' },
   { icon: Percent, label: 'Promo Codes', path: '/admin/pricing/promotions', description: 'Website offer configuration and rollout status' },
   { icon: DollarSign, label: 'Rate Plans', path: '/admin/pricing/rate-plans', description: 'One price, all meal options' },
   { 
@@ -141,6 +140,7 @@ const pricingMenuItems = [
     path: '/admin/pricing/cancellation-policies', 
     description: 'Refund policy options' 
   },
+  { icon: Users, label: 'Guest Type Policy', path: '/admin/pricing/guest-age-policy', description: 'Age bands and accommodation/meal rules' },
   { 
     icon: Percent, 
     label: 'GST Configuration', 
