@@ -5,6 +5,7 @@ import {
   Calendar, 
   CreditCard, 
   Settings as SettingsIcon, 
+  Code2,
   BarChart3, 
   FileText, 
   UserCheck, 
@@ -257,7 +258,14 @@ const systemMenuItems = [
     icon: SettingsIcon, 
     label: 'Settings', 
     path: '/admin/settings', 
+    exact: true,
     description: 'Site configuration' 
+  },
+  { 
+    icon: Code2, 
+    label: 'Website Integrations', 
+    path: '/admin/settings/website-integrations', 
+    description: 'Settings → pixels, tags & scripts' 
   }
 ];
 

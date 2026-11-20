@@ -7,6 +7,8 @@ import { I18nextProvider } from 'react-i18next';
 import i18n from '@/lib/i18n';
 import ScrollToTop from './components/ScrollToTop';
 import ScrollNavigation from './components/ScrollNavigation';
+import WebsiteIntegrationsLoader from './components/WebsiteIntegrationsLoader';
+import WebsiteIntegrations from './pages/admin/WebsiteIntegrations';
 import { TranslationProvider } from './components/admin/TranslationProvider';
 import { useFavicon } from './hooks/useFavicon';
 
@@ -100,6 +102,7 @@ function App() {
             <BrowserRouter>
               <ScrollToTop />
               <ScrollNavigation />
+              <WebsiteIntegrationsLoader />
               <Routes>
               {/* General Routes */}
               <Route path="/" element={<Index />} />
@@ -176,6 +179,7 @@ function App() {
                 <Route path="faq" element={<FAQManagement />} />
                 <Route path="users" element={<UserManagement />} />
                 <Route path="settings" element={<SiteSettings />} />
+                <Route path="settings/website-integrations" element={<WebsiteIntegrations />} />
                 <Route path="email" element={<Navigate to="/admin/templates/emails" replace />} />
                 <Route path="templates" element={<Navigate to="/admin/templates/emails" replace />} />
                 <Route path="templates/emails" element={<EmailSettings />} />
