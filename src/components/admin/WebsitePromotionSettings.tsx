@@ -1,4 +1,4 @@
-import { type ReactNode, useEffect, useRef, useState } from 'react';
+import { type ReactNode, useEffect, useId, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { unrestrictedPromotion, restrictionError, validDate, type PromotionRestrictions } from '@/lib/promotion-editor';
 import { supabase } from '@/integrations/supabase/client';
@@ -14,7 +14,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { ArrowLeft, CalendarDays, Plus, Search } from 'lucide-react';
+import { ArrowLeft, CalendarDays, Info, Plus, Search } from 'lucide-react';
 
 type Offer = PromotionRestrictions & {code:string;label:string;revision?:number;is_active:boolean;is_public:boolean;discount_kind:string;discount_basis:string|null;discount_value:number|null;amount_per_night?:number;amount_per_booking?:number;booking_from:string|null;booking_to:string|null;stay_from:string|null;stay_to:string|null;day_scope:string;mixed_stay_mode:string|null};
 const api = supabase as unknown as {rpc:(name:string,args?:Record<string,unknown>)=>Promise<{data:unknown;error:{message:string}|null}>};
@@ -42,8 +42,48 @@ const roomMealUsageGrid = 'grid min-w-0 items-start gap-2.5 grid-cols-[repeat(au
 const eligibilityGrid = 'grid min-w-0 items-start gap-2.5 grid-cols-[repeat(auto-fit,minmax(min(100%,12rem),1fr))]';
 const visibilityGrid = 'grid min-w-0 gap-2.5 grid-cols-[repeat(auto-fit,minmax(min(100%,16rem),1fr))]';
 const modes = [['RO','Room Only (EP)'], ['BB','Bed & Breakfast (CP)'], ['HB','Half Board (MAP)'], ['FB','Full Board (AP)']] as const;
-function Field({ id, label, children }: { id: string; label: string; children: ReactNode }) {
- return <div className="min-w-0 space-y-1"><Label htmlFor={id}>{label}</Label>{children}</div>;
+function FieldHelp({ label, children }: { label: string; children: ReactNode }) {
+ const descriptionId=useId();
+ const [open,setOpen]=useState(false);
+ const [pinned,setPinned]=useState(false);
+ const hoverTimer=useRef<ReturnType<typeof setTimeout> | null>(null);
+ const cancelHoverClose=()=>{
+  if(hoverTimer.current!==null){clearTimeout(hoverTimer.current);hoverTimer.current=null;}
+ };
+ useEffect(()=>()=>{if(hoverTimer.current!==null)clearTimeout(hoverTimer.current);},[]);
+ const scheduleHoverClose=()=>{
+  if(pinned)return;
+  cancelHoverClose();
+  hoverTimer.current=setTimeout(()=>{setOpen(false);hoverTimer.current=null;},220);
+ };
+ return <>
+  <span id={descriptionId} className="sr-only">{children}</span>
+  <Popover open={open} onOpenChange={next=>{cancelHoverClose();setOpen(next);if(!next)setPinned(false);}}>
+   <PopoverTrigger asChild>
+    <button type="button" aria-label={`Help: ${label}`} aria-describedby={descriptionId}
+     className="inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-muted-foreground hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+     onPointerEnter={event=>{if(event.pointerType==='mouse'){cancelHoverClose();setOpen(true);}}}
+     onPointerLeave={event=>{if(event.pointerType==='mouse'&&document.activeElement!==event.currentTarget)scheduleHoverClose();}}
+     onFocus={()=>{cancelHoverClose();setOpen(true);}}
+     onBlur={()=>{if(!pinned)setOpen(false);}}
+     onClick={event=>{event.preventDefault();cancelHoverClose();setPinned(!pinned);setOpen(!pinned);}}>
+     <Info aria-hidden="true" className="h-3.5 w-3.5"/>
+    </button>
+   </PopoverTrigger>
+   <PopoverContent aria-label={`Help: ${label}`} align="start" side="top" sideOffset={5}
+    className="w-64 max-w-[calc(100vw-1rem)] p-2.5 text-xs leading-relaxed"
+    onPointerEnter={cancelHoverClose} onPointerLeave={scheduleHoverClose}
+    onOpenAutoFocus={event=>event.preventDefault()} onCloseAutoFocus={event=>event.preventDefault()}>
+    {children}
+   </PopoverContent>
+  </Popover>
+ </>;
+}
+function Field({ id, label, help, children }: { id: string; label: string; help?: ReactNode; children: ReactNode }) {
+ return <div className="min-w-0 space-y-1">
+  {help?<div className="flex items-center gap-1"><Label htmlFor={id}>{label}</Label><FieldHelp label={label}>{help}</FieldHelp></div>:<Label htmlFor={id}>{label}</Label>}
+  {children}
+ </div>;
 }
 type DateWindow = { from: string | null; to: string | null };
 
@@ -83,7 +123,9 @@ function PromoDateRange({ id, label, value, today, disabled, onChange }: {
    return picked <= other ? { from: picked, to: other } : { from: other, to: picked };
   });
  };
- return <Field id={id} label={label}>
+ return <Field id={id} label={label} help={label==='Booking dates'
+  ? 'Controls when the reservation is made. Dates are inclusive in India time (Asia/Kolkata). Choose Any date for no limit.'
+  : 'Controls which occupied nights qualify, not checkout day. Dates are inclusive in India time (Asia/Kolkata). Choose Any date for no limit.'}>
   <Popover open={open} onOpenChange={next => {
    if (next) setDraft(value);
    setOpen(next);
@@ -312,16 +354,16 @@ export default function WebsitePromotionSettings(){
        <section className="min-w-0 space-y-1.5" aria-labelledby="promo-limits">
         <h4 id="promo-limits" className="text-sm font-medium">Usage limits</h4>
         <div className="grid min-w-0 gap-2.5">
-         <Field id="promo-total_usage_limit" label="Total uses"><Input id="promo-total_usage_limit" className={inputClass} type="number" min="1" step="1" placeholder="Unlimited" value={form.total_usage_limit??''} onChange={e=>change('total_usage_limit',e.target.value===''?null:Number(e.target.value))}/></Field>
+         <Field id="promo-total_usage_limit" label="Total uses" help="Limits count completed redemptions and reserved checkout attempts, not quotes. Leave blank for unlimited."><Input id="promo-total_usage_limit" className={inputClass} type="number" min="1" step="1" placeholder="Unlimited" value={form.total_usage_limit??''} onChange={e=>change('total_usage_limit',e.target.value===''?null:Number(e.target.value))}/></Field>
          <fieldset className="min-w-0 space-y-1.5">
-          <legend className="text-sm font-medium">Uses per booking email</legend>
+          <legend className="text-sm font-medium"><span className="inline-flex items-center gap-1">Uses per booking email<FieldHelp label="Uses per booking email">Uses the booking email, not a verified person.</FieldHelp></span></legend>
           <div className="flex flex-wrap gap-1.5">
            {([['unlimited','Unlimited'],['once','Once'],['custom','Custom']] as const).map(([mode,label])=><Button key={mode} size="sm" type="button" aria-pressed={emailMode===mode} variant={emailMode===mode?'default':'outline'} onClick={()=>{setReview(false);setCustomEmail(mode==='custom');if(mode!=='custom')change('per_guest_usage_limit',mode==='once'?1:null);}}>{label}</Button>)}
           </div>
           {emailMode==='custom'&&<Field id="promo-per_guest_usage_limit" label="Custom limit"><Input id="promo-per_guest_usage_limit" className={inputClass} type="number" min="1" step="1" placeholder="Enter number of uses" value={form.per_guest_usage_limit??''} onChange={e=>change('per_guest_usage_limit',e.target.value===''?null:Number(e.target.value))}/></Field>}
          </fieldset>
         </div>
-        <p className={noteClass}>Limits count completed redemptions and reserved checkout attempts, not quotes. Per-email limits use the booking email, not a verified person. Cancellations do not automatically restore a completed use.</p>
+        <p className={noteClass}>Cancellations do not automatically restore a completed use.</p>
        </section>
       </div>
      </section>
@@ -337,7 +379,7 @@ export default function WebsitePromotionSettings(){
           }}/>)}
        </div>
        <fieldset className="min-w-0 space-y-1.5">
-        <legend className="mb-1 text-sm font-medium leading-5">Applicable days</legend>
+        <legend className="mb-1 text-sm font-medium leading-5"><span className="inline-flex items-center gap-1">Applicable days<FieldHelp label="Applicable days">Weekend eligibility follows the hotel’s date-specific rules, including protected periods.</FieldHelp></span></legend>
         <div className="grid gap-1.5">
          {([['both','All days'],['weekday','Weekdays'],['weekend','Weekends']] as const).map(([value,label])=><Button key={value} size="sm" type="button" aria-pressed={form.day_scope===value} variant={form.day_scope===value?'default':'outline'} onClick={()=>change('day_scope',value)}>{label}</Button>)}
         </div>
@@ -349,18 +391,16 @@ export default function WebsitePromotionSettings(){
         <Field id="promo-minimum-nights" label="Stay length (minimum nights)"><Input id="promo-minimum-nights" className={inputClass} type="number" min="1" step="1" placeholder="No minimum" value={form.min_stay_nights??''} onChange={e=>change('min_stay_nights',e.target.value===''?null:Number(e.target.value))}/></Field>
        </div>
        <fieldset className="min-w-0 space-y-1.5">
-        <legend className="mb-1 text-sm font-medium leading-5">Excluded nights</legend>
+        <legend className="mb-1 text-sm font-medium leading-5"><span className="inline-flex items-center gap-1">Excluded nights<FieldHelp label="Excluded nights">Blocks particular nights even if they fall in the eligible stay window.</FieldHelp></span></legend>
         <div className="flex flex-wrap items-center gap-2">
          <Input id="promo-excluded-date" aria-label="Date to exclude" type="date" className={`${inputClass} w-full max-w-48 flex-1 basis-28`} value={excludedDate} onChange={e=>setExcludedDate(e.target.value)}/>
          <Button size="sm" type="button" variant="outline" disabled={!validDate(excludedDate)||form.excluded_stay_dates.includes(excludedDate)} onClick={()=>{if(validDate(excludedDate)&&!form.excluded_stay_dates.includes(excludedDate)){change('excluded_stay_dates',[...form.excluded_stay_dates,excludedDate]);setExcludedDate('');}}}>Add date</Button>
         </div>
         {form.excluded_stay_dates.length>0&&<ul className="flex flex-wrap gap-1.5">{form.excluded_stay_dates.map((date,index)=><li key={`${date}-${index}`}><Button size="sm" type="button" variant="outline" aria-label={`Remove excluded night ${date}`} onClick={()=>change('excluded_stay_dates',form.excluded_stay_dates.filter((_,i)=>i!==index))}>{date} <span aria-hidden="true">×</span></Button></li>)}</ul>}
         {form.excluded_stay_dates.some(date=>!validDate(date))&&<Field id="promo-exclusions" label="Correct existing date values"><Textarea id="promo-exclusions" rows={2} className="min-h-16 text-sm" placeholder="One YYYY-MM-DD date per line" value={form.excluded_stay_dates.join('\n')} onChange={e=>change('excluded_stay_dates',e.target.value===''?[]:e.target.value.split(/[\n,]/).map(v=>v.trim()))}/></Field>}
-        <p className={noteClass}>Block particular nights even if they fall in the eligible stay window.</p>
        </fieldset>
       </div>
-      <p className={noteClass}>Booking dates control when the reservation is made. Stay dates control which occupied nights qualify, not checkout day. Dates are inclusive in Asia/Kolkata. Choose Any date for no limit.</p>
-      <p className={noteClass}>Weekend eligibility follows the hotel’s date-specific rules, including protected periods.{flat?' All nights must qualify for once-per-booking offers.':''}</p>
+      {flat&&<p className={noteClass}>All nights must qualify for once-per-booking offers.</p>}
      </section>
      <section className={sectionClass} aria-labelledby="promo-visibility">
       <h3 id="promo-visibility" className="text-sm font-semibold">Visibility and activation</h3>
