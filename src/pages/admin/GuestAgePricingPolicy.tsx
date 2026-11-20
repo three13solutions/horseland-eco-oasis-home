@@ -4,13 +4,13 @@ import type { SupabaseClient } from '@supabase/supabase-js';
 import { Pencil, Plus } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useGuestAgePolicy } from '@/hooks/useGuestAgePolicy';
-import { validateGuestAgeBands, guestTypeChargeRule, guestTypeName, guestTypeKey, sameGuestPolicy, alternateGuestPolicy, type GuestAgeBand } from '@/lib/guest-age-policy';
+import { validateGuestAgePolicySave, guestPolicySaveError, guestTypeChargeRule, guestTypeName, guestTypeKey, sameGuestPolicy, alternateGuestPolicy, type GuestAgeBand } from '@/lib/guest-age-policy';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { toast } from 'sonner';
 
 const accLabel = (r: string) => (r === 'free' ? 'No Charge' : 'Guest Type Charge');
@@ -58,8 +58,8 @@ export default function GuestAgePricingPolicy() {
     if (!policy.data) return false;
     const exists = policy.data.bands.some(b => b.key === band.key);
     const bands = exists ? policy.data.bands.map((b) => (b.key === band.key ? { ...band, enabled: true } : b)) : [...policy.data.bands, { ...band, enabled: true }];
-    const err = validateGuestAgeBands(bands);
-    if (err) { setFormError(`${err} Adjust the neighbouring age group first so ranges don't overlap.`); toast.error(err); return false; }
+    const err = validateGuestAgePolicySave(bands, live);
+    if (err) { setFormError(err); return false; }
     setSaving(true);
     try {
       const { error } = await (supabase as SupabaseClient).rpc('save_guest_age_policy', { p_expected_revision: policy.data.revision, p_bands: bands });
@@ -68,7 +68,9 @@ export default function GuestAgePricingPolicy() {
       toast.success(`${guestTypeName(band)} policy saved.`);
       return true;
     } catch (e) {
-      toast.error(e instanceof Error ? e.message : 'Policy was not saved.');
+      const message = guestPolicySaveError(e);
+      setFormError(message);
+      toast.error(message);
       return false;
     } finally { setSaving(false); }
   }
@@ -101,7 +103,7 @@ export default function GuestAgePricingPolicy() {
       if (error) throw error;
       await refresh();
       toast.success(`${guestTypeName(row)} policy ${on ? 'activated' : 'deactivated'}.`);
-    } catch (e) { toast.error(e instanceof Error ? e.message : 'Could not change status.'); } finally { setToggling(false); }
+    } catch (e) { toast.error(guestPolicySaveError(e)); } finally { setToggling(false); }
   }
 
   const setBand = (patch: Partial<GuestAgeBand>) => form && setForm({ ...form, band: { ...form.band, ...patch } });
@@ -157,7 +159,10 @@ export default function GuestAgePricingPolicy() {
 
       <Dialog open={!!form} onOpenChange={(o) => !o && setForm(null)}>
         <DialogContent>
-          <DialogHeader><DialogTitle>{form?.mode === 'new' ? 'New Policy' : `Edit ${form ? guestTypeName(form.band) : ''} Policy`}</DialogTitle></DialogHeader>
+          <DialogHeader>
+            <DialogTitle>{form?.mode === 'new' ? 'New Policy' : `Edit ${form ? guestTypeName(form.band) : ''} Policy`}</DialogTitle>
+            <DialogDescription>{live ? 'Live pricing requires continuous age ranges and an Adult policy with no upper age limit.' : 'This policy is staged and is not applied to live prices.'}</DialogDescription>
+          </DialogHeader>
           {form && (
             <div className="grid gap-3">
               <label className="text-sm">Guest Type

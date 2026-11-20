@@ -1,5 +1,8 @@
 # Roadmap
 
+- [x] Diagnose Guest Type Policy save failures, match live validation in the edit form, and preserve authoritative error messages.
+- [x] Verify live-mode rejection and valid save/read-back without changing connected live policies: 18 tests and isolated desktop/mobile UI checks passed; connected signed-in verification remains blocked as noted below.
+
 - [x] Move Guest Type Policy activation into per-row status toggles with version-safe saves.
 - [x] Prevent deactivation without a compatible alternate policy and switch replacements atomically.
 - [x] Allow typed guest-type names and optional maximum ages, including segmented adult age groups.

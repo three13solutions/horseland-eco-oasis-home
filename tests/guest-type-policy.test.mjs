@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { validateGuestAgeBands, guestTypeKey, guestTypeName, alternateGuestPolicy, mealChargeableCount } from '../src/lib/guest-age-policy.ts';
+import { validateGuestAgeBands, validateGuestAgePolicySave, guestPolicySaveError, guestTypeKey, guestTypeName, alternateGuestPolicy, mealChargeableCount } from '../src/lib/guest-age-policy.ts';
 import { guestTypeChargeAmount, validateGuestTypeCharges } from '../src/lib/guest-type-charges.ts';
 import { mealAgeRuleError, mealAgeAmount } from '../src/lib/meal-age-pricing.ts';
 
@@ -8,6 +8,29 @@ const bands=[{key:'infant',min_age:0,max_age:3,accommodation_rule:'free',meal_ru
 test('typed guest names retain their display name and stable key',()=>{
  assert.equal(guestTypeKey('Senior Guest'),'senior_guest');
  assert.equal(guestTypeName({key:'senior_guest',name:'Senior Guest'}),'Senior Guest');
+});
+test('live save rejects Infant 0–1 when Child starts at 4, identifying uncovered ages 2–3',()=>{
+ const next=bands.map(b=>b.key==='infant'?{...b,max_age:1}:b);
+ assert.match(validateGuestAgePolicySave(next,true),/ages 2–3/);
+ assert.equal(validateGuestAgePolicySave(next,false),null);
+});
+test('live save rejects Adult capped at 60 but staged configuration permits it',()=>{
+ const next=bands.map(b=>b.key==='adult'?{...b,max_age:60}:b);
+ assert.match(validateGuestAgePolicySave(next,true),/Adult must keep No Limit/);
+ assert.equal(validateGuestAgePolicySave(next,false),null);
+});
+test('live save accepts continuous standard bands and charge-only edits',()=>{
+ assert.equal(validateGuestAgePolicySave(bands,true),null);
+ assert.equal(validateGuestAgePolicySave(bands.map(b=>b.key==='child'?{...b,meal_rule:'free'}:b),true),null);
+});
+test('custom named segments stay blocked for live pricing',()=>{
+ const next=[...bands.slice(0,2),{...bands[2],max_age:59},{key:'senior',name:'Senior',min_age:60,max_age:null,accommodation_rule:'guest_type',meal_rule:'full'}];
+ assert.match(validateGuestAgePolicySave(next,true),/matching booking and pricing support/);
+ assert.equal(validateGuestAgePolicySave(next,false),null);
+});
+test('Supabase plain-object errors retain the authoritative save reason',()=>{
+ assert.equal(guestPolicySaveError({code:'P0001',message:'Live age ranges must cover every age without gaps'}),'Live age ranges must cover every age without gaps');
+ assert.match(guestPolicySaveError({message:'AGE_POLICY_CHANGED: refresh and review before saving'}),/saved policy changed/);
 });
 test('Adult accepts a finite maximum and a separately named upper age segment',()=>{
  const next=[...bands.slice(0,2),{...bands[2],max_age:59},{key:'senior',name:'Senior',min_age:60,max_age:null,accommodation_rule:'guest_type',meal_rule:'full'}];
