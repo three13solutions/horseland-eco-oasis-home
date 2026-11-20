@@ -1,5 +1,6 @@
 # Roadmap
 
+- [x] Explain custom activation prerequisites and make active-policy edits reuse their existing pending draft rather than create duplicates: 22 tests and isolated same-ID save/read-back passed. Toddler activation still requires custom guest collection and canonical pricing support; live policies remain unchanged.
 - [x] Add confirmed deletion of draft/deactivated policies, protect active policies and historical booking records.
 - [x] Reject duplicate guest-type names across distinct types, including case and spacing variations; 40 tests passed and isolated duplicate-name/cancel/delete UI checks passed. Connected signed-in checks remain unavailable as noted below; existing security warnings unchanged.
 - [x] Clarify completed-year age boundaries and verify 0–3, 4–9, 10+ cover all ages without gaps.

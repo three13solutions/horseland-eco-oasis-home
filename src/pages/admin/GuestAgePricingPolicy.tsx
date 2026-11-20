@@ -4,7 +4,7 @@ import type { SupabaseClient } from '@supabase/supabase-js';
 import { Pencil, Plus, Trash2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useGuestAgePolicy } from '@/hooks/useGuestAgePolicy';
-import { validateGuestAgeBands, duplicateGuestName, ageBandLabel, guestPolicySaveError, guestTypeChargeRule, guestTypeName, guestTypeKey, sameGuestPolicy, alternateGuestPolicy, type GuestAgeBand } from '@/lib/guest-age-policy';
+import { validateGuestAgeBands, pendingGuestDraft, duplicateGuestName, ageBandLabel, guestPolicySaveError, guestTypeChargeRule, guestTypeName, guestTypeKey, sameGuestPolicy, alternateGuestPolicy, type GuestAgeBand } from '@/lib/guest-age-policy';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Switch } from '@/components/ui/switch';
@@ -143,6 +143,15 @@ export default function GuestAgePricingPolicy() {
   }
 
   const setBand = (patch: Partial<GuestAgeBand>) => form && setForm({ ...form, band: { ...form.band, ...patch } });
+  function editPolicy(row: Row) {
+    if (drafts.isLoading || drafts.isError) { toast.error('Reload draft policies before editing.'); return; }
+    try {
+      const draft = row.draft ?? pendingGuestDraft(row.key, drafts.data ?? []);
+      const band = draft?.band ?? rowBand(row);
+      setFormError(null);
+      setForm({ mode: 'edit', band: { ...band, name: guestTypeName(band) }, draft });
+    } catch (e) { toast.error(guestPolicySaveError(e)); }
+  }
   async function deletePolicy(row: Row) {
     if (!policy.data || row.current || row.active) return;
     if (!window.confirm(`Delete ${guestTypeName(row)} ${row.draft ? 'draft' : 'policy'} (${ageBandLabel(row)})? Active policies and historical bookings will remain unchanged.`)) return;
@@ -197,7 +206,7 @@ export default function GuestAgePricingPolicy() {
                     <div className="flex justify-end">
                     {(r.current || r.draft) && (
                       <Button size="icon" variant="ghost" aria-label={`Edit ${guestTypeName(r)} ${r.draft ? 'draft' : 'policy'}`} disabled={saving || toggling}
-                        onClick={() => { setFormError(null); const band = rowBand(r); setForm({ mode: 'edit', band: { ...band, name: guestTypeName(band) }, draft: r.draft }); }}>
+                        onClick={() => editPolicy(r)}>
                         <Pencil className="h-4 w-4" />
                       </Button>
                     )}

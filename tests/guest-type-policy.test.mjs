@@ -1,10 +1,20 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { validateGuestAgeBands, duplicateGuestName, validateGuestAgePolicySave, guestPolicySaveError, guestTypeKey, guestTypeName, alternateGuestPolicy, mealChargeableCount } from '../src/lib/guest-age-policy.ts';
+import { validateGuestAgeBands, pendingGuestDraft, duplicateGuestName, validateGuestAgePolicySave, guestPolicySaveError, guestTypeKey, guestTypeName, alternateGuestPolicy, mealChargeableCount } from '../src/lib/guest-age-policy.ts';
 import { guestTypeChargeAmount, validateGuestTypeCharges } from '../src/lib/guest-type-charges.ts';
 import { mealAgeRuleError, mealAgeAmount } from '../src/lib/meal-age-pricing.ts';
 
 const bands=[{key:'infant',min_age:0,max_age:3,accommodation_rule:'free',meal_rule:'free'}, {key:'child',min_age:4,max_age:9,accommodation_rule:'child',meal_rule:'full'}, {key:'adult',min_age:10,max_age:null,accommodation_rule:'adult',meal_rule:'full'}];
+test('editing Infant reuses its existing draft and leaves Toddler separate',()=>{
+ const infant={id:'infant-draft',band:{...bands[0],max_age:1}};
+ const toddler={id:'toddler-draft',band:{key:'toddler',min_age:2,max_age:3,meal_rule:'free',accommodation_rule:'free'}};
+ assert.equal(pendingGuestDraft('infant',[toddler,infant]),infant);
+ assert.equal(pendingGuestDraft('adult',[toddler,infant]),undefined);
+ assert.equal(toddler.band.min_age,2);
+});
+test('ambiguous pending drafts require editing an explicit row',()=>{
+ assert.throws(()=>pendingGuestDraft('infant',[{band:bands[0]},{band:{...bands[0],max_age:1}}]),/Multiple drafts exist/);
+});
 test('different guest types cannot share names ignoring case or repeated spaces',()=>{
  assert.equal(duplicateGuestName({ ...bands[2], name:'  Senior   Guest  ' }, [{...bands[1],name:'senior guest'}]),true);
  assert.equal(duplicateGuestName({...bands[2],name:' CHILD '},bands),true);

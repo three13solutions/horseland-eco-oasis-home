@@ -51,6 +51,11 @@ export function normalizedGuestName(band: Pick<GuestAgeBand, 'key' | 'name'>) { 
 export function duplicateGuestName(band: GuestAgeBand, existing: GuestAgeBand[], isNew = false) {
   return existing.some(other => (isNew || other.key !== band.key) && normalizedGuestName(other) === normalizedGuestName(band));
 }
+export function pendingGuestDraft<T extends { band: GuestAgeBand }>(key: string, drafts: T[]): T | undefined {
+  const matches = drafts.filter(d => d.band.key === key);
+  if (matches.length > 1) throw new Error('Multiple drafts exist for this guest type. Edit the specific draft row, or delete unwanted drafts first.');
+  return matches[0];
+}
 export function guestTypeKey(name: string) { return name.trim().toLowerCase().replace(/[^a-z0-9]+/g,'_').replace(/^_+|_+$/g,''); }
 export function sameGuestPolicy(a: GuestAgeBand, b: GuestAgeBand) { return a.key===b.key && a.name===b.name && a.min_age===b.min_age && a.max_age===b.max_age && a.accommodation_rule===b.accommodation_rule && a.meal_rule===b.meal_rule; }
 export function alternateGuestPolicy(current: GuestAgeBand, versions: GuestAgeBand[], bands: GuestAgeBand[]) {
