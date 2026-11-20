@@ -131,8 +131,8 @@ function displayRange({ from, to }: DateWindow) {
  return 'Any date';
 }
 
-function PromoDateRange({ id, label, value, today, disabled, onChange }: {
- id: string; label: string; value: DateWindow; today: string; disabled: boolean; onChange: (range: DateWindow) => void;
+function PromoDateRange({ id, label, value, today, disabled, flat, onChange }: {
+ id: string; label: string; value: DateWindow; today: string; disabled: boolean; flat?: boolean; onChange: (range: DateWindow) => void;
 }) {
  const [open, setOpen] = useState(false);
  const [draft, setDraft] = useState<DateWindow>(value);
@@ -150,7 +150,7 @@ function PromoDateRange({ id, label, value, today, disabled, onChange }: {
  };
  return <Field id={id} label={label} help={label==='Booking dates'
   ? 'Controls when the reservation is made. Dates are inclusive in India time (Asia/Kolkata). Choose Any date for no limit.'
-  : 'Controls which occupied nights qualify, not checkout day. Dates are inclusive in India time (Asia/Kolkata). Choose Any date for no limit.'}>
+  : `Controls which occupied nights qualify, not checkout day. Dates are inclusive in India time (Asia/Kolkata). Choose Any date for no limit.${flat?' All nights must qualify for once-per-booking offers.':''}`}>
   <Popover open={open} onOpenChange={next => {
    if (next) setDraft(value);
    setOpen(next);
@@ -402,11 +402,10 @@ export default function WebsitePromotionSettings(){
         </fieldset>
          <Field id="promo-value" label={form.discount_kind==='percentage'?'Discount (%)':'Discount (₹)'}><Input id="promo-value" className={inputClass} type="number" min="0.01" step="0.01" value={form.discount_value??''} onChange={e=>change('discount_value',e.target.value===''?null:Number(e.target.value))}/></Field>
          <fieldset className="min-w-0 space-y-1.5">
-          <legend className="mb-1 text-sm font-medium leading-5">Apply discount</legend>
+          <legend className="mb-1 text-sm font-medium leading-5"><span className="inline-flex items-center gap-1">Apply discount<FieldHelp label="Apply discount">Per-night rates must be verified room-only rates.</FieldHelp></span></legend>
           <div className="grid grid-cols-2 gap-2">
            {([['booking','Per booking'],['night','Per night']] as const).map(([value,label])=><Button key={value} size="sm" type="button" aria-pressed={form.discount_basis===value} variant={form.discount_basis===value?'default':'outline'} onClick={()=>change('discount_basis',value)}>{label}</Button>)}
           </div>
-          <p className={noteClass}>Per-night rates must be verified room-only rates.</p>
          </fieldset>
        </>}
       </div>
@@ -450,7 +449,7 @@ export default function WebsitePromotionSettings(){
        <section className="min-w-0 space-y-1.5" aria-labelledby="promo-limits">
         <h4 id="promo-limits" className="text-sm font-medium">Usage limits</h4>
         <div className="grid min-w-0 gap-2.5">
-         <Field id="promo-total_usage_limit" label="Total uses" help="Limits count completed redemptions and reserved checkout attempts, not quotes. Leave blank for unlimited."><Input id="promo-total_usage_limit" className={inputClass} type="number" min="1" step="1" placeholder="Unlimited" value={form.total_usage_limit??''} onChange={e=>change('total_usage_limit',e.target.value===''?null:Number(e.target.value))}/></Field>
+         <Field id="promo-total_usage_limit" label="Total uses" help="Limits count completed redemptions and reserved checkout attempts, not quotes. Leave blank for unlimited. Cancellations do not automatically restore a completed use."><Input id="promo-total_usage_limit" className={inputClass} type="number" min="1" step="1" placeholder="Unlimited" value={form.total_usage_limit??''} onChange={e=>change('total_usage_limit',e.target.value===''?null:Number(e.target.value))}/></Field>
          <fieldset className="min-w-0 space-y-1.5">
           <legend className="text-sm font-medium"><span className="inline-flex items-center gap-1">Uses per booking email<FieldHelp label="Uses per booking email">Uses the booking email, not a verified person.</FieldHelp></span></legend>
           <div className="flex flex-wrap gap-1.5">
@@ -459,7 +458,6 @@ export default function WebsitePromotionSettings(){
           {emailMode==='custom'&&<Field id="promo-per_guest_usage_limit" label="Custom limit"><Input id="promo-per_guest_usage_limit" className={inputClass} type="number" min="1" step="1" placeholder="Enter number of uses" value={form.per_guest_usage_limit??''} onChange={e=>change('per_guest_usage_limit',e.target.value===''?null:Number(e.target.value))}/></Field>}
          </fieldset>
         </div>
-        <p className={noteClass}>Cancellations do not automatically restore a completed use.</p>
        </section>
       </div>
      </section>
@@ -468,7 +466,7 @@ export default function WebsitePromotionSettings(){
       <div className={eligibilityGrid} data-promo-layout="eligibility">
        <div className="min-w-0 space-y-2.5">
         {([['Booking dates','booking_from','booking_to'],['Eligible stay dates','stay_from','stay_to']] as const).map(([title,from,to])=>
-         <PromoDateRange key={title} id={`promo-${from}-range`} label={title} today={today} disabled={unavailable}
+         <PromoDateRange key={title} id={`promo-${from}-range`} label={title} today={today} disabled={unavailable} flat={flat}
           value={{ from: form[from], to: form[to] }} onChange={dates=>{
            setReview(false);
            setForm(current=>current?{...current,[from]:dates.from,[to]:dates.to}:current);
@@ -496,7 +494,6 @@ export default function WebsitePromotionSettings(){
         {form.excluded_stay_dates.some(date=>!validDate(date))&&<Field id="promo-exclusions" label="Correct existing date values"><Textarea id="promo-exclusions" rows={2} className="min-h-16 text-sm" placeholder="One YYYY-MM-DD date per line" value={form.excluded_stay_dates.join('\n')} onChange={e=>change('excluded_stay_dates',e.target.value===''?[]:e.target.value.split(/[\n,]/).map(v=>v.trim()))}/></Field>}
        </fieldset>
       </div>
-      {flat&&<p className={noteClass}>All nights must qualify for once-per-booking offers.</p>}
      </section>
      {!canSave&&<p className={`text-xs ${restrictionsError||customEmailIncomplete?'text-destructive':'text-muted-foreground'}`}>{restrictionsError || (customEmailIncomplete?'Enter the custom per-email limit or choose Unlimited.':'Complete the required fields. Date ranges must be ordered, and stay restrictions need a stay policy.')}</p>}
      {review?<div className="space-y-2 rounded-md border bg-muted/40 p-2.5 text-sm">
