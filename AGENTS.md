@@ -1,5 +1,8 @@
 # Architecture
 
+- Live Rate Card uses canonical variant snapshots for every stay and the existing read-only promo action for coupon previews; never create payment orders or infer applied overrides from overlapping dates.
+- Live rate breakdowns link to the exact override via `override_id`, or the owning rate-plan room type; policy settings stay protected by their existing admin pages.
+
 - Mount shared scroll navigation at the application root, scoped to admin routes and explicitly marked `data-admin-media-gallery` containers (including Radix viewports), so only admin media galleries and selectors receive accessible arrows without changing saved content.
 - Keep media gallery controls in the active dialog's portal so they remain interactive under modal focus management.
 - Style the dialog close button per call site via `DialogContent`'s `closeButtonClassName`; leave the shared default untouched so public dialogs keep the neutral cross, and give admin media gallery dialogs the exported `MEDIA_GALLERY_CLOSE_BUTTON_CLASS` plus header right padding so the cross never sits over the title.- Record admin activity with a generic database trigger on every public table writing to the append-only `admin_audit_log`, so new modules are covered without app code and logs can't be edited or deleted.

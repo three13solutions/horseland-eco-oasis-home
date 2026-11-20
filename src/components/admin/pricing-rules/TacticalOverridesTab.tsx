@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { managedOverrideIds, hasManagedRateOverlap, type RateScopeDates } from '@/lib/rate-plans';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
@@ -73,6 +73,8 @@ const emptyRates = {
 
 export function TacticalOverridesTab() {
   const queryClient = useQueryClient();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const focusedOverrideId = searchParams.get('override_id');
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingRule, setEditingRule] = useState<any>(null);
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
@@ -156,6 +158,7 @@ export function TacticalOverridesTab() {
 
   const filteredRules = useMemo(() => {
     if (!rules) return [];
+    if (focusedOverrideId) return rules.filter(rule => rule.id === focusedOverrideId);
     if (statusFilter === 'all') return rules;
     return rules.filter(rule => {
       const status = getOverrideStatus(rule);
@@ -164,7 +167,7 @@ export function TacticalOverridesTab() {
       if (statusFilter === 'upcoming') return status === 'upcoming';
       return true;
     });
-  }, [rules, statusFilter]);
+  }, [rules, statusFilter, focusedOverrideId]);
 
   const statusCounts = useMemo(() => {
     if (!rules) return { all: 0, active: 0, expired: 0, upcoming: 0 };
@@ -591,6 +594,7 @@ export function TacticalOverridesTab() {
 
   return (
     <div className="space-y-4">
+      {focusedOverrideId && <Button variant="outline" size="sm" onClick={() => { const next = new URLSearchParams(searchParams); next.delete('override_id'); setSearchParams(next); }}>Show all override policies</Button>}
       {/* Header with filters and add button */}
       <div className="flex items-center justify-between flex-wrap gap-3">
         <div className="flex gap-1 flex-wrap">

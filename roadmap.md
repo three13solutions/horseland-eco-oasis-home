@@ -1,5 +1,10 @@
 # Roadmap
 
+- [x] Simplify Live Rate Card summary, expose applied override policies and coupon previews, and explain stay-night calculations.
+- [x] Identify unpublished room types and inactive categories in the live rates table.
+- [x] Verify 13 pricing tests and isolated desktop/mobile rate-card controls; preview build passes.
+- [ ] Verify signed-in rate-card flow (blocked: external unmanaged authentication; isolated component checks passed).
+
 - [x] Connect Google Workspace, deploy both email senders, pass 13 tests, and verify a sample booking email arrived in the connected inbox.
 - [x] Explain Google Workspace booking email sending as an alternative to Resend.
 - [x] Add a recipient field and Send Test Email control for every email category using current draft and sample data.

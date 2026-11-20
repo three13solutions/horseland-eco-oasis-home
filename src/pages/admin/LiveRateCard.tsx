@@ -1,28 +1,18 @@
 import { useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { Link } from 'react-router-dom';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { Calendar, RefreshCw, ChevronRight, ArrowRight, Info } from 'lucide-react';
+import { Calendar, RefreshCw, Info, ExternalLink, Tag, X } from 'lucide-react';
 import { format } from 'date-fns';
-import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar as CalendarComponent } from '@/components/ui/calendar';
 import { cn } from '@/lib/utils';
-import { HoverCard, HoverCardContent, HoverCardTrigger } from '@/components/ui/hover-card';
-
-interface LiveRateResult {
-  roomTypeId: string;
-  roomTypeName: string;
-  basePrice: number;
-  finalPrice: number;
-  adjustments: any[];
-  seasonName?: string;
-  dayTypeName?: string;
-}
+import { appliedOverrideIds, stayDateRange, promoMatchesLiveRate, type NightlyRateDetail } from '@/lib/live-rate-details';
 
 interface RateVariant {
   meal_plan_code: string;
@@ -34,434 +24,152 @@ interface RateVariant {
   policy_adjustment: number;
   total_price: number;
   price_per_night: number;
+  quote_fingerprint?: string;
+  nightly_breakdown?: NightlyRateDetail[];
+  applied_rules?: Record<string, unknown>[];
+  pricing_message?: string;
+  promotion?: { code: string; discount_amount: number };
+  couponError?: string;
+  original_variant?: RateVariant;
 }
-
 interface RoomType {
   id: string;
   name: string;
-  base_price: number | null;
+  is_published: boolean;
+  room_categories: { name: string; is_active: boolean } | null;
+}
+interface OverridePolicy {
+  id: string; reason: string | null; start_date: string; end_date: string;
+  override_price: number | null; adjustment_type: string | null; adjustment_value: number | null;
+  min_nights: number | null; max_nights: number | null; meal_plan_code: string | null;
+  day_type: string | null;
+}
+interface Offer { code: string; label: string; stay_from: string | null; stay_to: string | null }
+const money = (value: number) => `₹${value.toLocaleString('en-IN', { maximumFractionDigits: 2 })}`;
+
+function RateBreakdown({ variant, policies, nights, roomTypeId }: { variant: RateVariant; policies: OverridePolicy[]; nights: number; roomTypeId: string }) {
+  const nightly = variant.nightly_breakdown ?? [];
+  const ids = appliedOverrideIds(nightly);
+  const rules = [...(variant.applied_rules ?? []), ...nightly.flatMap(n => n.dynamic_rules ?? [])];
+  const overrideRules = rules.filter(r => String(r.type ?? r.rule_type ?? '').includes('override'));
+  const usedPolicies = policies.filter(p => ids.includes(p.id));
+  return <div className="space-y-3">
+    <div><h3 className="font-semibold">Rate Calculation Breakdown</h3><p className="text-xs text-muted-foreground">{variant.meal_plan_name} · {variant.cancellation_policy_name}</p></div>
+    {nightly.map(n => <div key={n.date} className="flex justify-between gap-3 text-sm"><span>{format(new Date(`${n.date}T12:00:00`), 'dd MMM yyyy')}</span><span>{typeof n.room_only === 'number' ? money(n.room_only) : '—'}</span></div>)}
+    {usedPolicies.map(p => <Popover key={p.id}><PopoverTrigger asChild><Button variant="outline" size="sm" className="w-full justify-between gap-2 h-auto py-2 whitespace-normal"><span>Override: {p.reason || 'Manual override'}</span><ExternalLink className="h-3 w-3 shrink-0" /></Button></PopoverTrigger><PopoverContent className="w-80 space-y-2" side="right">
+      <h4 className="font-semibold">{p.reason || 'Manual override'}</h4>
+      <p className="text-sm">{p.start_date} – {p.end_date}</p>
+      <p className="text-sm">{p.override_price !== null ? `Fixed rate: ${money(p.override_price)}` : `Adjustment: ${p.adjustment_value ?? 0}${p.adjustment_type === 'percentage' ? '%' : ' INR'}`}</p>
+      <p className="text-xs text-muted-foreground">Stay: {p.min_nights ?? 1}–{p.max_nights ?? 'any'} nights · {p.day_type || 'All days'} · {p.meal_plan_code || 'All meal plans'}</p>
+      <Button asChild variant="link" size="sm"><Link to={`/admin/pricing/overrides?override_id=${encodeURIComponent(p.id)}`}>Open override policy <ExternalLink className="ml-2 h-3 w-3" /></Link></Button>
+    </PopoverContent></Popover>)}
+    {ids.filter(id => !usedPolicies.some(p => p.id === id)).map(id => <p key={id} className="text-xs">Applied override: {id} · policy details unavailable</p>)}
+    {overrideRules.map((r, i) => <div key={i} className="text-xs border-l-2 border-primary pl-2"><span className="font-medium">Applied override</span>: {String(r.reason ?? r.rule ?? 'Manual rate adjustment')}{typeof r.adjustment === 'number' && ` (${money(r.adjustment)})`}<Button asChild variant="link" size="sm"><Link to="/admin/pricing/overrides">View policies</Link></Button></div>)}
+    {nightly.some(n => n.anchor_id) && <Button asChild variant="link" size="sm" className="h-auto p-0"><Link to={`/admin/pricing/rate-plans?room_type_id=${encodeURIComponent(roomTypeId)}`}>View rate plan <ExternalLink className="ml-2 h-3 w-3" /></Link></Button>}
+    {rules.filter(r => !String(r.type ?? r.rule_type ?? '').includes('override')).map((r, i) => <p key={i} className="text-xs text-muted-foreground">{String(r.reason ?? r.rule ?? r.type ?? 'Rate adjustment')}{typeof r.adjustment === 'number' && `: ${money(r.adjustment)}`}</p>)}
+    {nightly.filter(n => (n.length_of_stay_discount ?? 0) > 0).map(n => <p key={`discount-${n.date}`} className="text-xs">Stay discount ({n.date}): −{money(n.length_of_stay_discount ?? 0)}</p>)}
+    <dl className="space-y-1 border-t pt-2 text-sm">
+      <div className="flex justify-between"><dt>Accommodation</dt><dd>{money(variant.original_variant?.room_rate ?? variant.room_rate)}</dd></div>
+      <div className="flex justify-between"><dt>Meals</dt><dd>{money(variant.meal_cost)}</dd></div>
+      <div className="flex justify-between"><dt>Cancellation policy adjustment</dt><dd>{money(variant.policy_adjustment)}</dd></div>
+      {variant.promotion && <div className="flex justify-between text-primary"><dt>Coupon · {variant.promotion.code}</dt><dd>−{money(variant.promotion.discount_amount)}</dd></div>}
+      {variant.couponError && <p className="text-xs text-destructive">Coupon not applied: {variant.couponError}</p>}
+      <div className="flex justify-between font-semibold"><dt>{nights}-night total</dt><dd>{money(variant.total_price)}</dd></div>
+      <div className="flex justify-between"><dt>Average / night</dt><dd>{money(variant.price_per_night)}</dd></div>
+    </dl>
+    {variant.pricing_message && <p className="text-xs text-muted-foreground">{variant.pricing_message}</p>}
+  </div>;
 }
 
 export default function LiveRateCard() {
+  const queryClient = useQueryClient();
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [stayNights, setStayNights] = useState(1);
-
-  const { data: roomTypes = [] } = useQuery<RoomType[]>({
-    queryKey: ['pricing-room-types-with-units', 'LiveRateCard'],
+  const [couponInput, setCouponInput] = useState('');
+  const [coupon, setCoupon] = useState('');
+  const { checkOut } = stayDateRange(selectedDate, stayNights);
+  const checkInDate = format(selectedDate, 'yyyy-MM-dd');
+  const checkOutDate = format(checkOut, 'yyyy-MM-dd');
+  const { data: roomTypes = [], error: roomError } = useQuery<RoomType[]>({
+    queryKey: ['live-rate-card-room-types'],
     queryFn: async () => {
-      const { data, error } = await (supabase as any)
-        .from('room_types')
-        .select('id, name, base_price, room_units!inner(id)')
-        .order('name');
+      const { data, error } = await supabase.from('room_types').select('id, name, is_published, room_categories(name, is_active), room_units!inner(id)').order('name');
       if (error) throw error;
-      return data || [];
+      return (data ?? []) as unknown as RoomType[];
     },
   });
-
-  // Determine day type for display
-  const dayOfWeek = selectedDate.getDay();
-  const isWeekend = dayOfWeek === 0 || dayOfWeek === 5 || dayOfWeek === 6;
-
-  const { data: seasons = [] } = useQuery<any[]>({
-    queryKey: ['seasons'],
+  const { data: policies = [] } = useQuery({
+    queryKey: ['live-rate-card-overrides', checkInDate, checkOutDate],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('seasons')
-        .select('id, name, color');
+      const { data, error } = await supabase.from('tactical_overrides').select('id, reason, start_date, end_date, override_price, adjustment_type, adjustment_value, min_nights, max_nights, meal_plan_code, day_type').lte('start_date', format(new Date(checkOut.getFullYear(), checkOut.getMonth(), checkOut.getDate() - 1), 'yyyy-MM-dd')).gte('end_date', checkInDate);
       if (error) throw error;
-      return data || [];
+      return (data ?? []) as OverridePolicy[];
     },
   });
-
-  const { data: dayTypes = [] } = useQuery<any[]>({
-    queryKey: ['day-types'],
+  const { data: offers = [], error: offersError } = useQuery<Offer[]>({
+    queryKey: ['live-rate-card-offers'],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('day_types')
-        .select('id, name, slug');
-      if (error) throw error;
-      return data || [];
+      const { data, error } = await supabase.functions.invoke('create-razorpay-order-v3', { body: { action: 'promotions' } });
+      if (error || !Array.isArray(data?.offers)) throw new Error('Coupons could not be loaded.');
+      return data.offers;
     },
   });
-
-  const currentDayType = dayTypes.find(d => d.slug === (isWeekend ? 'weekend' : 'weekday'));
-
-  const { data: liveRates = [], isLoading, refetch, isFetching } = useQuery<LiveRateResult[]>({
-    queryKey: ['live-rates', format(selectedDate, 'yyyy-MM-dd'), stayNights, roomTypes.length],
-    queryFn: async () => {
-      if (roomTypes.length === 0) return [];
-      
-      const rates: LiveRateResult[] = [];
-      
-      for (const roomType of roomTypes) {
-        const end = new Date(selectedDate); end.setDate(end.getDate() + stayNights);
-        const { data, error } = await supabase.rpc('calculate_rate_variants_v2', {
-          p_room_type_id: roomType.id, p_check_in: format(selectedDate, 'yyyy-MM-dd'),
-          p_check_out: format(end, 'yyyy-MM-dd'), p_adults_count: 2, p_children_count: 0, p_infants_count: 0, p_booking_channel: 'direct'
-        });
-        if (error) throw error;
-        const variants = Array.isArray(data) ? data as unknown as RateVariant[] : [];
-        const selected = variants.find(v => v.meal_plan_code === 'RO' && v.cancellation_policy_code === 'refundable_credit') || variants.find(v=>v.meal_plan_code==='RO');
-        if (selected) rates.push({ roomTypeId:roomType.id, roomTypeName:roomType.name,
-          basePrice:selected.room_rate / stayNights, finalPrice:selected.price_per_night,
-          adjustments:[], dayTypeName:currentDayType?.name || (isWeekend?'Weekend':'Weekday') });
-      }
-      
-      return rates;
-    },
+  const availableOffers = offers.filter(o => (!o.stay_from || checkOutDate > o.stay_from) && (!o.stay_to || checkInDate <= o.stay_to));
+  const ratesQuery = useQuery({
+    queryKey: ['live-rate-card-variants', checkInDate, checkOutDate, coupon, roomTypes.map(r => r.id)],
     enabled: roomTypes.length > 0,
-  });
-
-  // Fetch full rate variants for the first room type (for demonstration)
-  const { data: rateVariants = [] } = useQuery<{ roomTypeId: string; roomTypeName: string; variants: RateVariant[] }[]>({
-    queryKey: ['rate-variants', format(selectedDate, 'yyyy-MM-dd'), stayNights, roomTypes.length],
-    queryFn: async () => {
-      if (roomTypes.length === 0) return [];
-      
-      const results: { roomTypeId: string; roomTypeName: string; variants: RateVariant[] }[] = [];
-      const checkOut = new Date(selectedDate);
-      checkOut.setDate(checkOut.getDate() + stayNights);
-      
-      for (const roomType of roomTypes) {
-        const { data, error } = await supabase.rpc('calculate_rate_variants_v2', {
-          p_room_type_id: roomType.id,
-          p_check_in: format(selectedDate, 'yyyy-MM-dd'),
-          p_check_out: format(checkOut, 'yyyy-MM-dd'),
-          p_adults_count: 2,
-          p_children_count: 0,
-          p_infants_count: 0,
-          p_booking_channel: 'direct'
-        });
-        
-        if (!error && data) {
-          const variantsArray = Array.isArray(data) ? data : [];
-          results.push({
-            roomTypeId: roomType.id,
-            roomTypeName: roomType.name,
-            variants: variantsArray as unknown as RateVariant[]
-          });
+    queryFn: async () => Promise.all(roomTypes.map(async room => {
+      const { data, error } = await supabase.rpc('calculate_rate_variants_v2', { p_room_type_id: room.id, p_check_in: checkInDate, p_check_out: checkOutDate, p_adults_count: 2, p_children_count: 0, p_infants_count: 0, p_booking_channel: 'direct' });
+      if (error) throw error;
+      const baseVariants = (Array.isArray(data) ? data : []) as unknown as RateVariant[];
+      const variants = !coupon ? baseVariants : await Promise.all(baseVariants.map(async base => {
+        const { data: result, error: quoteError } = await supabase.functions.invoke('create-razorpay-order-v3', { body: { action: 'promo', promo_code: coupon, quote_request: { room_type_id: room.id, room_unit_id: null, check_in: checkInDate, check_out: checkOutDate, adults_count: 2, children_count: 0, infants_count: 0, meal_plan_code: base.meal_plan_code, cancellation_policy_code: base.cancellation_policy_code, addons: [] } } });
+        const quote = result?.quote;
+        if (quoteError || !result?.valid || !promoMatchesLiveRate(quote, coupon, base.quote_fingerprint)) {
+          return { ...base, couponError: result?.error || 'Unavailable for this rate, or the price changed. Refresh to check again.' };
         }
-      }
-      
-      return results;
-    },
-    enabled: roomTypes.length > 0,
+        return { ...quote.variant, promotion: quote.promotion, original_variant: quote.original_variant } as RateVariant;
+      }));
+      return { room, variants };
+    })),
   });
-
-  // Build the matrix column structure: cancellation policies as column groups,
-  // meal plans as sub-columns, in the order returned by the rate engine.
+  const rates = ratesQuery.data ?? [];
+  const summaryRates = rates.flatMap(r => {
+    const v = r.variants.find(v => v.meal_plan_code === 'RO' && v.cancellation_policy_code === 'refundable_credit') ?? r.variants.find(v => v.meal_plan_code === 'RO');
+    return v ? [{ room: r.room, variant: v }] : [];
+  });
+  const average = summaryRates.length ? summaryRates.reduce((s, r) => s + r.variant.price_per_night, 0) / summaryRates.length : null;
+  const sorted = [...summaryRates].sort((a, b) => a.variant.price_per_night - b.variant.price_per_night);
+  const lowest = sorted[0];
+  const highest = sorted[sorted.length - 1];
   const policyGroups: { code: string; name: string; mealPlans: { code: string; name: string }[] }[] = [];
-  for (const room of rateVariants) {
-    for (const v of room.variants) {
-      let group = policyGroups.find(g => g.code === v.cancellation_policy_code);
-      if (!group) {
-        group = { code: v.cancellation_policy_code, name: v.cancellation_policy_name, mealPlans: [] };
-        policyGroups.push(group);
-      }
-      if (!group.mealPlans.some(m => m.code === v.meal_plan_code)) {
-        group.mealPlans.push({ code: v.meal_plan_code, name: v.meal_plan_name });
-      }
-    }
+  for (const r of rates) for (const v of r.variants) {
+    let group = policyGroups.find(g => g.code === v.cancellation_policy_code);
+    if (!group) { group = { code: v.cancellation_policy_code, name: v.cancellation_policy_name, mealPlans: [] }; policyGroups.push(group); }
+    if (!group.mealPlans.some(m => m.code === v.meal_plan_code)) group.mealPlans.push({ code: v.meal_plan_code, name: v.meal_plan_name });
   }
-  const variantsLoading = rateVariants.length === 0 && roomTypes.length > 0;
-
-  // Calculate stats
-  const avgPrice = liveRates.length > 0 
-    ? liveRates.reduce((sum, e) => sum + e.finalPrice, 0) / liveRates.length 
-    : 0;
-  const minRate = liveRates.length > 0 
-    ? liveRates.reduce((min, e) => e.finalPrice < min.finalPrice ? e : min, liveRates[0])
-    : null;
-  const maxRate = liveRates.length > 0 
-    ? liveRates.reduce((max, e) => e.finalPrice > max.finalPrice ? e : max, liveRates[0])
-    : null;
-
-  return (
-    <div className="p-6 space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold">Live Rate Card</h1>
-          <p className="text-muted-foreground mt-2">
-            Server-calculated rates for two adults. Verified anchors use meal conversion; legacy rates retain their unconfirmed basis.
-          </p>
-        </div>
-        <Button onClick={() => refetch()} variant="outline" disabled={isFetching}>
-          <RefreshCw className={cn("h-4 w-4 mr-2", isFetching && "animate-spin")} />
-          Refresh
-        </Button>
-      </div>
-
-      <Card>
-        <CardHeader>
-          <div className="flex items-center justify-between">
-            <div>
-              <CardTitle>All Room Types - Live Rates</CardTitle>
-              <CardDescription className="flex items-center gap-2 mt-1">
-                {format(selectedDate, 'EEEE, MMMM d, yyyy')}
-                {currentDayType && (
-                  <Badge variant={isWeekend ? 'default' : 'secondary'}>
-                    {currentDayType.name}
-                  </Badge>
-                )}
-              </CardDescription>
-            </div>
-            <label className="text-sm">Stay nights<Input aria-label="Stay nights" type="number" min="1" max="365" value={stayNights} onChange={e=>setStayNights(Math.min(365,Math.max(1,Number(e.target.value)||1)))} className="w-24" /></label>
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button variant="outline" className="min-w-[200px] justify-start text-left font-normal">
-                  <Calendar className="mr-2 h-4 w-4" />
-                  {format(selectedDate, 'PPP')}
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-auto p-0" align="end">
-                <CalendarComponent
-                  mode="single"
-                  selected={selectedDate}
-                  onSelect={(date) => date && setSelectedDate(date)}
-                  initialFocus
-                  className="p-3 pointer-events-auto"
-                />
-              </PopoverContent>
-            </Popover>
-          </div>
-        </CardHeader>
-        <CardContent className="space-y-6">
-          <div className="space-y-4 mt-4">
-              <Alert className="bg-muted/50">
-                <Info className="h-4 w-4" />
-                <AlertDescription className="text-xs">
-                  <strong>Full Rate Card:</strong> Each room type is shown once, with every meal plan and cancellation policy variant across the row.
-                  Rates include dynamic adjustments (occupancy, lead time, channel, tactical overrides) — this is what guests see during booking.
-                </AlertDescription>
-              </Alert>
-
-              {liveRates.length > 0 && (
-                <div className="grid grid-cols-3 gap-4 p-4 bg-muted/50 rounded-lg">
-                  <div>
-                    <div className="text-sm text-muted-foreground">Average Rate</div>
-                    <div className="text-2xl font-bold">₹{avgPrice.toLocaleString('en-IN', { maximumFractionDigits: 0 })}</div>
-                  </div>
-                  <div>
-                    <div className="text-sm text-muted-foreground">Lowest Rate</div>
-                    <div className="text-2xl font-bold text-green-600">
-                      ₹{minRate?.finalPrice.toLocaleString('en-IN', { maximumFractionDigits: 0 })}
-                    </div>
-                    <div className="text-xs text-muted-foreground">{minRate?.roomTypeName}</div>
-                  </div>
-                  <div>
-                    <div className="text-sm text-muted-foreground">Highest Rate</div>
-                    <div className="text-2xl font-bold text-blue-600">
-                      ₹{maxRate?.finalPrice.toLocaleString('en-IN', { maximumFractionDigits: 0 })}
-                    </div>
-                    <div className="text-xs text-muted-foreground">{maxRate?.roomTypeName}</div>
-                  </div>
-                </div>
-              )}
-
-              {isLoading || variantsLoading ? (
-                <p className="text-muted-foreground text-center py-8">Loading live rates...</p>
-              ) : liveRates.length === 0 ? (
-                <div className="text-center py-8">
-                  <p className="text-muted-foreground mb-4">No room types configured.</p>
-                  <p className="text-sm text-muted-foreground">
-                    Add room types in Room Management to see live rates.
-                  </p>
-                </div>
-              ) : (
-                <div className="border rounded-lg overflow-x-auto">
-                  <Table>
-                    <TableHeader>
-                      <TableRow className="text-xs">
-                        <TableHead rowSpan={2} className="py-2 px-3 align-middle">Room Type</TableHead>
-                        <TableHead rowSpan={2} className="py-2 px-3 text-right align-middle">Base</TableHead>
-                        <TableHead rowSpan={2} className="py-2 px-3 text-right align-middle">Room Only</TableHead>
-                        {policyGroups.map((g) => (
-                          <TableHead key={g.code} colSpan={g.mealPlans.length} className="py-2 px-3 text-center border-l">
-                            {g.name}
-                          </TableHead>
-                        ))}
-                      </TableRow>
-                      <TableRow className="text-xs">
-                        {policyGroups.map((g) =>
-                          g.mealPlans.map((m) => (
-                            <TableHead key={`${g.code}-${m.code}`} className="py-1 px-3 text-right border-l">
-                              <div className="text-[11px] font-medium whitespace-nowrap">{m.name}</div>
-                              <div className="text-[10px] text-muted-foreground font-normal">{m.code}</div>
-                            </TableHead>
-                          ))
-                        )}
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {liveRates.map((rate) => {
-                        const adjustment = rate.finalPrice - rate.basePrice;
-                        const adjustmentPercent = rate.basePrice > 0 
-                          ? ((adjustment / rate.basePrice) * 100).toFixed(0)
-                          : '0';
-                        const room = rateVariants.find((r) => r.roomTypeId === rate.roomTypeId);
-
-                        return (
-                          <HoverCard key={rate.roomTypeId} openDelay={100} closeDelay={100}>
-                            <HoverCardTrigger asChild>
-                              <TableRow className="cursor-pointer hover:bg-muted/80 text-sm">
-                                <TableCell className="py-2 px-3 font-medium">
-                                  <div className="flex items-center gap-2">
-                                    <span className="whitespace-nowrap">{rate.roomTypeName}</span>
-                                    {rate.adjustments && rate.adjustments.length > 0 ? (
-                                      <Badge variant="secondary" className="text-[10px] px-1.5 py-0">
-                                        {rate.adjustments.length} rule{rate.adjustments.length > 1 ? 's' : ''}
-                                      </Badge>
-                                    ) : (
-                                      <span className="text-[10px] text-muted-foreground">Base</span>
-                                    )}
-                                    <ChevronRight className="h-3 w-3 text-muted-foreground" />
-                                  </div>
-                                </TableCell>
-                                <TableCell className="py-2 px-3 text-right text-muted-foreground text-xs">
-                                  ₹{rate.basePrice.toLocaleString('en-IN')}
-                                </TableCell>
-                                <TableCell className="py-2 px-3 text-right">
-                                  <div className="font-semibold">₹{rate.finalPrice.toLocaleString('en-IN')}</div>
-                                  {adjustment !== 0 ? (
-                                    <div className={cn('text-[10px]', adjustment >= 0 ? 'text-green-600' : 'text-red-600')}>
-                                      {adjustment >= 0 ? '+' : ''}{adjustmentPercent}%
-                                    </div>
-                                  ) : (
-                                    <div className="text-[10px] text-muted-foreground">per night</div>
-                                  )}
-                                </TableCell>
-                                {policyGroups.map((g) =>
-                                  g.mealPlans.map((m) => {
-                                    const v = room?.variants.find(
-                                      (x) => x.meal_plan_code === m.code && x.cancellation_policy_code === g.code
-                                    );
-                                    return (
-                                      <TableCell key={`${g.code}-${m.code}`} className="py-2 px-3 text-right border-l">
-                                        {v ? (
-                                          <>
-                                            <div className="font-semibold text-sm whitespace-nowrap">
-                                              ₹{v.price_per_night?.toLocaleString('en-IN')}
-                                            </div>
-                                            <div className="text-[10px] text-muted-foreground whitespace-nowrap">
-                                              ₹{v.total_price?.toLocaleString('en-IN')} total
-                                            </div>
-                                          </>
-                                        ) : (
-                                          <span className="text-muted-foreground">-</span>
-                                        )}
-                                      </TableCell>
-                                    );
-                                  })
-                                )}
-                              </TableRow>
-                            </HoverCardTrigger>
-                            <HoverCardContent className="w-80 p-0" side="left" align="start">
-                              <div className="p-3 border-b bg-muted/30">
-                                <div className="font-semibold text-sm">{rate.roomTypeName}</div>
-                                <div className="text-xs text-muted-foreground">Rate Calculation Breakdown</div>
-                              </div>
-                              <div className="p-3 space-y-2 max-h-[300px] overflow-y-auto">
-                                {/* Step 1: Day Type & Base Price */}
-                                <div className="flex items-center justify-between text-sm">
-                                  <div className="flex items-center gap-2">
-                                    <Badge variant="outline" className="text-[10px] px-1.5 py-0 bg-background">1</Badge>
-                                    <div>
-                                      <span>Base Price</span>
-                                      <div className="text-[10px] text-muted-foreground">
-                                        {rate.dayTypeName} rate
-                                      </div>
-                                    </div>
-                                  </div>
-                                  <span className="font-mono text-xs">₹{rate.basePrice.toLocaleString('en-IN')}</span>
-                                </div>
-                                
-                                {/* Rule adjustments */}
-                                {rate.adjustments && rate.adjustments.length > 0 ? (
-                                  rate.adjustments.map((rule: any, idx: number) => {
-                                    const ruleAdjustment = rule.adjustment || (rule.to - rule.from) || 0;
-                                    const newPrice = rule.new_price || rule.to || rate.finalPrice;
-                                    
-                                    return (
-                                      <div key={idx} className="space-y-1">
-                                        <div className="flex items-start justify-between text-sm">
-                                          <div className="flex items-center gap-2">
-                                            <Badge variant="outline" className="text-[10px] px-1.5 py-0 bg-background">{idx + 2}</Badge>
-                                            <div>
-                                              <div className="font-medium text-xs capitalize">
-                                                {(rule.type || rule.rule_type || 'Adjustment').replace(/_/g, ' ')}
-                                              </div>
-                                              {rule.rule && (
-                                                <div className="text-[10px] text-muted-foreground">{rule.rule}</div>
-                                              )}
-                                              {rule.reason && (
-                                                <div className="text-[10px] text-muted-foreground">{rule.reason}</div>
-                                              )}
-                                              {rule.channel && (
-                                                <div className="text-[10px] text-muted-foreground">Channel: {rule.channel}</div>
-                                              )}
-                                              {rule.guests && (
-                                                <div className="text-[10px] text-muted-foreground">{rule.guests} guests</div>
-                                              )}
-                                            </div>
-                                          </div>
-                                          <div className="text-right">
-                                            <div className={cn(
-                                              "font-mono text-xs",
-                                              ruleAdjustment >= 0 ? "text-green-600" : "text-red-600"
-                                            )}>
-                                              {ruleAdjustment >= 0 ? '+' : ''}₹{Math.abs(ruleAdjustment).toLocaleString('en-IN')}
-                                            </div>
-                                            {newPrice > 0 && (
-                                              <div className="text-[10px] text-muted-foreground">
-                                                = ₹{newPrice.toLocaleString('en-IN')}
-                                              </div>
-                                            )}
-                                          </div>
-                                        </div>
-                                      </div>
-                                    );
-                                  })
-                                ) : (
-                                  <div className="text-xs text-muted-foreground italic py-2">
-                                    No dynamic rules applied. Using base {rate.dayTypeName?.toLowerCase()} price.
-                                  </div>
-                                )}
-                                
-                                {/* Final Price */}
-                                <div className="border-t pt-2 mt-2">
-                                  <div className="flex items-center justify-between">
-                                    <div className="flex items-center gap-2">
-                                      <ArrowRight className="h-3 w-3" />
-                                      <span className="font-semibold text-sm">Room Rate</span>
-                                    </div>
-                                    <span className="font-mono font-bold">₹{rate.finalPrice.toLocaleString('en-IN')}</span>
-                                  </div>
-                                  {adjustment !== 0 && (
-                                    <div className="text-right text-xs text-muted-foreground">
-                                      Total adjustment: <span className={adjustment >= 0 ? 'text-green-600' : 'text-red-600'}>
-                                        {adjustment >= 0 ? '+' : ''}₹{adjustment.toLocaleString('en-IN')} ({adjustmentPercent}%)
-                                      </span>
-                                    </div>
-                                  )}
-                                </div>
-
-                                <div className="border-t pt-2 mt-2 text-[10px] text-muted-foreground">
-                                  <Info className="h-3 w-3 inline mr-1" />
-                                  Meal plan & cancellation policy totals are shown across this row.
-                                </div>
-                              </div>
-                            </HoverCardContent>
-                          </HoverCard>
-                        );
-                      })}
-                    </TableBody>
-                  </Table>
-                </div>
-              )}
-          </div>
-        </CardContent>
-      </Card>
+  const stayDiscountCount = rates.filter(r => r.variants.some(v => v.nightly_breakdown?.some(n => (n.length_of_stay_discount ?? 0) > 0))).length;
+  const appliedCount = rates.reduce((s, r) => s + r.variants.filter(v => v.promotion).length, 0);
+  return <div className="p-4 md:p-6 space-y-6">
+    <div className="flex flex-wrap items-center justify-between gap-3"><div><h1 className="text-3xl font-bold">Live Rate Card</h1><p className="text-muted-foreground mt-2">Two adults · Direct website · Rates before tax</p></div><Button variant="outline" disabled={ratesQuery.isFetching} onClick={() => { void queryClient.invalidateQueries({ queryKey: ['live-rate-card-variants'] }); void queryClient.invalidateQueries({ queryKey: ['live-rate-card-offers'] }); void queryClient.invalidateQueries({ queryKey: ['live-rate-card-overrides'] }); }}><RefreshCw className={cn('h-4 w-4 mr-2', ratesQuery.isFetching && 'animate-spin')} />Refresh</Button></div>
+    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+      {[{ title: 'Average Rate', value: average, note: 'Room Only · per night' }, { title: 'Lowest Rate', value: lowest?.variant.price_per_night, note: lowest?.room.name }, { title: 'Highest Rate', value: highest?.variant.price_per_night, note: highest?.room.name }].map(s => <Card key={s.title}><CardHeader className="pb-2"><CardTitle className="text-sm font-medium text-muted-foreground">{s.title}</CardTitle></CardHeader><CardContent><p className="text-2xl font-bold">{s.value == null ? '—' : money(s.value)}</p><p className="text-xs text-muted-foreground mt-1">{s.note || 'Room Only · per night'}</p></CardContent></Card>)}
     </div>
-  );
+    <section className="space-y-3 border-y py-4" aria-label="Coupons"><div className="flex flex-wrap justify-between gap-3"><h2 className="font-semibold flex items-center gap-2"><Tag className="h-4 w-4" />Coupons</h2><Button asChild variant="link" size="sm"><Link to="/admin/pricing/promotions">Manage coupons</Link></Button></div>
+      <form className="flex flex-wrap items-center gap-2" onSubmit={e => { e.preventDefault(); setCoupon(couponInput.trim().toUpperCase()); }}><Input aria-label="Coupon code" placeholder="Coupon code" value={couponInput} onChange={e => setCouponInput(e.target.value)} className="w-56" /><Button type="submit" disabled={!couponInput.trim() || ratesQuery.isFetching}>Apply</Button>{coupon && <Button type="button" variant="outline" onClick={() => { setCoupon(''); setCouponInput(''); }}><X className="h-4 w-4 mr-1" />Remove</Button>}</form>
+      <div className="flex flex-wrap gap-2">{availableOffers.map(o => <Button key={o.code} variant="outline" size="sm" disabled={ratesQuery.isFetching} onClick={() => { setCouponInput(o.code); setCoupon(o.code); }}>{o.code} · {o.label}</Button>)}</div>
+      <p role="status" className={cn('text-sm', coupon && !ratesQuery.isFetching && !appliedCount ? 'text-destructive' : 'text-muted-foreground')}>{ratesQuery.isFetching && coupon ? `Checking ${coupon}…` : coupon ? appliedCount ? `${coupon} applied to ${appliedCount} eligible rates. Other rates remain unchanged.` : `${coupon} was not applied to any rate for this stay.` : offersError ? 'Available coupons could not be loaded.' : availableOffers.length ? 'No coupon applied.' : 'No advertised coupons for this period.'}</p>
+      {stayDiscountCount > 0 && <p className="text-sm text-primary">Stay-length discounts applied to {stayDiscountCount} room types.</p>}
+    </section>
+    <section className="space-y-4">
+      <div className="flex flex-wrap justify-between items-end gap-4"><div><h2 className="text-lg font-semibold">All Room Types — Live Rates</h2><p className="text-sm text-muted-foreground">{format(selectedDate, 'dd MMM yyyy')} – {format(checkOut, 'dd MMM yyyy')} · {stayNights} {stayNights === 1 ? 'night' : 'nights'}</p></div><div className="flex flex-wrap items-end gap-3"><label className="text-sm space-y-1 block">Stay nights<Input aria-label="Stay nights" type="number" min="1" max="365" step="1" value={stayNights} onChange={e => setStayNights(Math.min(365, Math.max(1, Math.trunc(Number(e.target.value) || 1))))} className="w-24" /></label><Popover><PopoverTrigger asChild><Button variant="outline"><Calendar className="mr-2 h-4 w-4" />{format(selectedDate, 'PPP')}</Button></PopoverTrigger><PopoverContent className="w-auto p-0" align="end"><CalendarComponent mode="single" selected={selectedDate} onSelect={date => date && setSelectedDate(date)} initialFocus /></PopoverContent></Popover></div></div>
+      {roomError || ratesQuery.error ? <p role="alert" className="text-destructive">Rates could not be loaded. Please refresh.</p> : ratesQuery.isPending && roomTypes.length ? <p className="text-muted-foreground py-8 text-center">Loading live rates…</p> : !rates.length ? <p className="text-muted-foreground py-8 text-center">No rates available.</p> : <div className="border rounded-md overflow-x-auto"><Table><TableHeader><TableRow><TableHead rowSpan={2}>Room Type / Category</TableHead><TableHead rowSpan={2} className="text-right">Base / night</TableHead><TableHead rowSpan={2} className="text-right">Room Only / night</TableHead>{policyGroups.map(g => <TableHead key={g.code} colSpan={g.mealPlans.length} className="text-center border-l">{g.name}</TableHead>)}</TableRow><TableRow>{policyGroups.flatMap(g => g.mealPlans.map(m => <TableHead key={`${g.code}-${m.code}`} className="text-right border-l whitespace-nowrap">{m.name}</TableHead>))}</TableRow></TableHeader><TableBody>{rates.map(({ room, variants }) => {
+        const ro = variants.find(v => v.meal_plan_code === 'RO' && v.cancellation_policy_code === 'refundable_credit') ?? variants.find(v => v.meal_plan_code === 'RO');
+        return <TableRow key={room.id}><TableCell className="min-w-48"><div className="font-medium">{room.name}</div><div className="text-xs text-muted-foreground">{room.room_categories?.name || 'Uncategorised'}</div><div className="flex flex-wrap gap-1 mt-1">{!room.is_published && <Badge variant="secondary">Unpublished</Badge>}{room.room_categories?.is_active === false && <Badge variant="destructive">Category inactive</Badge>}</div></TableCell><TableCell className="text-right whitespace-nowrap text-muted-foreground">{ro ? money((ro.original_variant?.room_rate ?? ro.room_rate) / stayNights) : '—'}</TableCell><TableCell className="text-right whitespace-nowrap">{ro ? money(ro.price_per_night) : '—'}</TableCell>{policyGroups.flatMap(g => g.mealPlans.map(m => {
+          const v = variants.find(v => v.meal_plan_code === m.code && v.cancellation_policy_code === g.code);
+          return <TableCell key={`${g.code}-${m.code}`} className="text-right border-l">{v ? <Popover><PopoverTrigger asChild><Button variant="ghost" className="h-auto px-1 py-2 flex-col items-end gap-1" aria-label={`${room.name}, ${m.name}, ${g.name}: rate calculation breakdown`}><span className="font-semibold whitespace-nowrap">{money(v.price_per_night)} <Info className="h-3 w-3 inline text-muted-foreground" /></span><span className="text-xs text-muted-foreground whitespace-nowrap">{money(v.total_price)} total</span>{(appliedOverrideIds(v.nightly_breakdown ?? []).length > 0 || (v.nightly_breakdown ?? []).some(n => n.dynamic_rules?.some(r => String(r.type ?? '').includes('override')))) && <Badge variant="secondary">Override</Badge>}{v.promotion && <Badge variant="outline">{v.promotion.code}</Badge>}{v.couponError && <span className="text-xs text-muted-foreground">Coupon not applied</span>}</Button></PopoverTrigger><PopoverContent className="w-96 max-w-[calc(100vw-2rem)] max-h-[70vh] overflow-y-auto" align="end"><RateBreakdown variant={v} policies={policies} nights={stayNights} roomTypeId={room.id} /></PopoverContent></Popover> : '—'}</TableCell>;
+        }))}</TableRow>;
+      })}</TableBody></Table></div>}
+    </section>
+  </div>;
 }
-
