@@ -15,6 +15,19 @@ import { Plus, Search } from 'lucide-react';
 
 type Offer = PromotionRestrictions & {code:string;label:string;revision?:number;is_active:boolean;is_public:boolean;discount_kind:string;discount_basis:string|null;discount_value:number|null;amount_per_night?:number;amount_per_booking?:number;booking_from:string|null;booking_to:string|null;stay_from:string|null;stay_to:string|null;day_scope:string;mixed_stay_mode:string|null};
 const api = supabase as unknown as {rpc:(name:string,args?:Record<string,unknown>)=>Promise<{data:unknown;error:{message:string}|null}>};
+const promoStatuses = ['Active', 'Draft / disabled', 'Scheduled', 'Expired'] as const;
+type PromoStatus = typeof promoStatuses[number];
+const promoDayFormatter = new Intl.DateTimeFormat('en', { timeZone: 'Asia/Kolkata', year: 'numeric', month: '2-digit', day: '2-digit' });
+function promoToday(now = new Date()) {
+ const parts = promoDayFormatter.formatToParts(now);
+ return ['year', 'month', 'day'].map(part => parts.find(value => value.type === part)?.value).join('-');
+}
+function promotionStatus(offer: Offer, today: string): PromoStatus {
+ if ((offer.booking_to && offer.booking_to < today) || (offer.stay_to && offer.stay_to < today)) return 'Expired';
+ if (!offer.is_active) return 'Draft / disabled';
+ if (offer.booking_from && offer.booking_from > today) return 'Scheduled';
+ return 'Active';
+}
 const initial = ():Offer=>({...unrestrictedPromotion(),code:'',label:'',is_active:false,is_public:false,discount_kind:'fixed',discount_basis:null,discount_value:null,booking_from:null,booking_to:null,stay_from:null,stay_to:null,day_scope:'both',mixed_stay_mode:null});
 const inputClass = 'h-9 min-w-0 text-sm';
 const selectClass = 'h-9 w-full min-w-0 rounded-md border border-input bg-background px-2.5 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50';
@@ -30,10 +43,11 @@ export default function WebsitePromotionSettings(){
  async function load(){const {data,error}=await api.rpc('website_promotion_settings');if(error)throw Error(error.message);const r=data as {enabled:boolean;offers:Offer[]};if(!Array.isArray(r?.offers))throw Error('Invalid promotion settings');setOffers(r.offers.map(o=>({...unrestrictedPromotion(),...o})));setEnabled(r.enabled);setReady(r.offers.every(o=>typeof o.day_scope==='string'&&'total_usage_limit' in o&&'eligible_room_category_ids' in o));}
  useEffect(()=>{void load().catch(e=>setError(e.message));},[]);
  const change=(key:keyof Offer,value:unknown)=>{setReview(false);setForm(f=>f?{...f,[key]:value}:null)};
- const [statusFilter,setStatusFilter]=useState<'all'|'enabled'|'disabled'>('all');
+ const [statusFilter,setStatusFilter]=useState<PromoStatus | 'all'>('all');
  const query=search.trim().toLowerCase();
+ const today=promoToday();
  const visibleOffers=offers.filter(o=>(o.code+' '+o.label).toLowerCase().includes(query)&&
-   (statusFilter==='all'||o.is_active===(statusFilter==='enabled')));
+   (statusFilter==='all'||promotionStatus(o, today)===statusFilter));
  const [categories,setCategories]=useState<{id:string;name:string}[]>([]);
  const editorRef=useRef<HTMLHeadingElement>(null);
  const editOffer=(offer: Offer = initial())=>{
@@ -86,8 +100,8 @@ export default function WebsitePromotionSettings(){
        <Search aria-hidden="true" className="pointer-events-none absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground"/>
        <Input className="h-9 pl-8 text-sm" aria-label="Search promotions" placeholder="Search code or description" value={search} onChange={e=>setSearch(e.target.value)}/>
       </div>
-      <select aria-label="Filter promotions by status" className={selectClass.replace('w-full','w-auto')} value={statusFilter} onChange={e=>{const value=e.target.value;if(value==='all'||value==='enabled'||value==='disabled')setStatusFilter(value);}}>
-       <option value="all">All statuses</option><option value="enabled">Enabled</option><option value="disabled">Disabled / draft</option>
+      <select aria-label="Filter promotions by status" className={selectClass.replace('w-full','w-auto')} value={statusFilter} onChange={e=>{const value=e.target.value;const status=promoStatuses.find(item=>item===value);setStatusFilter(status??'all');}}>
+       <option value="all">All statuses</option>{promoStatuses.map(status=><option key={status} value={status}>{status}</option>)}
       </select>
      </div>
     </CardHeader>
@@ -104,7 +118,7 @@ export default function WebsitePromotionSettings(){
         <th scope="row" className="p-2 text-left font-medium">{o.code}</th>
         <TableCell className="p-2">{o.code==='EP300'&&o.discount_kind==='legacy'?'₹300 / room-only night':o.code==='DIRECT1000'&&o.discount_kind==='legacy'?'₹1,000 / booking':o.discount_value==null?o.label:o.discount_kind==='percentage'?`${o.discount_value}% off`:`₹${o.discount_value.toLocaleString('en-IN')} off`}</TableCell>
         <TableCell className={`p-2 ${noteClass}`}><p>Book: {o.booking_from??'Any'} to {o.booking_to??'Any'}</p><p>Stay: {o.stay_from??'Any'} to {o.stay_to??'Any'}</p></TableCell>
-        <TableCell className="p-2"><Badge variant={o.is_active?'default':'secondary'}>{o.is_active?'Enabled':'Disabled'}</Badge><span className="mt-0.5 block text-xs text-muted-foreground">{o.is_public===false?'Private':'Public'}</span></TableCell>
+        <TableCell className="p-2"><Badge variant={promotionStatus(o, today)==='Active'?'default':'secondary'}>{promotionStatus(o, today)}</Badge><span className="mt-0.5 block text-xs text-muted-foreground">{o.is_public===false?'Private':'Public'}</span></TableCell>
         <TableCell className="p-1 text-right"><Button type="button" variant="ghost" size="sm" aria-label={`Edit ${o.code}`} disabled={unavailable} onClick={()=>editOffer(o)}>Edit</Button></TableCell>
        </TableRow>)}</TableBody>
       </Table>
