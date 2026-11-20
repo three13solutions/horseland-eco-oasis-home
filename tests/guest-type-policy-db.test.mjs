@@ -24,7 +24,7 @@ before(async()=>{
  if not found then raise exception 'GUEST_PRICING_NOT_ACTIVE: age and meal pricing are staged; publish and activate the matching booking frontend before editing'; end if;
  return p_rules;end$$;`);
  await db.query('insert into guest_age_policy_versions(revision,bands) values(1,$1)',[JSON.stringify(bands)]);
- for(const file of ['20261120173258_405372e3-36c0-421a-9ab7-eb2252bf6198.sql','20261120173535_e31c57c3-8c2a-4b25-9a75-a491f6cc05be.sql','20261120174609_1de4fedf-4125-46e8-9900-316ebed22d9e.sql','20261120174853_f07f3b33-b4d0-4664-a328-06e69abdcdd4.sql']) await db.exec(readFileSync(new URL('../supabase/migrations/'+file,import.meta.url),'utf8'));
+ for(const file of ['20261120173258_405372e3-36c0-421a-9ab7-eb2252bf6198.sql','20261120173535_e31c57c3-8c2a-4b25-9a75-a491f6cc05be.sql','20261120174609_1de4fedf-4125-46e8-9900-316ebed22d9e.sql','20261120174853_f07f3b33-b4d0-4664-a328-06e69abdcdd4.sql','20261120175306_245ac7e3-be68-46d8-8957-368276eb3672.sql']) await db.exec(readFileSync(new URL('../supabase/migrations/'+file,import.meta.url),'utf8'));
  await db.exec('set check_function_bodies=on');
 });
 after(async()=>{if(db)await db.close();});
