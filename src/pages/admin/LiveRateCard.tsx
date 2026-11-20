@@ -13,7 +13,6 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Calendar as CalendarComponent } from '@/components/ui/calendar';
 import { cn } from '@/lib/utils';
 import { HoverCard, HoverCardContent, HoverCardTrigger } from '@/components/ui/hover-card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 interface LiveRateResult {
   roomTypeId: string;
@@ -46,7 +45,6 @@ interface RoomType {
 export default function LiveRateCard() {
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [stayNights, setStayNights] = useState(1);
-  const [activeTab, setActiveTab] = useState('room-rates');
 
   const { data: roomTypes = [] } = useQuery<RoomType[]>({
     queryKey: ['pricing-room-types-with-units', 'LiveRateCard'],
@@ -147,8 +145,25 @@ export default function LiveRateCard() {
       
       return results;
     },
-    enabled: roomTypes.length > 0 && activeTab === 'full-variants',
+    enabled: roomTypes.length > 0,
   });
+
+  // Build the matrix column structure: cancellation policies as column groups,
+  // meal plans as sub-columns, in the order returned by the rate engine.
+  const policyGroups: { code: string; name: string; mealPlans: { code: string; name: string }[] }[] = [];
+  for (const room of rateVariants) {
+    for (const v of room.variants) {
+      let group = policyGroups.find(g => g.code === v.cancellation_policy_code);
+      if (!group) {
+        group = { code: v.cancellation_policy_code, name: v.cancellation_policy_name, mealPlans: [] };
+        policyGroups.push(group);
+      }
+      if (!group.mealPlans.some(m => m.code === v.meal_plan_code)) {
+        group.mealPlans.push({ code: v.meal_plan_code, name: v.meal_plan_name });
+      }
+    }
+  }
+  const variantsLoading = rateVariants.length === 0 && roomTypes.length > 0;
 
   // Calculate stats
   const avgPrice = liveRates.length > 0 
@@ -211,18 +226,12 @@ export default function LiveRateCard() {
           </div>
         </CardHeader>
         <CardContent className="space-y-6">
-          <Tabs value={activeTab} onValueChange={setActiveTab}>
-            <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="room-rates">Room Rates Only</TabsTrigger>
-              <TabsTrigger value="full-variants">Full Variants (with Meal Plans)</TabsTrigger>
-            </TabsList>
-
-            <TabsContent value="room-rates" className="space-y-4 mt-4">
+          <div className="space-y-4 mt-4">
               <Alert className="bg-muted/50">
                 <Info className="h-4 w-4" />
                 <AlertDescription className="text-xs">
-                  <strong>Room Rates Only:</strong> Shows base room pricing with dynamic adjustments (occupancy, lead time, channel, tactical overrides). 
-                  Meal plans and cancellation policies are shown in "Full Variants" tab.
+                  <strong>Full Rate Card:</strong> Each room type is shown once, with every meal plan and cancellation policy variant across the row.
+                  Rates include dynamic adjustments (occupancy, lead time, channel, tactical overrides) — this is what guests see during booking.
                 </AlertDescription>
               </Alert>
 
@@ -249,7 +258,7 @@ export default function LiveRateCard() {
                 </div>
               )}
 
-              {isLoading ? (
+              {isLoading || variantsLoading ? (
                 <p className="text-muted-foreground text-center py-8">Loading live rates...</p>
               ) : liveRates.length === 0 ? (
                 <div className="text-center py-8">
@@ -259,15 +268,28 @@ export default function LiveRateCard() {
                   </p>
                 </div>
               ) : (
-                <div className="border rounded-lg overflow-hidden">
+                <div className="border rounded-lg overflow-x-auto">
                   <Table>
                     <TableHeader>
                       <TableRow className="text-xs">
-                        <TableHead className="py-2 px-3">Room Type</TableHead>
-                        <TableHead className="py-2 px-3 text-right">Base</TableHead>
-                        <TableHead className="py-2 px-3 text-right">Final</TableHead>
-                        <TableHead className="py-2 px-3 text-right">Adj.</TableHead>
-                        <TableHead className="py-2 px-3">Rules</TableHead>
+                        <TableHead rowSpan={2} className="py-2 px-3 align-middle">Room Type</TableHead>
+                        <TableHead rowSpan={2} className="py-2 px-3 text-right align-middle">Base</TableHead>
+                        <TableHead rowSpan={2} className="py-2 px-3 text-right align-middle">Room Only</TableHead>
+                        {policyGroups.map((g) => (
+                          <TableHead key={g.code} colSpan={g.mealPlans.length} className="py-2 px-3 text-center border-l">
+                            {g.name}
+                          </TableHead>
+                        ))}
+                      </TableRow>
+                      <TableRow className="text-xs">
+                        {policyGroups.map((g) =>
+                          g.mealPlans.map((m) => (
+                            <TableHead key={`${g.code}-${m.code}`} className="py-1 px-3 text-right border-l">
+                              <div className="text-[11px] font-medium whitespace-nowrap">{m.name}</div>
+                              <div className="text-[10px] text-muted-foreground font-normal">{m.code}</div>
+                            </TableHead>
+                          ))
+                        )}
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -276,31 +298,15 @@ export default function LiveRateCard() {
                         const adjustmentPercent = rate.basePrice > 0 
                           ? ((adjustment / rate.basePrice) * 100).toFixed(0)
                           : '0';
+                        const room = rateVariants.find((r) => r.roomTypeId === rate.roomTypeId);
 
                         return (
                           <HoverCard key={rate.roomTypeId} openDelay={100} closeDelay={100}>
                             <HoverCardTrigger asChild>
                               <TableRow className="cursor-pointer hover:bg-muted/80 text-sm">
                                 <TableCell className="py-2 px-3 font-medium">
-                                  {rate.roomTypeName}
-                                </TableCell>
-                                <TableCell className="py-2 px-3 text-right text-muted-foreground text-xs">
-                                  ₹{rate.basePrice.toLocaleString('en-IN')}
-                                </TableCell>
-                                <TableCell className="py-2 px-3 text-right font-semibold">
-                                  ₹{rate.finalPrice.toLocaleString('en-IN')}
-                                </TableCell>
-                                <TableCell className="py-2 px-3 text-right text-xs">
-                                  {adjustment !== 0 ? (
-                                    <span className={adjustment >= 0 ? 'text-green-600' : 'text-red-600'}>
-                                      {adjustment >= 0 ? '+' : ''}{adjustmentPercent}%
-                                    </span>
-                                  ) : (
-                                    <span className="text-muted-foreground">-</span>
-                                  )}
-                                </TableCell>
-                                <TableCell className="py-2 px-3">
-                                  <div className="flex items-center gap-1">
+                                  <div className="flex items-center gap-2">
+                                    <span className="whitespace-nowrap">{rate.roomTypeName}</span>
                                     {rate.adjustments && rate.adjustments.length > 0 ? (
                                       <Badge variant="secondary" className="text-[10px] px-1.5 py-0">
                                         {rate.adjustments.length} rule{rate.adjustments.length > 1 ? 's' : ''}
@@ -311,6 +317,42 @@ export default function LiveRateCard() {
                                     <ChevronRight className="h-3 w-3 text-muted-foreground" />
                                   </div>
                                 </TableCell>
+                                <TableCell className="py-2 px-3 text-right text-muted-foreground text-xs">
+                                  ₹{rate.basePrice.toLocaleString('en-IN')}
+                                </TableCell>
+                                <TableCell className="py-2 px-3 text-right">
+                                  <div className="font-semibold">₹{rate.finalPrice.toLocaleString('en-IN')}</div>
+                                  {adjustment !== 0 ? (
+                                    <div className={cn('text-[10px]', adjustment >= 0 ? 'text-green-600' : 'text-red-600')}>
+                                      {adjustment >= 0 ? '+' : ''}{adjustmentPercent}%
+                                    </div>
+                                  ) : (
+                                    <div className="text-[10px] text-muted-foreground">per night</div>
+                                  )}
+                                </TableCell>
+                                {policyGroups.map((g) =>
+                                  g.mealPlans.map((m) => {
+                                    const v = room?.variants.find(
+                                      (x) => x.meal_plan_code === m.code && x.cancellation_policy_code === g.code
+                                    );
+                                    return (
+                                      <TableCell key={`${g.code}-${m.code}`} className="py-2 px-3 text-right border-l">
+                                        {v ? (
+                                          <>
+                                            <div className="font-semibold text-sm whitespace-nowrap">
+                                              ₹{v.price_per_night?.toLocaleString('en-IN')}
+                                            </div>
+                                            <div className="text-[10px] text-muted-foreground whitespace-nowrap">
+                                              ₹{v.total_price?.toLocaleString('en-IN')} total
+                                            </div>
+                                          </>
+                                        ) : (
+                                          <span className="text-muted-foreground">-</span>
+                                        )}
+                                      </TableCell>
+                                    );
+                                  })
+                                )}
                               </TableRow>
                             </HoverCardTrigger>
                             <HoverCardContent className="w-80 p-0" side="left" align="start">
@@ -405,7 +447,7 @@ export default function LiveRateCard() {
 
                                 <div className="border-t pt-2 mt-2 text-[10px] text-muted-foreground">
                                   <Info className="h-3 w-3 inline mr-1" />
-                                  Meal plans & cancellation policies are applied at booking. See "Full Variants" tab.
+                                  Meal plan & cancellation policy totals are shown across this row.
                                 </div>
                               </div>
                             </HoverCardContent>
@@ -416,84 +458,7 @@ export default function LiveRateCard() {
                   </Table>
                 </div>
               )}
-            </TabsContent>
-
-            <TabsContent value="full-variants" className="space-y-4 mt-4">
-              <Alert className="bg-muted/50">
-                <Info className="h-4 w-4" />
-                <AlertDescription className="text-xs">
-                  <strong>Full Variants:</strong> Shows complete pricing including room rate + meal plan adjustments + cancellation policy adjustments. 
-                  This is what guests see during booking.
-                </AlertDescription>
-              </Alert>
-
-              {rateVariants.length === 0 ? (
-                <p className="text-muted-foreground text-center py-8">Loading rate variants...</p>
-              ) : (
-                <div className="space-y-6">
-                  {rateVariants.map((room) => (
-                    <Card key={room.roomTypeId} className="overflow-hidden">
-                      <CardHeader className="py-3 bg-muted/30">
-                        <CardTitle className="text-base">{room.roomTypeName}</CardTitle>
-                      </CardHeader>
-                      <CardContent className="p-0">
-                        <Table>
-                          <TableHeader>
-                            <TableRow className="text-xs">
-                              <TableHead className="py-2 px-3">Meal Plan</TableHead>
-                              <TableHead className="py-2 px-3">Cancellation</TableHead>
-                              <TableHead className="py-2 px-3 text-right">Room</TableHead>
-                              <TableHead className="py-2 px-3 text-right">Meal Adj.</TableHead>
-                              <TableHead className="py-2 px-3 text-right">Policy Adj.</TableHead>
-                              <TableHead className="py-2 px-3 text-right font-semibold">Total</TableHead>
-                            </TableRow>
-                          </TableHeader>
-                          <TableBody>
-                            {room.variants.map((variant, idx) => (
-                              <TableRow key={idx} className="text-sm">
-                                <TableCell className="py-2 px-3">
-                                  <div className="font-medium text-xs">{variant.meal_plan_name}</div>
-                                  <div className="text-[10px] text-muted-foreground">{variant.meal_plan_code}</div>
-                                </TableCell>
-                                <TableCell className="py-2 px-3">
-                                  <div className="font-medium text-xs">{variant.cancellation_policy_name}</div>
-                                  <div className="text-[10px] text-muted-foreground">{variant.cancellation_policy_code}</div>
-                                </TableCell>
-                                <TableCell className="py-2 px-3 text-right text-xs text-muted-foreground">
-                                  ₹{variant.room_rate?.toLocaleString('en-IN')}
-                                </TableCell>
-                                <TableCell className="py-2 px-3 text-right text-xs">
-                                  {variant.meal_cost !== 0 ? (
-                                    <span className={variant.meal_cost >= 0 ? 'text-green-600' : 'text-red-600'}>
-                                      {variant.meal_cost >= 0 ? '+' : ''}₹{variant.meal_cost?.toLocaleString('en-IN')}
-                                    </span>
-                                  ) : (
-                                    <span className="text-muted-foreground">-</span>
-                                  )}
-                                </TableCell>
-                                <TableCell className="py-2 px-3 text-right text-xs">
-                                  {variant.policy_adjustment !== 0 ? (
-                                    <span className={variant.policy_adjustment >= 0 ? 'text-green-600' : 'text-red-600'}>
-                                      {variant.policy_adjustment >= 0 ? '+' : ''}₹{variant.policy_adjustment?.toLocaleString('en-IN')}
-                                    </span>
-                                  ) : (
-                                    <span className="text-muted-foreground">-</span>
-                                  )}
-                                </TableCell>
-                                <TableCell className="py-2 px-3 text-right font-semibold">
-                                  ₹{variant.total_price?.toLocaleString('en-IN')}
-                                </TableCell>
-                              </TableRow>
-                            ))}
-                          </TableBody>
-                        </Table>
-                      </CardContent>
-                    </Card>
-                  ))}
-                </div>
-              )}
-            </TabsContent>
-          </Tabs>
+          </div>
         </CardContent>
       </Card>
     </div>
