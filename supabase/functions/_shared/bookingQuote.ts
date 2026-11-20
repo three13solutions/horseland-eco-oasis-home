@@ -60,6 +60,21 @@ const FALLBACK_TRANSPORT: Record<string, number> = {
 
 export async function calculateBookingQuote(db: any, raw: any, mode: 'website' | 'manual' = 'website', internalOptions: { promotionPreview?: import('./epPromo.ts').EpPromotion; promotionPreviewNow?: Date } = {}) {
   const request = normalizeQuoteRequest(raw);
+  // Never accept a fresh legacy quote after guest-type catalogue pricing is
+  // released. Saved payment intents resume upstream using their retained quote.
+  // Install the staged gate RPC (OFF) before deploying callers; an unknown
+  // gate state must not be treated as disabled.
+  if (!request.guest_counts) {
+    let gate;
+    try { gate = await db.rpc('get_meal_catalogue_checkout_gate'); }
+    catch { throw new QuoteError('QUOTE_LOOKUP_FAILED', 'Pricing availability could not be verified. Please refresh.', 503); }
+    if (!gate || gate.error || typeof gate.data !== 'boolean') {
+      throw new QuoteError('QUOTE_LOOKUP_FAILED', 'Pricing availability could not be verified. Please refresh.', 503);
+    }
+    if (gate.data === true) {
+      throw new QuoteError('AGE_POLICY_CHANGED', 'Guest pricing has changed. Refresh and review your guest selection before booking.');
+    }
+  }
   const { data: room, error: roomError } = await db.from('room_types').select('id,is_published,base_price,category_id').eq('id', request.room_type_id).maybeSingle();
   if (roomError) throw new QuoteError('QUOTE_LOOKUP_FAILED', 'Room could not be verified.', 503);
   if (!room || (mode === 'website' && room.is_published !== true)) throw new QuoteError('ROOM_TYPE_NOT_PUBLISHED', 'This room is not available for website booking.');

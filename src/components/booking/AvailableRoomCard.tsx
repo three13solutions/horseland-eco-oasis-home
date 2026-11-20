@@ -1,3 +1,4 @@
+import { parseBookingDay } from '@/lib/booking-calendar-date';
 import React, { useState, useMemo } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -61,8 +62,8 @@ export const AvailableRoomCard: React.FC<AvailableRoomCardProps> = ({
   const { data: rateVariants, isLoading, isError: ratesError } = useDynamicPricing({
     website: true,
     roomTypeId: roomType.id,
-    checkIn: checkIn ? new Date(checkIn) : undefined,
-    checkOut: checkOut ? new Date(checkOut) : undefined,
+    checkIn: parseBookingDay(checkIn),
+    checkOut: parseBookingDay(checkOut),
     adultsCount: adults,
     childrenCount: children,
     infantsCount: infants,

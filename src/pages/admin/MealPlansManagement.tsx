@@ -1,7 +1,7 @@
 import { useGuestAgePolicy } from "@/hooks/useGuestAgePolicy";
 import { CatalogueGuestMealRollup } from "@/components/admin/CatalogueGuestMealRollup";
 import { useCatalogueGuestMealPrices } from "@/lib/catalogue-guest-meal-pricing-client";
-import { catalogueMealBands, catalogueMealBandName, catalogueMealPriceForGuest, currencyForMealGuestPrice } from "@/lib/catalogue-guest-meal-pricing";
+import { catalogueMealBands, catalogueMealBandName, catalogueMealIsAdultOnly, catalogueMealPriceForGuest, currencyForMealGuestPrice } from "@/lib/catalogue-guest-meal-pricing";
 import { MealPlanAgePricing } from "@/components/admin/MealPlanAgePricing";
 import { MealPlanDietaryVariants } from "@/components/admin/MealPlanDietaryVariants";
 import { type ReactNode, useEffect, useId, useRef, useState } from "react";
@@ -202,7 +202,10 @@ function CatalogueVariants({
                     <p>Adult: {formatCataloguePrice(meal.price)} per guest{!meal.is_active ? ' · Inactive in Services' : ''}</p>
                     {bands.filter(band => band.key !== 'adult').map(band => {
                       const amount = catalogueMealPriceForGuest(meal, band, verifiedGuestPrices);
-                      return <p key={band.key}>{catalogueMealBandName(band)}: {amount === undefined ? 'Not configured' : currencyForMealGuestPrice(amount)}</p>;
+                      const state = catalogueMealIsAdultOnly(meal.id, guestPrices.data ?? undefined) ? 'Not applicable'
+                        : guestPriceAvailability !== 'ready' ? 'Not verified'
+                        : amount === undefined ? 'Not configured' : currencyForMealGuestPrice(amount);
+                      return <p key={band.key}>{catalogueMealBandName(band)}: {state}</p>;
                     })}
                     {workspace.data?.mode === 'staged' && workspaceMeal && workspaceMeal.price !== meal.price && <p>Staged price: {formatCataloguePrice(workspaceMeal.price)} per person</p>}
                     {meal.description && <p className="break-words">{meal.description}</p>}

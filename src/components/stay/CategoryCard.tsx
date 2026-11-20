@@ -1,3 +1,4 @@
+import { countBookingNights, formatBookingDay } from '@/lib/booking-calendar-date';
 import { writeGuestParty, legacyGuestCounts, guestHeadcount, type GuestCounts } from '@/lib/guest-counts';
 import { MEAL_PLANS, getMealPlan, normalizeMealPlanCode } from '@/lib/mealPlans';
 import React, { useState, useMemo } from 'react';
@@ -133,7 +134,7 @@ const CategoryCard: React.FC<Props> = ({ category, onViewDetails, onBookNow, vie
 
   const unavailableSelection = !!(checkIn && checkOut && selectedMealPlan && !isLoading && !variants?.some(v => v.meal_plan_code === selectedMealPlan));
 
-  const nights = checkIn && checkOut ? Math.ceil((checkOut.getTime() - checkIn.getTime()) / (1000 * 60 * 60 * 24)) : 1;
+  const nights = checkIn && checkOut ? countBookingNights(checkIn, checkOut) : 1;
 
   // Use database variant prices (which include both meal plan AND cancellation policy adjustments)
   // Only fallback to manual calculation if variants aren't loaded yet
@@ -158,8 +159,8 @@ const CategoryCard: React.FC<Props> = ({ category, onViewDetails, onBookNow, vie
     if (checkIn && checkOut) {
       // We have dates - navigate to booking page with room selected
       const searchParams = new URLSearchParams({
-        checkIn: checkIn.toISOString().split('T')[0],
-        checkOut: checkOut.toISOString().split('T')[0],
+        checkIn: formatBookingDay(checkIn),
+        checkOut: formatBookingDay(checkOut),
         guests: guests.toString(),
         adults: adults.toString(),
         children: children.toString(),

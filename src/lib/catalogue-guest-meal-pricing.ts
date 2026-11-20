@@ -5,9 +5,10 @@ export type MealGuestPriceSnapshot = {
   revision: number;
   guest_policy_revision: number;
   prices: Record<string, Record<string, number>>;
+  adult_only_meal_ids?: string[];
 };
 
-const guestKey = /^[a-z][a-z0-9_]{0,99}$/;
+const guestKey = /^[a-z][a-z0-9_]*$/;
 const mealId = /^[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}$/i;
 function record(value: unknown): value is Record<string, unknown> {
   return !!value && typeof value === 'object' && !Array.isArray(value);
@@ -37,7 +38,10 @@ export function parseMealGuestPriceSnapshot(value: unknown): MealGuestPriceSnaps
       return [key, paise / 100];
     }))];
   }));
-  return { revision, guest_policy_revision: ageRevision, prices };
+  const adultOnly = value.adult_only_meal_ids;
+  if (adultOnly === undefined) return { revision, guest_policy_revision: ageRevision, prices };
+  if (!Array.isArray(adultOnly) || !adultOnly.every(id => typeof id === 'string' && mealId.test(id))) throw invalid();
+  return { revision, guest_policy_revision: ageRevision, prices, adult_only_meal_ids: adultOnly };
 }
 
 export function catalogueMealBands(bands: GuestAgeBand[] = []) {
@@ -57,9 +61,14 @@ export const currencyForMealGuestPrice = (paise: number) => (paise / 100).toLoca
   style: 'currency', currency: 'INR', minimumFractionDigits: paise % 100 ? 2 : 0,
 });
 
+export function catalogueMealIsAdultOnly(id: string, snapshot?: MealGuestPriceSnapshot): boolean {
+  return snapshot?.adult_only_meal_ids?.includes(id) ?? false;
+}
+
 export function catalogueMealPriceForGuest(
   meal: { id: string; price: number }, band: GuestAgeBand, snapshot?: MealGuestPriceSnapshot,
 ): number | undefined {
+  if (band.key !== 'adult' && catalogueMealIsAdultOnly(meal.id, snapshot)) return undefined;
   if (band.meal_rule === 'free') return 0;
   if (band.key === 'adult') return mealGuestPricePaise(meal.price);
   const row = snapshot?.prices[meal.id];
@@ -68,7 +77,7 @@ export function catalogueMealPriceForGuest(
 
 export type GuestMealRollup = { kind: 'fixed'; paise: number }
   | { kind: 'range'; minPaise: number; maxPaise: number }
-  | { kind: 'unavailable'; reason: 'missing_price' | 'missing_groups' | 'unavailable_meal' };
+  | { kind: 'unavailable'; reason: 'missing_price' | 'missing_groups' | 'unavailable_meal' | 'adults_only' };
 
 /** One price per AND group; alternatives in the same group are OR, never summed. */
 export function rollUpCatalogueGuestMealPrices(
@@ -77,7 +86,10 @@ export function rollUpCatalogueGuestMealPrices(
 ): GuestMealRollup {
   if (plan.plan_code === 'RO') return { kind: 'fixed', paise: 0 };
   if (!plan.groups.length) return { kind: 'unavailable', reason: 'missing_groups' };
-  if (band.meal_rule === 'free') return { kind: 'fixed', paise: 0 };
+  if (band.key !== 'adult' && plan.groups.some(group => group.meal_ids.some(id => catalogueMealIsAdultOnly(id, snapshot)))) {
+    // Don't infer a permitted alternative: guest-level selection is not implemented.
+    return { kind: 'unavailable', reason: 'adults_only' };
+  }
   let minPaise = 0;
   let maxPaise = 0;
   for (const group of plan.groups) {

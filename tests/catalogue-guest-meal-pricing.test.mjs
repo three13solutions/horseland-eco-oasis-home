@@ -68,3 +68,24 @@ test('different OR prices stay an indicative range; missing prices/invalid link 
   bad.delete(veg.id);
   assert.deepEqual(rollup(plan, bad, child, rates), {kind: 'unavailable', reason: 'unavailable_meal'});
 });
+test('adults-only UUIDs take precedence over free/zero and deny child and infant plans', () => {
+  const restrictedRates = parse({...rates, adult_only_meal_ids: [jain.id]});
+  assert.equal(price(jain, adult, restrictedRates), 65000);
+  assert.equal(price(jain, child, restrictedRates), undefined);
+  assert.equal(price(jain, infant, restrictedRates), undefined);
+  assert.equal(price(veg, infant, restrictedRates), 0);
+  assert.deepEqual(rollup(plan, meals, adult, restrictedRates), {kind: 'fixed', paise: 92000});
+  for (const band of [child, infant]) {
+    assert.deepEqual(rollup(plan, meals, band, restrictedRates), {kind: 'unavailable', reason: 'adults_only'});
+  }
+  assert.deepEqual(rollup({...plan, plan_code: 'RO'}, meals, infant, restrictedRates), {kind: 'fixed', paise: 0});
+});
+
+test('adults-only metadata is optional for old responses but verified when present; policy keys have no artificial length cap', () => {
+  assert.equal(parse(rates).adult_only_meal_ids, undefined);
+  for (const invalid of [null, jain.id, ['Candle Light Dinner'], [27]]) {
+    assert.throws(() => parse({...rates, adult_only_meal_ids: invalid}), /could not be verified/);
+  }
+  const dynamicKey = 'child_' + 'group_'.repeat(30);
+  assert.deepEqual(parse({...rates, prices: {[jain.id]: {[dynamicKey]: 20}}}).prices[jain.id], {[dynamicKey]: 20});
+});

@@ -1,5 +1,5 @@
 -- STAGING ONLY. Never run on production or via automatic migrations.
--- Apply the additive catalogue migration first. The second gate defaults OFF.
+-- Apply both additive catalogue migrations first. The second gate defaults OFF.
 -- The separate keyed guest-types flag and authenticated checkout/manual gates
 -- must be rehearsed before use. Read docs/meal-catalogue-guest-pricing.md.
 BEGIN;
@@ -18,6 +18,15 @@ CREATE TABLE meal_catalog_pricing_private.booking_release (
 INSERT INTO meal_catalog_pricing_private.booking_release DEFAULT VALUES;
 ALTER TABLE meal_catalog_pricing_private.booking_release ENABLE ROW LEVEL SECURITY;
 REVOKE ALL ON meal_catalog_pricing_private.booking_release FROM PUBLIC, anon, authenticated;
+-- Trusted Edge safety gate. An enabled catalogue gate requires current keyed
+-- counts even if a dependency or pin is misconfigured; old clients never bypass it.
+CREATE FUNCTION public.get_meal_catalogue_checkout_gate() RETURNS boolean
+LANGUAGE sql STABLE SECURITY DEFINER SET search_path = '' AS $$
+  SELECT coalesce((SELECT enabled FROM meal_catalog_pricing_private.booking_release WHERE id),false)
+$$;
+REVOKE ALL ON FUNCTION public.get_meal_catalogue_checkout_gate() FROM PUBLIC, anon, authenticated, service_role;
+GRANT EXECUTE ON FUNCTION public.get_meal_catalogue_checkout_gate() TO service_role;
+
 CREATE FUNCTION meal_catalog_pricing_private.is_effective(p_night date) RETURNS boolean
 LANGUAGE sql STABLE SECURITY INVOKER SET search_path = '' AS $$
   SELECT coalesce((SELECT enabled AND effective_from <= p_night
@@ -59,6 +68,12 @@ BEGIN
   END IF;
   v_policy := guest_pricing_private.get_booking_guest_policy();
   SELECT * INTO STRICT v_release FROM meal_catalog_pricing_private.booking_release WHERE id;
+  -- A child cannot be priced as free (including Under 4) when any linked
+  -- choice in this plan is adults-only. Without captured guest choice we must
+  -- not silently swap an OR option out or assume other guests will not eat it.
+  IF meal_catalog_pricing_private.has_adult_only_plan_choice(p_groups,p_night,v_release.published_revision) THEN
+    RETURN NULL;
+  END IF;
   FOR v_guest IN SELECT value FROM jsonb_array_elements(v_policy->'bands') LOOP
     v_guest_key:=v_guest->>'key';
     v_count:=coalesce((p_counts->>v_guest_key)::int,0);

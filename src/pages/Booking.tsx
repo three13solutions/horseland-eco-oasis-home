@@ -1,3 +1,4 @@
+import { countBookingNights, formatBookingDay, parseBookingDay, parseSavedBookingDay } from '@/lib/booking-calendar-date';
 import { writeGuestParty, legacyGuestCounts, guestHeadcount, type GuestCounts } from '@/lib/guest-counts';
 import { guestTypeName } from '@/lib/guest-age-policy';
 import { useGuestAgePolicy } from '@/hooks/useGuestAgePolicy';
@@ -114,8 +115,10 @@ const Booking = () => {
   const { toast } = useToast();
   
   // Get search parameters
-  const checkIn = searchParams.get('checkIn') || '';
-  const checkOut = searchParams.get('checkOut') || '';
+  const urlCheckInDay = parseBookingDay(searchParams.get('checkIn'));
+  const urlCheckOutDay = parseBookingDay(searchParams.get('checkOut'));
+  const checkIn = urlCheckInDay ? formatBookingDay(urlCheckInDay) : '';
+  const checkOut = urlCheckOutDay ? formatBookingDay(urlCheckOutDay) : '';
   const { guests, adults: urlAdults, children: urlChildren, infants: urlInfants, guestCounts: urlGuestCounts } = readGuestParty(searchParams);
   const roomTypeId = searchParams.get('roomTypeId');
   const packageId = searchParams.get('packageId');
@@ -126,8 +129,8 @@ const Booking = () => {
   // State
   const [availableRooms, setAvailableRooms] = useState<AvailableRoom[]>([]);
   const [loading, setLoading] = useState(true);
-  const [searchCheckIn, setSearchCheckIn] = useState<Date | undefined>(checkIn ? new Date(checkIn) : undefined);
-  const [searchCheckOut, setSearchCheckOut] = useState<Date | undefined>(checkOut ? new Date(checkOut) : undefined);
+  const [searchCheckIn, setSearchCheckIn] = useState<Date | undefined>(urlCheckInDay);
+  const [searchCheckOut, setSearchCheckOut] = useState<Date | undefined>(urlCheckOutDay);
   const [searchGuests, setSearchGuests] = useState(guests.toString());
   const [searchAdults, setSearchAdults] = useState(urlAdults);
   const [searchChildren, setSearchChildren] = useState(urlChildren);
@@ -146,8 +149,8 @@ const Booking = () => {
   const [infantsCount, setInfantsCount] = useState(urlInfants);
   
   // State for search modification
-  const [tempCheckIn, setTempCheckIn] = useState<Date | undefined>(checkIn ? new Date(checkIn) : undefined);
-  const [tempCheckOut, setTempCheckOut] = useState<Date | undefined>(checkOut ? new Date(checkOut) : undefined);
+  const [tempCheckIn, setTempCheckIn] = useState<Date | undefined>(urlCheckInDay);
+  const [tempCheckOut, setTempCheckOut] = useState<Date | undefined>(urlCheckOutDay);
   const [tempGuests, setTempGuests] = useState(guests);
   const [tempAdults, setTempAdults] = useState(adultsCount);
   const [tempChildren, setTempChildren] = useState(childrenCount);
@@ -358,6 +361,16 @@ const Booking = () => {
     loadHeroImage();
   }, [checkIn, checkOut, guests, roomTypeId]);
 
+  // Date pickers and the quote use the same calendar days after URL navigation.
+  useEffect(() => {
+    const start = parseBookingDay(checkIn);
+    const end = parseBookingDay(checkOut);
+    setSearchCheckIn(start);
+    setSearchCheckOut(end);
+    setTempCheckIn(start);
+    setTempCheckOut(end);
+  }, [checkIn, checkOut]);
+
   // URL navigation must update pricing counts, including Back/Forward and search edits.
   useEffect(() => {
     setGuestCounts(urlGuestCounts);
@@ -398,14 +411,16 @@ const Booking = () => {
         try {
           const booking = JSON.parse(savedBooking);
           
-          // Restore dates if not in URL
-          if (!checkIn && booking.checkIn) {
-            setSearchCheckIn(booking.checkIn);
-            searchParams.set('checkIn', booking.checkIn);
+          // Only restore dates that can be represented as valid calendar days.
+          const savedCheckIn = !checkIn ? parseSavedBookingDay(booking.checkIn) : undefined;
+          const savedCheckOut = !checkOut ? parseSavedBookingDay(booking.checkOut) : undefined;
+          if (savedCheckIn) {
+            setSearchCheckIn(savedCheckIn);
+            searchParams.set('checkIn', formatBookingDay(savedCheckIn));
           }
-          if (!checkOut && booking.checkOut) {
-            setSearchCheckOut(booking.checkOut);
-            searchParams.set('checkOut', booking.checkOut);
+          if (savedCheckOut) {
+            setSearchCheckOut(savedCheckOut);
+            searchParams.set('checkOut', formatBookingDay(savedCheckOut));
           }
           if (!guests && booking.guests) {
             setSearchGuests(booking.guests.toString());
@@ -462,7 +477,7 @@ const Booking = () => {
           }
           
           // Update URL if dates were restored
-          if ((!checkIn && booking.checkIn) || (!checkOut && booking.checkOut)) {
+          if (savedCheckIn || savedCheckOut) {
             setSearchParams(searchParams);
           }
         } catch (error) {
@@ -508,8 +523,8 @@ const Booking = () => {
   useEffect(() => {
     if (checkIn || checkOut || selectedRoomType || selectedAddons.length > 0) {
       const bookingData = {
-        checkIn: checkIn || searchCheckIn,
-        checkOut: checkOut || searchCheckOut,
+        checkIn: checkIn || (searchCheckIn ? formatBookingDay(searchCheckIn) : undefined),
+        checkOut: checkOut || (searchCheckOut ? formatBookingDay(searchCheckOut) : undefined),
         guests: guests || parseInt(searchGuests),
         selectedRoom: selectedRoomType,
         roomType: selectedRoomType,
@@ -739,8 +754,8 @@ const Booking = () => {
       return;
     }
 
-    const formattedCheckIn = format(searchCheckIn, 'yyyy-MM-dd');
-    const formattedCheckOut = format(searchCheckOut, 'yyyy-MM-dd');
+    const formattedCheckIn = formatBookingDay(searchCheckIn);
+    const formattedCheckOut = formatBookingDay(searchCheckOut);
 
     // Check if dates have changed
     const datesChanged = formattedCheckIn !== checkIn || formattedCheckOut !== checkOut;
@@ -867,20 +882,7 @@ const Booking = () => {
     });
   };
 
-  const calculateNights = () => {
-    if (!checkIn || !checkOut) return 0;
-    const start = new Date(checkIn);
-    const end = new Date(checkOut);
-    
-    // Validate that dates are valid
-    if (isNaN(start.getTime()) || isNaN(end.getTime())) {
-      console.warn('Invalid dates:', { checkIn, checkOut });
-      return 0;
-    }
-    
-    const nights = Math.ceil((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24));
-    return Math.max(0, nights); // Ensure non-negative
-  };
+  const calculateNights = () => countBookingNights(checkIn, checkOut);
 
   const calculateSubtotal = () => {
     if (!selectedRoomType || !selectedVariant) return 0;
@@ -920,8 +922,9 @@ const Booking = () => {
   };
 
   const formatDate = (dateString: string) => {
-    if (!dateString) return '';
-    return new Date(dateString).toLocaleDateString('en-US', {
+    const date = parseBookingDay(dateString);
+    if (!date) return '';
+    return date.toLocaleDateString('en-US', {
       weekday: 'short',
       year: 'numeric',
       month: 'short',

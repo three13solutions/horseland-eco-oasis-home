@@ -86,6 +86,6 @@ serve(async(req:Request)=>{
   if(identity&&allowClose){try{const closed=await db.rpc('distribution_close_unused_checkout',{p_request_id:identity.requestId,p_owner_scope:identity.ownerScope});safeToChange=!closed.error&&closed.data===true;}catch{/* Never infer that an uncertain request did not reserve inventory. */}}
   const known=error instanceof InventoryPaymentError||error instanceof QuoteError;
   const code=known?error.code:'CHECKOUT_PREPARATION_UNCONFIRMED';
-  return reply({request_id:identity?.requestId,safe_to_change_selection:safeToChange,code,error:known?error.message:'Payment preparation could not be confirmed. Keep this checkout and contact the hotel; do not start another payment.',resolution_required:!safeToChange&&!['INVALID_REQUEST_ID','INVALID_GUEST_DETAILS','GUEST_DETAILS_REQUIRED','INVALID_CURRENCY','INVALID_QUOTE','QUOTE_CHANGED'].includes(code)},error instanceof QuoteError?error.status:known?409:503);
+  return reply({request_id:identity?.requestId,safe_to_change_selection:safeToChange,code,error:known?error.message:'Payment preparation could not be confirmed. Keep this checkout and contact the hotel; do not start another payment.',resolution_required:!safeToChange&&!['INVALID_REQUEST_ID','INVALID_GUEST_DETAILS','GUEST_DETAILS_REQUIRED','INVALID_CURRENCY','INVALID_QUOTE','QUOTE_CHANGED','AGE_POLICY_CHANGED'].includes(code)},error instanceof QuoteError?error.status:known?409:503);
  }
 });

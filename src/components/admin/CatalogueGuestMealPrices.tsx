@@ -5,7 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useGuestAgePolicy } from '@/hooks/useGuestAgePolicy';
 import { catalogueGuestMealPricesKey, saveCatalogueGuestMealPrices, useCatalogueGuestMealPrices } from '@/lib/catalogue-guest-meal-pricing-client';
-import { buildCatalogueMealGuestPriceRow, catalogueMealBands, catalogueMealBandLabel, type MealGuestPriceSnapshot } from '@/lib/catalogue-guest-meal-pricing';
+import { buildCatalogueMealGuestPriceRow, catalogueMealIsAdultOnly, catalogueMealBands, catalogueMealBandLabel, type MealGuestPriceSnapshot } from '@/lib/catalogue-guest-meal-pricing';
 
 type SelectedMeal = { id: string; price: number };
 type PriceDraft = { mealId: string; snapshot: MealGuestPriceSnapshot; values: Record<string, string> };
@@ -33,11 +33,12 @@ export function CatalogueGuestMealPrices({
   const [error, setError] = useState('');
   const [saved, setSaved] = useState(false);
   const synchronized = !!rates.data && !!policy.data && rates.data.guest_policy_revision === policy.data.revision;
+  const adultOnly = !!meal && catalogueMealIsAdultOnly(meal.id, rates.data ?? undefined);
   const currentRow = meal && rates.data ? rates.data.prices[meal.id] : undefined;
   const current = draft?.mealId === meal?.id ? draft : undefined;
   const stale = !!current && (!synchronized || current.snapshot.revision !== rates.data?.revision
     || current.snapshot.guest_policy_revision !== rates.data?.guest_policy_revision);
-  const canEdit = !!meal && synchronized && !rates.isError && !rates.isFetching && !policy.isFetching;
+  const canEdit = !!meal && !adultOnly && synchronized && !rates.isError && !rates.isFetching && !policy.isFetching;
   const valueOf = (key: string) => current && Object.prototype.hasOwnProperty.call(current.values, key) ? current.values[key] :
     currentRow && Object.prototype.hasOwnProperty.call(currentRow, key) ? String(currentRow[key]) : '';
   useEffect(() => {
@@ -92,13 +93,15 @@ export function CatalogueGuestMealPrices({
         const fieldId = `${id}-guest-${index}`;
         return <div key={band.key} className="min-w-0 space-y-1">
           <Label htmlFor={fieldId}>{catalogueMealBandLabel(band)} (₹)</Label>
-          <Input id={fieldId} inputMode="decimal" value={band.meal_rule === 'free' ? '0' : valueOf(band.key)}
-            placeholder="Not configured" onChange={event => changePrice(band.key, event.target.value)}
-            disabled={!canEdit || stale || band.meal_rule === 'free'} />
-          {band.meal_rule === 'free' && <p className="text-xs text-muted-foreground">Free under the guest policy</p>}
+          {adultOnly ? <Input id={fieldId} type="text" value="Not applicable" readOnly aria-describedby={`${id}-adults-only`} />
+            : <Input id={fieldId} inputMode="decimal" value={band.meal_rule === 'free' ? (!meal || synchronized ? '0' : '') : valueOf(band.key)}
+            placeholder={band.meal_rule === 'free' ? 'Not verified' : 'Not configured'} onChange={event => changePrice(band.key, event.target.value)}
+            disabled={!canEdit || stale || band.meal_rule === 'free'} />}
+          {!adultOnly && band.meal_rule === 'free' && (!meal || synchronized) && <p className="text-xs text-muted-foreground">Free under the guest policy</p>}
         </div>;
       })}
     </div>
+    {adultOnly && <p id={`${id}-adults-only`} className="text-xs text-muted-foreground">Adults only. This meal does not apply to other guest types.</p>}
     {policy.isPending && <p role="status" className="text-xs text-muted-foreground">Loading guest types…</p>}
     {policy.isError && <p role="alert" className="text-xs text-destructive">Guest types could not be loaded. Metadata editing is still available.</p>}
     {!meal && <p className="text-xs text-muted-foreground">Create the meal with its adult price first. Then add prices for the other guest types.</p>}

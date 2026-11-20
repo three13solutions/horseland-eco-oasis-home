@@ -14,7 +14,7 @@ function db(config={}) {
  if(this.t==='addons')return{data:[]};
  return{data:null};
  }}
- return{from:t=>new Query(t),rpc:async()=>({data:[variant]})};
+ return{from:t=>new Query(t),rpc:async(name)=>name==='get_meal_catalogue_checkout_gate'?{data:false,error:null}:{data:[variant]}};
 }
 test('request normalizer ignores arbitrary prices and includes all counts',()=>{
  const r=normalizeQuoteRequest({...request, total_amount:1});assert.equal(r.infants_count,1);assert.equal(r.total_amount,undefined);

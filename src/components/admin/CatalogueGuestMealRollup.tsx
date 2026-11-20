@@ -18,12 +18,20 @@ export function CatalogueGuestMealRollup({
     </p>}
     {plan && bands.length > 0 && <dl className="grid gap-2 sm:grid-cols-3">
       {bands.map(band => {
+        if (band.key !== 'adult' && plan.plan_code !== 'RO' && availability !== 'ready') {
+          return <div key={band.key} className="rounded-md border bg-background px-2.5 py-2">
+            <dt className="text-xs text-muted-foreground">{catalogueMealBandLabel(band)}</dt>
+            <dd className="text-sm font-semibold">Not verified</dd>
+          </div>;
+        }
         const result = rollUpCatalogueGuestMealPrices(plan, meals, band, prices);
         return <div key={band.key} className="rounded-md border bg-background px-2.5 py-2">
           <dt className="text-xs text-muted-foreground">{catalogueMealBandLabel(band)}</dt>
           <dd className="text-sm font-semibold">{result.kind === 'fixed' ? currencyForMealGuestPrice(result.paise)
             : result.kind === 'range' ? `${currencyForMealGuestPrice(result.minPaise)}–${currencyForMealGuestPrice(result.maxPaise)}`
+            : result.reason === 'adults_only' ? 'Not applicable'
             : result.reason === 'missing_price' ? 'Not configured' : 'Unavailable'}</dd>
+          {result.kind === 'unavailable' && result.reason === 'adults_only' && <p className="text-xs text-muted-foreground">An adults-only meal is linked to this plan.</p>}
           {result.kind === 'range' && <p className="text-xs text-muted-foreground">Alternatives have different prices. Review the choice group; the range is not bookable.</p>}
         </div>;
       })}
