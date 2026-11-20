@@ -1327,6 +1327,7 @@ export type Database = {
           extra_adult_charge: number | null
           extra_child_charge: number | null
           extra_infant_charge: number | null
+          guest_type_charges: Json
           id: string
           is_active: boolean | null
           max_extra_guests: number | null
@@ -1339,6 +1340,7 @@ export type Database = {
           extra_adult_charge?: number | null
           extra_child_charge?: number | null
           extra_infant_charge?: number | null
+          guest_type_charges?: Json
           id?: string
           is_active?: boolean | null
           max_extra_guests?: number | null
@@ -1351,6 +1353,7 @@ export type Database = {
           extra_adult_charge?: number | null
           extra_child_charge?: number | null
           extra_infant_charge?: number | null
+          guest_type_charges?: Json
           id?: string
           is_active?: boolean | null
           max_extra_guests?: number | null
@@ -2772,6 +2775,7 @@ export type Database = {
           extra_adult_per_night: number | null
           extra_child_per_night: number | null
           extra_infant_per_night: number
+          guest_type_charges: Json
           id: string
           included_adults: number
           is_active: boolean
@@ -2801,6 +2805,7 @@ export type Database = {
           extra_adult_per_night?: number | null
           extra_child_per_night?: number | null
           extra_infant_per_night?: number
+          guest_type_charges?: Json
           id?: string
           included_adults?: number
           is_active?: boolean
@@ -2830,6 +2835,7 @@ export type Database = {
           extra_adult_per_night?: number | null
           extra_child_per_night?: number | null
           extra_infant_per_night?: number
+          guest_type_charges?: Json
           id?: string
           included_adults?: number
           is_active?: boolean
@@ -4295,6 +4301,10 @@ export type Database = {
       }
       set_guest_age_pricing_active: {
         Args: { p_active: boolean }
+        Returns: Json
+      }
+      set_guest_type_policy_status: {
+        Args: { p_band: Json; p_enabled: boolean; p_expected_revision: number }
         Returns: Json
       }
       set_meal_plan_active: {
