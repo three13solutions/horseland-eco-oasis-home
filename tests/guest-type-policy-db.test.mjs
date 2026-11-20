@@ -16,7 +16,7 @@ before(async()=>{
  create function record_activity_log() returns trigger language plpgsql as $$begin return coalesce(new,old);end$$;
  create table guest_age_policy_versions(revision integer primary key,bands jsonb,updated_at timestamptz default now(),updated_by uuid);
  grant select on guest_age_policy_versions to authenticated;
- create function get_guest_age_policy() returns jsonb language sql as $$select jsonb_build_object('revision',revision,'bands',bands,'active',false,'updated_at',updated_at) from guest_age_policy_versions order by revision desc limit 1$$;
+ create function get_guest_age_policy() returns jsonb language sql as $$select jsonb_build_object('revision',revision,'bands',bands,'active',false,'updated_at',updated_at) from public.guest_age_policy_versions order by revision desc limit 1$$;
  create table rate_plan_anchors(id integer primary key,extra_adult_per_night numeric,extra_child_per_night numeric,extra_infant_per_night numeric);
  create table guest_composition_rules(id integer primary key,extra_adult_charge numeric,extra_child_charge numeric,extra_infant_charge numeric);
  create table tactical_overrides(id uuid primary key,created_at timestamptz default now(),occupancy_type text,is_active boolean,room_category_id uuid,room_type_id uuid,room_unit_id uuid,start_date date,end_date date,day_type text,min_nights integer,max_nights integer,meal_plan_code text,adjustment_type text,adjustment_value numeric);
@@ -26,7 +26,7 @@ before(async()=>{
  if not found then raise exception 'GUEST_PRICING_NOT_ACTIVE: age and meal pricing are staged; publish and activate the matching booking frontend before editing'; end if;
  return p_rules;end$$;`);
  await db.query('insert into guest_age_policy_versions(revision,bands) values(1,$1)',[JSON.stringify(bands)]);
- for(const file of ['20261120173258_405372e3-36c0-421a-9ab7-eb2252bf6198.sql','20261120173535_e31c57c3-8c2a-4b25-9a75-a491f6cc05be.sql','20261120174609_1de4fedf-4125-46e8-9900-316ebed22d9e.sql','20261120174853_f07f3b33-b4d0-4664-a328-06e69abdcdd4.sql','20261120175306_245ac7e3-be68-46d8-8957-368276eb3672.sql','20261120175550_cb17fc8c-da47-4a31-950a-9c2a2c975917.sql','20261120180650_5628f0b1-f434-4430-b1d9-3008346ddb70.sql','20261120180908_e99c518b-3e88-4b83-a9a2-8c97af90bb5a.sql','20261120181107_945623dc-91d7-4ba8-bb25-fa5660154d1b.sql']) await db.exec(readFileSync(new URL('../supabase/migrations/'+file,import.meta.url),'utf8'));
+ for(const file of ['20261120173258_405372e3-36c0-421a-9ab7-eb2252bf6198.sql','20261120173535_e31c57c3-8c2a-4b25-9a75-a491f6cc05be.sql','20261120174609_1de4fedf-4125-46e8-9900-316ebed22d9e.sql','20261120174853_f07f3b33-b4d0-4664-a328-06e69abdcdd4.sql','20261120175306_245ac7e3-be68-46d8-8957-368276eb3672.sql','20261120175550_cb17fc8c-da47-4a31-950a-9c2a2c975917.sql','20261120180650_5628f0b1-f434-4430-b1d9-3008346ddb70.sql','20261120180908_e99c518b-3e88-4b83-a9a2-8c97af90bb5a.sql','20261120181107_945623dc-91d7-4ba8-bb25-fa5660154d1b.sql','20261120182349_096b3f18-670c-4576-b6dd-99b5ec84bf9d.sql']) await db.exec(readFileSync(new URL('../supabase/migrations/'+file,import.meta.url),'utf8'));
  await db.exec('set check_function_bodies=on');
 });
 after(async()=>{if(db)await db.close();});
@@ -124,4 +124,33 @@ test('custom upper-age drafts cannot bypass the live pricing release guard',opti
 test('draft actions reject non-administrators',options,async()=>{
  await db.exec("select set_config('test.admin','false',true)");
  await assert.rejects(db.query('select save_guest_policy_draft($1)',[JSON.stringify(bands[1])]),/Administrator required/);
+});
+test('draft deletion leaves active age coverage and revision unchanged',options,async()=>{
+ const d=await sql('select save_guest_policy_draft($1) value',[JSON.stringify({...bands[1],min_age:2})]);
+ await db.query('select delete_guest_policy(1,$1,$2,$3)',[JSON.stringify(d.band),d.id,d.updated_at]);
+ assert.equal((await sql('select list_guest_policy_drafts() value')).length,0);
+ assert.equal(await sql('select max(revision) value from guest_age_policy_versions'),1);
+ assert.equal(await sql('select guest_policy_complete(bands) value from guest_age_policy_versions where revision=1'),true);
+});
+test('active policy cannot be deleted',options,async()=>{
+ await assert.rejects(db.query('select delete_guest_policy(1,$1)',[JSON.stringify(bands[1])]),/Active policies cannot be deleted/);
+});
+test('deleted historical policies retain history but cannot reactivate',options,async()=>{
+ const next=bands.map(b=>b.key==='child'?{...b,meal_rule:'free'}:b);
+ await sql('select save_guest_age_policy(1,$1) value',[JSON.stringify(next)]);
+ await db.query('select delete_guest_policy(2,$1)',[JSON.stringify(bands[1])]);
+ assert.equal((await sql('select deleted_guest_policies() value')).length,1);
+ assert.equal(await sql('select count(*)::int value from guest_age_policy_versions'),2);
+ await assert.rejects(db.query('select save_guest_age_policy(2,$1)',[JSON.stringify(bands)]),/policy was deleted/);
+});
+test('different guest keys cannot use case-insensitive duplicate names in drafts',options,async()=>{
+ await assert.rejects(db.query('select save_guest_policy_draft($1)',[JSON.stringify({key:'junior',name:' CHILD ',min_age:4,max_age:9,meal_rule:'full',accommodation_rule:'guest_type'})]),/already uses this name/);
+});
+test('activation cannot assign two guest types the same normalized name',options,async()=>{
+ const next=bands.map(b=>b.key==='child'?{...b,name:' ADULT '}:b);
+ await assert.rejects(db.query('select save_guest_age_policy(1,$1)',[JSON.stringify(next)]),/already uses this name|cannot use the same name/);
+});
+test('completed-year ranges have no gaps at 3–4 or 9–10',options,async()=>{
+ assert.equal(await sql('select guest_policy_complete($1) value',[JSON.stringify(bands)]),true);
+ assert.equal(await sql('select guest_policy_complete($1) value',[JSON.stringify(bands.map(b=>b.key==='child'?{...b,min_age:5}:b))]),false);
 });

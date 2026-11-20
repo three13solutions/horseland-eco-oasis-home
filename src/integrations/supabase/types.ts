@@ -4082,6 +4082,16 @@ export type Database = {
         }
         Returns: Json
       }
+      delete_guest_policy: {
+        Args: {
+          p_band: Json
+          p_draft_id?: string
+          p_expected_revision: number
+          p_expected_updated_at?: string
+        }
+        Returns: undefined
+      }
+      deleted_guest_policies: { Args: never; Returns: Json }
       distribution_admin_reconciliation_intent: {
         Args: { p_hold_id: string }
         Returns: Json

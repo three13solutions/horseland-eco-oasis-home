@@ -1,10 +1,18 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { validateGuestAgeBands, validateGuestAgePolicySave, guestPolicySaveError, guestTypeKey, guestTypeName, alternateGuestPolicy, mealChargeableCount } from '../src/lib/guest-age-policy.ts';
+import { validateGuestAgeBands, duplicateGuestName, validateGuestAgePolicySave, guestPolicySaveError, guestTypeKey, guestTypeName, alternateGuestPolicy, mealChargeableCount } from '../src/lib/guest-age-policy.ts';
 import { guestTypeChargeAmount, validateGuestTypeCharges } from '../src/lib/guest-type-charges.ts';
 import { mealAgeRuleError, mealAgeAmount } from '../src/lib/meal-age-pricing.ts';
 
 const bands=[{key:'infant',min_age:0,max_age:3,accommodation_rule:'free',meal_rule:'free'}, {key:'child',min_age:4,max_age:9,accommodation_rule:'child',meal_rule:'full'}, {key:'adult',min_age:10,max_age:null,accommodation_rule:'adult',meal_rule:'full'}];
+test('different guest types cannot share names ignoring case or repeated spaces',()=>{
+ assert.equal(duplicateGuestName({ ...bands[2], name:'  Senior   Guest  ' }, [{...bands[1],name:'senior guest'}]),true);
+ assert.equal(duplicateGuestName({...bands[2],name:' CHILD '},bands),true);
+});
+test('new duplicate types are rejected but a revised policy for the same type is allowed',()=>{
+ assert.equal(duplicateGuestName({...bands[1],name:'Child'},bands,true),true);
+ assert.equal(duplicateGuestName({...bands[1],name:'Child',min_age:2},bands),false);
+});
 test('typed guest names retain their display name and stable key',()=>{
  assert.equal(guestTypeKey('Senior Guest'),'senior_guest');
  assert.equal(guestTypeName({key:'senior_guest',name:'Senior Guest'}),'Senior Guest');

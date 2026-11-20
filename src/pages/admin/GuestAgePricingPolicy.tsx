@@ -1,10 +1,10 @@
 import React, { useMemo, useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import type { SupabaseClient } from '@supabase/supabase-js';
-import { Pencil, Plus } from 'lucide-react';
+import { Pencil, Plus, Trash2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useGuestAgePolicy } from '@/hooks/useGuestAgePolicy';
-import { validateGuestAgeBands, ageBandLabel, guestPolicySaveError, guestTypeChargeRule, guestTypeName, guestTypeKey, sameGuestPolicy, alternateGuestPolicy, type GuestAgeBand } from '@/lib/guest-age-policy';
+import { validateGuestAgeBands, duplicateGuestName, ageBandLabel, guestPolicySaveError, guestTypeChargeRule, guestTypeName, guestTypeKey, sameGuestPolicy, alternateGuestPolicy, type GuestAgeBand } from '@/lib/guest-age-policy';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Switch } from '@/components/ui/switch';
@@ -52,21 +52,30 @@ export default function GuestAgePricingPolicy() {
       return (data ?? []) as { revision: number; bands: GuestAgeBand[] }[];
     },
   });
+  const deleted = useQuery({
+    queryKey: ['deleted-guest-policies'], enabled: !!policy.data,
+    queryFn: async () => {
+      const { data, error } = await (supabase as SupabaseClient).rpc('deleted_guest_policies');
+      if (error) throw error;
+      return (data ?? []) as GuestAgeBand[];
+    },
+  });
 
   const rows = useMemo<Row[]>(() => {
     const current = policy.data?.bands ?? [];
     const out: Row[] = [];
     for (const v of history.data ?? []) for (const b of v.bands ?? []) {
+      if (deleted.data?.some(d => sameBand(d, b))) continue;
       if (out.some((r) => sameBand(r, b))) continue;
       const selected = current.find((c) => sameBand(c, b));
       out.push({ ...b, id: `${v.revision}-${b.key}`, revision: v.revision, current: !!selected, active: !!selected && selected.enabled !== false });
     }
     for (const draft of drafts.data ?? []) out.push({ ...draft.band, id: draft.id, revision: 0, current: false, active: false, draft });
     return out.sort((a, b) => a.min_age - b.min_age || Number(b.active) - Number(a.active) || b.revision - a.revision);
-  }, [history.data, policy.data, drafts.data]);
+  }, [history.data, policy.data, drafts.data, deleted.data]);
 
   async function refresh() {
-    await Promise.all(['guest-age-policy', 'guest-age-policy-history', 'guest-policy-drafts', 'rate-variants', 'website-rate-variants'].map((k) => client.invalidateQueries({ queryKey: [k] })));
+    await Promise.all(['guest-age-policy', 'guest-age-policy-history', 'guest-policy-drafts', 'deleted-guest-policies', 'rate-variants', 'website-rate-variants'].map((k) => client.invalidateQueries({ queryKey: [k] })));
   }
 
   async function applyBand(band: GuestAgeBand) {
@@ -96,6 +105,7 @@ export default function GuestAgePricingPolicy() {
     if (!form) return;
     setFormError(null);
     const b = form.band;
+    if (duplicateGuestName(b, rows, form.mode === 'new')) { setFormError('This guest type name already exists. Edit the existing type to create a revised draft, or choose a unique name.'); return; }
     if (!b.name?.trim() || !/^[a-z][a-z0-9_]*$/.test(b.key)) { setFormError('Enter a guest type name beginning with a letter.'); return; }
     if (!Number.isInteger(b.min_age) || b.min_age < 0 || (b.max_age !== null && (!Number.isInteger(b.max_age) || b.max_age < b.min_age))) { setFormError('Enter valid whole-number ages; maximum must be at least the minimum.'); return; }
     const invalid = validateGuestAgeBands([{ ...b, enabled: true }]);
@@ -133,6 +143,19 @@ export default function GuestAgePricingPolicy() {
   }
 
   const setBand = (patch: Partial<GuestAgeBand>) => form && setForm({ ...form, band: { ...form.band, ...patch } });
+  async function deletePolicy(row: Row) {
+    if (!policy.data || row.current || row.active) return;
+    if (!window.confirm(`Delete ${guestTypeName(row)} ${row.draft ? 'draft' : 'policy'} (${ageBandLabel(row)})? Active policies and historical bookings will remain unchanged.`)) return;
+    setSaving(true);
+    try {
+      const { error } = await (supabase as SupabaseClient).rpc('delete_guest_policy', {
+        p_expected_revision: policy.data.revision, p_band: rowBand(row),
+        p_draft_id: row.draft?.id ?? null, p_expected_updated_at: row.draft?.updated_at ?? null,
+      });
+      if (error) throw error;
+      await refresh(); toast.success('Policy deleted.');
+    } catch (e) { toast.error(guestPolicySaveError(e)); } finally { setSaving(false); }
+  }
 
   return (
     <main className="p-6 space-y-5 max-w-6xl">
@@ -149,6 +172,7 @@ export default function GuestAgePricingPolicy() {
       {policy.isLoading && <p>Loading policy…</p>}
       {history.isError && <p role="alert" className="text-destructive">Could not load policy history. <Button size="sm" onClick={() => history.refetch()}>Try again</Button></p>}
       {drafts.isError && <p role="alert" className="text-destructive">Could not load draft policies. <Button size="sm" onClick={() => drafts.refetch()}>Try again</Button></p>}
+      {deleted.isError && <p role="alert" className="text-destructive">Could not load deleted policy status. <Button size="sm" onClick={() => deleted.refetch()}>Try again</Button></p>}
       {policy.isError && <p role="alert">Could not load the saved policy. <Button size="sm" onClick={() => policy.refetch()}>Try again</Button></p>}
 
       {policy.data && (
@@ -156,7 +180,7 @@ export default function GuestAgePricingPolicy() {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Guest Type</TableHead><TableHead>Minimum Age</TableHead><TableHead>Maximum Age</TableHead>
+                <TableHead>Guest Type</TableHead><TableHead title="Age in completed years: 3 years 11 months is age 3">Minimum Age (Years)</TableHead><TableHead title="Includes the whole year up to the next birthday">Maximum Age (Years)</TableHead>
                 <TableHead>Accommodation Charge</TableHead><TableHead>Meal Charge</TableHead><TableHead>Status</TableHead><TableHead className="text-right">Actions</TableHead>
               </TableRow>
             </TableHeader>
@@ -170,12 +194,15 @@ export default function GuestAgePricingPolicy() {
                   <TableCell>{mealLabel(r.meal_rule)}</TableCell>
                   <TableCell><div className="flex items-center gap-2 whitespace-nowrap"><Switch aria-label={`${r.active ? 'Deactivate' : 'Activate'} ${guestTypeName(r)} ${r.draft ? 'draft' : `policy revision ${r.revision}`}`} checked={r.active} disabled={saving || toggling || (r.active && !alternateGuestPolicy(r, rows, policy.data.bands))} title={r.active && !alternateGuestPolicy(r, rows, policy.data.bands) ? 'An alternate policy for the same ages is required before deactivation' : undefined} onCheckedChange={(on) => setActive(r, on)} /><span className="text-sm">{r.draft ? 'Draft' : r.active ? 'Active' : 'Deactivated'}</span></div></TableCell>
                   <TableCell className="text-right">
+                    <div className="flex justify-end">
                     {(r.current || r.draft) && (
                       <Button size="icon" variant="ghost" aria-label={`Edit ${guestTypeName(r)} ${r.draft ? 'draft' : 'policy'}`} disabled={saving || toggling}
                         onClick={() => { setFormError(null); const band = rowBand(r); setForm({ mode: 'edit', band: { ...band, name: guestTypeName(band) }, draft: r.draft }); }}>
                         <Pencil className="h-4 w-4" />
                       </Button>
                     )}
+                    <Button size="icon" variant="ghost" className="text-destructive" aria-label={`Delete ${guestTypeName(r)} ${r.draft ? 'draft' : `policy revision ${r.revision}`}`} title={r.current ? 'Activate a replacement before deleting this policy' : 'Delete policy'} disabled={saving || toggling || r.current || deleted.isError || deleted.isLoading} onClick={() => deletePolicy(r)}><Trash2 className="h-4 w-4" /></Button>
+                    </div>
                   </TableCell>
                 </TableRow>
               ))}

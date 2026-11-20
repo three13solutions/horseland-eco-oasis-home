@@ -4,6 +4,7 @@
 - Accommodation charge editors retain keyed guest-type modes alongside legacy numeric columns; database triggers resolve linked adult amounts on every write so existing authoritative pricing readers remain compatible.
 - Named guest types and bounded adult segments remain staged until guest collection and canonical quote inputs support those segments; configuration alone must never claim custom live pricing.
 - Guest-policy drafts are separate from authoritative versions; server-previewed bundles activate in one revision with draft/revision checks so incomplete edits never change live age coverage.
+- Policy deletion uses tombstones for historical versions and soft-deleted drafts; active versions cannot be removed and authoritative booking history remains immutable.
 
 - Live Rate Card uses canonical variant snapshots and the read-only promo action after checking publication, active category and website-visible variants; retain base rates on preview rejection, never create payment orders or infer applied overrides from overlapping dates.
 - Live rate breakdowns link to the exact override via `override_id`, or the owning rate-plan room type; policy settings stay protected by their existing admin pages.

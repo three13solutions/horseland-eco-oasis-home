@@ -47,6 +47,10 @@ export function guestPolicySaveError(error: unknown): string {
 export function mealChargeableCount(policy: GuestAgePolicy, counts: Record<string,number>) { return policy.bands.reduce((sum,b)=>sum+(b.enabled === false || b.meal_rule==='full'?(counts[b.key] ?? 0):0),0); }
 export function guestTypeChargeRule(key: string): GuestAgeBand['accommodation_rule'] { return key === 'adult' ? 'adult' : key === 'child' || key === 'infant' ? 'child' : 'guest_type'; }
 export function guestTypeName(band: Pick<GuestAgeBand, 'key' | 'name'>) { return band.name || band.key.split('_').map(word => word.charAt(0).toUpperCase()+word.slice(1)).join(' '); }
+export function normalizedGuestName(band: Pick<GuestAgeBand, 'key' | 'name'>) { return guestTypeName(band).trim().replace(/\s+/g, ' ').toLowerCase(); }
+export function duplicateGuestName(band: GuestAgeBand, existing: GuestAgeBand[], isNew = false) {
+  return existing.some(other => (isNew || other.key !== band.key) && normalizedGuestName(other) === normalizedGuestName(band));
+}
 export function guestTypeKey(name: string) { return name.trim().toLowerCase().replace(/[^a-z0-9]+/g,'_').replace(/^_+|_+$/g,''); }
 export function sameGuestPolicy(a: GuestAgeBand, b: GuestAgeBand) { return a.key===b.key && a.name===b.name && a.min_age===b.min_age && a.max_age===b.max_age && a.accommodation_rule===b.accommodation_rule && a.meal_rule===b.meal_rule; }
 export function alternateGuestPolicy(current: GuestAgeBand, versions: GuestAgeBand[], bands: GuestAgeBand[]) {
