@@ -3513,6 +3513,51 @@ export type Database = {
         }
         Relationships: []
       }
+      website_integrations: {
+        Row: {
+          code: string
+          created_at: string
+          description: string | null
+          id: string
+          is_active: boolean
+          name: string
+          page_paths: string[]
+          placement: string
+          platform: string
+          sort_order: number
+          target_mode: string
+          updated_at: string
+        }
+        Insert: {
+          code?: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          name: string
+          page_paths?: string[]
+          placement?: string
+          platform?: string
+          sort_order?: number
+          target_mode?: string
+          updated_at?: string
+        }
+        Update: {
+          code?: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          name?: string
+          page_paths?: string[]
+          placement?: string
+          platform?: string
+          sort_order?: number
+          target_mode?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       website_meal_visibility_plans: {
         Row: {
           meal_plan_id: string
