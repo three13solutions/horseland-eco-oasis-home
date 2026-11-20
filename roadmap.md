@@ -1,6 +1,7 @@
 # Roadmap
 
 - [ ] Move Guest Type Policy activation into per-row status toggles with version-safe saves.
+- [ ] Prevent deactivation without a compatible alternate policy and switch replacements atomically.
 - [ ] Offer No Charge / Guest Type Charge and linked-adult or custom accommodation/meal rates.
 - [ ] Verify policy and rate rules; report any authenticated-check limitation.
 
