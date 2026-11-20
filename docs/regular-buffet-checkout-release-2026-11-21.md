@@ -1,0 +1,6 @@
+# Regular buffet checkout release
+
+- Production code migration 20261120224736 installs the narrow gate OFF. The separately authorized production rollout pins catalogue revision 2, fallback age policy revision 3, and the reviewed active BB/HB/FB linked groups. Do not activate the broader keyed engine for this rollout.
+- Scope: wholly verified EP stays in Basement Hideouts, Standard, Deluxe, and Superior. Eligible nights are Nov 21–Dec 23, 2026 and Jan 2–Mar 31, 2027 inclusive. This does not change any quote that crosses into the festive window or beyond the verified coverage.
+- Re-verified in real quote-only transaction: keyed website 19, numeric website 19, internal 20 eligible quote cases; 24 out-of-scope comparisons unchanged per route. Public quote readback for Deluxe Mar 9–10: Half Board meals INR 1840 adults only or with an under-4; INR 2300 with one child, whether or not the under-4 is present. No inventory hold, order, or payment created.
+- Changes to catalogue prices are drafts, not the released pin. No changes to candlelight eligibility, festive prices, separately purchased meal extras, or saved reservations/checkout snapshots. For rollback, set the private regular buffet release flag false first and verify quote continuity before considering code rollback.
