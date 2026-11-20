@@ -1570,33 +1570,6 @@ export type Database = {
           },
         ]
       }
-      guest_policy_drafts: {
-        Row: {
-          band: Json
-          created_at: string
-          id: string
-          status: string
-          updated_at: string
-          updated_by: string | null
-        }
-        Insert: {
-          band: Json
-          created_at?: string
-          id?: string
-          status?: string
-          updated_at?: string
-          updated_by?: string | null
-        }
-        Update: {
-          band?: Json
-          created_at?: string
-          id?: string
-          status?: string
-          updated_at?: string
-          updated_by?: string | null
-        }
-        Relationships: []
-      }
       guest_reviews: {
         Row: {
           created_at: string
@@ -4245,6 +4218,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      list_guest_policy_drafts: { Args: never; Returns: Json }
       list_website_meal_visibility_rules: { Args: never; Returns: Json }
       log_admin_action: {
         Args: {
