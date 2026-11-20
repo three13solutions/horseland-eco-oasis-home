@@ -1,5 +1,8 @@
 # Architecture
 
+- Guest-type status is versioned within each age band; staging edits never activate the pricing release, because live engine activation requires its separate rollout checks.
+- Accommodation charge editors retain keyed guest-type modes alongside legacy numeric columns; database triggers resolve linked adult amounts on every write so existing authoritative pricing readers remain compatible.
+
 - Live Rate Card uses canonical variant snapshots and the read-only promo action after checking publication, active category and website-visible variants; retain base rates on preview rejection, never create payment orders or infer applied overrides from overlapping dates.
 - Live rate breakdowns link to the exact override via `override_id`, or the owning rate-plan room type; policy settings stay protected by their existing admin pages.
 

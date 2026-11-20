@@ -1,4 +1,5 @@
 /** Admin previews only. Booking totals are authoritative on the server. */
+import type { GuestTypeCharges } from './guest-type-charges';
 export type SourceMealPlan = 'RO' | 'BB' | 'HB' | 'FB';
 export type SupplementRates = Record<SourceMealPlan, number>;
 export interface RatePlanAnchor {
@@ -19,6 +20,7 @@ export interface RatePlanAnchor {
   extra_adult_per_night: number | null;
   extra_child_per_night: number | null;
   extra_infant_per_night: number;
+  guest_type_charges?: GuestTypeCharges;
   priority: number;
   los_min_nights?: number | null;
   los_adjustment_type?: 'fixed' | 'percentage' | null;

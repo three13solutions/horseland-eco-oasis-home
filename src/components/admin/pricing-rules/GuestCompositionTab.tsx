@@ -1,3 +1,5 @@
+import { GuestTypeChargeInput } from '@/components/admin/GuestTypeChargeInput';
+import { guestTypeChargeAmount, type GuestTypeCharges } from '@/lib/guest-type-charges';
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -16,6 +18,7 @@ import { EmptyRuleState } from './EmptyRuleState';
 
 export function GuestCompositionTab() {
   const queryClient = useQueryClient();
+  const [guestCharges, setGuestCharges] = useState<GuestTypeCharges>({});
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingRule, setEditingRule] = useState<any>(null);
   const [formData, setFormData] = useState({
@@ -108,6 +111,7 @@ export function GuestCompositionTab() {
       is_active: true
     });
     setEditingRule(null);
+    setGuestCharges({});
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -117,8 +121,9 @@ export function GuestCompositionTab() {
       base_guests_count: parseInt(formData.base_guests_count),
       max_extra_guests: parseInt(formData.max_extra_guests),
       extra_adult_charge: parseFloat(formData.extra_adult_charge),
-      extra_child_charge: formData.extra_child_charge ? parseFloat(formData.extra_child_charge) : null,
-      extra_infant_charge: formData.extra_infant_charge ? parseFloat(formData.extra_infant_charge) : null,
+      extra_child_charge: guestTypeChargeAmount(guestCharges.child,formData.extra_child_charge,formData.extra_adult_charge) ? parseFloat(guestTypeChargeAmount(guestCharges.child,formData.extra_child_charge,formData.extra_adult_charge)) : null,
+      extra_infant_charge: guestTypeChargeAmount(guestCharges.infant,formData.extra_infant_charge,formData.extra_adult_charge) ? parseFloat(guestTypeChargeAmount(guestCharges.infant,formData.extra_infant_charge,formData.extra_adult_charge)) : null,
+      guest_type_charges: guestCharges,
       is_active: formData.is_active
     };
 
@@ -131,6 +136,7 @@ export function GuestCompositionTab() {
 
   const handleEdit = (rule: any) => {
     setEditingRule(rule);
+    setGuestCharges(rule.guest_type_charges ?? {});
     setFormData({
       room_type_id: rule.room_type_id || '',
       base_guests_count: rule.base_guests_count?.toString() || '2',
@@ -191,16 +197,10 @@ export function GuestCompositionTab() {
                   <p className="text-xs text-muted-foreground">Per adult beyond base count; age band follows Guest Age & Pricing Policy</p>
                 </div>
                 <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label>Extra Child Charge (₹) - Optional</Label>
-                    <Input type="number" step="0.01" placeholder="500" value={formData.extra_child_charge} onChange={(e) => setFormData({ ...formData, extra_child_charge: e.target.value })} />
-                    <p className="text-xs text-muted-foreground">Configured child rate; age band follows Guest Age & Pricing Policy</p>
-                  </div>
-                  <div className="space-y-2">
-                    <Label>Extra Infant Charge (₹) - Optional</Label>
-                    <Input type="number" step="0.01" placeholder="0" value={formData.extra_infant_charge} onChange={(e) => setFormData({ ...formData, extra_infant_charge: e.target.value })} />
-                    <p className="text-xs text-muted-foreground">Free-band accommodation follows Guest Age & Pricing Policy</p>
-                  </div>
+                  {(['child','infant'] as const).map(key => <GuestTypeChargeInput key={key} label={`${key === 'child' ? 'Child' : 'Infant'} Accommodation (₹)`}
+                    value={formData[`extra_${key}_charge`]} adultValue={formData.extra_adult_charge} sameAsAdult={guestCharges[key]?.mode === 'same_as_adult'}
+                    onValueChange={value => setFormData({...formData,[`extra_${key}_charge`]:value})}
+                    onModeChange={same => setGuestCharges(previous => {const next={...previous};if(same)next[key]={mode:'same_as_adult'};else delete next[key];return next;})} />)}
                 </div>
                 <div className="flex items-center space-x-2">
                   <Switch checked={formData.is_active} onCheckedChange={(checked) => setFormData({ ...formData, is_active: checked })} />
