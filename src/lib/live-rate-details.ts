@@ -9,6 +9,18 @@ export interface NightlyRateDetail {
   length_of_stay_discount?: number;
 }
 
+export type RoomPublicationFilter = 'all' | 'published' | 'unpublished';
+export const DEFAULT_ROOM_PUBLICATION_FILTER: RoomPublicationFilter = 'published';
+
+export function matchesRoomPublicationFilter(
+  room: { is_published: boolean; room_categories: { is_active: boolean } | null },
+  filter: RoomPublicationFilter,
+) {
+  if (filter === 'all') return true;
+  if (filter === 'unpublished') return room.is_published === false;
+  return room.is_published === true && room.room_categories?.is_active !== false;
+}
+
 /** Display only the policies the authoritative quote says were actually used. */
 export function appliedOverrideIds(nights: NightlyRateDetail[]) {
   return [...new Set(nights.flatMap(night => [

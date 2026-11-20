@@ -4,6 +4,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
@@ -12,7 +13,7 @@ import { format } from 'date-fns';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar as CalendarComponent } from '@/components/ui/calendar';
 import { cn } from '@/lib/utils';
-import { appliedOverrideIds, stayDateRange, promoMatchesLiveRate, couponPreviewUnavailable, type NightlyRateDetail } from '@/lib/live-rate-details';
+import { appliedOverrideIds, stayDateRange, promoMatchesLiveRate, couponPreviewUnavailable, matchesRoomPublicationFilter, DEFAULT_ROOM_PUBLICATION_FILTER, type RoomPublicationFilter, type NightlyRateDetail } from '@/lib/live-rate-details';
 
 interface RateVariant {
   meal_plan_code: string;
@@ -88,6 +89,7 @@ export default function LiveRateCard() {
   const [stayNights, setStayNights] = useState(1);
   const [couponInput, setCouponInput] = useState('');
   const [coupon, setCoupon] = useState('');
+  const [publicationFilter, setPublicationFilter] = useState<RoomPublicationFilter>(DEFAULT_ROOM_PUBLICATION_FILTER);
   const { checkOut } = stayDateRange(selectedDate, stayNights);
   const checkInDate = format(selectedDate, 'yyyy-MM-dd');
   const checkOutDate = format(checkOut, 'yyyy-MM-dd');
@@ -116,10 +118,11 @@ export default function LiveRateCard() {
     },
   });
   const availableOffers = offers.filter(o => (!o.stay_from || checkOutDate > o.stay_from) && (!o.stay_to || checkInDate <= o.stay_to));
+  const visibleRoomTypes = roomTypes.filter(room => matchesRoomPublicationFilter(room, publicationFilter));
   const ratesQuery = useQuery({
-    queryKey: ['live-rate-card-variants', checkInDate, checkOutDate, coupon, roomTypes.map(r => r.id)],
-    enabled: roomTypes.length > 0,
-    queryFn: async () => Promise.all(roomTypes.map(async room => {
+    queryKey: ['live-rate-card-variants', checkInDate, checkOutDate, coupon, visibleRoomTypes.map(r => r.id)],
+    enabled: visibleRoomTypes.length > 0,
+    queryFn: async () => Promise.all(visibleRoomTypes.map(async room => {
       const { data, error } = await supabase.rpc('calculate_rate_variants_v2', { p_room_type_id: room.id, p_check_in: checkInDate, p_check_out: checkOutDate, p_adults_count: 2, p_children_count: 0, p_infants_count: 0, p_booking_channel: 'direct' });
       if (error) throw error;
       const baseVariants = (Array.isArray(data) ? data : []) as unknown as RateVariant[];
@@ -151,7 +154,7 @@ export default function LiveRateCard() {
       return { room, variants };
     })),
   });
-  const rates = ratesQuery.data ?? [];
+  const rates = (ratesQuery.data ?? []).filter(({ room }) => matchesRoomPublicationFilter(room, publicationFilter));
   const summaryRates = rates.flatMap(r => {
     const v = r.variants.find(v => v.meal_plan_code === 'RO' && v.cancellation_policy_code === 'refundable_credit') ?? r.variants.find(v => v.meal_plan_code === 'RO');
     return v ? [{ room: r.room, variant: v }] : [];
@@ -169,7 +172,7 @@ export default function LiveRateCard() {
   const stayDiscountCount = rates.filter(r => r.variants.some(v => v.nightly_breakdown?.some(n => (n.length_of_stay_discount ?? 0) > 0))).length;
   const appliedCount = rates.reduce((s, r) => s + r.variants.filter(v => v.promotion).length, 0);
   return <div className="p-4 md:p-6 space-y-6">
-    <div className="flex flex-wrap items-center justify-between gap-3"><div><h1 className="text-3xl font-bold">Live Rate Card</h1><p className="text-muted-foreground mt-2">Two adults · Direct website · Rates before tax</p></div><Button variant="outline" disabled={ratesQuery.isFetching} onClick={() => { void queryClient.invalidateQueries({ queryKey: ['live-rate-card-variants'] }); void queryClient.invalidateQueries({ queryKey: ['live-rate-card-offers'] }); void queryClient.invalidateQueries({ queryKey: ['live-rate-card-overrides'] }); }}><RefreshCw className={cn('h-4 w-4 mr-2', ratesQuery.isFetching && 'animate-spin')} />Refresh</Button></div>
+    <div className="flex flex-wrap items-center justify-between gap-3"><div><h1 className="text-3xl font-bold">Live Rate Card</h1><p className="text-muted-foreground mt-2">Two adults · Direct website · Rates before tax</p></div><Button variant="outline" disabled={ratesQuery.isFetching} onClick={() => { void queryClient.invalidateQueries({ queryKey: ['live-rate-card-room-types'] }); void queryClient.invalidateQueries({ queryKey: ['live-rate-card-variants'] }); void queryClient.invalidateQueries({ queryKey: ['live-rate-card-offers'] }); void queryClient.invalidateQueries({ queryKey: ['live-rate-card-overrides'] }); }}><RefreshCw className={cn('h-4 w-4 mr-2', ratesQuery.isFetching && 'animate-spin')} />Refresh</Button></div>
     <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
       {[{ title: 'Average Rate', value: average, note: 'Room Only · per night' }, { title: 'Lowest Rate', value: lowest?.variant.price_per_night, note: lowest?.room.name }, { title: 'Highest Rate', value: highest?.variant.price_per_night, note: highest?.room.name }].map(s => <Card key={s.title}><CardHeader className="pb-2"><CardTitle className="text-sm font-medium text-muted-foreground">{s.title}</CardTitle></CardHeader><CardContent><p className="text-2xl font-bold">{s.value == null ? '—' : money(s.value)}</p><p className="text-xs text-muted-foreground mt-1">{s.note || 'Room Only · per night'}</p></CardContent></Card>)}
     </div>
@@ -180,10 +183,10 @@ export default function LiveRateCard() {
       {stayDiscountCount > 0 && <p className="text-sm text-primary">Stay-length discounts applied to {stayDiscountCount} room types.</p>}
     </section>
     <section className="space-y-4">
-      <div className="flex flex-wrap justify-between items-end gap-4"><div><h2 className="text-lg font-semibold">All Room Types — Live Rates</h2><p className="text-sm text-muted-foreground">{format(selectedDate, 'dd MMM yyyy')} – {format(checkOut, 'dd MMM yyyy')} · {stayNights} {stayNights === 1 ? 'night' : 'nights'}</p></div><div className="flex flex-wrap items-end gap-3"><label className="text-sm space-y-1 block">Stay nights<Input aria-label="Stay nights" type="number" min="1" max="365" step="1" value={stayNights} onChange={e => setStayNights(Math.min(365, Math.max(1, Math.trunc(Number(e.target.value) || 1))))} className="w-24" /></label><Popover><PopoverTrigger asChild><Button variant="outline"><Calendar className="mr-2 h-4 w-4" />{format(selectedDate, 'PPP')}</Button></PopoverTrigger><PopoverContent className="w-auto p-0" align="end"><CalendarComponent mode="single" selected={selectedDate} onSelect={date => date && setSelectedDate(date)} initialFocus /></PopoverContent></Popover></div></div>
-      {roomError || ratesQuery.error ? <p role="alert" className="text-destructive">Rates could not be loaded. Please refresh.</p> : ratesQuery.isPending && roomTypes.length ? <p className="text-muted-foreground py-8 text-center">Loading live rates…</p> : !rates.length ? <p className="text-muted-foreground py-8 text-center">No rates available.</p> : <div className="border rounded-md overflow-x-auto"><Table><TableHeader><TableRow><TableHead rowSpan={2}>Room Type / Category</TableHead><TableHead rowSpan={2} className="text-right">Base / night</TableHead><TableHead rowSpan={2} className="text-right">Room Only / night</TableHead>{policyGroups.map(g => <TableHead key={g.code} colSpan={g.mealPlans.length} className="text-center border-l">{g.name}</TableHead>)}</TableRow><TableRow>{policyGroups.flatMap(g => g.mealPlans.map(m => <TableHead key={`${g.code}-${m.code}`} className="text-right border-l whitespace-nowrap">{m.name}</TableHead>))}</TableRow></TableHeader><TableBody>{rates.map(({ room, variants }) => {
+      <div className="flex flex-wrap justify-between items-end gap-4"><div><h2 className="text-lg font-semibold">{publicationFilter === 'all' ? 'All Room Types' : publicationFilter === 'published' ? 'Published Room Types' : 'Unpublished Room Types'} — Live Rates</h2><p className="text-sm text-muted-foreground">{format(selectedDate, 'dd MMM yyyy')} – {format(checkOut, 'dd MMM yyyy')} · {stayNights} {stayNights === 1 ? 'night' : 'nights'}</p></div><div className="flex flex-wrap items-end gap-3"><div className="space-y-1"><label htmlFor="room-publication-filter" className="text-sm">Room status</label><Select value={publicationFilter} onValueChange={value => { if (value === 'all' || value === 'published' || value === 'unpublished') setPublicationFilter(value); }}><SelectTrigger id="room-publication-filter" aria-label="Room status" className="w-40"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="all">All</SelectItem><SelectItem value="published">Published</SelectItem><SelectItem value="unpublished">Unpublished</SelectItem></SelectContent></Select></div><label className="text-sm space-y-1 block">Stay nights<Input aria-label="Stay nights" type="number" min="1" max="365" step="1" value={stayNights} onChange={e => setStayNights(Math.min(365, Math.max(1, Math.trunc(Number(e.target.value) || 1))))} className="w-24" /></label><Popover><PopoverTrigger asChild><Button variant="outline"><Calendar className="mr-2 h-4 w-4" />{format(selectedDate, 'PPP')}</Button></PopoverTrigger><PopoverContent className="w-auto p-0" align="end"><CalendarComponent mode="single" selected={selectedDate} onSelect={date => date && setSelectedDate(date)} initialFocus /></PopoverContent></Popover></div></div>
+      {roomError || ratesQuery.error ? <p role="alert" className="text-destructive">Rates could not be loaded. Please refresh.</p> : ratesQuery.isPending && visibleRoomTypes.length ? <p className="text-muted-foreground py-8 text-center">Loading live rates…</p> : !rates.length ? <p className="text-muted-foreground py-8 text-center">No rates available for this filter.</p> : <div className="border rounded-md overflow-x-auto"><Table><TableHeader><TableRow><TableHead rowSpan={2}>Room Type / Category</TableHead><TableHead rowSpan={2} className="text-right">Base / night</TableHead><TableHead rowSpan={2} className="text-right">Room Only / night</TableHead>{policyGroups.map(g => <TableHead key={g.code} colSpan={g.mealPlans.length} className="text-center border-l">{g.name}</TableHead>)}</TableRow><TableRow>{policyGroups.flatMap(g => g.mealPlans.map(m => <TableHead key={`${g.code}-${m.code}`} className="text-right border-l whitespace-nowrap">{m.name}</TableHead>))}</TableRow></TableHeader><TableBody>{rates.map(({ room, variants }) => {
         const ro = variants.find(v => v.meal_plan_code === 'RO' && v.cancellation_policy_code === 'refundable_credit') ?? variants.find(v => v.meal_plan_code === 'RO');
-        return <TableRow key={room.id}><TableCell className="min-w-48"><div className="font-medium">{room.name}</div><div className="text-xs text-muted-foreground">{room.room_categories?.name || 'Uncategorised'}</div><div className="flex flex-wrap gap-1 mt-1">{!room.is_published && <Badge variant="secondary">Unpublished</Badge>}{room.room_categories?.is_active === false && <Badge variant="destructive">Category inactive</Badge>}</div></TableCell><TableCell className="text-right whitespace-nowrap text-muted-foreground">{ro ? money((ro.original_variant?.room_rate ?? ro.room_rate) / stayNights) : '—'}</TableCell><TableCell className="text-right whitespace-nowrap">{ro ? money(ro.price_per_night) : '—'}</TableCell>{policyGroups.flatMap(g => g.mealPlans.map(m => {
+        return <TableRow key={room.id} className={cn(!room.is_published && "bg-destructive/5 hover:bg-destructive/10")}><TableCell className="min-w-48"><div className="font-medium">{room.name}</div><div className="text-xs text-muted-foreground">{room.room_categories?.name || 'Uncategorised'}</div>{room.room_categories?.is_active === false && <span className="text-xs text-muted-foreground">Inactive category</span>}</TableCell><TableCell className="text-right whitespace-nowrap text-muted-foreground">{ro ? money((ro.original_variant?.room_rate ?? ro.room_rate) / stayNights) : '—'}</TableCell><TableCell className="text-right whitespace-nowrap">{ro ? money(ro.price_per_night) : '—'}</TableCell>{policyGroups.flatMap(g => g.mealPlans.map(m => {
           const v = variants.find(v => v.meal_plan_code === m.code && v.cancellation_policy_code === g.code);
           return <TableCell key={`${g.code}-${m.code}`} className="text-right border-l">{v ? <Popover><PopoverTrigger asChild><Button variant="ghost" className="h-auto px-1 py-2 flex-col items-end gap-1" aria-label={`${room.name}, ${m.name}, ${g.name}: rate calculation breakdown`}><span className="font-semibold whitespace-nowrap">{money(v.price_per_night)} <Info className="h-3 w-3 inline text-muted-foreground" /></span><span className="text-xs text-muted-foreground whitespace-nowrap">{money(v.total_price)} total</span>{(appliedOverrideIds(v.nightly_breakdown ?? []).length > 0 || (v.nightly_breakdown ?? []).some(n => n.dynamic_rules?.some(r => String(r.type ?? '').includes('override')))) && <Badge variant="secondary">Override</Badge>}{v.promotion && <Badge variant="outline">{v.promotion.code}</Badge>}{v.couponError && <span className="text-xs text-muted-foreground">Coupon not applied</span>}</Button></PopoverTrigger><PopoverContent className="w-96 max-w-[calc(100vw-2rem)] max-h-[70vh] overflow-y-auto" align="end"><RateBreakdown variant={v} policies={policies} nights={stayNights} roomTypeId={room.id} /></PopoverContent></Popover> : '—'}</TableCell>;
         }))}</TableRow>;

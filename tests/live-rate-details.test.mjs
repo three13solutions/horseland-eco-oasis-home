@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { appliedOverrideIds, stayDateRange, promoMatchesLiveRate, couponPreviewUnavailable } from '../src/lib/live-rate-details.ts';
+import { appliedOverrideIds, stayDateRange, promoMatchesLiveRate, couponPreviewUnavailable, matchesRoomPublicationFilter, DEFAULT_ROOM_PUBLICATION_FILTER } from '../src/lib/live-rate-details.ts';
 
 test('show only applied overrides, once across a multi-night stay', () => {
   assert.deepEqual(appliedOverrideIds([
@@ -22,6 +22,23 @@ test('accept only a server coupon quote matching the displayed variant', () => {
   assert.equal(promoMatchesLiveRate({ ...quote, variant: { total_price: -1, price_per_night: 0 } }, 'DIRECT1000', 'current'), false);
 });
 const published = { is_published: true, room_categories: { is_active: true } };
+const unpublished = { ...published, is_published: false };
+const inactive = { ...published, room_categories: { is_active: false } };
+test('default published filter shows only published rooms in active categories', () => {
+  assert.equal(DEFAULT_ROOM_PUBLICATION_FILTER, 'published');
+  assert.equal(matchesRoomPublicationFilter(published, DEFAULT_ROOM_PUBLICATION_FILTER), true);
+  assert.equal(matchesRoomPublicationFilter(unpublished, DEFAULT_ROOM_PUBLICATION_FILTER), false);
+  assert.equal(matchesRoomPublicationFilter(inactive, DEFAULT_ROOM_PUBLICATION_FILTER), false);
+});
+test('all filter includes unpublished rooms and inactive categories', () => {
+  for (const room of [published, unpublished, inactive]) assert.equal(matchesRoomPublicationFilter(room, 'all'), true);
+});
+test('unpublished filter selects publication state, not category activation', () => {
+  assert.equal(matchesRoomPublicationFilter(unpublished, 'unpublished'), true);
+  assert.equal(matchesRoomPublicationFilter({ ...unpublished, room_categories: { is_active: false } }, 'unpublished'), true);
+  assert.equal(matchesRoomPublicationFilter(published, 'unpublished'), false);
+  assert.equal(matchesRoomPublicationFilter(inactive, 'unpublished'), false);
+});
 const variant = { meal_plan_code: 'RO', cancellation_policy_code: 'refundable_credit', quote_fingerprint: 'current' };
 test('unpublished room types cannot request website coupon quotes', () => {
   assert.match(couponPreviewUnavailable({ ...published, is_published: false }, variant, [variant]), /unpublished/);
