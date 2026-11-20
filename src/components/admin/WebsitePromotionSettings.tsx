@@ -62,10 +62,10 @@ const selectClass = 'h-9 w-full min-w-0 rounded-md border border-input bg-backgr
 const noteClass = 'text-xs leading-relaxed text-muted-foreground';
 const sectionClass = 'min-w-0 space-y-2.5 border-t pt-3';
 const fieldGrid = 'grid min-w-0 gap-2.5 sm:grid-cols-2';
-const identityDiscountGrid = 'grid min-w-0 items-start gap-3 grid-cols-[repeat(auto-fit,minmax(min(100%,17rem),1fr))]';
+const identityDiscountGrid = 'grid min-w-0 gap-3 grid-cols-[repeat(auto-fit,minmax(min(100%,17rem),1fr))]';
 const roomMealUsageGrid = 'grid min-w-0 items-start gap-2.5 grid-cols-[repeat(auto-fit,minmax(min(100%,14rem),1fr))]';
 const eligibilityGrid = 'grid min-w-0 items-start gap-2.5 grid-cols-[repeat(auto-fit,minmax(min(100%,12rem),1fr))]';
-const visibilityGrid = 'grid min-w-0 gap-2.5 grid-cols-[repeat(auto-fit,minmax(min(100%,16rem),1fr))]';
+const visibilityGrid = 'grid min-w-0 gap-2.5 grid-cols-[repeat(auto-fit,minmax(min(100%,13rem),1fr))]';
 const modes = [['RO','Room Only (EP)'], ['BB','Bed & Breakfast (CP)'], ['HB','Half Board (MAP)'], ['FB','Full Board (AP)']] as const;
 function FieldHelp({ label, children }: { label: string; children: ReactNode }) {
  const descriptionId=useId();
@@ -381,11 +381,18 @@ export default function WebsitePromotionSettings(){
     <CardContent className="px-3 pb-3 sm:px-4 sm:pb-4">{form&&<fieldset disabled={unavailable} className="min-w-0 space-y-3">
      <legend className="sr-only">Promo code settings</legend>
      <div className={identityDiscountGrid} data-promo-layout="identity-discount">
-      <div className="min-w-0 space-y-2.5">
+      <div className="row-span-3 grid min-w-0 grid-rows-[subgrid] items-start">
        <Field id="promo-code" label="Code"><Input id="promo-code" className={inputClass} autoCapitalize="characters" spellCheck={false} disabled={!!form.revision||unavailable} value={form.code} onChange={e=>change('code',e.target.value.toUpperCase())}/></Field>
        <Field id="promo-description" label="Guest-facing description"><Input id="promo-description" className={inputClass} value={form.label} onChange={e=>change('label',e.target.value)}/></Field>
+       <section className="min-w-0 space-y-1.5" aria-labelledby="promo-visibility">
+        <h3 id="promo-visibility" className="text-sm font-semibold">Visibility and activation</h3>
+        <div className={visibilityGrid} data-promo-layout="visibility">
+         <div className="flex min-w-0 min-h-9 items-center justify-between gap-3 rounded-md border px-2.5 py-1.5"><Label htmlFor="promo-public">List publicly in booking offers</Label><Switch id="promo-public" disabled={unavailable} checked={form.is_public} onCheckedChange={checked=>change('is_public',checked)}/></div>
+         <div className="flex min-w-0 min-h-9 items-center justify-between gap-3 rounded-md border px-2.5 py-1.5"><Label htmlFor="promo-active">Enable for eligible new checkouts</Label><Switch id="promo-active" disabled={unavailable} checked={form.is_active} onCheckedChange={checked=>change('is_active',checked)}/></div>
+        </div>
+       </section>
       </div>
-      <div className="min-w-0 space-y-2.5">
+      <div className="row-span-3 grid min-w-0 grid-rows-[subgrid] items-start">
        {form.discount_kind==='legacy'?<p className="rounded-md bg-muted px-3 py-2 text-sm">Existing discount preserved: {form.code==='EP300'?'₹300 per verified room-only night':'₹1,000 per booking, accommodation only'}.</p>:<>
         <fieldset className="min-w-0 space-y-1.5">
          <legend className="mb-1 text-sm font-medium leading-5">Discount type</legend>
@@ -490,13 +497,6 @@ export default function WebsitePromotionSettings(){
        </fieldset>
       </div>
       {flat&&<p className={noteClass}>All nights must qualify for once-per-booking offers.</p>}
-     </section>
-     <section className={sectionClass} aria-labelledby="promo-visibility">
-      <h3 id="promo-visibility" className="text-sm font-semibold">Visibility and activation</h3>
-      <div className={visibilityGrid} data-promo-layout="visibility">
-       <div className="flex min-w-0 min-h-9 items-center justify-between gap-3 rounded-md border px-2.5 py-1.5"><Label htmlFor="promo-public">List publicly in booking offers</Label><Switch id="promo-public" disabled={unavailable} checked={form.is_public} onCheckedChange={checked=>change('is_public',checked)}/></div>
-       <div className="flex min-w-0 min-h-9 items-center justify-between gap-3 rounded-md border px-2.5 py-1.5"><Label htmlFor="promo-active">Enable for eligible new checkouts</Label><Switch id="promo-active" disabled={unavailable} checked={form.is_active} onCheckedChange={checked=>change('is_active',checked)}/></div>
-      </div>
      </section>
      {!canSave&&<p className={`text-xs ${restrictionsError||customEmailIncomplete?'text-destructive':'text-muted-foreground'}`}>{restrictionsError || (customEmailIncomplete?'Enter the custom per-email limit or choose Unlimited.':'Complete the required fields. Date ranges must be ordered, and stay restrictions need a stay policy.')}</p>}
      {review?<div className="space-y-2 rounded-md border bg-muted/40 p-2.5 text-sm">
