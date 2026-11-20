@@ -10,6 +10,7 @@ import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { LiveMealPricing } from '@/components/admin/LiveMealPricing';
+import { CatalogueGuestMealPrices } from '@/components/admin/CatalogueGuestMealPrices';
 import { 
   Dialog, 
   DialogContent, 
@@ -70,12 +71,15 @@ const MealsManagement = () => {
   const [variantFilter, setVariantFilter] = useState<string>('all');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [guestPriceSaveInProgress, setGuestPriceSaveInProgress] = useState(false);
+  const [guestPriceDirty, setGuestPriceDirty] = useState(false);
+  const [metadataSaveInProgress, setMetadataSaveInProgress] = useState(false);
   const [editingMeal, setEditingMeal] = useState<Meal | null>(null);
   const [formData, setFormData] = useState<{
     title: string;
     meal_type: 'breakfast' | 'lunch' | 'high_tea' | 'dinner';
     variant: 'veg' | 'non_veg' | 'jain';
-    price: number;
+    price: string;
     description: string;
     availability_start: string;
     availability_end: string;
@@ -86,7 +90,7 @@ const MealsManagement = () => {
     title: '',
     meal_type: 'breakfast',
     variant: 'veg',
-    price: 0,
+    price: '',
     description: '',
     availability_start: '00:00',
     availability_end: '23:59',
@@ -124,8 +128,11 @@ const MealsManagement = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (guestPriceSaveInProgress || metadataSaveInProgress || guestPriceDirty) return;
+    setMetadataSaveInProgress(true);
     
     try {
+      if (!editingMeal && !formData.price.trim()) throw new Error('Enter an adult price, or enter zero if the meal is free.');
       const mealData = {
         ...formData,
         price: Number(formData.price)
@@ -141,7 +148,7 @@ const MealsManagement = () => {
       } else {
         result = await (supabase as any)
           .from('meals')
-          .insert([mealData]);
+          .insert([mealData]).select('*').single();
       }
 
       if (result.error) throw result.error;
@@ -151,16 +158,23 @@ const MealsManagement = () => {
         description: `Meal ${editingMeal ? 'updated' : 'created'} successfully`
       });
 
-      setIsDialogOpen(false);
-      resetForm();
+      if (!editingMeal && result.data) {
+        // Rates are staged against a real catalogue ID, separately from creating the meal.
+        handleEdit(result.data as Meal);
+      } else {
+        setIsDialogOpen(false);
+        resetForm();
+      }
       loadMeals();
     } catch (error) {
       console.error('Error saving meal:', error);
       toast({
         title: "Error",
-        description: `Failed to ${editingMeal ? 'update' : 'create'} meal`,
+        description: error instanceof Error ? error.message : `Failed to ${editingMeal ? 'update' : 'create'} meal`,
         variant: "destructive"
       });
+    } finally {
+      setMetadataSaveInProgress(false);
     }
   };
 
@@ -170,7 +184,7 @@ const MealsManagement = () => {
       title: meal.title,
       meal_type: meal.meal_type,
       variant: meal.variant,
-      price: meal.price,
+      price: String(meal.price),
       description: meal.description || '',
       availability_start: meal.availability_start.slice(0, 5),
       availability_end: meal.availability_end.slice(0, 5),
@@ -211,7 +225,7 @@ const MealsManagement = () => {
       title: '',
       meal_type: 'breakfast',
       variant: 'veg',
-      price: 0,
+      price: '',
       description: '',
       availability_start: '00:00',
       availability_end: '23:59',
@@ -361,43 +375,28 @@ const MealsManagement = () => {
           </div>
         </div>
 
-        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+        <Dialog open={isDialogOpen} onOpenChange={open => { if (!guestPriceSaveInProgress && !metadataSaveInProgress) setIsDialogOpen(open); }}>
           <DialogTrigger asChild>
             <Button onClick={resetForm}>
               <Plus className="w-4 h-4 mr-2" />
               Add Meal
             </Button>
           </DialogTrigger>
-          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto"
+            onInteractOutside={event => { if (guestPriceSaveInProgress || metadataSaveInProgress) event.preventDefault(); }}
+            onEscapeKeyDown={event => { if (guestPriceSaveInProgress || metadataSaveInProgress) event.preventDefault(); }}>
             <DialogHeader>
               <DialogTitle>{editingMeal ? 'Edit Meal' : 'Add New Meal'}</DialogTitle>
             </DialogHeader>
             <form onSubmit={handleSubmit} className="space-y-6">
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="title">Title</Label>
-                  <Input
-                    id="title"
-                    value={formData.title}
-                    onChange={(e) => setFormData({...formData, title: e.target.value})}
-                    required
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="price">Price (₹)</Label>
-                  <Input
-                    id="price"
-                    disabled={!!editingMeal}
-                    type="number"
-                    min="0"
-                    step="0.01"
-                    value={formData.price}
-                    onChange={(e) => setFormData({...formData, price: parseFloat(e.target.value) || 0})}
-                    required
-                  />
-                </div>
+              <div className="space-y-2">
+                <Label htmlFor="title">Title</Label>
+                <Input id="title" value={formData.title} onChange={event => setFormData(previous => ({ ...previous, title: event.target.value }))} required />
               </div>
-              {editingMeal && <p className="text-sm text-muted-foreground">Change prices through Shared meal prices on this page so linked plans are reviewed and updated securely. This form edits other meal details only.</p>}
+              <CatalogueGuestMealPrices meal={editingMeal} adultPrice={formData.price}
+                onAdultPriceChange={price => setFormData(previous => ({ ...previous, price }))}
+                onSaveInProgress={setGuestPriceSaveInProgress} onPendingChanges={setGuestPriceDirty}
+                disabled={metadataSaveInProgress} />
 
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
@@ -479,8 +478,9 @@ const MealsManagement = () => {
                     .select('hardcoded_key')
                     .eq('image_url', url)
                     .single();
-                  if (data?.hardcoded_key) {
-                    setFormData(prev => ({...prev, featured_media_key: data.hardcoded_key}));
+                  const hardcodedKey = data?.hardcoded_key;
+                  if (hardcodedKey) {
+                    setFormData(prev => ({ ...prev, featured_media_key: hardcodedKey }));
                   }
                 }}
                 categorySlug="dining"
@@ -496,13 +496,15 @@ const MealsManagement = () => {
                 <Label htmlFor="is_active">Active</Label>
               </div>
 
+              {guestPriceDirty && <p role="status" className="text-xs text-muted-foreground">Save or discard your guest-type prices separately before updating the meal details.</p>}
               <div className="flex gap-2 pt-4">
-                <Button type="submit" className="flex-1">
-                  {editingMeal ? 'Update Meal' : 'Create Meal'}
+                <Button type="submit" className="flex-1" disabled={guestPriceDirty || guestPriceSaveInProgress || metadataSaveInProgress}>
+                  {metadataSaveInProgress ? 'Saving…' : editingMeal ? 'Update Meal' : 'Create Meal'}
                 </Button>
                 <Button
                   type="button"
                   variant="outline"
+                  disabled={guestPriceSaveInProgress || metadataSaveInProgress}
                   onClick={() => setIsDialogOpen(false)}
                 >
                   Cancel
@@ -617,7 +619,7 @@ const MealsManagement = () => {
       {filteredMeals.length === 0 ? (
         <div className="text-center py-12">
           <p className="text-muted-foreground mb-4">No meals found</p>
-          <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+          <Dialog open={isDialogOpen} onOpenChange={open => { if (!guestPriceSaveInProgress && !metadataSaveInProgress) setIsDialogOpen(open); }}>
             <DialogTrigger asChild>
               <Button onClick={resetForm}>
                 <Plus className="w-4 h-4 mr-2" />
@@ -641,7 +643,7 @@ const MealsManagement = () => {
                 <TableHead>Title</TableHead>
                 <TableHead>Type</TableHead>
                 <TableHead>Variant</TableHead>
-                <TableHead>Price</TableHead>
+                <TableHead>Adult price</TableHead>
                 <TableHead>Availability</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead className="text-right">Actions</TableHead>
