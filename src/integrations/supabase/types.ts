@@ -518,10 +518,12 @@ export type Database = {
           check_in: string
           check_out: string
           created_at: string
+          guest_counts: Json | null
           guest_email: string | null
           guest_id: string | null
           guest_name: string
           guest_phone: string | null
+          guest_policy_snapshot: Json | null
           guests_count: number
           id: string
           meal_cost: number | null
@@ -549,10 +551,12 @@ export type Database = {
           check_in: string
           check_out: string
           created_at?: string
+          guest_counts?: Json | null
           guest_email?: string | null
           guest_id?: string | null
           guest_name: string
           guest_phone?: string | null
+          guest_policy_snapshot?: Json | null
           guests_count?: number
           id?: string
           meal_cost?: number | null
@@ -580,10 +584,12 @@ export type Database = {
           check_in?: string
           check_out?: string
           created_at?: string
+          guest_counts?: Json | null
           guest_email?: string | null
           guest_id?: string | null
           guest_name?: string
           guest_phone?: string | null
+          guest_policy_snapshot?: Json | null
           guests_count?: number
           id?: string
           meal_cost?: number | null
@@ -4247,14 +4253,6 @@ export type Database = {
         Returns: number
       }
       guest_policy_complete: { Args: { p_bands: Json }; Returns: boolean }
-      guest_type_accommodation_charge: {
-        Args: { p_anchor: Json; p_counts: Json }
-        Returns: Json
-      }
-      guest_type_meal_charge: {
-        Args: { p_adult_rate: number; p_counts: Json; p_plan: string }
-        Returns: Json
-      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -4411,10 +4409,6 @@ export type Database = {
       shared_meal_pricing_is_live: { Args: never; Returns: boolean }
       unit_has_direct_pricing: { Args: { p_unit: string }; Returns: boolean }
       validate_guest_age_bands: { Args: { p_bands: Json }; Returns: boolean }
-      validate_guest_type_counts: {
-        Args: { p_counts: Json; p_revision: number }
-        Returns: Json
-      }
       validate_meal_age_pricing_rules: {
         Args: { p_rules: Json }
         Returns: boolean
