@@ -1,5 +1,7 @@
 # Roadmap
 
+- [ ] Add confirmed deletion of draft/deactivated policies, protect active policies and historical booking records.
+- [ ] Reject duplicate guest-type names across distinct types, including case and spacing variations; verify protected actions.
 - [x] Add administrator-only policy drafts without changing active age policies.
 - [x] Preview and atomically activate an edited policy with compatible drafts, rejecting gaps, overlaps, ambiguity, and stale changes.
 - [x] Verify draft persistence and coordinated activation: 32 tests passed, including 14 isolated PostgreSQL tests; isolated desktop/mobile draft save/read-back, cancellation and activation passed; deployed access grants verified and live revision unchanged. Unsupported custom guest segments remain draft-only while current pricing is live.
