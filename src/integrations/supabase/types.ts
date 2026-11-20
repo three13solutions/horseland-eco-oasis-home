@@ -1299,6 +1299,27 @@ export type Database = {
         }
         Relationships: []
       }
+      guest_age_policy_versions: {
+        Row: {
+          bands: Json
+          revision: number
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          bands: Json
+          revision: number
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          bands?: Json
+          revision?: number
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: []
+      }
       guest_composition_rules: {
         Row: {
           base_guests_count: number
@@ -1826,6 +1847,84 @@ export type Database = {
             columns: ["season_id"]
             isOneToOne: false
             referencedRelation: "seasons"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      meal_age_pricing_versions: {
+        Row: {
+          revision: number
+          rules: Json
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          revision: number
+          rules: Json
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          revision?: number
+          rules?: Json
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: []
+      }
+      meal_plan_dietary_variants: {
+        Row: {
+          created_at: string
+          description: string
+          dietary_type: string
+          gallery_image_id: string | null
+          id: string
+          is_active: boolean
+          meal_plan_id: string
+          rate_per_person_inr: number
+          revision: number
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          created_at?: string
+          description?: string
+          dietary_type: string
+          gallery_image_id?: string | null
+          id?: string
+          is_active?: boolean
+          meal_plan_id: string
+          rate_per_person_inr: number
+          revision?: number
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          created_at?: string
+          description?: string
+          dietary_type?: string
+          gallery_image_id?: string | null
+          id?: string
+          is_active?: boolean
+          meal_plan_id?: string
+          rate_per_person_inr?: number
+          revision?: number
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "meal_plan_dietary_variants_gallery_image_id_fkey"
+            columns: ["gallery_image_id"]
+            isOneToOne: false
+            referencedRelation: "gallery_images"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "meal_plan_dietary_variants_meal_plan_id_fkey"
+            columns: ["meal_plan_id"]
+            isOneToOne: false
+            referencedRelation: "meal_plan_rules"
             referencedColumns: ["id"]
           },
         ]
@@ -3566,31 +3665,85 @@ export type Database = {
       }
       website_promotions: {
         Row: {
+          amount_per_booking: number
           amount_per_night: number
+          booking_from: string | null
+          booking_to: string | null
           code: string
+          day_scope: string
+          discount_basis: string | null
+          discount_kind: string
+          discount_value: number | null
+          eligible_meal_plan_codes: string[] | null
+          eligible_room_category_ids: string[] | null
+          excluded_stay_dates: string[]
           is_active: boolean
+          is_public: boolean
           label: string
+          min_stay_nights: number | null
+          mixed_stay_mode: string | null
+          per_guest_usage_limit: number | null
           revision: number
+          stay_from: string | null
+          stay_to: string | null
+          total_usage_limit: number | null
           updated_at: string
           updated_by: string | null
+          usage_serial: number
         }
         Insert: {
+          amount_per_booking?: number
           amount_per_night?: number
+          booking_from?: string | null
+          booking_to?: string | null
           code: string
+          day_scope?: string
+          discount_basis?: string | null
+          discount_kind?: string
+          discount_value?: number | null
+          eligible_meal_plan_codes?: string[] | null
+          eligible_room_category_ids?: string[] | null
+          excluded_stay_dates?: string[]
           is_active?: boolean
+          is_public?: boolean
           label?: string
+          min_stay_nights?: number | null
+          mixed_stay_mode?: string | null
+          per_guest_usage_limit?: number | null
           revision?: number
+          stay_from?: string | null
+          stay_to?: string | null
+          total_usage_limit?: number | null
           updated_at?: string
           updated_by?: string | null
+          usage_serial?: number
         }
         Update: {
+          amount_per_booking?: number
           amount_per_night?: number
+          booking_from?: string | null
+          booking_to?: string | null
           code?: string
+          day_scope?: string
+          discount_basis?: string | null
+          discount_kind?: string
+          discount_value?: number | null
+          eligible_meal_plan_codes?: string[] | null
+          eligible_room_category_ids?: string[] | null
+          excluded_stay_dates?: string[]
           is_active?: boolean
+          is_public?: boolean
           label?: string
+          min_stay_nights?: number | null
+          mixed_stay_mode?: string | null
+          per_guest_usage_limit?: number | null
           revision?: number
+          stay_from?: string | null
+          stay_to?: string | null
+          total_usage_limit?: number | null
           updated_at?: string
           updated_by?: string | null
+          usage_serial?: number
         }
         Relationships: []
       }
@@ -3599,6 +3752,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      admin_meal_plan_dietary_variants: { Args: never; Returns: Json }
       apply_accommodation_modifiers: {
         Args: {
           p_channel: string
@@ -3608,6 +3762,24 @@ export type Database = {
           p_room_only: number
           p_room_type_id: string
           p_room_unit_id: string
+        }
+        Returns: Json
+      }
+      assert_legacy_meal_age_supported: {
+        Args: {
+          p_adults: number
+          p_children: number
+          p_infants: number
+          p_plan_code: string
+        }
+        Returns: undefined
+      }
+      attach_guest_age_policy: {
+        Args: {
+          p_adults: number
+          p_children: number
+          p_infants: number
+          p_variants: Json
         }
         Returns: Json
       }
@@ -3682,6 +3854,21 @@ export type Database = {
           final_price: number
         }[]
       }
+      calculate_guest_meal_plan_cost: {
+        Args: {
+          p_adults_count: number
+          p_children_count: number
+          p_infants_count: number
+          p_meal_plan_code: string
+          p_nights: number
+          p_preferred_variant?: string
+        }
+        Returns: {
+          included_meals: Json
+          meal_breakdown: Json
+          meal_cost: number
+        }[]
+      }
       calculate_invoice_totals:
         | {
             Args: { p_subtotal: number }
@@ -3713,6 +3900,16 @@ export type Database = {
           p_room_unit_id: string
         }
         Returns: number
+      }
+      calculate_meal_age_charge: {
+        Args: {
+          p_adult_rate: number
+          p_adults: number
+          p_children: number
+          p_infants: number
+          p_plan_code: string
+        }
+        Returns: Json
       }
       calculate_meal_plan_cost: {
         Args: {
@@ -3899,10 +4096,12 @@ export type Database = {
       }
       get_current_user_role: { Args: never; Returns: string }
       get_gst_rate_for_amount: { Args: { p_amount: number }; Returns: number }
+      get_guest_age_policy: { Args: never; Returns: Json }
       get_guest_available_credit: {
         Args: { p_guest_id: string }
         Returns: number
       }
+      get_meal_age_pricing_policy: { Args: never; Returns: Json }
       get_meal_pricing_workspace: { Args: never; Returns: Json }
       get_pricing_preservation_policy: {
         Args: { p_date: string; p_room_type_id: string }
@@ -3911,6 +4110,16 @@ export type Database = {
       get_room_type_pricing_cleanup_preview: {
         Args: { p_type_id: string }
         Returns: Json
+      }
+      guest_age_meal_pricing_active: { Args: never; Returns: boolean }
+      guest_policy_charge_count: {
+        Args: {
+          p_adults: number
+          p_children: number
+          p_infants: number
+          p_kind: string
+        }
+        Returns: number
       }
       has_role: {
         Args: {
@@ -3936,6 +4145,15 @@ export type Database = {
           }
       is_super_admin: { Args: never; Returns: boolean }
       is_super_admin_new: { Args: never; Returns: boolean }
+      legacy_meal_age_supported: {
+        Args: {
+          p_adults: number
+          p_children: number
+          p_infants: number
+          p_plan_code: string
+        }
+        Returns: boolean
+      }
       list_website_meal_visibility_rules: { Args: never; Returns: Json }
       log_admin_action: {
         Args: {
@@ -3960,6 +4178,35 @@ export type Database = {
       room_type_has_pricing: { Args: { p_type: string }; Returns: boolean }
       save_distribution_inventory: {
         Args: { p_changes: Json; p_request_id: string }
+        Returns: Json
+      }
+      save_guest_age_policy: {
+        Args: { p_bands: Json; p_expected_revision: number }
+        Returns: Json
+      }
+      save_managed_website_promotion: {
+        Args: { p_expected_revision?: number; p_settings: Json }
+        Returns: Json
+      }
+      save_managed_website_promotion_pre_caps: {
+        Args: { p_expected_revision?: number; p_settings: Json }
+        Returns: Json
+      }
+      save_managed_website_promotion_pre_restrictions: {
+        Args: { p_expected_revision?: number; p_settings: Json }
+        Returns: Json
+      }
+      save_meal_age_pricing_policy: {
+        Args: {
+          p_expected_guest_age_revision: number
+          p_expected_meal_workspace_revision: number
+          p_expected_revision: number
+          p_rules: Json
+        }
+        Returns: Json
+      }
+      save_meal_plan_dietary_variant: {
+        Args: { p_expected_revision?: number; p_settings: Json }
         Returns: Json
       }
       save_meal_plan_groups: {
@@ -4012,6 +4259,20 @@ export type Database = {
       }
       shared_meal_pricing_is_live: { Args: never; Returns: boolean }
       unit_has_direct_pricing: { Args: { p_unit: string }; Returns: boolean }
+      validate_guest_age_bands: { Args: { p_bands: Json }; Returns: boolean }
+      validate_meal_age_pricing_rules: {
+        Args: { p_rules: Json }
+        Returns: boolean
+      }
+      website_promotion_eligible_dates: {
+        Args: {
+          p_check_in: string
+          p_check_out: string
+          p_day_scope: string
+          p_room_type_id: string
+        }
+        Returns: Json
+      }
       website_promotion_settings: { Args: never; Returns: Json }
     }
     Enums: {
