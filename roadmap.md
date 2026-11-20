@@ -1,5 +1,7 @@
 # Roadmap
 
+- [x] Replace live-rate coupon section with an auto-applying Promo Codes dropdown beside Room Status, defaulting to No Promo Codes; focused tests and isolated desktop/mobile selection checks passed.
+
 - [x] Default Live Rate Card to published rooms in active categories, add All/Published/Unpublished filter, and replace publication badges with a light-red row accent; 20 tests and isolated desktop/mobile filter checks passed.
 
 - [x] Prevent live-rate coupon previews for unpublished rooms and unavailable meal plans; verify rejected previews retain the table with 17 passing tests and isolated browser checks.
