@@ -1,5 +1,9 @@
 # Roadmap
 
+- [ ] Connect guest-type accommodation and meal pricing editors to configured policy types, and show expandable linked-pricing records.
+- [ ] Carry dynamic guest types through guest selection, canonical rate variants, checkout snapshots and payment validation without changing existing rates.
+- [ ] Test dynamic pricing, age coverage and stale-quote protection; verify available user flows.
+
 - [x] Explain custom activation prerequisites and make active-policy edits reuse their existing pending draft rather than create duplicates: 22 tests and isolated same-ID save/read-back passed. Toddler activation still requires custom guest collection and canonical pricing support; live policies remain unchanged.
 - [x] Add confirmed deletion of draft/deactivated policies, protect active policies and historical booking records.
 - [x] Reject duplicate guest-type names across distinct types, including case and spacing variations; 40 tests passed and isolated duplicate-name/cancel/delete UI checks passed. Connected signed-in checks remain unavailable as noted below; existing security warnings unchanged.
