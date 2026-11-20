@@ -27,7 +27,7 @@ serve(async(req:Request)=>{
    if(saved.error||!saved.data)throw new InventoryPaymentError('CHECKOUT_NOT_FOUND','The saved checkout could not be read. Contact the hotel before starting another payment.');
    const entry=saved.data,intent=entry.intent;
    const room=await db.from('room_types').select('name').eq('id',intent.selection.roomTypeId).maybeSingle();
-   const base={room_type_name:room.error?undefined:room.data?.name,request_id:body.request_id,quote_request:intent.quoteSnapshot.request,guest:intent.bookingMetadata?.guest,booking_id:entry.booking_id??undefined};
+   const base={room_type_name:room.error?undefined:room.data?.name,request_id:body.request_id,quote_request:intent.quoteSnapshot.request,guest_policy_snapshot:intent.quoteSnapshot.variant?.guest_age_policy,guest:intent.bookingMetadata?.guest,booking_id:entry.booking_id??undefined};
    if(entry.state==='confirmed')return reply({...base,state:entry.booking_status==='confirmed'?'confirmed':'pending',message:entry.booking_status==='confirmed'?undefined:'This saved booking needs hotel review. Do not pay again.'});
    if(!entry.provider_order_id||!entry.record)return reply({...base,state:'pending'});
    const credentials=await getDistributionRazorpayCredentials(db,name=>Deno.env.get(name));

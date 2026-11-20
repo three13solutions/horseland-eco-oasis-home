@@ -1,4 +1,5 @@
 import { calculateEpPromotion, normalizePromoCode, assertPromotionBookingEligibility } from './epPromo.ts';
+import { normalizeGuestCounts, guestHeadcount } from './guestCounts.ts';
 // One server-side adapter around the canonical database quote engine.
 // Requests contain IDs and quantities only. Never accept client meal/room/addon prices.
 export class QuoteError extends Error {
@@ -21,6 +22,12 @@ export function normalizeQuoteRequest(raw: any) {
   const adults_count = integer(raw.adults_count, 'Adults', 1);
   const children_count = integer(raw.children_count, 'Children');
   const infants_count = integer(raw.infants_count, 'Infants');
+  let guest_counts: ReturnType<typeof normalizeGuestCounts> | undefined;
+  if (raw.guest_counts !== undefined) {
+    try { guest_counts = normalizeGuestCounts(raw.guest_counts); } catch (error) { throw new QuoteError('INVALID_QUOTE', error instanceof Error ? error.message : 'Invalid guest breakdown.', 400); }
+    if ((guest_counts.adult ?? 0) !== adults_count || (guest_counts.child ?? 0) !== children_count || (guest_counts.infant ?? 0) !== infants_count) throw new QuoteError('INVALID_QUOTE', 'Guest breakdown conflicts with guest counts.', 400);
+    if (raw.guest_age_policy_revision === undefined) throw new QuoteError('AGE_POLICY_CHANGED', 'Review guest types before booking.');
+  }
   if (adults_count + children_count + infants_count > 100) throw new QuoteError('INVALID_QUOTE', 'Too many guests.', 400);
   const guest_age_policy_revision = raw.guest_age_policy_revision === undefined ? undefined : integer(raw.guest_age_policy_revision, 'Guest age policy revision', 1, Number.MAX_SAFE_INTEGER);
   if (!Array.isArray(raw.addons ?? [])) throw new QuoteError('INVALID_QUOTE', 'Invalid extras.', 400);
@@ -35,7 +42,7 @@ export function normalizeQuoteRequest(raw: any) {
   if (addons.length > 100) throw new QuoteError('INVALID_QUOTE', 'Too many extras.', 400);
   let promo_code: string | undefined;
   try { promo_code = normalizePromoCode(raw.promo_code); } catch { throw new QuoteError('INVALID_PROMO', 'Invalid promotion code.', 400); }
-  return { ...(guest_age_policy_revision === undefined ? {} : { guest_age_policy_revision }), ...(promo_code ? { promo_code } : {}), room_type_id: raw.room_type_id, room_unit_id: raw.room_unit_id || null, check_in: raw.check_in, check_out: raw.check_out, adults_count, children_count, infants_count, meal_plan_code: raw.meal_plan_code, cancellation_policy_code: raw.cancellation_policy_code, addons };
+  return { ...(guest_counts ? { guest_counts } : {}), ...(guest_age_policy_revision === undefined ? {} : { guest_age_policy_revision }), ...(promo_code ? { promo_code } : {}), room_type_id: raw.room_type_id, room_unit_id: raw.room_unit_id || null, check_in: raw.check_in, check_out: raw.check_out, adults_count, children_count, infants_count, meal_plan_code: raw.meal_plan_code, cancellation_policy_code: raw.cancellation_policy_code, addons };
 }
 
 // Preserve the existing published bedding/fallback transfer tariffs, but validate
@@ -62,13 +69,15 @@ export async function calculateBookingQuote(db: any, raw: any, mode: 'website' |
     if (error || !unit || unit.room_type_id !== room.id || !unit.is_active || (unit.status === 'maintenance' || (unit.status === 'management_block' || unit.status === 'reserved'))) throw new QuoteError('ROOM_SELECTION_MISMATCH', 'The selected room unit is unavailable.');
     roomCategoryId = unit.category_id ?? roomCategoryId;
   }
-  const { data: variants, error } = await db.rpc(mode === 'website' ? 'calculate_website_rate_variants' : 'calculate_rate_variants_v2', {
+  const { data: variants, error } = await db.rpc(request.guest_counts ? 'calculate_guest_type_rate_variants' : mode === 'website' ? 'calculate_website_rate_variants' : 'calculate_rate_variants_v2', {
     p_room_type_id: request.room_type_id, p_room_unit_id: request.room_unit_id,
     p_check_in: request.check_in, p_check_out: request.check_out,
-    p_adults_count: request.adults_count, p_children_count: request.children_count, p_infants_count: request.infants_count,
+    ...(request.guest_counts ? { p_guest_counts: request.guest_counts, p_policy_revision: request.guest_age_policy_revision, p_website: mode === 'website' } : { p_adults_count: request.adults_count, p_children_count: request.children_count, p_infants_count: request.infants_count }),
     p_booking_channel: 'direct',
   });
   if (mode === 'website' && error?.code === 'P0001' && error.message?.startsWith('MEAL_PLAN_UNAVAILABLE')) throw new QuoteError('MEAL_PLAN_UNAVAILABLE', 'This meal plan is no longer available for the selected room and stay. Please choose an available plan.');
+  if (error?.message?.startsWith('AGE_POLICY_CHANGED')) throw new QuoteError('AGE_POLICY_CHANGED', 'Guest policies changed. Refresh and review your guest selection.');
+  if (error?.message?.startsWith('GUEST_TYPE_RATE_NOT_CONFIGURED')) throw new QuoteError('GUEST_TYPE_RATE_NOT_CONFIGURED', 'A guest-type charge is not configured for this room and stay. Choose another available room or contact the hotel.');
   if (error) throw new QuoteError('QUOTE_LOOKUP_FAILED', 'The rate could not be calculated. Please refresh.', 503);
   if (mode === 'website' && Array.isArray(variants) && !variants.some(v => v.meal_plan_code === request.meal_plan_code)) throw new QuoteError('MEAL_PLAN_UNAVAILABLE', 'This meal plan is no longer available for the selected room and stay. Please choose an available plan.');
   let variant = Array.isArray(variants) ? variants.find(v => v.meal_plan_code === request.meal_plan_code && v.cancellation_policy_code === request.cancellation_policy_code) : null;
@@ -172,7 +181,8 @@ export function snapshotBookingFields(snapshot: any) {
   const r = snapshot.request;
   return {
     room_type_id: r.room_type_id, room_unit_id: r.room_unit_id, check_in: r.check_in, check_out: r.check_out,
-    guests_count: r.adults_count + r.children_count + r.infants_count,
+    guests_count: r.guest_counts ? guestHeadcount(r.guest_counts) : r.adults_count + r.children_count + r.infants_count,
+    ...(r.guest_counts ? { guest_counts: r.guest_counts, guest_policy_snapshot: snapshot.variant.guest_age_policy } : {}),
     meal_plan_code: r.meal_plan_code, cancellation_policy_code: r.cancellation_policy_code,
     room_cost: snapshot.variant.room_rate, meal_cost: snapshot.variant.meal_cost,
     total_amount: snapshot.total_amount,

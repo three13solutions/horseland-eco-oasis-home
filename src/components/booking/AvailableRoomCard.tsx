@@ -7,6 +7,7 @@ import { Users, Coffee, UtensilsCrossed, Home, CreditCard, XCircle } from 'lucid
 import { useDynamicPricing, RateVariant } from '@/hooks/useDynamicPricing';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Info } from 'lucide-react';
+import { guestHeadcount, legacyGuestCounts, type GuestCounts } from '@/lib/guest-counts';
 
 interface RoomType {
   id: string;
@@ -25,6 +26,7 @@ interface RoomType {
 }
 
 interface AvailableRoomCardProps {
+  guestCounts?: GuestCounts;
   roomType: RoomType;
   availableCount: number;
   checkIn: string;
@@ -47,6 +49,7 @@ export const AvailableRoomCard: React.FC<AvailableRoomCardProps> = ({
   adults = guests,
   children = 0,
   infants = 0,
+  guestCounts,
   nights,
   onSelectRoom,
   getFeatureIcon
@@ -63,6 +66,7 @@ export const AvailableRoomCard: React.FC<AvailableRoomCardProps> = ({
     adultsCount: adults,
     childrenCount: children,
     infantsCount: infants,
+    guestCounts,
     bookingChannel: 'direct',
     enabled: !!checkIn && !!checkOut
   });
@@ -231,7 +235,7 @@ export const AvailableRoomCard: React.FC<AvailableRoomCardProps> = ({
                     <div className="text-2xl font-bold">₹{Math.round(selectedVariant.price_per_night).toLocaleString()}</div>
                     <div className="text-sm text-muted-foreground">per night</div>
                     <div className="text-xs text-muted-foreground mt-1">
-                      ₹{Math.round(selectedVariant.price_per_night / Math.max(adults + children + infants, 1)).toLocaleString()}/guest/night (party average)
+                      ₹{Math.round(selectedVariant.price_per_night / Math.max(guestHeadcount(guestCounts ?? legacyGuestCounts(adults,children,infants)), 1)).toLocaleString()}/guest/night (party average)
                     </div>
                   </div>
                   <div className="text-right">

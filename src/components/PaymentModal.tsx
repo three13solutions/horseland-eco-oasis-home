@@ -1,4 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
+import type { GuestCounts } from '@/lib/guest-counts';
+import { guestTypeName, type GuestAgePolicy } from '@/lib/guest-age-policy';
 import { distributionCheckoutEnabled } from '@/lib/websiteInventory';
 import { checkoutSelectionKey, checkoutErrorBody, discardSafelyRejectedWebsiteCheckout, getOrCreateWebsiteCheckout, readWebsiteCheckout, updateWebsiteCheckout, withWebsiteCheckoutLock, type WebsiteCheckoutContext } from '@/lib/websiteCheckoutAttempt';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from './ui/dialog';
@@ -20,7 +22,8 @@ type RetainedCheckout = {
   request_id: string;
   state: 'payable' | 'paid' | 'confirmed' | 'pending';
   order: { id: string; amount: number; currency: string } | null;
-  quote_request: { room_type_id?: string; check_in: string; check_out: string; adults_count: number; children_count: number; infants_count: number; meal_plan_code: string };
+  quote_request: { room_type_id?: string; check_in: string; check_out: string; adults_count: number; children_count: number; infants_count: number; meal_plan_code: string; guest_counts?: GuestCounts };
+  guest_policy_snapshot?: GuestAgePolicy;
   room_type_name?: string;
   key_id?: string;
   guest: { first_name: string; last_name: string; email: string; phone: string };
@@ -414,7 +417,7 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
               {retained && <>
                 <p className="font-medium">{retained.room_type_name || `Room type ${retained.quote_request.room_type_id || 'held for this checkout'}`}</p>
                 <p>{retained.quote_request.check_in} to {retained.quote_request.check_out}</p>
-                <p className="text-sm">{retained.quote_request.adults_count} adults · {retained.quote_request.children_count} children · {retained.quote_request.infants_count} infants</p>
+                <p className="text-sm">{retained.quote_request.guest_counts ? Object.entries(retained.quote_request.guest_counts).filter(([,count])=>count>0).map(([key,count])=>`${count} ${guestTypeName(retained.guest_policy_snapshot?.bands.find(b=>b.key===key) ?? {key})}`).join(' · ') : `${retained.quote_request.adults_count} adults · ${retained.quote_request.children_count} children · ${retained.quote_request.infants_count} infants`}</p>
                 <p className="text-sm">Meal plan: {retained.quote_request.meal_plan_code}</p>
                 <p className="text-sm">Guest: {retained.guest.first_name} {retained.guest.last_name}</p>
                 {retained.order && <p className="font-semibold">Original total (including taxes): {formatCurrency(retained.order.amount / 100)}</p>}

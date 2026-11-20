@@ -1606,6 +1606,27 @@ export type Database = {
         }
         Relationships: []
       }
+      guest_type_pricing_release: {
+        Row: {
+          enabled: boolean
+          frontend_release: string | null
+          id: boolean
+          updated_at: string
+        }
+        Insert: {
+          enabled?: boolean
+          frontend_release?: string | null
+          id?: boolean
+          updated_at?: string
+        }
+        Update: {
+          enabled?: boolean
+          frontend_release?: string | null
+          id?: boolean
+          updated_at?: string
+        }
+        Relationships: []
+      }
       guests: {
         Row: {
           address: string | null
@@ -3313,6 +3334,7 @@ export type Database = {
           day_type: string | null
           end_date: string
           guest_charge_mode: string
+          guest_type_key: string | null
           id: string
           is_active: boolean | null
           max_adults: number | null
@@ -3340,6 +3362,7 @@ export type Database = {
           day_type?: string | null
           end_date: string
           guest_charge_mode?: string
+          guest_type_key?: string | null
           id?: string
           is_active?: boolean | null
           max_adults?: number | null
@@ -3367,6 +3390,7 @@ export type Database = {
           day_type?: string | null
           end_date?: string
           guest_charge_mode?: string
+          guest_type_key?: string | null
           id?: string
           is_active?: boolean | null
           max_adults?: number | null
@@ -3932,6 +3956,19 @@ export type Database = {
           meal_cost: number
         }[]
       }
+      calculate_guest_type_rate_variants: {
+        Args: {
+          p_booking_channel?: string
+          p_check_in: string
+          p_check_out: string
+          p_guest_counts: Json
+          p_policy_revision: number
+          p_room_type_id: string
+          p_room_unit_id?: string
+          p_website?: boolean
+        }
+        Returns: Json
+      }
       calculate_invoice_totals:
         | {
             Args: { p_subtotal: number }
@@ -3950,6 +3987,20 @@ export type Database = {
               total_amount: number
             }[]
           }
+      calculate_keyed_rate_variants_engine: {
+        Args: {
+          p_adults_count?: number
+          p_booking_channel?: string
+          p_check_in: string
+          p_check_out: string
+          p_children_count?: number
+          p_guest_counts?: Json
+          p_infants_count?: number
+          p_room_type_id: string
+          p_room_unit_id?: string
+        }
+        Returns: Json
+      }
       calculate_legacy_rate_night_context: {
         Args: {
           p_adults_count: number
@@ -4167,6 +4218,7 @@ export type Database = {
           season_id: string
         }[]
       }
+      get_booking_guest_policy: { Args: never; Returns: Json }
       get_current_user_role: { Args: never; Returns: string }
       get_gst_rate_for_amount: { Args: { p_amount: number }; Returns: number }
       get_guest_age_policy: { Args: never; Returns: Json }
@@ -4195,6 +4247,14 @@ export type Database = {
         Returns: number
       }
       guest_policy_complete: { Args: { p_bands: Json }; Returns: boolean }
+      guest_type_accommodation_charge: {
+        Args: { p_anchor: Json; p_counts: Json }
+        Returns: Json
+      }
+      guest_type_meal_charge: {
+        Args: { p_adult_rate: number; p_counts: Json; p_plan: string }
+        Returns: Json
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -4351,6 +4411,10 @@ export type Database = {
       shared_meal_pricing_is_live: { Args: never; Returns: boolean }
       unit_has_direct_pricing: { Args: { p_unit: string }; Returns: boolean }
       validate_guest_age_bands: { Args: { p_bands: Json }; Returns: boolean }
+      validate_guest_type_counts: {
+        Args: { p_counts: Json; p_revision: number }
+        Returns: Json
+      }
       validate_meal_age_pricing_rules: {
         Args: { p_rules: Json }
         Returns: boolean

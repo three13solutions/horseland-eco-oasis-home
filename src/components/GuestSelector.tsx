@@ -1,3 +1,5 @@
+import { guestHeadcount, guestOccupancy, legacyGuestCounts, type GuestCounts } from '@/lib/guest-counts';
+import { guestTypeName } from '@/lib/guest-age-policy';
 import { useGuestAgePolicy } from '@/hooks/useGuestAgePolicy';
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
@@ -8,10 +10,11 @@ import { cn } from '@/lib/utils';
 
 type GuestSelectorProps = {
   totalGuests: number;
+  guestCounts?: GuestCounts;
   adultsCount?: number;
   childrenCount?: number;
   infantsCount?: number;
-  onGuestsChange: (total: number, adults: number, children: number, infants?: number) => void;
+  onGuestsChange: (total: number, adults: number, children: number, infants?: number, counts?: GuestCounts) => void;
   className?: string;
   variant?: 'default' | 'hero';
   open?: boolean;
@@ -20,6 +23,7 @@ type GuestSelectorProps = {
 
 const GuestSelector: React.FC<GuestSelectorProps> = ({ 
   totalGuests,
+  guestCounts,
   adultsCount,
   childrenCount,
   infantsCount,
@@ -30,51 +34,26 @@ const GuestSelector: React.FC<GuestSelectorProps> = ({
   onOpenChange: controlledOnOpenChange
 }) => {
   const agePolicy = useGuestAgePolicy();
-  const [adults, setAdults] = useState(Math.max(1, adultsCount ?? totalGuests ?? 2));
-  const [children, setChildren] = useState(childrenCount ?? 0);
-  const [infants, setInfants] = useState(infantsCount ?? 0);
+  const [counts, setCounts] = useState<GuestCounts>(guestCounts ?? legacyGuestCounts(Math.max(1, adultsCount ?? totalGuests ?? 2), childrenCount ?? 0, infantsCount ?? 0));
   const [internalOpen, setInternalOpen] = useState(false);
-  
-  // Use controlled state if provided, otherwise use internal state
   const isOpen = controlledOpen !== undefined ? controlledOpen : internalOpen;
   const setIsOpen = controlledOnOpenChange || setInternalOpen;
-
-  // Preserve the actual party breakdown when reopening, navigating, or editing.
   useEffect(() => {
-    if (adultsCount === undefined && childrenCount === undefined && infantsCount === undefined) return;
-    setAdults(Math.max(1, adultsCount ?? totalGuests ?? 2));
-    setChildren(childrenCount ?? 0);
-    setInfants(infantsCount ?? 0);
-  }, [totalGuests, adultsCount, childrenCount, infantsCount]);
-
-  const handleAdultsChange = (delta: number) => {
-    const newAdults = Math.max(1, Math.min(20, adults + delta)); // Increased cap to 20
-    setAdults(newAdults);
-    onGuestsChange(newAdults + children, newAdults, children, infants);
+    setCounts(guestCounts ?? legacyGuestCounts(Math.max(1, adultsCount ?? totalGuests ?? 2), childrenCount ?? 0, infantsCount ?? 0));
+  }, [guestCounts, totalGuests, adultsCount, childrenCount, infantsCount]);
+  const changeCount = (key: string, delta: number) => {
+    const minimum = key === 'adult' ? 1 : 0;
+    const next = {...counts, [key]: Math.max(minimum, Math.min(100, (counts[key] ?? 0) + delta))};
+    if (guestHeadcount(next) > 100) return;
+    setCounts(next);
+    onGuestsChange(guestOccupancy(next), next.adult ?? 0, next.child ?? 0, next.infant ?? 0, next);
   };
-
-  const handleChildrenChange = (delta: number) => {
-    const newChildren = Math.max(0, Math.min(15, children + delta)); // Increased cap to 15
-    setChildren(newChildren);
-    onGuestsChange(adults + newChildren, adults, newChildren, infants);
-  };
-
-  const handleInfantsChange = (delta: number) => {
-    const newInfants = Math.max(0, Math.min(10, infants + delta)); // Increased cap to 10
-    setInfants(newInfants);
-    onGuestsChange(adults + children, adults, children, newInfants);
-  };
-
-  const total = adults + children + infants;
-
-  const guestBreakdown = [
-    adults > 0 && `${adults} Adult${adults !== 1 ? 's' : ''}`,
-    children > 0 && `${children} Child${children !== 1 ? 'ren' : ''}`,
-    infants > 0 && `${infants} Infant${infants !== 1 ? 's' : ''}`
-  ].filter(Boolean).join(', ');
+  const total = guestHeadcount(counts);
+  const bands = agePolicy.data?.bands.filter(b => b.enabled !== false) ?? [];
+  const guestBreakdown = bands.filter(b => (counts[b.key] ?? 0) > 0).map(b => `${counts[b.key]} ${guestTypeName(b)}`).join(', ');
 
   const buttonClasses = variant === 'hero' 
-    ? "w-full h-12 bg-white/20 border-white/30 text-white hover:bg-white/30 hover:text-white rounded-xl justify-between text-left font-normal"
+    ? "w-full h-12 bg-background/20 border-border/30 text-primary-foreground hover:bg-background/30 hover:text-primary-foreground rounded-xl justify-between text-left font-normal"
     : "w-full justify-between text-left h-10";
 
   return (
@@ -106,100 +85,17 @@ const GuestSelector: React.FC<GuestSelectorProps> = ({
       <PopoverContent className="w-80 bg-background border shadow-lg z-50" align="start">
         <div className="space-y-4 p-2">
           <div className="space-y-3">
-            {/* Adults */}
-            <div className="flex items-center justify-between py-2">
-              <div>
-                <div className="font-medium">Adults</div>
-                <div className="text-xs text-muted-foreground">{agePolicy.label('adult')}</div>
+            {bands.map(band => <div key={band.key} className="flex items-center justify-between gap-3 py-2">
+              <div className="min-w-0"><div className="font-medium break-words">{guestTypeName(band)}</div><div className="text-xs text-muted-foreground">{agePolicy.label(band.key)}</div></div>
+              <div className="flex items-center gap-3 shrink-0">
+                <Button variant="outline" size="icon" className="h-8 w-8 rounded-full" aria-label={`Remove ${guestTypeName(band)}`} disabled={(counts[band.key] ?? 0) <= (band.key==='adult'?1:0)} onClick={()=>changeCount(band.key,-1)}><Minus className="h-3 w-3"/></Button>
+                <span className="w-8 text-center font-medium">{counts[band.key] ?? 0}</span>
+                <Button variant="outline" size="icon" className="h-8 w-8 rounded-full" aria-label={`Add ${guestTypeName(band)}`} disabled={total>=100} onClick={()=>changeCount(band.key,1)}><Plus className="h-3 w-3"/></Button>
               </div>
-              <div className="flex items-center gap-3">
-                <Button
-                  variant="outline"
-                  size="icon"
-                  className="h-8 w-8 rounded-full"
-                  onClick={() => handleAdultsChange(-1)}
-                  disabled={!agePolicy.data || adults <= 1}
-                >
-                  <Minus className="h-3 w-3" />
-                </Button>
-                <span className="w-8 text-center font-medium">{adults}</span>
-                <Button
-                  variant="outline"
-                  size="icon"
-                  className="h-8 w-8 rounded-full"
-                  onClick={() => handleAdultsChange(1)}
-                  disabled={!agePolicy.data || adults >= 20}
-                >
-                  <Plus className="h-3 w-3" />
-                </Button>
-              </div>
-            </div>
-
-            {/* Children */}
-            <div className="flex items-center justify-between py-2">
-              <div>
-                <div className="font-medium">Children</div>
-                <div className="text-xs text-muted-foreground">{agePolicy.label('child')}</div>
-              </div>
-              <div className="flex items-center gap-3">
-                <Button
-                  variant="outline"
-                  size="icon"
-                  className="h-8 w-8 rounded-full"
-                  onClick={() => handleChildrenChange(-1)}
-                  disabled={!agePolicy.data || children <= 0}
-                >
-                  <Minus className="h-3 w-3" />
-                </Button>
-                <span className="w-8 text-center font-medium">{children}</span>
-                <Button
-                  variant="outline"
-                  size="icon"
-                  className="h-8 w-8 rounded-full"
-                  onClick={() => handleChildrenChange(1)}
-                  disabled={!agePolicy.data || children >= 15}
-                >
-                  <Plus className="h-3 w-3" />
-                </Button>
-              </div>
-            </div>
-
-            {/* Infants */}
-            <div className="flex items-center justify-between py-2">
-              <div>
-                <div className="font-medium">Young children</div>
-                <div className="text-xs text-muted-foreground">{agePolicy.label('infant')}</div>
-              </div>
-              <div className="flex items-center gap-3">
-                <Button
-                  variant="outline"
-                  size="icon"
-                  className="h-8 w-8 rounded-full"
-                  onClick={() => handleInfantsChange(-1)}
-                  disabled={!agePolicy.data || infants <= 0}
-                >
-                  <Minus className="h-3 w-3" />
-                </Button>
-                <span className="w-8 text-center font-medium">{infants}</span>
-                <Button
-                  variant="outline"
-                  size="icon"
-                  className="h-8 w-8 rounded-full"
-                  onClick={() => handleInfantsChange(1)}
-                  disabled={!agePolicy.data || infants >= 10}
-                >
-                  <Plus className="h-3 w-3" />
-                </Button>
-              </div>
-            </div>
-          </div>
-
-          <div className="pt-3 border-t">
-            <p className="text-xs text-muted-foreground">
-              Accommodation charges depend on the selected room and guest ages.
-              {agePolicy.data ? agePolicy.data.bands.map(b => `${agePolicy.label(b.key)}: ${b.accommodation_rule === 'free' ? 'no accommodation charge' : b.accommodation_rule + ' accommodation rate'}, ${b.meal_rule === 'free' ? 'no automatic meal charge' : 'meal charges follow selected plan age rates'}.`).join(' ') : 'Age policy could not yet be verified. Please retry before choosing guests.'}
-              Please provide the right number of guests for the best options and prices.
-            </p>
+            </div>)}
+            {agePolicy.isLoading&&<p className="text-sm text-muted-foreground">Loading guest types…</p>}
+            {agePolicy.isError&&<p role="alert" className="text-sm text-destructive">Guest types could not be verified. <Button size="sm" variant="outline" onClick={()=>agePolicy.refetch()}>Retry</Button></p>}
+            {Object.keys(counts).some(key=>counts[key]>0&&!bands.some(b=>b.key===key))&&agePolicy.data&&<p role="alert" className="text-sm text-destructive">Guest policies changed. Review your guest selection before booking.</p>}
           </div>
 
           <Button 

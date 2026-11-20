@@ -1,3 +1,5 @@
+import { writeGuestParty, legacyGuestCounts, guestHeadcount, type GuestCounts } from '@/lib/guest-counts';
+import { guestTypeName } from '@/lib/guest-age-policy';
 import { useGuestAgePolicy } from '@/hooks/useGuestAgePolicy';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { readWebsiteCheckout, clearConfirmedWebsiteCheckout, type WebsiteCheckoutContext } from '@/lib/websiteCheckoutAttempt';
@@ -114,7 +116,7 @@ const Booking = () => {
   // Get search parameters
   const checkIn = searchParams.get('checkIn') || '';
   const checkOut = searchParams.get('checkOut') || '';
-  const { guests, adults: urlAdults, children: urlChildren, infants: urlInfants } = readGuestParty(searchParams);
+  const { guests, adults: urlAdults, children: urlChildren, infants: urlInfants, guestCounts: urlGuestCounts } = readGuestParty(searchParams);
   const roomTypeId = searchParams.get('roomTypeId');
   const packageId = searchParams.get('packageId');
   const tabParam = searchParams.get('tab');
@@ -130,6 +132,9 @@ const Booking = () => {
   const [searchAdults, setSearchAdults] = useState(urlAdults);
   const [searchChildren, setSearchChildren] = useState(urlChildren);
   const [searchInfants, setSearchInfants] = useState(urlInfants);
+  const [searchGuestCounts, setSearchGuestCounts] = useState<GuestCounts>(urlGuestCounts);
+  const [guestCounts, setGuestCounts] = useState<GuestCounts>(urlGuestCounts);
+  const [tempGuestCounts, setTempGuestCounts] = useState<GuestCounts>(urlGuestCounts);
   const [selectedPackage, setSelectedPackage] = useState<any>(null);
   const [packageLoading, setPackageLoading] = useState(false);
   const [heroImage, setHeroImage] = useState<string>('');
@@ -247,17 +252,17 @@ const Booking = () => {
 
   // Fetch rate variants when room type and dates are selected
   const { data: rateVariantsData, isFetching: websiteRatesChecking, isError: websiteRatesError } = useQuery({
-    queryKey: ['website-rate-variants', selectedRoomType?.id, checkIn, checkOut, adultsCount, childrenCount, infantsCount, agePolicy.data?.revision],
+    queryKey: ['website-rate-variants', selectedRoomType?.id, checkIn, checkOut, guestCounts, agePolicy.data?.revision],
     queryFn: async () => {
       if (!selectedRoomType?.id || !checkIn || !checkOut) return null;
       
-      const { data, error } = await (supabase as SupabaseClient).rpc('calculate_website_rate_variants', {
+      const { data, error } = await (supabase as SupabaseClient).rpc('calculate_guest_type_rate_variants', {
         p_room_type_id: selectedRoomType.id,
         p_check_in: checkIn,
         p_check_out: checkOut,
-        p_adults_count: adultsCount,
-        p_children_count: childrenCount,
-        p_infants_count: infantsCount,
+        p_guest_counts: guestCounts,
+        p_policy_revision: agePolicy.data?.revision,
+        p_website: true,
         p_booking_channel: 'direct'
       });
       
@@ -355,6 +360,9 @@ const Booking = () => {
 
   // URL navigation must update pricing counts, including Back/Forward and search edits.
   useEffect(() => {
+    setGuestCounts(urlGuestCounts);
+    setSearchGuestCounts(urlGuestCounts);
+    setTempGuestCounts(urlGuestCounts);
     setAdultsCount(Math.max(1, urlAdults));
     setChildrenCount(urlChildren);
     setInfantsCount(urlInfants);
@@ -366,7 +374,7 @@ const Booking = () => {
     setTempAdults(urlAdults);
     setTempChildren(urlChildren);
     setTempInfants(urlInfants);
-  }, [urlAdults, urlChildren, urlInfants, guests]);
+  }, [urlAdults, urlChildren, urlInfants, guests, searchParams.get('guestTypes')]);
 
   // Update meal plan and cancellation policy when URL params change
   useEffect(() => {
@@ -761,6 +769,7 @@ const Booking = () => {
     newSearchParams.set('adults', searchAdults.toString());
     newSearchParams.set('children', searchChildren.toString());
     newSearchParams.set('infants', searchInfants.toString());
+    writeGuestParty(newSearchParams,searchGuestCounts);
     
     navigate(`/booking?${newSearchParams.toString()}`);
   };
@@ -1242,6 +1251,7 @@ const Booking = () => {
     adults_count: adultsCount,
     children_count: childrenCount,
     infants_count: infantsCount,
+    guest_counts: guestCounts,
     guest_age_policy_revision: selectedVariant?.guest_age_policy?.revision ?? agePolicy.data?.revision,
     meal_plan_code: selectedMealPlan,
     cancellation_policy_code: selectedCancellationPolicy,
@@ -1340,7 +1350,7 @@ const Booking = () => {
         room_type_id: selectedRoomType?.id || null,
         check_in: checkIn || null,
         check_out: checkOut || null,
-        guests_count: (adultsCount || 0) + (childrenCount || 0) + (infantsCount || 0), // Actual headcount, including guests whose automatic meals are free.
+        guests_count: guestHeadcount(guestCounts), // Actual headcount, including guests whose automatic meals are free.
         total_amount: calculateTotal() || 0,
         // Store meal plan information
         meal_plan_code: selectedMealPlan || 'RO',
@@ -1351,6 +1361,8 @@ const Booking = () => {
           quote_fingerprint: selectedVariant?.quote_fingerprint,
           pricing_status: selectedVariant?.pricing_status,
           nightly_breakdown: selectedVariant?.nightly_breakdown,
+          guest_counts: guestCounts,
+          guest_age_policy: selectedVariant?.guest_age_policy,
           meal_plan: selectedMealPlan,
           cancellation_policy: selectedCancellationPolicy,
           adults_count: adultsCount,
@@ -1487,6 +1499,7 @@ const Booking = () => {
             infants: tempInfants.toString()
           });
 
+          writeGuestParty(params,tempGuestCounts);
           navigate(`/search-availability?${params.toString()}`);
           return;
         }
@@ -1502,6 +1515,7 @@ const Booking = () => {
         infants: tempInfants.toString()
       });
 
+      writeGuestParty(params,tempGuestCounts);
       if (roomTypeId) {
         params.set('roomTypeId', roomTypeId);
       }
@@ -1671,7 +1685,8 @@ const Booking = () => {
                           checkOut,
                           guests: guests.toString()
                         });
-                        navigate(`/search-availability?${params.toString()}`);
+                        writeGuestParty(params,tempGuestCounts);
+          navigate(`/search-availability?${params.toString()}`);
                       }}>
                         Change Room
                       </Button>
@@ -2337,9 +2352,11 @@ const Booking = () => {
                               adultsCount={tempAdults}
                               childrenCount={tempChildren}
                               infantsCount={tempInfants}
+                              guestCounts={tempGuestCounts}
                               open={editGuestSelectorOpen}
                               onOpenChange={setEditGuestSelectorOpen}
-                              onGuestsChange={(total, adults, children, infants) => {
+                              onGuestsChange={(total, adults, children, infants, counts) => {
+                                setTempGuestCounts(counts ?? legacyGuestCounts(adults,children,infants));
                                 setTempGuests(total);
                                 setTempAdults(adults);
                                 setTempChildren(children);
@@ -2392,36 +2409,7 @@ const Booking = () => {
                     <div className="space-y-3">
                       <div className="space-y-2 bg-muted/30 p-3 rounded-lg">
                         <div className="font-medium text-sm mb-2">Guest Breakdown:</div>
-                        <div className="flex justify-between gap-2 text-sm">
-                          <span className="text-muted-foreground">
-                            {adultsCount} {adultsCount === 1 ? 'Adult' : 'Adults'}
-                          </span>
-                          <span className="font-medium">
-                            Included in room rate
-                          </span>
-                        </div>
-                        
-                        {childrenCount > 0 && (
-                          <div className="flex justify-between gap-2 text-sm">
-                            <span className="text-muted-foreground">
-                              {childrenCount} {childrenCount === 1 ? 'Child' : 'Children'}
-                            </span>
-                            <span className="font-medium">
-                              Included in room rate
-                            </span>
-                          </div>
-                        )}
-                        
-                        {infantsCount > 0 && (
-                          <div className="flex justify-between gap-2 text-sm">
-                            <span className="text-muted-foreground">
-                              {infantsCount} young {infantsCount === 1 ? 'child' : 'children'} ({agePolicy.label('infant')})
-                            </span>
-                            <span className="font-medium text-right">
-                              {agePolicy.band('infant')?.accommodation_rule === 'free' && agePolicy.band('infant')?.meal_rule === 'free' ? 'No automatic room or meal charge' : 'Charges follow guest age policy'}
-                            </span>
-                          </div>
-                        )}
+                        {agePolicy.data?.bands.filter(b=>(guestCounts[b.key] ?? 0)>0).map(b=><div key={b.key} className="flex justify-between gap-2 text-sm"><span className="text-muted-foreground">{guestCounts[b.key]} {guestTypeName(b)} ({agePolicy.label(b.key)})</span><span className="text-right">{b.accommodation_rule==='free'&&b.meal_rule==='free'?'No automatic guest charge':'Charges included in quoted total'}</span></div>)}
                       </div>
 
                       <Separator />
@@ -2730,9 +2718,11 @@ const Booking = () => {
                     adultsCount={searchAdults}
                     childrenCount={searchChildren}
                     infantsCount={searchInfants}
+                    guestCounts={searchGuestCounts}
                     open={editGuestSelectorOpen}
                     onOpenChange={setEditGuestSelectorOpen}
-                    onGuestsChange={(total, a, c, i) => {
+                    onGuestsChange={(total, a, c, i, counts) => {
+                      setSearchGuestCounts(counts ?? legacyGuestCounts(a,c,i));
                       setSearchGuests(total.toString());
                       setSearchAdults(a);
                       setSearchChildren(c);
@@ -2817,6 +2807,7 @@ const Booking = () => {
                     adults={adultsCount}
                     children={childrenCount}
                     infants={infantsCount}
+                    guestCounts={guestCounts}
                     nights={nights}
                     onSelectRoom={handleSelectRoom}
                     getFeatureIcon={getFeatureIcon}

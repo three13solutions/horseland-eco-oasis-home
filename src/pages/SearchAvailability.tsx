@@ -1,3 +1,4 @@
+import { writeGuestParty, legacyGuestCounts, type GuestCounts } from '@/lib/guest-counts';
 import { websiteTypeAvailability } from '@/lib/websiteInventory';
 import { readGuestParty } from '@/lib/guestParty';
 import React, { useState, useEffect, useMemo, useRef } from 'react';
@@ -86,6 +87,7 @@ const SearchAvailability = () => {
   const [adults, setAdults] = useState<number>(initialParty.adults);
   const [children, setChildren] = useState<number>(initialParty.children);
   const [infants, setInfants] = useState<number>(initialParty.infants);
+  const [guestCounts, setGuestCounts] = useState<GuestCounts>(initialParty.guestCounts);
   const roomTypeIdParam = searchParams.get('roomTypeId'); // Filter to specific room if provided
   
   const [categories, setCategories] = useState<Category[]>([]);
@@ -187,6 +189,7 @@ const SearchAvailability = () => {
         children: children.toString(),
         infants: infants.toString()
       });
+      writeGuestParty(params,guestCounts);
       setSearchParams(params, { replace: replaceHistory });
 
       if (mappedCategories.length === 0) {
@@ -375,9 +378,11 @@ const SearchAvailability = () => {
                   adultsCount={adults}
                   childrenCount={children}
                   infantsCount={infants}
+                  guestCounts={guestCounts}
                   open={guestSelectorOpen}
                   onOpenChange={setGuestSelectorOpen}
-                  onGuestsChange={(total, a, c, i) => {
+                  onGuestsChange={(total, a, c, i, counts) => {
+                    setGuestCounts(counts ?? legacyGuestCounts(a,c,i));
                     setGuests(total);
                     setAdults(a);
                     setChildren(c);
@@ -1150,6 +1155,7 @@ const SearchAvailability = () => {
                           adults={adults}
                           children={children}
                           infants={infants}
+                          guestCounts={guestCounts}
                           onViewDetails={(cat) => navigate(`/stay/${cat.id}`)}
                           onBookNow={(cat) => {
                             const params = new URLSearchParams({
@@ -1161,6 +1167,7 @@ const SearchAvailability = () => {
                               infants: infants.toString(),
                               roomTypeId: cat.id
                             });
+                            writeGuestParty(params,guestCounts);
                             navigate(`/booking?${params.toString()}`);
                           }}
                         />

@@ -1,4 +1,5 @@
 import GuestSelector from '@/components/GuestSelector';
+import { writeGuestParty, guestHeadcount, legacyGuestCounts, type GuestCounts } from '@/lib/guest-counts';
 import { useNavigate } from 'react-router-dom';
 import { variantStillOffered } from '@/lib/mealPlanVisibility';
 import React, { useState, useEffect } from 'react';
@@ -33,6 +34,7 @@ const CategoryBookingModal: React.FC<Props> = ({ open, onOpenChange, category })
   const navigate = useNavigate();
   const [children, setChildren] = useState(0);
   const [infants, setInfants] = useState(0);
+  const [guestCounts, setGuestCounts] = useState<GuestCounts>(legacyGuestCounts(2));
   const [date, setDate] = React.useState<DateRange | undefined>();
   const [guests, setGuests] = React.useState<number>(2);
   const [extraMattress, setExtraMattress] = React.useState<number>(0);
@@ -51,7 +53,7 @@ const CategoryBookingModal: React.FC<Props> = ({ open, onOpenChange, category })
     ? Math.ceil((date.to.getTime() - date.from.getTime()) / (1000 * 60 * 60 * 24))
     : 0;
   
-  const totalGuests = guests + children + infants;
+  const totalGuests = guestHeadcount(guestCounts);
   
   const { data: variants = [], isLoading: variantsLoading, isError: variantError } = useDynamicPricing({
     website: true,
@@ -61,6 +63,7 @@ const CategoryBookingModal: React.FC<Props> = ({ open, onOpenChange, category })
     adultsCount: guests,
     childrenCount: children,
     infantsCount: infants,
+    guestCounts,
     enabled: !!date?.from && !!date?.to && availableUnits > 0
   });
 
@@ -160,7 +163,7 @@ const CategoryBookingModal: React.FC<Props> = ({ open, onOpenChange, category })
               <div>
                 <Label htmlFor="guests" className="text-sm font-medium">Number of Guests</Label>
                 <GuestSelector totalGuests={guests + children} adultsCount={guests} childrenCount={children}
-                infantsCount={infants} open={guestSelectorOpen} onOpenChange={setGuestSelectorOpen} onGuestsChange={(_, a, c, i = 0) => {setGuests(a);setChildren(c);setInfants(i);setSelectedVariant(null);}} />
+                infantsCount={infants} guestCounts={guestCounts} open={guestSelectorOpen} onOpenChange={setGuestSelectorOpen} onGuestsChange={(_, a, c, i = 0, counts) => {setGuestCounts(counts ?? legacyGuestCounts(a,c,i));setGuests(a);setChildren(c);setInfants(i);setSelectedVariant(null);}} />
                 {totalGuests > category.maxGuests && <p role="alert" className="text-red-700">The party exceeds this room's maximum occupancy. Choose another room or reduce the party.</p>}
               </div>
 
@@ -340,6 +343,7 @@ const CategoryBookingModal: React.FC<Props> = ({ open, onOpenChange, category })
               onClick={() => {
                 if (!date?.from || !date?.to || !selectedVariant) return;
                 const params = new URLSearchParams({ roomTypeId:category.id, checkIn:format(date.from,'yyyy-MM-dd'), checkOut:format(date.to,'yyyy-MM-dd'), guests:String(guests+children), adults:String(guests), children:String(children), infants:String(infants), mealPlan:selectedVariant.meal_plan_code, cancellationPolicy:selectedVariant.cancellation_policy_code });
+                writeGuestParty(params,guestCounts,selectedVariant.guest_age_policy?.revision);
                 // A mattress is a separately priced request, never an additional guest.
                 if (notes || extraMattress) params.set('specialRequests', [notes, extraMattress ? `${extraMattress} extra mattress requested; availability and separate charge to be confirmed` : ''].filter(Boolean).join('\n'));
                 onOpenChange(false);navigate(`/booking?${params}`);

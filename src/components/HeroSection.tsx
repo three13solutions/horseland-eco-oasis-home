@@ -11,6 +11,7 @@ import { useTranslationContext } from '@/components/admin/TranslationProvider';
 import { supabase } from '@/integrations/supabase/client';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
+import { writeGuestParty, legacyGuestCounts, type GuestCounts } from '@/lib/guest-counts';
 
 const HeroSection = () => {
   const navigate = useNavigate();
@@ -22,6 +23,7 @@ const HeroSection = () => {
   const [adults, setAdults] = useState(2);
   const [children, setChildren] = useState(0);
   const [infants, setInfants] = useState(0);
+  const [guestCounts, setGuestCounts] = useState<GuestCounts>(legacyGuestCounts(2));
   const [heroTitle, setHeroTitle] = useState('Escape to Nature\'s Embrace');
   const [heroSubtitle, setHeroSubtitle] = useState('A mindful retreat in Matheran\'s no-car eco zone');
   const [slides, setSlides] = useState<Array<{ type: string; content: string; alt: string }>>([]);
@@ -195,9 +197,11 @@ const HeroSection = () => {
                     adultsCount={adults}
                     childrenCount={children}
                     infantsCount={infants}
+                    guestCounts={guestCounts}
                     open={guestSelectorOpen}
                     onOpenChange={setGuestSelectorOpen}
-                    onGuestsChange={(total, a, c, i) => {
+                    onGuestsChange={(total, a, c, i, counts) => {
+                      setGuestCounts(counts ?? legacyGuestCounts(a,c,i));
                       setGuests(total);
                       setAdults(a);
                       setChildren(c);
@@ -218,6 +222,7 @@ const HeroSection = () => {
                         children: children.toString(),
                         infants: infants.toString()
                       });
+                      writeGuestParty(searchParams,guestCounts);
                       navigate(`/search-availability?${searchParams.toString()}`);
                     } else {
                       navigate('/stay');

@@ -1,3 +1,5 @@
+import GuestSelector from '@/components/GuestSelector';
+import { guestHeadcount, legacyGuestCounts, type GuestCounts } from '@/lib/guest-counts';
 import { useGuestAgePolicy } from '@/hooks/useGuestAgePolicy';
 import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -47,13 +49,14 @@ export const ManualBookingModal: React.FC<ManualBookingModalProps> = ({
   const [guestsCount, setGuestsCount] = useState(2);
   const [childrenCount, setChildrenCount] = useState(0);
   const [infantsCount, setInfantsCount] = useState(0);
+  const [guestCounts, setGuestCounts] = useState<GuestCounts>(legacyGuestCounts(2));
   const [roomTypeId, setRoomTypeId] = useState<string>();
   const [roomPrice, setRoomPrice] = useState(0);
   const [mealPlanCode, setMealPlanCode] = useState('RO');
   const [policyCode, setPolicyCode] = useState('credit_voucher');
   const { data: rateVariants = [], isFetching: quoteLoading } = useDynamicPricing({
     roomTypeId, roomUnitId, checkIn: checkInDate, checkOut: checkOutDate,
-    adultsCount: guestsCount, childrenCount, infantsCount, enabled: isOpen,
+    adultsCount: guestsCount, childrenCount, infantsCount, guestCounts, enabled: isOpen,
   });
   const rpcRate = rateVariants.find(v => v.meal_plan_code === mealPlanCode && v.cancellation_policy_code === policyCode);
   const legacyManualRate = rpcRate?.pricing_status === 'legacy_basis_unverified';
@@ -366,6 +369,7 @@ export const ManualBookingModal: React.FC<ManualBookingModalProps> = ({
     setGuestEmail('');
     setGuestPhone('');
     setGuestsCount(2);
+    setGuestCounts(legacyGuestCounts(2));
     setChildrenCount(0);
     setInfantsCount(0);
     setPaymentStatus('pending');
@@ -511,7 +515,7 @@ export const ManualBookingModal: React.FC<ManualBookingModalProps> = ({
         guest_phone: guestPhone.trim() || null,
         check_in: format(checkInDate, 'yyyy-MM-dd'),
         check_out: format(checkOutDate, 'yyyy-MM-dd'),
-        guests_count: guestsCount + childrenCount + infantsCount,
+        guests_count: guestHeadcount(guestCounts),
         payment_status: paymentStatus,
         total_amount: getBookingTotal(),
         notes: notes.trim() || null,
@@ -530,7 +534,7 @@ export const ManualBookingModal: React.FC<ManualBookingModalProps> = ({
           quote_request: {
             room_type_id: roomTypeId, room_unit_id: roomUnitId,
             check_in: format(checkInDate, 'yyyy-MM-dd'), check_out: format(checkOutDate, 'yyyy-MM-dd'),
-            adults_count: guestsCount, children_count: childrenCount, infants_count: infantsCount,
+            adults_count: guestsCount, children_count: childrenCount, infants_count: infantsCount, guest_counts:guestCounts,
             guest_age_policy_revision: selectedRate.guest_age_policy?.revision ?? agePolicy.data?.revision,
             meal_plan_code: mealPlanCode, cancellation_policy_code: policyCode,
             addons: [
@@ -565,6 +569,7 @@ export const ManualBookingModal: React.FC<ManualBookingModalProps> = ({
       setGuestEmail('');
       setGuestPhone('');
       setGuestsCount(2);
+    setGuestCounts(legacyGuestCounts(2));
     setChildrenCount(0);
     setInfantsCount(0);
       setPaymentStatus('pending');
@@ -686,8 +691,7 @@ export const ManualBookingModal: React.FC<ManualBookingModalProps> = ({
                 {[...new Map(rateVariants.map(v => [v.cancellation_policy_code, v])).values()].map(v => <SelectItem key={v.cancellation_policy_code} value={v.cancellation_policy_code}>{v.cancellation_policy_name}</SelectItem>)}
               </SelectContent></Select>
             </div>
-            <div className="space-y-2"><Label>Children ({agePolicy.label('child')})</Label><Input type="number" min={0} value={childrenCount} onChange={e => setChildrenCount(Math.max(0, parseInt(e.target.value) || 0))} /></div>
-            <div className="space-y-2"><Label>Young children ({agePolicy.label('infant')})</Label><Input type="number" min={0} value={infantsCount} onChange={e => setInfantsCount(Math.max(0, parseInt(e.target.value) || 0))} /></div>
+            <div className="sm:col-span-2 space-y-2"><Label>Guests</Label><GuestSelector totalGuests={guestHeadcount(guestCounts)} guestCounts={guestCounts} adultsCount={guestsCount} childrenCount={childrenCount} infantsCount={infantsCount} onGuestsChange={(_,a,c,i=0,counts)=>{setGuestCounts(counts ?? legacyGuestCounts(a,c,i));setGuestsCount(a);setChildrenCount(c);setInfantsCount(i);}}/></div>
             <p className="sm:col-span-2 text-sm text-muted-foreground">{quoteLoading ? 'Refreshing server quote…' : selectedRate ? `Room and extra accommodation: ₹${selectedRate.room_rate.toLocaleString()}; meals: ₹${selectedRate.meal_cost.toLocaleString()}; policy adjustment: ₹${selectedRate.policy_adjustment.toLocaleString()}.` : 'Select dates and guests to obtain a quote.'} {legacyManualRate ? ' Existing manual room pricing is retained while its meal basis awaits confirmation.' : ''} Manual booking tax remains 18% pending separate policy review.</p>
           </div>
 
@@ -787,18 +791,6 @@ export const ManualBookingModal: React.FC<ManualBookingModalProps> = ({
             )}
 
             <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="guestsCount">Adults ({agePolicy.label('adult')})</Label>
-                <Input
-                  id="guestsCount"
-                  type="number"
-                  min="1"
-                  max="10"
-                  value={guestsCount}
-                  onChange={(e) => setGuestsCount(parseInt(e.target.value) || 1)}
-                />
-              </div>
-
               <div className="space-y-2">
                 <Label htmlFor="packageSelect">Package (Optional)</Label>
                 <Select value={selectedPackage} onValueChange={handlePackageChange}>

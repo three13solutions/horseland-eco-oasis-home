@@ -1,3 +1,4 @@
+import { writeGuestParty, legacyGuestCounts, guestHeadcount, type GuestCounts } from '@/lib/guest-counts';
 import { MEAL_PLANS, getMealPlan, normalizeMealPlanCode } from '@/lib/mealPlans';
 import React, { useState, useMemo } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
@@ -32,13 +33,14 @@ type Props = {
   checkIn?: Date;
   checkOut?: Date;
   guests?: number;
+  guestCounts?: GuestCounts;
   adults?: number;
   children?: number;
   infants?: number;
   hideBookNow?: boolean;
 };
 
-const CategoryCard: React.FC<Props> = ({ category, onViewDetails, onBookNow, viewMode = 'grid', checkIn, checkOut, guests = 2, adults = 2, children = 0, infants = 0, hideBookNow = false }) => {
+const CategoryCard: React.FC<Props> = ({ category, onViewDetails, onBookNow, viewMode = 'grid', checkIn, checkOut, guests = 2, adults = 2, children = 0, infants = 0, guestCounts, hideBookNow = false }) => {
   const navigate = useNavigate();
   const [selectedMealPlan, setSelectedMealPlan] = useState<string>('');
   const [selectedCancellationPolicy, setSelectedCancellationPolicy] = useState<string>('');
@@ -52,6 +54,7 @@ const CategoryCard: React.FC<Props> = ({ category, onViewDetails, onBookNow, vie
     adultsCount: adults,
     childrenCount: children,
     infantsCount: infants,
+    guestCounts,
     enabled: !!(checkIn && checkOut)
   });
 
@@ -172,6 +175,7 @@ const CategoryCard: React.FC<Props> = ({ category, onViewDetails, onBookNow, vie
         searchParams.set('cancellationPolicy', selectedCancellationPolicy);
       }
       
+      writeGuestParty(searchParams,guestCounts ?? legacyGuestCounts(adults,children,infants),selectedVariant?.guest_age_policy?.revision);
       navigate(`/booking?${searchParams.toString()}`);
     } else {
       // No dates - navigate to search availability page with roomTypeId to filter
@@ -305,7 +309,7 @@ const CategoryCard: React.FC<Props> = ({ category, onViewDetails, onBookNow, vie
                 </span>
                 {selectedVariant && (
                   <div className="text-xs text-muted-foreground mt-1">
-                    Total: ₹{totalPrice.toLocaleString()} for {nights} night{nights > 1 ? 's' : ''} · {adults} adult{adults > 1 ? 's' : ''}{children > 0 ? ` · ${children} child${children > 1 ? 'ren' : ''}` : ''}
+                    Total: ₹{totalPrice.toLocaleString()} for {nights} night{nights > 1 ? 's' : ''} · {guestHeadcount(guestCounts ?? legacyGuestCounts(adults,children,infants))} guests
                   </div>
                 )}
               </div>
@@ -449,7 +453,7 @@ const CategoryCard: React.FC<Props> = ({ category, onViewDetails, onBookNow, vie
             </span>
             {selectedVariant && (
               <div className="text-xs text-muted-foreground mt-1">
-                Total: ₹{totalPrice.toLocaleString()} for {nights} night{nights > 1 ? 's' : ''} · {adults} adult{adults > 1 ? 's' : ''}{children > 0 ? ` · ${children} child${children > 1 ? 'ren' : ''}` : ''}
+                Total: ₹{totalPrice.toLocaleString()} for {nights} night{nights > 1 ? 's' : ''} · {guestHeadcount(guestCounts ?? legacyGuestCounts(adults,children,infants))} guests
               </div>
             )}
           </div>

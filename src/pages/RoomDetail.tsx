@@ -1,3 +1,4 @@
+import { writeGuestParty, legacyGuestCounts, type GuestCounts } from '@/lib/guest-counts';
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import Navigation from '../components/Navigation';
@@ -58,6 +59,7 @@ const RoomDetail = () => {
   const [adults, setAdults] = useState<number>(2);
   const [children, setChildren] = useState<number>(0);
   const [infants, setInfants] = useState<number>(0);
+  const [guestCounts, setGuestCounts] = useState<GuestCounts>(legacyGuestCounts(2));
 
   // Popover states for auto-advance
   const [checkInOpen, setCheckInOpen] = useState(false);
@@ -252,6 +254,7 @@ const RoomDetail = () => {
       roomTypeId: roomData.id
     });
     
+    writeGuestParty(searchParams,guestCounts);
     navigate(`/booking?${searchParams.toString()}`);
   };
 
@@ -759,9 +762,11 @@ const RoomDetail = () => {
                       adultsCount={adults}
                       childrenCount={children}
                       infantsCount={infants}
+                      guestCounts={guestCounts}
                       open={guestSelectorOpen}
                       onOpenChange={setGuestSelectorOpen}
-                      onGuestsChange={(total, adultsCount, childrenCount, infantsCount) => {
+                      onGuestsChange={(total, adultsCount, childrenCount, infantsCount, counts) => {
+                        setGuestCounts(counts ?? legacyGuestCounts(adultsCount,childrenCount,infantsCount));
                         setAdults(adultsCount || 0);
                         setChildren(childrenCount || 0);
                         setInfants(infantsCount || 0);

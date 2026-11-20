@@ -1,4 +1,5 @@
 import type { GuestAgePolicy } from '@/lib/guest-age-policy';
+import { legacyGuestCounts, type GuestCounts } from '@/lib/guest-counts';
 import { useGuestAgePolicy } from '@/hooks/useGuestAgePolicy';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { format } from 'date-fns';
@@ -6,6 +7,7 @@ import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 
 interface RateVariant {
+  guest_counts?: GuestCounts;
   guest_age_policy?: GuestAgePolicy;
   actual_guest_count?: number;
   chargeable_meal_guests?: number;
@@ -43,6 +45,7 @@ export const applyMealPlanAdjustment = (
 };
 
 interface UseDynamicPricingParams {
+  guestCounts?: GuestCounts;
   roomTypeId?: string;
   roomUnitId?: string;
   checkIn?: Date;
@@ -56,6 +59,7 @@ interface UseDynamicPricingParams {
 }
 
 export const useDynamicPricing = ({
+  guestCounts,
   roomTypeId,
   roomUnitId,
   checkIn,
@@ -69,20 +73,20 @@ export const useDynamicPricing = ({
 }: UseDynamicPricingParams) => {
   const agePolicy = useGuestAgePolicy();
   const query = useQuery({
-    queryKey: [website ? 'website-rate-variants' : 'rate-variants', roomTypeId, roomUnitId, checkIn, checkOut, adultsCount, childrenCount, infantsCount, bookingChannel, agePolicy.data?.revision],
+    queryKey: [website ? 'website-rate-variants' : 'rate-variants', roomTypeId, roomUnitId, checkIn, checkOut, guestCounts ?? legacyGuestCounts(adultsCount,childrenCount,infantsCount), bookingChannel, agePolicy.data?.revision],
     queryFn: async () => {
       if (!roomTypeId || !checkIn || !checkOut) {
         throw new Error('Missing required parameters');
       }
 
-      const { data, error } = await (supabase as SupabaseClient).rpc(website ? 'calculate_website_rate_variants' : 'calculate_rate_variants_v2', {
+      const { data, error } = await (supabase as SupabaseClient).rpc('calculate_guest_type_rate_variants', {
         p_room_type_id: roomTypeId,
         p_check_in: format(checkIn, 'yyyy-MM-dd'),
         p_check_out: format(checkOut, 'yyyy-MM-dd'),
         p_room_unit_id: roomUnitId || null,
-        p_adults_count: adultsCount,
-        p_children_count: childrenCount,
-        p_infants_count: infantsCount,
+        p_guest_counts: guestCounts ?? legacyGuestCounts(adultsCount,childrenCount,infantsCount),
+        p_policy_revision: agePolicy.data?.revision,
+        p_website: website,
         p_booking_channel: bookingChannel
       });
 

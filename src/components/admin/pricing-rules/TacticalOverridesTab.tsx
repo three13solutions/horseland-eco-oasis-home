@@ -1,3 +1,6 @@
+import { useConfiguredGuestTypes } from '@/hooks/useConfiguredGuestTypes';
+import { guestTypeName } from '@/lib/guest-age-policy';
+import { validateGuestTypeCharges, type GuestTypeCharges } from '@/lib/guest-type-charges';
 import { GuestTypeChargeInput } from '@/components/admin/GuestTypeChargeInput';
 import { useState, useMemo } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
@@ -25,6 +28,7 @@ type StatusFilter = 'all' | 'active' | 'expired' | 'upcoming';
 type OverrideLevel = 'category' | 'room_type' | 'room_unit';
 
 interface RateRow {
+  guestCharges?: GuestTypeCharges;
   double: string;
   extraAdult: string;
   extraChild: string;
@@ -75,6 +79,7 @@ const emptyRates = {
 
 export function TacticalOverridesTab() {
   const queryClient = useQueryClient();
+  const guestTypes = useConfiguredGuestTypes();
   const [searchParams, setSearchParams] = useSearchParams();
   const focusedOverrideId = searchParams.get('override_id');
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -346,6 +351,10 @@ export function TacticalOverridesTab() {
     }));
   };
 
+  const updateGuestRate = (id: string, duration: keyof RoomCategoryRates['rates'], key: string, rule: GuestTypeCharges[string]) => {
+    setFormData(previous=>({...previous,categoryRates:previous.categoryRates.map(r=>r.id===id?{...r,rates:{...r.rates,[duration]:{...r.rates[duration],guestCharges:{...r.rates[duration].guestCharges,[key]:rule}}}}:r)}));
+  };
+
   const checkMissingExtraCharges = (categoryRates: RoomCategoryRates[]): string[] => {
     const categoriesWithMissingCharges: string[] = [];
     
@@ -432,6 +441,13 @@ export function TacticalOverridesTab() {
           min_children: 1,
           occupancy_type: 'extra_child',
         });
+      }
+      const invalid = validateGuestTypeCharges(rateRow.guestCharges ?? {});
+      if (invalid) throw new Error(invalid);
+      for (const [key, rule] of Object.entries(rateRow.guestCharges ?? {})) {
+        if (['adult','child'].includes(key)) continue;
+        if (rule.mode==='same_as_adult' && rateRow.extraAdult==='') throw new Error('Enter the matching adult rate before choosing Same as Adult.');
+        payloads.push({...basePayload,reason:`${reason} - ${guestTypeName({key})}`,adjustment_type:'fixed',adjustment_value:rule.mode==='fixed'?rule.amount:Number(rateRow.extraAdult),guest_charge_mode:rule.mode,guest_type_key:key,occupancy_type:`extra_${key}`});
       }
     };
     
@@ -723,110 +739,17 @@ export function TacticalOverridesTab() {
                     </div>
                   </CardHeader>
                   <CardContent className="pt-0">
-                    {formData.sameRateForAllDays ? (
-                      <Table>
-                        <TableHeader>
-                          <TableRow className="bg-muted/50">
-                            <TableHead className="h-8 text-xs w-24">Duration</TableHead>
-                            <TableHead className="h-8 text-xs text-center">Double Occ (₹)</TableHead>
-                            <TableHead className="h-8 text-xs text-center">+Adult/night (₹)</TableHead>
-                            <TableHead className="h-8 text-xs text-center">+Child/night (₹)</TableHead>
-                          </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                          <TableRow>
-                            <TableCell className="py-2 font-medium text-sm">1 Night</TableCell>
-                            <TableCell className="py-1 px-2">
-                              <Input type="number" placeholder="—" className="h-8 text-center text-sm" value={categoryRate.rates.oneNightWeekday.double} onChange={(e) => updateRateValue(categoryRate.id, 'oneNightWeekday', 'double', e.target.value)} />
-                            </TableCell>
-                            <TableCell className="py-1 px-2">
-                              <Input type="number" placeholder="—" className="h-8 text-center text-sm" value={categoryRate.rates.oneNightWeekday.extraAdult} onChange={(e) => updateRateValue(categoryRate.id, 'oneNightWeekday', 'extraAdult', e.target.value)} />
-                            </TableCell>
-                            <TableCell className="py-1 px-2">
-                              <GuestTypeChargeInput label="Child Accommodation (₹)" value={categoryRate.rates.oneNightWeekday.extraChild} adultValue={categoryRate.rates.oneNightWeekday.extraAdult} sameAsAdult={categoryRate.rates.oneNightWeekday.childSameAsAdult === 'yes'} onModeChange={same=>updateRateValue(categoryRate.id,'oneNightWeekday','childSameAsAdult',same?'yes':'no')} onValueChange={value=>updateRateValue(categoryRate.id,'oneNightWeekday','extraChild',value)} />
-                            </TableCell>
-                          </TableRow>
-                          <TableRow>
-                            <TableCell className="py-2 font-medium text-sm">2+ Nights</TableCell>
-                            <TableCell className="py-1 px-2">
-                              <Input type="number" placeholder="—" className="h-8 text-center text-sm" value={categoryRate.rates.twoNightsWeekday.double} onChange={(e) => updateRateValue(categoryRate.id, 'twoNightsWeekday', 'double', e.target.value)} />
-                            </TableCell>
-                            <TableCell className="py-1 px-2">
-                              <Input type="number" placeholder="—" className="h-8 text-center text-sm" value={categoryRate.rates.twoNightsWeekday.extraAdult} onChange={(e) => updateRateValue(categoryRate.id, 'twoNightsWeekday', 'extraAdult', e.target.value)} />
-                            </TableCell>
-                            <TableCell className="py-1 px-2">
-                              <GuestTypeChargeInput label="Child Accommodation (₹)" value={categoryRate.rates.twoNightsWeekday.extraChild} adultValue={categoryRate.rates.twoNightsWeekday.extraAdult} sameAsAdult={categoryRate.rates.twoNightsWeekday.childSameAsAdult === 'yes'} onModeChange={same=>updateRateValue(categoryRate.id,'twoNightsWeekday','childSameAsAdult',same?'yes':'no')} onValueChange={value=>updateRateValue(categoryRate.id,'twoNightsWeekday','extraChild',value)} />
-                            </TableCell>
-                          </TableRow>
-                        </TableBody>
-                      </Table>
-                    ) : (
-                    <Table>
-                      <TableHeader>
-                        <TableRow className="bg-muted/50">
-                          <TableHead className="h-8 text-xs w-24" rowSpan={2}>Duration</TableHead>
-                          <TableHead className="h-8 text-xs text-center border-l" colSpan={3}>
-                            <Badge variant="secondary" className="text-xs">Weekday</Badge>
-                          </TableHead>
-                          <TableHead className="h-8 text-xs text-center border-l" colSpan={3}>
-                            <Badge variant="outline" className="text-xs">Weekend</Badge>
-                          </TableHead>
-                        </TableRow>
-                        <TableRow className="bg-muted/30">
-                          <TableHead className="h-7 text-xs text-center border-l px-1">Double</TableHead>
-                          <TableHead className="h-7 text-xs text-center px-1">+Adult</TableHead>
-                          <TableHead className="h-7 text-xs text-center px-1">+Child</TableHead>
-                          <TableHead className="h-7 text-xs text-center border-l px-1">Double</TableHead>
-                          <TableHead className="h-7 text-xs text-center px-1">+Adult</TableHead>
-                          <TableHead className="h-7 text-xs text-center px-1">+Child</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        <TableRow>
-                          <TableCell className="py-2 font-medium text-sm">1 Night</TableCell>
-                          <TableCell className="py-1 px-1 border-l">
-                            <Input type="number" placeholder="—" className="h-8 text-center text-sm" value={categoryRate.rates.oneNightWeekday.double} onChange={(e) => updateRateValue(categoryRate.id, 'oneNightWeekday', 'double', e.target.value)} />
-                          </TableCell>
-                          <TableCell className="py-1 px-1">
-                            <Input type="number" placeholder="—" className="h-8 text-center text-sm" value={categoryRate.rates.oneNightWeekday.extraAdult} onChange={(e) => updateRateValue(categoryRate.id, 'oneNightWeekday', 'extraAdult', e.target.value)} />
-                          </TableCell>
-                          <TableCell className="py-1 px-1">
-                            <GuestTypeChargeInput label="Child Accommodation (₹)" value={categoryRate.rates.oneNightWeekday.extraChild} adultValue={categoryRate.rates.oneNightWeekday.extraAdult} sameAsAdult={categoryRate.rates.oneNightWeekday.childSameAsAdult === 'yes'} onModeChange={same=>updateRateValue(categoryRate.id,'oneNightWeekday','childSameAsAdult',same?'yes':'no')} onValueChange={value=>updateRateValue(categoryRate.id,'oneNightWeekday','extraChild',value)} />
-                          </TableCell>
-                          <TableCell className="py-1 px-1 border-l">
-                            <Input type="number" placeholder="—" className="h-8 text-center text-sm" value={categoryRate.rates.oneNightWeekend.double} onChange={(e) => updateRateValue(categoryRate.id, 'oneNightWeekend', 'double', e.target.value)} />
-                          </TableCell>
-                          <TableCell className="py-1 px-1">
-                            <Input type="number" placeholder="—" className="h-8 text-center text-sm" value={categoryRate.rates.oneNightWeekend.extraAdult} onChange={(e) => updateRateValue(categoryRate.id, 'oneNightWeekend', 'extraAdult', e.target.value)} />
-                          </TableCell>
-                          <TableCell className="py-1 px-1">
-                            <GuestTypeChargeInput label="Child Accommodation (₹)" value={categoryRate.rates.oneNightWeekend.extraChild} adultValue={categoryRate.rates.oneNightWeekend.extraAdult} sameAsAdult={categoryRate.rates.oneNightWeekend.childSameAsAdult === 'yes'} onModeChange={same=>updateRateValue(categoryRate.id,'oneNightWeekend','childSameAsAdult',same?'yes':'no')} onValueChange={value=>updateRateValue(categoryRate.id,'oneNightWeekend','extraChild',value)} />
-                          </TableCell>
-                        </TableRow>
-                        <TableRow>
-                          <TableCell className="py-2 font-medium text-sm">2+ Nights</TableCell>
-                          <TableCell className="py-1 px-1 border-l">
-                            <Input type="number" placeholder="—" className="h-8 text-center text-sm" value={categoryRate.rates.twoNightsWeekday.double} onChange={(e) => updateRateValue(categoryRate.id, 'twoNightsWeekday', 'double', e.target.value)} />
-                          </TableCell>
-                          <TableCell className="py-1 px-1">
-                            <Input type="number" placeholder="—" className="h-8 text-center text-sm" value={categoryRate.rates.twoNightsWeekday.extraAdult} onChange={(e) => updateRateValue(categoryRate.id, 'twoNightsWeekday', 'extraAdult', e.target.value)} />
-                          </TableCell>
-                          <TableCell className="py-1 px-1">
-                            <GuestTypeChargeInput label="Child Accommodation (₹)" value={categoryRate.rates.twoNightsWeekday.extraChild} adultValue={categoryRate.rates.twoNightsWeekday.extraAdult} sameAsAdult={categoryRate.rates.twoNightsWeekday.childSameAsAdult === 'yes'} onModeChange={same=>updateRateValue(categoryRate.id,'twoNightsWeekday','childSameAsAdult',same?'yes':'no')} onValueChange={value=>updateRateValue(categoryRate.id,'twoNightsWeekday','extraChild',value)} />
-                          </TableCell>
-                          <TableCell className="py-1 px-1 border-l">
-                            <Input type="number" placeholder="—" className="h-8 text-center text-sm" value={categoryRate.rates.twoNightsWeekend.double} onChange={(e) => updateRateValue(categoryRate.id, 'twoNightsWeekend', 'double', e.target.value)} />
-                          </TableCell>
-                          <TableCell className="py-1 px-1">
-                            <Input type="number" placeholder="—" className="h-8 text-center text-sm" value={categoryRate.rates.twoNightsWeekend.extraAdult} onChange={(e) => updateRateValue(categoryRate.id, 'twoNightsWeekend', 'extraAdult', e.target.value)} />
-                          </TableCell>
-                          <TableCell className="py-1 px-1">
-                            <GuestTypeChargeInput label="Child Accommodation (₹)" value={categoryRate.rates.twoNightsWeekend.extraChild} adultValue={categoryRate.rates.twoNightsWeekend.extraAdult} sameAsAdult={categoryRate.rates.twoNightsWeekend.childSameAsAdult === 'yes'} onModeChange={same=>updateRateValue(categoryRate.id,'twoNightsWeekend','childSameAsAdult',same?'yes':'no')} onValueChange={value=>updateRateValue(categoryRate.id,'twoNightsWeekend','extraChild',value)} />
-                          </TableCell>
-                        </TableRow>
-                      </TableBody>
-                    </Table>
-                    )}
+                    <Table><TableHeader><TableRow><TableHead>Stay</TableHead><TableHead>Double Occupancy (₹)</TableHead>{guestTypes.types.map(b=><TableHead key={b.key}>{guestTypeName(b)} / night (₹)</TableHead>)}</TableRow></TableHeader><TableBody>
+                      {(formData.sameRateForAllDays ? ['oneNightWeekday','twoNightsWeekday'] : ['oneNightWeekday','oneNightWeekend','twoNightsWeekday','twoNightsWeekend']).map(duration=>{
+                        const key=duration as keyof RoomCategoryRates['rates'];const rate=categoryRate.rates[key];
+                        return <TableRow key={key}><TableCell className="whitespace-nowrap">{key.startsWith('one')?'1 Night':'2+ Nights'}{!formData.sameRateForAllDays&&` · ${key.endsWith('Weekend')?'Weekend':'Weekday'}`}</TableCell><TableCell><Input aria-label={`${categoryRate.name} ${key} Double occupancy`} type="number" min="0" step="0.01" value={rate.double} onChange={e=>updateRateValue(categoryRate.id,key,'double',e.target.value)}/></TableCell>
+                        {guestTypes.types.map(b=>{
+                          if(b.key==='adult')return <TableCell key={b.key}><Input aria-label={`${categoryRate.name} ${key} Adult rate`} type="number" min="0" step="0.01" value={rate.extraAdult} onChange={e=>updateRateValue(categoryRate.id,key,'extraAdult',e.target.value)}/></TableCell>;
+                          const rule=rate.guestCharges?.[b.key];const value=b.key==='child'?rate.extraChild:rule?.mode==='fixed'?String(rule.amount):'';
+                          return <TableCell key={b.key} className="min-w-40"><GuestTypeChargeInput label={`${guestTypeName(b)} Accommodation (₹)`} value={value} adultValue={rate.extraAdult} sameAsAdult={b.key==='child'?rate.childSameAsAdult==='yes':rule?.mode==='same_as_adult'} onValueChange={value=>b.key==='child'?updateRateValue(categoryRate.id,key,'extraChild',value):updateGuestRate(categoryRate.id,key,b.key,{mode:'fixed',amount:Number(value)})} onModeChange={same=>b.key==='child'?updateRateValue(categoryRate.id,key,'childSameAsAdult',same?'yes':'no'):updateGuestRate(categoryRate.id,key,b.key,same?{mode:'same_as_adult'}:{mode:'fixed',amount:Number(value)})}/></TableCell>;
+                        })}</TableRow>;
+                      })}
+                    </TableBody></Table>
                   </CardContent>
                 </Card>
               ))}
