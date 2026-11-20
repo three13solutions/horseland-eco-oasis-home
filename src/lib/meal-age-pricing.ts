@@ -1,9 +1,11 @@
 export type MealAgeMode='full'|'percentage'|'fixed'|'free';
-export interface MealAgeRule {plan_code:'RO'|'BB'|'HB'|'FB';band_key:'adult'|'child'|'infant';mode:MealAgeMode;value:number|null}
+export interface MealAgeRule {plan_code:'RO'|'BB'|'HB'|'FB';band_key:string;mode:MealAgeMode;value:number|null}
 export interface MealAgePolicy {revision:number;updated_at:string;rules:MealAgeRule[]}
-export function mealAgeRuleError(rules:MealAgeRule[]):string|null {
- if(!Array.isArray(rules)||rules.length!==12)return 'All four plans and all three age bands must be configured.';
- const seen=new Set<string>();for(const r of rules){if(!r||!['RO','BB','HB','FB'].includes(r.plan_code)||!['adult','child','infant'].includes(r.band_key))return 'Invalid plan or age band.';const key=r.plan_code+':'+r.band_key;if(seen.has(key))return 'Duplicate plan/age band.';seen.add(key);
+export function mealAgeRuleError(rules:MealAgeRule[], keys?:string[]):string|null {
+ if(!Array.isArray(rules)||!rules.length)return 'All four plans and every guest type must be configured.';
+ const bands=keys ?? [...new Set(rules.map(r=>r?.band_key))];
+ if(rules.length!==bands.length*4)return 'All four plans and every guest type must be configured.';
+ const seen=new Set<string>();for(const r of rules){if(!r||!['RO','BB','HB','FB'].includes(r.plan_code)||!bands.includes(r.band_key)||!/^[a-z][a-z0-9_]*$/.test(r.band_key))return 'Invalid plan or age band.';const key=r.plan_code+':'+r.band_key;if(seen.has(key))return 'Duplicate plan/age band.';seen.add(key);
  if(!['full','percentage','fixed','free'].includes(r.mode))return 'Choose a valid pricing mode.';
  if(r.plan_code==='RO'&&r.mode!=='free')return 'EP has no meal charge.';
  if(r.plan_code!=='RO'&&r.band_key==='adult'&&r.mode!=='full')return 'Adults use the current shared adult meal price.';

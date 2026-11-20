@@ -1,3 +1,6 @@
+import { useGuestAgePolicy } from '@/hooks/useGuestAgePolicy';
+import { guestTypeName } from '@/lib/guest-age-policy';
+import { validateGuestTypeCharges } from '@/lib/guest-type-charges';
 import { GuestTypeChargeInput } from '@/components/admin/GuestTypeChargeInput';
 import { guestTypeChargeAmount, type GuestTypeCharges } from '@/lib/guest-type-charges';
 import { useState } from 'react';
@@ -18,6 +21,7 @@ import { EmptyRuleState } from './EmptyRuleState';
 
 export function GuestCompositionTab() {
   const queryClient = useQueryClient();
+  const agePolicy=useGuestAgePolicy({allowInactive:true});
   const [guestCharges, setGuestCharges] = useState<GuestTypeCharges>({});
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingRule, setEditingRule] = useState<any>(null);
@@ -116,6 +120,7 @@ export function GuestCompositionTab() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    const error=validateGuestTypeCharges(guestCharges); if(error){toast.error(error);return;}
     const payload = {
       room_type_id: formData.room_type_id && formData.room_type_id !== 'all' ? formData.room_type_id : null,
       base_guests_count: parseInt(formData.base_guests_count),
@@ -197,10 +202,14 @@ export function GuestCompositionTab() {
                   <p className="text-xs text-muted-foreground">Per adult beyond base count; age band follows Guest Age & Pricing Policy</p>
                 </div>
                 <div className="grid grid-cols-2 gap-4">
-                  {(['child','infant'] as const).map(key => <GuestTypeChargeInput key={key} label={`${key === 'child' ? 'Child' : 'Infant'} Accommodation (₹)`}
-                    value={formData[`extra_${key}_charge`]} adultValue={formData.extra_adult_charge} sameAsAdult={guestCharges[key]?.mode === 'same_as_adult'}
-                    onValueChange={value => setFormData({...formData,[`extra_${key}_charge`]:value})}
-                    onModeChange={same => setGuestCharges(previous => {const next={...previous};if(same)next[key]={mode:'same_as_adult'};else delete next[key];return next;})} />)}
+                  {(agePolicy.data?.bands ?? [{key:'child'},{key:'infant'}]).filter(b=>b.key!=='adult').map(b => {
+                    const key=b.key;const column=key==='child'?'extra_child_charge':key==='infant'?'extra_infant_charge':null;
+                    const saved=guestCharges[key];const value=column?formData[column]:saved?.mode==='fixed'?String(saved.amount):'';
+                    return <GuestTypeChargeInput key={key} label={`${guestTypeName(b)} Accommodation (₹)`}
+                      value={value} adultValue={formData.extra_adult_charge} sameAsAdult={saved?.mode==='same_as_adult'}
+                      onValueChange={value=>{if(column)setFormData({...formData,[column]:value});else setGuestCharges(previous=>({...previous,[key]:{mode:'fixed',amount:Number(value)}}));}}
+                      onModeChange={same=>setGuestCharges(previous=>{const next={...previous};if(same)next[key]={mode:'same_as_adult'};else if(column)delete next[key];else next[key]={mode:'fixed',amount:Number(value || 0)};return next;})} />;
+                  })}
                 </div>
                 <div className="flex items-center space-x-2">
                   <Switch checked={formData.is_active} onCheckedChange={(checked) => setFormData({ ...formData, is_active: checked })} />

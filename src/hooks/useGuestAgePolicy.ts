@@ -1,7 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
-import { ageBandLabel, validateGuestAgeBands, type GuestAgePolicy, type GuestBandKey } from '@/lib/guest-age-policy';
+import { ageBandLabel, validateGuestAgeBands, type GuestAgePolicy } from '@/lib/guest-age-policy';
 export function useGuestAgePolicy(opts:{allowInactive?:boolean}={}) {
   const query=useQuery({queryKey:['guest-age-policy',!!opts.allowInactive],queryFn:async()=>{
     const {data,error}=await (supabase as SupabaseClient).rpc('get_guest_age_policy');
@@ -12,5 +12,5 @@ export function useGuestAgePolicy(opts:{allowInactive?:boolean}={}) {
     return policy;
   },staleTime:0,refetchOnWindowFocus:true});
   const policy=query.isError ? undefined : query.data;
-  return {...query,data:policy,label:(key:GuestBandKey)=>ageBandLabel(policy?.bands.find(b=>b.key===key)),band:(key:GuestBandKey)=>policy?.bands.find(b=>b.key===key)};
+  return {...query,data:policy,label:(key:string)=>ageBandLabel(policy?.bands.find(b=>b.key===key)),band:(key:string)=>policy?.bands.find(b=>b.key===key)};
 }
