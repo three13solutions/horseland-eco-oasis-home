@@ -12,6 +12,7 @@ import { Switch } from '@/components/ui/switch';
 import { Textarea } from '@/components/ui/textarea';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Calendar } from '@/components/ui/calendar';
+import { AlertDialog, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ArrowLeft, CalendarDays, Info, Plus, Search } from 'lucide-react';
@@ -31,6 +32,30 @@ function promotionStatus(offer: Offer, today: string): PromoStatus {
  if (offer.booking_from && offer.booking_from > today) return 'Scheduled';
  return 'Active';
 }
+type TableSwitch = 'is_public' | 'is_active';
+type PendingSwitch = { offer: Offer; field: TableSwitch; checked: boolean };
+function isRestricted(offer: Offer) {
+ return offer.day_scope!=='both'||!!offer.stay_from||!!offer.stay_to||offer.excluded_stay_dates.length>0;
+}
+function isFlat(offer: Offer) {
+ return offer.code==='DIRECT1000'||offer.discount_basis==='booking';
+}
+function validOffer(offer: Offer) {
+ const { code,label,discount_kind,discount_basis,discount_value,mixed_stay_mode,booking_from,booking_to,stay_from,stay_to }=offer;
+ return !restrictionError(offer)&&/^[A-Z0-9_-]{3,30}$/.test(code)&&!!label.trim()
+  &&(discount_kind==='legacy'||(!!discount_basis&&Number(discount_value)>0&&(discount_kind!=='percentage'||Number(discount_value)<=100)))
+  &&(!isRestricted(offer)||!!mixed_stay_mode)&&(!isFlat(offer)||mixed_stay_mode!=='eligible_nights')
+  &&(!booking_from||!booking_to||booking_from<=booking_to)&&(!stay_from||!stay_to||stay_from<=stay_to);
+}
+async function readOffers() {
+ const {data,error}=await api.rpc('website_promotion_settings');
+ if(error)throw Error(error.message);
+ const settings=data as {enabled:boolean;offers:Offer[]};
+ if(!Array.isArray(settings?.offers))throw Error('Invalid promotion settings');
+ return settings;
+}
+const switchName=(field:TableSwitch)=>field==='is_public'?'Visibility':'Activation';
+const switchDescription=(field:TableSwitch,on:boolean)=>field==='is_public'?(on?'Make public':'Make private'):(on?'Enable code':'Disable code');
 const initial = ():Offer=>({...unrestrictedPromotion(),code:'',label:'',is_active:false,is_public:false,discount_kind:'fixed',discount_basis:null,discount_value:null,booking_from:null,booking_to:null,stay_from:null,stay_to:null,day_scope:'both',mixed_stay_mode:null});
 const inputClass = 'h-9 min-w-0 text-sm';
 const selectClass = 'h-9 w-full min-w-0 rounded-md border border-input bg-background px-2.5 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50';
@@ -163,7 +188,60 @@ function PromoDateRange({ id, label, value, today, disabled, onChange }: {
 
 export default function WebsitePromotionSettings(){
  const [offers,setOffers]=useState<Offer[]>([]),[enabled,setEnabled]=useState(false),[ready,setReady]=useState(false),[error,setError]=useState(''),[busy,setBusy]=useState(false),[search,setSearch]=useState(''),[form,setForm]=useState<Offer|null>(initial),[review,setReview]=useState(false);
- async function load(){const {data,error}=await api.rpc('website_promotion_settings');if(error)throw Error(error.message);const r=data as {enabled:boolean;offers:Offer[]};if(!Array.isArray(r?.offers))throw Error('Invalid promotion settings');setOffers(r.offers.map(o=>({...unrestrictedPromotion(),...o})));setEnabled(r.enabled);setReady(r.offers.every(o=>typeof o.day_scope==='string'&&'total_usage_limit' in o&&'eligible_room_category_ids' in o));}
+ async function load(){
+  const settings=await readOffers();
+  setOffers(settings.offers.map(offer=>({...unrestrictedPromotion(),...offer})));
+  setEnabled(settings.enabled);
+  setReady(settings.offers.every(offer=>typeof offer.day_scope==='string'&&'total_usage_limit' in offer&&'eligible_room_category_ids' in offer));
+ }
+ const [pendingSwitch,setPendingSwitch]=useState<PendingSwitch|null>(null);
+ const [switchError,setSwitchError]=useState('');
+ const switchTrigger=useRef<HTMLButtonElement|null>(null);
+ const statusControl=useRef<HTMLSelectElement>(null);
+ const switchCandidate=pendingSwitch?{...pendingSwitch.offer,[pendingSwitch.field]:pendingSwitch.checked}:null;
+ const canSwitch=switchCandidate!==null&&validOffer(switchCandidate)&&Number.isInteger(switchCandidate.revision);
+ const beginSwitch=(offer:Offer,field:TableSwitch,checked:boolean,trigger:HTMLButtonElement|null)=>{
+  if(busy||!ready)return;
+  switchTrigger.current=trigger;
+  setSwitchError('');
+  setPendingSwitch({offer,field,checked});
+ };
+ async function confirmSwitch(){
+  if(!pendingSwitch||!canSwitch||busy||!ready)return;
+  const {offer,field,checked}=pendingSwitch;
+  setBusy(true);
+  setSwitchError('');
+  try {
+   const settings=await readOffers();
+   const persisted=settings.offers.find(item=>item.code===offer.code);
+   if(!persisted||persisted.revision!==offer.revision||persisted[field]!==offer[field]||settings.enabled!==enabled){
+    throw Error('Promotion settings changed. Close this review, then try again using the refreshed list.');
+   }
+   const next={...persisted,[field]:checked};
+   if(!validOffer(next))throw Error('This code’s settings need attention. Open Edit and check the required fields first.');
+   const {data,error}=await api.rpc('save_managed_website_promotion',{p_settings:next,p_expected_revision:persisted.revision});
+   if(error)throw Error(error.message);
+   const saved=data as Offer;
+   if(saved?.code===offer.code&&Number.isInteger(saved.revision)){
+    setOffers(current=>current.map(item=>item.code===saved.code?{...unrestrictedPromotion(),...saved}:item));
+   }else{
+    // A successful RPC must not be retried merely because the response could not be read.
+    try {await load();} catch {setError('The switch was saved, but the list could not refresh. Reload the page to see its final state.');}
+   }
+   // Preserve unsaved editor inputs, rebasing only an editor on the same reviewed revision.
+   if(saved?.code===offer.code&&Number.isInteger(saved.revision)){
+    setForm(current=>current&&current.code===offer.code&&current.revision===offer.revision
+      ? {...current,[field]:current[field]===offer[field]?checked:current[field],revision:saved.revision}
+      : current);
+   }
+   setReview(false);
+   setPendingSwitch(null);
+  } catch (e) {
+   const message=e instanceof Error?e.message:'The switch could not be saved.';
+   setSwitchError(message);
+   if(/changed/i.test(message))try {await load();} catch {/* keep the original failure visible */}
+  } finally {setBusy(false);}
+ }
  useEffect(()=>{void load().catch(e=>setError(e.message));},[]);
  const change=(key:keyof Offer,value:unknown)=>{setReview(false);setForm(f=>f?{...f,[key]:value}:null)};
  const [statusFilter,setStatusFilter]=useState<PromoStatus | 'all'>('all');
@@ -210,10 +288,10 @@ export default function WebsitePromotionSettings(){
   })();
   return ()=>{active=false;};
  },[]);
- const restricted=!!form&&(form.day_scope!=='both'||!!form.stay_from||!!form.stay_to||form.excluded_stay_dates.length>0);
- const flat=form?.code==='DIRECT1000'||form?.discount_basis==='booking';
+ const restricted=!!form&&isRestricted(form);
+ const flat=!!form&&isFlat(form);
  const restrictionsError=form?restrictionError(form):null;
- const valid=!!form&&!restrictionsError&&/^[A-Z0-9_-]{3,30}$/.test(form.code)&&!!form.label.trim()&&(form.discount_kind==='legacy'||(!!form.discount_basis&&Number(form.discount_value)>0&&(form.discount_kind!=='percentage'||Number(form.discount_value)<=100)))&&(!restricted||!!form.mixed_stay_mode)&&(!flat||form.mixed_stay_mode!=='eligible_nights')&&(!form.booking_from||!form.booking_to||form.booking_from<=form.booking_to)&&(!form.stay_from||!form.stay_to||form.stay_from<=form.stay_to);
+ const valid=!!form&&validOffer(form);
  const customEmailIncomplete=customEmail&&form?.per_guest_usage_limit==null;
  const canSave=valid&&!customEmailIncomplete;
  const emailMode=customEmail||(form?.per_guest_usage_limit!=null&&form.per_guest_usage_limit!==1)?'custom':form?.per_guest_usage_limit===1?'once':'unlimited';
@@ -254,7 +332,7 @@ export default function WebsitePromotionSettings(){
        <Search aria-hidden="true" className="pointer-events-none absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground"/>
        <Input className="h-9 pl-8 text-sm" aria-label="Search promotions" placeholder="Search code or description" value={search} onChange={e=>setSearch(e.target.value)}/>
       </div>
-      <select aria-label="Filter promotions by status" className={selectClass.replace('w-full','w-auto')} value={statusFilter} onChange={e=>{const value=e.target.value;const status=promoStatuses.find(item=>item===value);setStatusFilter(status??'all');}}>
+      <select ref={statusControl} aria-label="Filter promotions by status" className={selectClass.replace('w-full','w-auto')} value={statusFilter} onChange={e=>{const value=e.target.value;const status=promoStatuses.find(item=>item===value);setStatusFilter(status??'all');}}>
        <option value="all">All statuses</option>{promoStatuses.map(status=><option key={status} value={status}>{status}</option>)}
       </select>
      </div>
@@ -262,17 +340,25 @@ export default function WebsitePromotionSettings(){
     <CardContent className="px-3 pb-3 sm:px-4 sm:pb-4">
      {ready&&visibleOffers.length===0&&<p role="status" className={noteClass}>{offers.length===0?'No promotion codes yet.':'No promotions match these filters.'}</p>}
      {visibleOffers.length>0&&<div className="rounded-md border">
-      <Table className="min-w-[26rem]" aria-label="Promo codes">
+      <Table className="min-w-[42rem]" aria-label="Promo codes">
        <TableHeader className="bg-muted/50"><TableRow>
         <TableHead scope="col" className="h-9 px-2">Code</TableHead><TableHead scope="col" className="h-9 px-2">Offer</TableHead>
         <TableHead scope="col" className="h-9 px-2">Validity</TableHead><TableHead scope="col" className="h-9 px-2">Status</TableHead>
+        <TableHead scope="col" className="h-9 px-2">Visibility</TableHead><TableHead scope="col" className="h-9 px-2">Activation</TableHead>
         <TableHead scope="col" className="h-9 px-2"><span className="sr-only">Actions</span></TableHead>
        </TableRow></TableHeader>
        <TableBody>{visibleOffers.map(o=><TableRow key={o.code} data-state={form?.revision&&form.code===o.code?'selected':undefined}>
         <th scope="row" className="p-2 text-left font-medium">{o.code}</th>
         <TableCell className="p-2">{o.code==='EP300'&&o.discount_kind==='legacy'?'₹300 / room-only night':o.code==='DIRECT1000'&&o.discount_kind==='legacy'?'₹1,000 / booking':o.discount_value==null?o.label:o.discount_kind==='percentage'?`${o.discount_value}% off`:`₹${o.discount_value.toLocaleString('en-IN')} off`}</TableCell>
         <TableCell className={`p-2 ${noteClass}`}><p>Book: {o.booking_from??'Any'} to {o.booking_to??'Any'}</p><p>Stay: {o.stay_from??'Any'} to {o.stay_to??'Any'}</p></TableCell>
-        <TableCell className="p-2"><Badge variant={promotionStatus(o, today)==='Active'?'default':'secondary'}>{promotionStatus(o, today)}</Badge><span className="mt-0.5 block text-xs text-muted-foreground">{o.is_public===false?'Private':'Public'}</span></TableCell>
+        <TableCell className="p-2"><Badge variant={promotionStatus(o, today)==='Active'?'default':'secondary'}>{promotionStatus(o, today)}</Badge></TableCell>
+        {(['is_public','is_active'] as const).map(field=><TableCell key={field} className="p-2">
+         <div className="flex items-center gap-2">
+          <Switch type="button" disabled={unavailable||!Number.isInteger(o.revision)} checked={o[field]} aria-label={`${switchName(field)} for ${o.code}`}
+           onCheckedChange={checked=>beginSwitch(o,field,checked,document.activeElement instanceof HTMLButtonElement?document.activeElement:null)}/>
+          <span className={noteClass}>{field==='is_public'?(o.is_public?'Public':'Private'):(o.is_active?'Enabled':'Disabled')}</span>
+         </div>
+        </TableCell>)}
         <TableCell className="p-1 text-right"><Button type="button" variant="ghost" size="sm" aria-label={`Edit ${o.code}`} disabled={unavailable} onClick={()=>editOffer(o)}>Edit</Button></TableCell>
        </TableRow>)}</TableBody>
       </Table>
@@ -318,7 +404,6 @@ export default function WebsitePromotionSettings(){
        </>}
       </div>
      </div>
-     <p className={noteClass}>Discount applies to room charges only. Room categories and meal plans below determine which bookings qualify. Meals aren’t discounted.</p>
      <section className={sectionClass} aria-labelledby="promo-eligibility">
       <h3 id="promo-eligibility" className="text-sm font-semibold">Room and meal eligibility</h3>
       <div className={roomMealUsageGrid} data-promo-layout="room-meal-usage">
@@ -343,7 +428,7 @@ export default function WebsitePromotionSettings(){
         </div>
        </fieldset>
        <fieldset className="min-w-0 space-y-1.5">
-        <legend className="text-sm font-medium">Meal plans</legend>
+        <legend className="text-sm font-medium"><span className="inline-flex items-center gap-1">Meal plans<FieldHelp label="Meal plans">Discount applies to room charges only. Room categories and meal plans determine which bookings qualify. Meals aren’t discounted.</FieldHelp></span></legend>
         <div className="space-y-1 rounded-md border p-2.5">
          <div className="flex min-h-7 items-center gap-2">
           <Checkbox id="promo-all-plans" disabled={unavailable} checked={form.eligible_meal_plan_codes===null||modes.every(([code])=>planSelection.includes(code))} onCheckedChange={checked=>change('eligible_meal_plan_codes',checked===true?null:[])}/>
@@ -427,5 +512,33 @@ export default function WebsitePromotionSettings(){
    </Card>
    </TabsContent>
   </Tabs>
+  <AlertDialog open={pendingSwitch!==null} onOpenChange={open=>{if(!open&&!busy)setPendingSwitch(null);}}>
+   {pendingSwitch&&switchCandidate&&<AlertDialogContent className="max-h-[calc(100dvh-1rem)] overflow-y-auto" onCloseAutoFocus={event=>{
+    event.preventDefault();
+    const trigger=switchTrigger.current;
+    if(trigger?.isConnected&&!trigger.disabled)trigger.focus();else statusControl.current?.focus();
+   }}>
+    <AlertDialogHeader>
+     <AlertDialogTitle>{switchDescription(pendingSwitch.field,pendingSwitch.checked)}: {pendingSwitch.offer.code}</AlertDialogTitle>
+     <AlertDialogDescription>
+      {pendingSwitch.field==='is_public'?'Public codes can appear in the website’s booking offers when eligible. Private codes are not listed but can still be entered if enabled and eligible.':'Enabled codes can be applied to new eligible bookings. Disabled codes cannot be applied, even when marked Public.'} Existing bookings and payment snapshots are unchanged.
+     </AlertDialogDescription>
+    </AlertDialogHeader>
+    <div className="space-y-1 rounded-md border bg-muted/40 p-2.5 text-sm">
+     <p><strong>{switchCandidate.is_public?'Public':'Private'}</strong> · <strong>{switchCandidate.is_active?'Enabled':'Disabled'}</strong> · Status: {promotionStatus(switchCandidate,today)}</p>
+     <p className={noteClass}>{switchCandidate.label} · {switchCandidate.day_scope} days</p>
+     <p className={noteClass}>Booking dates: {displayRange({from:switchCandidate.booking_from,to:switchCandidate.booking_to})}. Eligible stay dates: {displayRange({from:switchCandidate.stay_from,to:switchCandidate.stay_to})}.</p>
+     <p className={noteClass}>Stay policy: {switchCandidate.mixed_stay_mode==='eligible_nights'?'Discount only eligible nights':switchCandidate.mixed_stay_mode==='all_nights'?'All nights must qualify':'No additional restriction'}. Minimum nights: {switchCandidate.min_stay_nights??'none'}. Excluded nights: {switchCandidate.excluded_stay_dates.join(', ')||'none'}.</p>
+     <p className={noteClass}>Total uses: {switchCandidate.total_usage_limit??'unlimited'}; per email: {switchCandidate.per_guest_usage_limit??'unlimited'}. Rooms: {switchCandidate.eligible_room_category_ids?.map(id=>categories.find(category=>category.id===id)?.name??id).join(', ')??'all'}. Meal plans: {switchCandidate.eligible_meal_plan_codes?.map(code=>modes.find(([value])=>value===code)?.[1]??code).join(', ')??'all'}.</p>
+     {!enabled&&<p className={noteClass}>The website-wide promo release is off. This change does not turn it on.</p>}
+    </div>
+    {!canSwitch&&<p role="alert" className="text-sm text-destructive">This code’s settings need attention. Open Edit and check the required fields first.</p>}
+    {switchError&&<p role="alert" className="text-sm text-destructive">{switchError}</p>}
+    <AlertDialogFooter>
+     <AlertDialogCancel type="button" disabled={busy}>Cancel</AlertDialogCancel>
+     <Button type="button" disabled={busy||!canSwitch||/changed/i.test(switchError)} onClick={()=>void confirmSwitch()}>{busy?'Saving…':`Confirm and ${switchDescription(pendingSwitch.field,pendingSwitch.checked).toLowerCase()}`}</Button>
+    </AlertDialogFooter>
+   </AlertDialogContent>}
+  </AlertDialog>
  </section>;
 }
