@@ -37,7 +37,7 @@ const selectClass = 'h-9 w-full min-w-0 rounded-md border border-input bg-backgr
 const noteClass = 'text-xs leading-relaxed text-muted-foreground';
 const sectionClass = 'min-w-0 space-y-2.5 border-t pt-3';
 const fieldGrid = 'grid min-w-0 gap-2.5 sm:grid-cols-2';
-const discountGrid = 'grid min-w-0 items-start gap-2.5 grid-cols-[repeat(auto-fit,minmax(min(100%,14rem),1fr))]';
+const identityDiscountGrid = 'grid min-w-0 items-start gap-3 grid-cols-[repeat(auto-fit,minmax(min(100%,17rem),1fr))]';
 const roomMealUsageGrid = 'grid min-w-0 items-start gap-2.5 grid-cols-[repeat(auto-fit,minmax(min(100%,14rem),1fr))]';
 const eligibilityGrid = 'grid min-w-0 items-start gap-2.5 grid-cols-[repeat(auto-fit,minmax(min(100%,12rem),1fr))]';
 const visibilityGrid = 'grid min-w-0 gap-2.5 grid-cols-[repeat(auto-fit,minmax(min(100%,16rem),1fr))]';
@@ -294,26 +294,30 @@ export default function WebsitePromotionSettings(){
     </CardHeader>
     <CardContent className="px-3 pb-3 sm:px-4 sm:pb-4">{form&&<fieldset disabled={unavailable} className="min-w-0 space-y-3">
      <legend className="sr-only">Promo code settings</legend>
-     <div className="grid min-w-0 gap-2.5 sm:grid-cols-[minmax(0,1fr)_minmax(0,1.5fr)]">
-      <Field id="promo-code" label="Code"><Input id="promo-code" className={inputClass} autoCapitalize="characters" spellCheck={false} disabled={!!form.revision||unavailable} value={form.code} onChange={e=>change('code',e.target.value.toUpperCase())}/></Field>
-      <Field id="promo-description" label="Guest-facing description"><Input id="promo-description" className={inputClass} value={form.label} onChange={e=>change('label',e.target.value)}/></Field>
+     <div className={identityDiscountGrid} data-promo-layout="identity-discount">
+      <div className="min-w-0 space-y-2.5">
+       <Field id="promo-code" label="Code"><Input id="promo-code" className={inputClass} autoCapitalize="characters" spellCheck={false} disabled={!!form.revision||unavailable} value={form.code} onChange={e=>change('code',e.target.value.toUpperCase())}/></Field>
+       <Field id="promo-description" label="Guest-facing description"><Input id="promo-description" className={inputClass} value={form.label} onChange={e=>change('label',e.target.value)}/></Field>
+      </div>
+      <div className="min-w-0 space-y-2.5">
+       {form.discount_kind==='legacy'?<p className="rounded-md bg-muted px-3 py-2 text-sm">Existing discount preserved: {form.code==='EP300'?'₹300 per verified room-only night':'₹1,000 per booking, accommodation only'}.</p>:<>
+        <fieldset className="min-w-0 space-y-1.5">
+         <legend className="mb-1 text-sm font-medium leading-5">Discount type</legend>
+         <div className="grid grid-cols-2 gap-2">
+          {([['percentage','Percentage'],['fixed','Fixed amount']] as const).map(([value,label])=><Button key={value} size="sm" type="button" aria-pressed={form.discount_kind===value} variant={form.discount_kind===value?'default':'outline'} onClick={()=>change('discount_kind',value)}>{label}</Button>)}
+         </div>
+        </fieldset>
+         <Field id="promo-value" label={form.discount_kind==='percentage'?'Discount (%)':'Discount (₹)'}><Input id="promo-value" className={inputClass} type="number" min="0.01" step="0.01" value={form.discount_value??''} onChange={e=>change('discount_value',e.target.value===''?null:Number(e.target.value))}/></Field>
+         <fieldset className="min-w-0 space-y-1.5">
+          <legend className="mb-1 text-sm font-medium leading-5">Apply discount</legend>
+          <div className="grid grid-cols-2 gap-2">
+           {([['booking','Per booking'],['night','Per night']] as const).map(([value,label])=><Button key={value} size="sm" type="button" aria-pressed={form.discount_basis===value} variant={form.discount_basis===value?'default':'outline'} onClick={()=>change('discount_basis',value)}>{label}</Button>)}
+          </div>
+          <p className={noteClass}>Per-night rates must be verified room-only rates.</p>
+         </fieldset>
+       </>}
+      </div>
      </div>
-     {form.discount_kind==='legacy'?<p className="rounded-md bg-muted px-3 py-2 text-sm">Existing discount preserved: {form.code==='EP300'?'₹300 per verified room-only night':'₹1,000 per booking, accommodation only'}.</p>:<div className={discountGrid} data-promo-layout="discount">
-      <fieldset className="min-w-0 space-y-1.5">
-       <legend className="mb-1 text-sm font-medium leading-5">Discount type</legend>
-       <div className="grid grid-cols-2 gap-2">
-        {([['percentage','Percentage'],['fixed','Fixed amount']] as const).map(([value,label])=><Button key={value} size="sm" type="button" aria-pressed={form.discount_kind===value} variant={form.discount_kind===value?'default':'outline'} onClick={()=>change('discount_kind',value)}>{label}</Button>)}
-       </div>
-      </fieldset>
-       <Field id="promo-value" label={form.discount_kind==='percentage'?'Discount (%)':'Discount (₹)'}><Input id="promo-value" className={inputClass} type="number" min="0.01" step="0.01" value={form.discount_value??''} onChange={e=>change('discount_value',e.target.value===''?null:Number(e.target.value))}/></Field>
-       <fieldset className="min-w-0 space-y-1.5">
-        <legend className="mb-1 text-sm font-medium leading-5">Apply discount</legend>
-        <div className="grid grid-cols-2 gap-2">
-         {([['booking','Per booking'],['night','Per night']] as const).map(([value,label])=><Button key={value} size="sm" type="button" aria-pressed={form.discount_basis===value} variant={form.discount_basis===value?'default':'outline'} onClick={()=>change('discount_basis',value)}>{label}</Button>)}
-        </div>
-        <p className={noteClass}>Per-night rates must be verified room-only rates.</p>
-       </fieldset>
-     </div>}
      <p className={noteClass}>Discount applies to room charges only. Room categories and meal plans below determine which bookings qualify. Meals aren’t discounted.</p>
      <section className={sectionClass} aria-labelledby="promo-eligibility">
       <h3 id="promo-eligibility" className="text-sm font-semibold">Room and meal eligibility</h3>
