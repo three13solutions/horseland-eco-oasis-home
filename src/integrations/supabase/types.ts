@@ -1570,6 +1570,33 @@ export type Database = {
           },
         ]
       }
+      guest_policy_drafts: {
+        Row: {
+          band: Json
+          created_at: string
+          id: string
+          status: string
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          band: Json
+          created_at?: string
+          id?: string
+          status?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          band?: Json
+          created_at?: string
+          id?: string
+          status?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: []
+      }
       guest_reviews: {
         Row: {
           created_at: string
@@ -3819,6 +3846,15 @@ export type Database = {
         }
         Returns: Json
       }
+      apply_guest_policy_with_drafts: {
+        Args: {
+          p_activate?: boolean
+          p_band: Json
+          p_expected_plan?: Json
+          p_expected_revision: number
+        }
+        Returns: Json
+      }
       assert_legacy_meal_age_supported: {
         Args: {
           p_adults: number
@@ -4175,6 +4211,7 @@ export type Database = {
         }
         Returns: number
       }
+      guest_policy_complete: { Args: { p_bands: Json }; Returns: boolean }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -4229,6 +4266,10 @@ export type Database = {
         Args: { p_channel: string }
         Returns: string
       }
+      resolve_guest_policy_drafts: {
+        Args: { p_band: Json; p_current: Json; p_drafts: Json }
+        Returns: Json
+      }
       room_type_has_pricing: { Args: { p_type: string }; Returns: boolean }
       save_distribution_inventory: {
         Args: { p_changes: Json; p_request_id: string }
@@ -4236,6 +4277,10 @@ export type Database = {
       }
       save_guest_age_policy: {
         Args: { p_bands: Json; p_expected_revision: number }
+        Returns: Json
+      }
+      save_guest_policy_draft: {
+        Args: { p_band: Json; p_expected_updated_at?: string; p_id?: string }
         Returns: Json
       }
       save_managed_website_promotion: {
