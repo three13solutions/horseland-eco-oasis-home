@@ -4293,6 +4293,10 @@ export type Database = {
         Args: { p_active: boolean; p_code: string; p_expected_revision: number }
         Returns: Json
       }
+      set_guest_age_pricing_active: {
+        Args: { p_active: boolean }
+        Returns: Json
+      }
       set_meal_plan_active: {
         Args: {
           p_expected_revision: number
