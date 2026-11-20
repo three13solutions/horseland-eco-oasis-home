@@ -1,3 +1,4 @@
+import { formatBookingDay, parseBookingDay } from '@/lib/booking-calendar-date';
 import { writeGuestParty, legacyGuestCounts, type GuestCounts } from '@/lib/guest-counts';
 import { websiteTypeAvailability } from '@/lib/websiteInventory';
 import { readGuestParty } from '@/lib/guestParty';
@@ -77,10 +78,10 @@ const SearchAvailability = () => {
   const { toast } = useToast();
   
   const [checkIn, setCheckIn] = useState<Date | undefined>(
-    searchParams.get('checkIn') ? new Date(searchParams.get('checkIn')!) : undefined
+    parseBookingDay(searchParams.get('checkIn'))
   );
   const [checkOut, setCheckOut] = useState<Date | undefined>(
-    searchParams.get('checkOut') ? new Date(searchParams.get('checkOut')!) : undefined
+    parseBookingDay(searchParams.get('checkOut'))
   );
   const initialParty = readGuestParty(searchParams);
   const [guests, setGuests] = useState<number>(initialParty.guests);
@@ -159,8 +160,8 @@ const SearchAvailability = () => {
     }
 
     const request = ++availabilityRequest.current;
-    const checkInDate = format(checkIn, 'yyyy-MM-dd');
-    const checkOutDate = format(checkOut, 'yyyy-MM-dd');
+    const checkInDate = formatBookingDay(checkIn);
+    const checkOutDate = formatBookingDay(checkOut);
     setLoading(true);
     setSearched(true);
 
@@ -1158,9 +1159,10 @@ const SearchAvailability = () => {
                           guestCounts={guestCounts}
                           onViewDetails={(cat) => navigate(`/stay/${cat.id}`)}
                           onBookNow={(cat) => {
+                            if (!checkIn || !checkOut) return;
                             const params = new URLSearchParams({
-                              checkIn: checkIn!.toISOString().split('T')[0],
-                              checkOut: checkOut!.toISOString().split('T')[0],
+                              checkIn: formatBookingDay(checkIn),
+                              checkOut: formatBookingDay(checkOut),
                               guests: guests.toString(),
                               adults: adults.toString(),
                               children: children.toString(),

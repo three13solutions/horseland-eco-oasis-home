@@ -1,3 +1,4 @@
+import { countBookingNights, parseBookingDay } from '@/lib/booking-calendar-date';
 import { getMealPlan } from '@/lib/mealPlans';
 import { guestTypeName, type GuestAgePolicy } from '@/lib/guest-age-policy';
 import type { GuestCounts } from '@/lib/guest-counts';
@@ -142,10 +143,10 @@ export default function BookingConfirmation() {
             <h2>Stay Details</h2>
             <div class="section">
               <p><span class="label">Room:</span><span class="value">${booking.room_type?.name || 'N/A'}</span></p>
-              <p><span class="label">Check-in:</span><span class="value">${new Date(booking.check_in).toLocaleDateString()}</span></p>
-              <p><span class="label">Check-out:</span><span class="value">${new Date(booking.check_out).toLocaleDateString()}</span></p>
+              <p><span class="label">Check-in:</span><span class="value">${parseBookingDay(booking.check_in)?.toLocaleDateString() ?? ''}</span></p>
+              <p><span class="label">Check-out:</span><span class="value">${parseBookingDay(booking.check_out)?.toLocaleDateString() ?? ''}</span></p>
               <p><span class="label">Guests:</span><span class="value">${booking.guests_count}</span></p>
-              <p><span class="label">Nights:</span><span class="value">${Math.ceil((new Date(booking.check_out).getTime() - new Date(booking.check_in).getTime()) / (1000 * 60 * 60 * 24))}</span></p>
+              <p><span class="label">Nights:</span><span class="value">${countBookingNights(booking.check_in, booking.check_out)}</span></p>
             </div>
             
             <h2>Payment Summary</h2>
@@ -198,10 +199,7 @@ export default function BookingConfirmation() {
     return null;
   }
 
-  const nights = Math.ceil(
-    (new Date(booking.check_out).getTime() - new Date(booking.check_in).getTime()) /
-      (1000 * 60 * 60 * 24)
-  );
+  const nights = countBookingNights(booking.check_in, booking.check_out);
 
   const gstAmount = (booking.rate_breakdown?.validated_quote?.tax_amount ?? ((booking.total_amount || 0) * 0.18 / 1.18));
   const subtotal = (booking.total_amount || 0) - gstAmount;
@@ -300,13 +298,13 @@ export default function BookingConfirmation() {
               <div>
                 <p className="text-sm text-muted-foreground">Check-in</p>
                 <p className="font-semibold">
-                  {new Date(booking.check_in).toLocaleDateString()}
+                  {parseBookingDay(booking.check_in)?.toLocaleDateString() ?? ''}
                 </p>
               </div>
               <div>
                 <p className="text-sm text-muted-foreground">Check-out</p>
                 <p className="font-semibold">
-                  {new Date(booking.check_out).toLocaleDateString()}
+                  {parseBookingDay(booking.check_out)?.toLocaleDateString() ?? ''}
                 </p>
               </div>
             </div>

@@ -1,3 +1,4 @@
+import { formatBookingDay } from '@/lib/booking-calendar-date';
 import { writeGuestParty, legacyGuestCounts, type GuestCounts } from '@/lib/guest-counts';
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
@@ -127,8 +128,8 @@ const RoomDetail = () => {
       
       const { data, error } = await supabase.rpc('check_room_availability', {
         p_room_type_id: roomData.id,
-        p_check_in: today.toISOString().split('T')[0],
-        p_check_out: tomorrow.toISOString().split('T')[0]
+        p_check_in: formatBookingDay(today),
+        p_check_out: formatBookingDay(tomorrow)
       });
 
       if (error) throw error;
@@ -248,8 +249,8 @@ const RoomDetail = () => {
     
     const totalGuests = adults + children; // Occupancy excludes infants; meal pricing receives infants separately.
     const searchParams = new URLSearchParams({
-      checkIn: checkIn.toISOString().split('T')[0],
-      checkOut: checkOut.toISOString().split('T')[0],
+      checkIn: formatBookingDay(checkIn),
+      checkOut: formatBookingDay(checkOut),
       guests: totalGuests.toString(),
       adults: adults.toString(),
       children: children.toString(),

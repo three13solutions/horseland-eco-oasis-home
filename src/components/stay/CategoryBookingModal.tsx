@@ -1,3 +1,4 @@
+import { countBookingNights, formatBookingDay } from '@/lib/booking-calendar-date';
 import GuestSelector from '@/components/GuestSelector';
 import { writeGuestParty, guestHeadcount, legacyGuestCounts, type GuestCounts } from '@/lib/guest-counts';
 import { useNavigate } from 'react-router-dom';
@@ -50,7 +51,7 @@ const CategoryBookingModal: React.FC<Props> = ({ open, onOpenChange, category })
   const [guestSelectorOpen, setGuestSelectorOpen] = useState(false);
   
   const nights = date?.from && date?.to 
-    ? Math.ceil((date.to.getTime() - date.from.getTime()) / (1000 * 60 * 60 * 24))
+    ? countBookingNights(date.from, date.to)
     : 0;
   
   const totalGuests = guestHeadcount(guestCounts);
@@ -81,8 +82,8 @@ const CategoryBookingModal: React.FC<Props> = ({ open, onOpenChange, category })
     try {
       const { data, error } = await supabase.rpc('check_room_availability', {
         p_room_type_id: category.id,
-        p_check_in: date.from.toISOString().split('T')[0],
-        p_check_out: date.to.toISOString().split('T')[0]
+        p_check_in: formatBookingDay(date.from),
+        p_check_out: formatBookingDay(date.to)
       });
 
       if (error) throw error;
@@ -342,7 +343,7 @@ const CategoryBookingModal: React.FC<Props> = ({ open, onOpenChange, category })
             <Button 
               onClick={() => {
                 if (!date?.from || !date?.to || !selectedVariant) return;
-                const params = new URLSearchParams({ roomTypeId:category.id, checkIn:format(date.from,'yyyy-MM-dd'), checkOut:format(date.to,'yyyy-MM-dd'), guests:String(guests+children), adults:String(guests), children:String(children), infants:String(infants), mealPlan:selectedVariant.meal_plan_code, cancellationPolicy:selectedVariant.cancellation_policy_code });
+                const params = new URLSearchParams({ roomTypeId:category.id, checkIn:formatBookingDay(date.from), checkOut:formatBookingDay(date.to), guests:String(guests+children), adults:String(guests), children:String(children), infants:String(infants), mealPlan:selectedVariant.meal_plan_code, cancellationPolicy:selectedVariant.cancellation_policy_code });
                 writeGuestParty(params,guestCounts,selectedVariant.guest_age_policy?.revision);
                 // A mattress is a separately priced request, never an additional guest.
                 if (notes || extraMattress) params.set('specialRequests', [notes, extraMattress ? `${extraMattress} extra mattress requested; availability and separate charge to be confirmed` : ''].filter(Boolean).join('\n'));
