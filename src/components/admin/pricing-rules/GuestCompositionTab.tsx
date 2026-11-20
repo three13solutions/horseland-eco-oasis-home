@@ -3,7 +3,8 @@ import { guestTypeName } from '@/lib/guest-age-policy';
 import { validateGuestTypeCharges } from '@/lib/guest-type-charges';
 import { GuestTypeChargeInput } from '@/components/admin/GuestTypeChargeInput';
 import { guestTypeChargeAmount, type GuestTypeCharges } from '@/lib/guest-type-charges';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -22,6 +23,7 @@ import { EmptyRuleState } from './EmptyRuleState';
 export function GuestCompositionTab() {
   const queryClient = useQueryClient();
   const agePolicy=useConfiguredGuestTypes();
+  const [params,setParams] = useSearchParams();
   const [guestCharges, setGuestCharges] = useState<GuestTypeCharges>({});
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingRule, setEditingRule] = useState<any>(null);
@@ -153,6 +155,13 @@ export function GuestCompositionTab() {
     });
     setIsDialogOpen(true);
   };
+  useEffect(()=>{
+    const id=params.get('rule_id');
+    if(!id || !rules) return;
+    const rule=rules.find(r=>r.id===id);
+    if(rule) handleEdit(rule); else toast.error('This linked guest rate no longer exists.');
+    const next=new URLSearchParams(params);next.delete('rule_id');setParams(next,{replace:true});
+  },[rules,params,setParams]);
 
   return (
     <Card>

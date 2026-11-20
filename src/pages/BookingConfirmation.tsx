@@ -74,7 +74,7 @@ export default function BookingConfirmation() {
         .maybeSingle();
 
       if (!error && data) {
-        setBooking(data as BookingDetails);
+        setBooking(data as unknown as BookingDetails);
         return;
       }
 

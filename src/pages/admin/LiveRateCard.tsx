@@ -1,4 +1,5 @@
 import { useGuestAgePolicy } from '@/hooks/useGuestAgePolicy';
+import { guestTypeName, type GuestAgeBand } from '@/lib/guest-age-policy';
 import { legacyGuestCounts, type GuestCounts } from '@/lib/guest-counts';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { useState } from 'react';
@@ -36,7 +37,7 @@ interface RateVariant {
   promotion?: { code: string; discount_amount: number };
   couponError?: string;
   original_variant?: RateVariant;
-  guest_age_policy?: { revision: number };
+  guest_age_policy?: { revision: number; bands?: GuestAgeBand[] };
 }
 interface RoomType {
   id: string;
@@ -64,6 +65,7 @@ function RateBreakdown({ variant, policies, nights, roomTypeId }: { variant: Rat
   return <div className="space-y-3">
     <div><h3 className="font-semibold">Rate Calculation Breakdown</h3><p className="text-xs text-muted-foreground">{variant.meal_plan_name} · {variant.cancellation_policy_name}</p></div>
     {nightly.map(n => <div key={n.date} className="flex justify-between gap-3 text-sm"><span>{format(new Date(`${n.date}T12:00:00`), 'dd MMM yyyy')}</span><span>{typeof n.room_only === 'number' ? money(n.room_only) : '—'}</span></div>)}
+    {nightly.filter(n=>n.guest_type_accommodation||n.guest_type_meals).map(n=><div key={`guests-${n.date}`} className="border-t pt-2 text-xs space-y-1"><p className="font-medium">Guest charges · {n.date}</p>{([{label:'Accommodation',charge:n.guest_type_accommodation},{label:'Meals',charge:n.guest_type_meals}]).map(({label,charge})=>charge?.bands.map(b=><p key={`${label}-${b.guest_type_key}`}>{guestTypeName(variant.guest_age_policy?.bands?.find(x=>x.key===b.guest_type_key) ?? {key:b.guest_type_key})} · {label}: {b.count} × {money(b.unit_price)} = {money(b.total)}</p>))}</div>)}
     {usedPolicies.map(p => <Popover key={p.id}><PopoverTrigger asChild><Button variant="outline" size="sm" className="w-full justify-between gap-2 h-auto py-2 whitespace-normal"><span>Override: {p.reason || 'Manual override'}</span><ExternalLink className="h-3 w-3 shrink-0" /></Button></PopoverTrigger><PopoverContent className="w-80 space-y-2" side="right">
       <h4 className="font-semibold">{p.reason || 'Manual override'}</h4>
       <p className="text-sm">{p.start_date} – {p.end_date}</p>

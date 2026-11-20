@@ -11,7 +11,7 @@ before(async()=>{
  if(!modulePath)return;
  const {PGlite}=await import(modulePath);db=new PGlite();
  const base=readFileSync(new URL('./combined-pricing-activation.mjs',import.meta.url),'utf8');
- const sql=base.slice(base.index('await db.exec(`')+15,base.index("`.replace(/default(\\d)/g,'default $1')"));
+ const sql=base.slice(base.indexOf('await db.exec(`')+15,base.indexOf("`.replace(/default(\\d)/g,'default $1')"));
  await db.exec(sql.replace(/default(\d)/g,'default $1'));
  await db.exec(`create role service_role;create schema auth;create function auth.uid() returns uuid language sql as $$select '${id}'::uuid$$;create function auth.role() returns text language sql as $$select 'service_role'::text$$;
  create function public.is_admin_new() returns boolean language sql as $$select true$$;
@@ -21,7 +21,7 @@ before(async()=>{
  create table guest_policy_drafts(band jsonb,status text);
  create table guest_type_pricing_release(id boolean,enabled boolean,frontend_release text);
  insert into guest_type_pricing_release values(true,true,'keyed-guest-v1');
- create function get_guest_age_policy() returns jsonb language sql as $$select jsonb_build_object('revision',revision,'bands',bands,'active',false) from guest_age_policy_versions order by revision desc limit 1$$;
+ create function get_guest_age_policy() returns jsonb language sql as $$select jsonb_build_object('revision',revision,'bands',bands,'active',false) from public.guest_age_policy_versions order by revision desc limit 1$$;
  create function get_pricing_preservation_policy(uuid,date) returns jsonb language sql as $$select null::jsonb$$;
  create function preserved_meal_version(jsonb,text,date) returns jsonb language sql as $$select null::jsonb$$;
  create function calculate_legacy_rate_night_context(uuid,date,date,uuid,int,int,int,text,date) returns numeric language sql as $$select 9999$$;

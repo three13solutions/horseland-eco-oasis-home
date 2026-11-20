@@ -7,6 +7,8 @@ export interface NightlyRateDetail {
   anchor_name?: string;
   dynamic_rules?: Record<string, unknown>[];
   length_of_stay_discount?: number;
+  guest_type_accommodation?: { bands: { guest_type_key: string; count: number; unit_price: number; total: number }[] };
+  guest_type_meals?: { bands: { guest_type_key: string; count: number; unit_price: number; total: number }[] };
 }
 
 export type RoomPublicationFilter = 'all' | 'published' | 'unpublished';

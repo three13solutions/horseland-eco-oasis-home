@@ -164,6 +164,13 @@ export default function RatePlans() {
     setForm({name:anchor.name,scope:anchor.room_unit_id?'unit':anchor.room_type_id?'type':'category',scopeId:anchor.room_unit_id||anchor.room_type_id||anchor.room_category_id||'',amount:String(anchor.amount),source:anchor.source_meal_plan_code,quotedNights:String(anchor.quoted_nights),includedAdults:String(anchor.included_adults),start:anchor.start_date||'',end:anchor.end_date||'',min:String(anchor.min_nights),max:anchor.max_nights==null?'':String(anchor.max_nights),day:anchor.day_type,extraAdult:anchor.extra_adult_per_night==null?'':String(anchor.extra_adult_per_night),extraChild:anchor.extra_child_per_night==null?'':String(anchor.extra_child_per_night),extraInfant:String(anchor.extra_infant_per_night),guestCharges:anchor.guest_type_charges ?? {},priority:String(anchor.priority),losType:anchor.los_adjustment_type||'',losMin:String(anchor.los_min_nights||2),losValue:anchor.los_adjustment_value==null?'':String(anchor.los_adjustment_value),previewNights:String(anchor.min_nights||1),active:anchor.is_active,verified:anchor.verified_basis});
     setOpen(true);
   };
+  useEffect(() => {
+    const id = searchParams.get('anchor_id');
+    if (!id || !data) return;
+    const anchor = data.anchors.find(r=>r.id===id);
+    if (anchor) edit(anchor); else toast.error('This linked rate no longer exists.');
+    const next = new URLSearchParams(searchParams); next.delete('anchor_id'); setSearchParams(next,{replace:true});
+  }, [data,searchParams,setSearchParams]);
   const visible = (data?.anchors||[]).filter(anchor=>(filter==='all'||(filter==='active'?anchor.is_active:!anchor.is_active))&&`${anchor.name} ${scopeLabel(anchor)}`.toLowerCase().includes(search.toLowerCase()));
   const field = (key: keyof typeof form, value: string | boolean) => setForm(previous=>({...previous,[key]:value}));
   if(query.isLoading) return <p className="p-6">Loading rate plans…</p>;

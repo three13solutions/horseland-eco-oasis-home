@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -14,7 +15,8 @@ import { CompetitorRatesTab } from '@/components/admin/pricing-rules/CompetitorR
 import { Alert, AlertDescription } from '@/components/ui/alert';
 
 export default function PricingRules() {
-  const [activeTab, setActiveTab] = useState('constraints');
+  const [params] = useSearchParams();
+  const [activeTab, setActiveTab] = useState(params.has('rule_id') ? 'guests' : 'constraints');
 
   // Fetch active rule counts
   const { data: ruleCounts } = useQuery({
