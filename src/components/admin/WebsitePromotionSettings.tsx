@@ -313,19 +313,26 @@ export default function WebsitePromotionSettings(){
      <section className={sectionClass} aria-labelledby="promo-dates">
       <h3 id="promo-dates" className="text-sm font-semibold">Date and stay eligibility</h3>
       <div className={eligibilityGrid} data-promo-layout="eligibility">
-       {([['Booking dates','booking_from','booking_to'],['Eligible stay dates','stay_from','stay_to']] as const).map(([title,from,to])=>
-        <PromoDateRange key={title} id={`promo-${from}-range`} label={title} today={today} disabled={unavailable}
-         value={{ from: form[from], to: form[to] }} onChange={dates=>{
-          setReview(false);
-          setForm(current=>current?{...current,[from]:dates.from,[to]:dates.to}:current);
-         }}/>)}
+       <div className="min-w-0 space-y-2.5">
+        {([['Booking dates','booking_from','booking_to'],['Eligible stay dates','stay_from','stay_to']] as const).map(([title,from,to])=>
+         <PromoDateRange key={title} id={`promo-${from}-range`} label={title} today={today} disabled={unavailable}
+          value={{ from: form[from], to: form[to] }} onChange={dates=>{
+           setReview(false);
+           setForm(current=>current?{...current,[from]:dates.from,[to]:dates.to}:current);
+          }}/>)}
+       </div>
        <fieldset className="min-w-0 space-y-1.5">
         <legend className="mb-1 text-sm font-medium leading-5">Applicable days</legend>
-        <div className="flex flex-wrap gap-1.5">
+        <div className="grid gap-1.5">
          {([['both','All days'],['weekday','Weekdays'],['weekend','Weekends']] as const).map(([value,label])=><Button key={value} size="sm" type="button" aria-pressed={form.day_scope===value} variant={form.day_scope===value?'default':'outline'} onClick={()=>change('day_scope',value)}>{label}</Button>)}
         </div>
        </fieldset>
-       <Field id="promo-minimum-nights" label="Stay length (minimum nights)"><Input id="promo-minimum-nights" className={inputClass} type="number" min="1" step="1" placeholder="No minimum" value={form.min_stay_nights??''} onChange={e=>change('min_stay_nights',e.target.value===''?null:Number(e.target.value))}/></Field>
+       <div className="min-w-0 space-y-2.5">
+        {(restricted||(flat&&form.mixed_stay_mode==='eligible_nights'))&&<Field id="promo-stay-mode" label="Stay eligibility policy">
+         <select id="promo-stay-mode" className={selectClass} value={form.mixed_stay_mode??''} onChange={e=>change('mixed_stay_mode',e.target.value||null)}><option value="">Choose a stay policy</option><option value="all_nights">All occupied nights must qualify</option>{!flat&&<option value="eligible_nights">Discount only eligible nights</option>}</select>
+        </Field>}
+        <Field id="promo-minimum-nights" label="Stay length (minimum nights)"><Input id="promo-minimum-nights" className={inputClass} type="number" min="1" step="1" placeholder="No minimum" value={form.min_stay_nights??''} onChange={e=>change('min_stay_nights',e.target.value===''?null:Number(e.target.value))}/></Field>
+       </div>
        <fieldset className="min-w-0 space-y-1.5">
         <legend className="mb-1 text-sm font-medium leading-5">Excluded nights</legend>
         <div className="flex flex-wrap items-center gap-2">
@@ -338,9 +345,6 @@ export default function WebsitePromotionSettings(){
        </fieldset>
       </div>
       <p className={noteClass}>Booking dates control when the reservation is made. Stay dates control which occupied nights qualify, not checkout day. Dates are inclusive in Asia/Kolkata. Choose Any date for no limit.</p>
-       {(restricted||(flat&&form.mixed_stay_mode==='eligible_nights'))&&<Field id="promo-stay-mode" label="Stay eligibility policy">
-        <select id="promo-stay-mode" className={selectClass} value={form.mixed_stay_mode??''} onChange={e=>change('mixed_stay_mode',e.target.value||null)}><option value="">Choose a stay policy</option><option value="all_nights">All occupied nights must qualify</option>{!flat&&<option value="eligible_nights">Discount only eligible nights</option>}</select>
-       </Field>}
       <p className={noteClass}>Weekend eligibility follows the hotel’s date-specific rules, including protected periods.{flat?' All nights must qualify for once-per-booking offers.':''}</p>
      </section>
      <section className={sectionClass} aria-labelledby="promo-limits">
