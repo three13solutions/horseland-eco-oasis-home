@@ -8,7 +8,6 @@ import i18n from '@/lib/i18n';
 import ScrollToTop from './components/ScrollToTop';
 import ScrollNavigation from './components/ScrollNavigation';
 import WebsiteIntegrationsLoader from './components/WebsiteIntegrationsLoader';
-import WebsiteIntegrations from './pages/admin/WebsiteIntegrations';
 import { TranslationProvider } from './components/admin/TranslationProvider';
 import { useFavicon } from './hooks/useFavicon';
 
@@ -179,7 +178,7 @@ function App() {
                 <Route path="faq" element={<FAQManagement />} />
                 <Route path="users" element={<UserManagement />} />
                 <Route path="settings" element={<SiteSettings />} />
-                <Route path="settings/website-integrations" element={<WebsiteIntegrations />} />
+                <Route path="settings/website-integrations" element={<Navigate to="/admin/integrations?tab=pixels_tags" replace />} />
                 <Route path="email" element={<Navigate to="/admin/templates/emails" replace />} />
                 <Route path="templates" element={<Navigate to="/admin/templates/emails" replace />} />
                 <Route path="templates/emails" element={<EmailSettings />} />

@@ -8,6 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Settings, Shield, CheckCircle, XCircle, AlertCircle, Eye, EyeOff } from 'lucide-react';
 import { toast } from 'sonner';
+import WebsiteIntegrations from '@/pages/admin/WebsiteIntegrations';
 import { IntegrationConfigModal } from '@/components/admin/IntegrationConfigModal';
 
 interface Integration {
@@ -48,7 +49,7 @@ const categoryColors = {
 };
 
 export default function IntegrationsManagement() {
-  const [selectedCategory, setSelectedCategory] = useState<string>('all');
+  const [selectedCategory, setSelectedCategory] = useState<string>(() => new URLSearchParams(window.location.search).get('tab') || 'all');
   const [selectedIntegration, setSelectedIntegration] = useState<Integration | null>(null);
   const [isConfigModalOpen, setIsConfigModalOpen] = useState(false);
   const queryClient = useQueryClient();
@@ -198,8 +199,14 @@ export default function IntegrationsManagement() {
               {category} ({integrations?.filter(i => i.category === category).length})
             </TabsTrigger>
           ))}
+          <TabsTrigger value="pixels_tags">Pixels/Tags</TabsTrigger>
         </TabsList>
 
+        <TabsContent value="pixels_tags" className="mt-6">
+          <WebsiteIntegrations embedded />
+        </TabsContent>
+
+        {selectedCategory !== 'pixels_tags' && (
         <TabsContent value={selectedCategory} className="mt-6">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {filteredIntegrations.map((integration) => (
@@ -290,6 +297,7 @@ export default function IntegrationsManagement() {
             ))}
           </div>
         </TabsContent>
+        )}
       </Tabs>
 
       {selectedIntegration && (

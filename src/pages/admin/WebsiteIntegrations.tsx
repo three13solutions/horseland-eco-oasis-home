@@ -20,7 +20,7 @@ type Draft = Omit<WebsiteIntegration, 'id' | 'updated_at'> & { id?: string; page
 const empty: Draft = { name: '', platform: 'custom', description: '', code: '', placement: 'head', target_mode: 'global', page_paths: [], is_active: true, sort_order: 0, pagesText: '' };
 const table = () => supabase.from('website_integrations' as any);
 
-export default function WebsiteIntegrations() {
+export default function WebsiteIntegrations({ embedded = false }: { embedded?: boolean }) {
   const [items, setItems] = useState<WebsiteIntegration[]>([]);
   const [loading, setLoading] = useState(true);
   const [draft, setDraft] = useState<Draft | null>(null);
@@ -77,11 +77,10 @@ export default function WebsiteIntegrations() {
   };
 
   return (
-    <div className="p-6 space-y-6">
+    <div className={embedded ? 'space-y-6' : 'p-6 space-y-6'}>
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
-          <p className="text-sm text-muted-foreground">Settings</p>
-          <h1 className="text-3xl font-heading font-bold flex items-center gap-2"><Code2 className="h-7 w-7" /> Website Integrations</h1>
+          {!embedded && <h1 className="text-3xl font-heading font-bold flex items-center gap-2"><Code2 className="h-7 w-7" /> Website Integrations</h1>}
           <p className="text-muted-foreground mt-1">Manage meta tags, verification codes, tracking pixels and third-party scripts.</p>
         </div>
         <Button onClick={() => setDraft({ ...empty })}><Plus className="h-4 w-4 mr-2" />Add Integration</Button>
