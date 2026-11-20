@@ -1,6 +1,6 @@
 import { MealPlanAgePricing } from "@/components/admin/MealPlanAgePricing";
 import { MealPlanDietaryVariants } from "@/components/admin/MealPlanDietaryVariants";
-import { useState } from "react";
+import { type ReactNode, useEffect, useId, useRef, useState } from "react";
 import { LiveMealPricing } from "@/components/admin/LiveMealPricing";
 import { mealPlanAliasPayload, findMealPlanAliasConflict } from "@/lib/mealPlanAliases";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -10,10 +10,12 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Edit, Trash2 } from "lucide-react";
+import { ArrowLeft, Edit, Info } from "lucide-react";
 import { toast } from "sonner";
 import { Checkbox } from "@/components/ui/checkbox";
 
@@ -24,38 +26,103 @@ interface MealPlan {
   alias_names: string[];
   alias_codes: string[];
   supplement_per_person_inr: number | null;
-  supplement_pricing_enabled: boolean;
   supplement_period: string | null;
   supplement_effective_from: string;
-  supplement_guest_basis: string | null;
-  description: string;
+  description: string | null;
   included_meal_types: string[];
-  preferred_variant: string;
+  preferred_variant: string | null;
   display_order: number;
   is_active: boolean;
-  is_featured: boolean;
+  is_featured: boolean | null;
+  updated_at: string;
+}
+
+const emptyMetadata = () => ({
+  plan_code: '',
+  plan_name: '',
+  alias_names_text: '',
+  alias_codes_text: '',
+  description: '',
+  display_order: 0,
+  is_featured: false,
+});
+const canonicalCodes = ['RO', 'BB', 'HB', 'FB'];
+const inputClass = 'h-9 min-w-0 text-sm';
+const sectionClass = 'min-w-0 space-y-2.5 border-t pt-3';
+const fieldGrid = 'grid min-w-0 items-start gap-2.5 sm:grid-cols-2';
+const aliasHelp = 'Separate entries with commas or new lines. Aliases identify this same plan in admin; they are not extra plans or website descriptions.';
+
+function FieldHelp({ label, children }: { label: string; children: ReactNode }) {
+ const descriptionId=useId();
+ const [open,setOpen]=useState(false);
+ const [pinned,setPinned]=useState(false);
+ const hoverTimer=useRef<ReturnType<typeof setTimeout> | null>(null);
+ const cancelHoverClose=()=>{
+  if(hoverTimer.current!==null){clearTimeout(hoverTimer.current);hoverTimer.current=null;}
+ };
+ useEffect(()=>()=>{if(hoverTimer.current!==null)clearTimeout(hoverTimer.current);},[]);
+ const scheduleHoverClose=()=>{
+  if(pinned)return;
+  cancelHoverClose();
+  hoverTimer.current=setTimeout(()=>{setOpen(false);hoverTimer.current=null;},220);
+ };
+ return <>
+  <span id={descriptionId} className="sr-only">{children}</span>
+  <Popover open={open} onOpenChange={next=>{cancelHoverClose();setOpen(next);if(!next)setPinned(false);}}>
+   <PopoverTrigger asChild>
+    <button type="button" aria-label={`Help: ${label}`} aria-describedby={descriptionId}
+     className="inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-muted-foreground hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+     onPointerEnter={event=>{if(event.pointerType==='mouse'){cancelHoverClose();setOpen(true);}}}
+     onPointerLeave={event=>{if(event.pointerType==='mouse'&&document.activeElement!==event.currentTarget)scheduleHoverClose();}}
+     onFocus={()=>{cancelHoverClose();setOpen(true);}}
+     onBlur={()=>{if(!pinned)setOpen(false);}}
+     onClick={event=>{event.preventDefault();cancelHoverClose();setPinned(!pinned);setOpen(!pinned);}}>
+     <Info aria-hidden="true" className="h-3.5 w-3.5"/>
+    </button>
+   </PopoverTrigger>
+   <PopoverContent aria-label={`Help: ${label}`} align="start" side="top" sideOffset={5}
+    className="w-64 max-w-[calc(100vw-1rem)] p-2.5 text-xs leading-relaxed"
+    onPointerEnter={cancelHoverClose} onPointerLeave={scheduleHoverClose}
+    onOpenAutoFocus={event=>event.preventDefault()} onCloseAutoFocus={event=>event.preventDefault()}>
+    {children}
+   </PopoverContent>
+  </Popover>
+ </>;
+}
+function Field({ id, label, help, children }: { id: string; label: string; help?: ReactNode; children: ReactNode }) {
+ return <div className="min-w-0 space-y-1">
+  {help?<div className="flex items-center gap-1"><Label htmlFor={id}>{label}</Label><FieldHelp label={label}>{help}</FieldHelp></div>:<Label htmlFor={id}>{label}</Label>}
+  {children}
+ </div>;
+}
+function ConfigurationSection({ title, help, children }: { title: string; help: string; children: ReactNode }) {
+  return <details className="min-w-0 rounded-md border p-2.5 sm:p-3">
+    <summary className="cursor-pointer rounded-sm text-sm font-semibold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+      {title}
+    </summary>
+    <div className="mt-2 min-w-0 space-y-2">
+      <div className="flex items-center gap-1"><span className="text-xs text-muted-foreground">About this section</span><FieldHelp label={title}>{help}</FieldHelp></div>
+      {children}
+    </div>
+  </details>;
 }
 
 const MealPlansManagement = () => {
   const queryClient = useQueryClient();
-  const [isOpen, setIsOpen] = useState(false);
+  const [tab, setTab] = useState<'manage' | 'editor'>('manage');
+  const [hasOpenedEditor, setHasOpenedEditor] = useState(false);
+  const manageRef = useRef<HTMLButtonElement>(null);
+  const editorRef = useRef<HTMLHeadingElement>(null);
+  const focusTarget = useRef<'manage' | 'editor' | null>(null);
+  useEffect(() => {
+    if (focusTarget.current !== tab) return;
+    (tab === 'editor' ? editorRef.current : manageRef.current)?.focus();
+    focusTarget.current = null;
+  }, [tab]);
   const [editingPlan, setEditingPlan] = useState<MealPlan | null>(null);
-  const [formData, setFormData] = useState({
-    plan_code: '',
-    plan_name: '',
-    alias_names_text: '',
-    alias_codes_text: '',
-    supplement_amount_text: '',
-    supplement_effective_from: new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Kolkata' }),
-    description: '',
-    included_meal_types: [] as string[],
-    preferred_variant: 'veg',
-    display_order: 0,
-    is_active: true,
-    is_featured: false
-  });
+  const [formData, setFormData] = useState(emptyMetadata);
 
-  const { data: mealPlans, isLoading } = useQuery({
+  const { data: mealPlans, isLoading, error: listError, refetch } = useQuery({
     queryKey: ['meal-plans'],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -68,30 +135,27 @@ const MealPlansManagement = () => {
   });
 
   const saveMutation = useMutation({
-    mutationFn: async (form: typeof formData) => {
-      const { alias_names_text, alias_codes_text, supplement_amount_text, ...fields } = form;
-      const supplement = supplement_amount_text.trim() === '' ? null : Number(supplement_amount_text);
-      if (fields.is_active && (!['RO','BB','HB','FB'].includes(fields.plan_code) || supplement === null)) throw new Error('Active booking plans require RO, BB, HB or FB and a configured meal supplement. Save other plans as inactive drafts.');
+    mutationFn: async ({ form, plan }: { form: typeof formData; plan: MealPlan }) => {
+      const { alias_names_text, alias_codes_text, ...metadata } = form;
+      const supplement = plan.supplement_per_person_inr;
+      if (plan.is_active && (!canonicalCodes.includes(metadata.plan_code) || supplement === null)) throw new Error('Active booking plans require RO, BB, HB or FB and a configured meal supplement. Configure linked pricing and availability before editing the metadata of a plan without them.');
       if (supplement !== null && (!Number.isFinite(supplement) || supplement < 0)) throw new Error('Enter a valid non-negative meal supplement.');
       const aliases = mealPlanAliasPayload(alias_names_text, alias_codes_text);
       const conflict = findMealPlanAliasConflict([...aliases.alias_names, ...aliases.alias_codes],
-        (mealPlans || []).filter(plan => plan.id !== editingPlan?.id));
+        (mealPlans || []).filter(other => other.id !== plan.id));
       if (conflict) throw new Error(`Alias "${conflict}" is already used by another meal plan.`);
-      if (fields.plan_code === 'RO' && supplement !== 0) throw new Error('Room Only must have a zero meal supplement.');
-      const data = { ...fields, ...aliases, supplement_per_person_inr: supplement, supplement_period: 'per_night', supplement_guest_basis: 'all_guests' };
-      if (editingPlan) {
-        // Shared prices and linked composition are saved only by the reviewed RPC.
-        const { supplement_per_person_inr: _amount, supplement_period: _period, supplement_guest_basis: _basis, supplement_effective_from: _effective, included_meal_types: _included, preferred_variant: _variant, is_active: _active, ...metadata } = data;
-        const { error } = await supabase
-          .from('meal_plan_rules')
-          .update(metadata)
-          .eq('id', editingPlan.id)
-          .select('id')
-          .single();
-        if (error) throw error;
-      } else {
-        throw new Error('Use the four canonical plans. Creating additional pricing plans is not supported here.');
-      }
+      if (metadata.plan_code === 'RO' && supplement !== 0) throw new Error('Room Only must have a zero meal supplement.');
+      if (!Number.isSafeInteger(metadata.display_order)) throw new Error('Enter a whole number for Display Order.');
+      // Only metadata is written here. Linked prices, availability and composition use their reviewed RPCs.
+      const { data: saved, error } = await supabase
+        .from('meal_plan_rules')
+        .update({ ...metadata, ...aliases, updated_at: new Date(Math.max(Date.now(), Date.parse(plan.updated_at) + 1)).toISOString() })
+        .eq('id', plan.id)
+        .eq('updated_at', plan.updated_at)
+        .select('id')
+        .maybeSingle();
+      if (error) throw error;
+      if (!saved) throw new Error('This meal plan changed while you were editing. Refresh it before saving again.');
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['meal-plans'] });
@@ -99,30 +163,16 @@ const MealPlansManagement = () => {
       queryClient.invalidateQueries({ queryKey: ['meal-supplement-versions'] });
       queryClient.invalidateQueries({ queryKey: ['rate-plan-admin'] });
       queryClient.invalidateQueries({ queryKey: ['rate-variants'] });
-      setIsOpen(false);
-      resetForm();
-      toast.success(editingPlan ? 'Meal plan updated' : 'Meal plan created');
+      goToManage();
+      toast.success('Meal plan updated');
     },
-    onError: (error: any) => {
-      toast.error(error.message);
+    onError: (error) => {
+      toast.error(error instanceof Error ? error.message : (error as { message?: string })?.message ?? 'Unable to update meal plan.');
     }
   });
 
   const resetForm = () => {
-    setFormData({
-      plan_code: '',
-      plan_name: '',
-      alias_names_text: '',
-      alias_codes_text: '',
-    supplement_amount_text: '',
-    supplement_effective_from: new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Kolkata' }),
-      description: '',
-      included_meal_types: [],
-      preferred_variant: 'veg',
-      display_order: 0,
-      is_active: true,
-      is_featured: false
-    });
+    setFormData(emptyMetadata());
     setEditingPlan(null);
   };
 
@@ -133,240 +183,244 @@ const MealPlansManagement = () => {
       plan_name: plan.plan_name,
       alias_names_text: (plan.alias_names || []).join(', '),
       alias_codes_text: (plan.alias_codes || []).join(', '),
-      supplement_amount_text: plan.supplement_per_person_inr == null ? '' : String(plan.supplement_per_person_inr),
-      supplement_effective_from: new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Kolkata' }),
       description: plan.description || '',
-      included_meal_types: plan.included_meal_types || [],
-      preferred_variant: plan.preferred_variant,
       display_order: plan.display_order,
-      is_active: plan.is_active,
-      is_featured: plan.is_featured
+      is_featured: !!plan.is_featured,
     });
-    setIsOpen(true);
+    saveMutation.reset();
+    showEditor(true);
   };
 
-  const handleMealTypeToggle = (mealType: string) => {
-    setFormData(prev => ({
-      ...prev,
-      included_meal_types: prev.included_meal_types.includes(mealType)
-        ? prev.included_meal_types.filter(m => m !== mealType)
-        : [...prev.included_meal_types, mealType]
-    }));
-  };
+  function goToManage(restoreFocus = true) {
+    resetForm();
+    saveMutation.reset();
+    if (restoreFocus) focusTarget.current = 'manage';
+    setTab('manage');
+  }
 
-  if (isLoading) return <div>Loading...</div>;
+  function showEditor(moveFocus = false) {
+    setHasOpenedEditor(true);
+    if (moveFocus && tab !== 'editor') focusTarget.current = 'editor';
+    setTab('editor');
+  }
+
+  async function reloadSelectedPlan() {
+    const result = await refetch();
+    if (result.error) {
+      toast.error('Could not refresh the meal plan. Your unsaved edits are unchanged.');
+      return;
+    }
+    const fresh = result.data?.find(plan => plan.id === editingPlan?.id);
+    if (fresh) handleEdit(fresh);
+    else {
+      goToManage();
+      toast.error('This meal plan is no longer available.');
+    }
+  }
+
+  const currentPlan = mealPlans?.find(plan => plan.id === editingPlan?.id);
+  const metadataStale = !!editingPlan && (!currentPlan || currentPlan.updated_at !== editingPlan.updated_at);
+  const saveError = saveMutation.error && (saveMutation.error instanceof Error ? saveMutation.error.message : (saveMutation.error as { message?: string })?.message);
+
+  if (isLoading) return <div role="status">Loading meal plans…</div>;
 
   return (
-    <div className="p-6 space-y-6">
-      <div className="flex justify-between items-center">
-        <div>
-          <h1 className="text-3xl font-bold">Meal Plans Management</h1>
-          <p className="text-muted-foreground">Configure meal plan options for bookings</p>
-          <div className="mt-2 p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
-            <p className="text-sm text-blue-800 dark:text-blue-200">
-              <strong>How It Works:</strong> Meal plans are now independent from cancellation policies in the booking flow. 
-              Meal Management supplies shared meal prices. Linked required groups below derive the plan supplements. Edit names and aliases separately; linked prices and groups use reviewed, revision-checked saves. Aliases refer to the same plan, not additional plans. Pricing rules are configured separately.
-            </p>
-          </div>
-        </div>
-        <Dialog open={isOpen} onOpenChange={(open) => {
-          setIsOpen(open);
-          if (!open) resetForm();
-        }}>
-          <p className="text-xs text-muted-foreground">Four canonical plans. Edit their linked groups below.</p>
-          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-            <DialogHeader>
-              <DialogTitle>{editingPlan ? 'Edit' : 'Add'} Meal Plan</DialogTitle>
-            </DialogHeader>
-            <div className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label>Plan Code</Label>
-                  <Input 
-                    value={formData.plan_code}
-                    disabled={!!editingPlan && ['RO','BB','HB','FB'].includes(editingPlan.plan_code)}
-                    onChange={(e) => setFormData(prev => ({ ...prev, plan_code: e.target.value }))}
-                    placeholder="RO, BB, HB or FB"
-                  />
-                </div>
-                <div>
-                  <Label>Plan Name</Label>
-                  <Input 
-                    value={formData.plan_name}
-                    onChange={(e) => setFormData(prev => ({ ...prev, plan_name: e.target.value }))}
-                    placeholder="e.g., Breakfast Included"
-                  />
-                </div>
-              </div>
-              
-              <div>
-                <Label>Description</Label>
-                <Textarea 
-                  value={formData.description}
-                  onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
-                  placeholder="Brief description of this meal plan"
-                />
-              </div>
+    <section aria-label="Meal Plans" className="min-w-0 space-y-3">
+      <header>
+        <h1 className="text-3xl font-bold tracking-tight">Meal Plans</h1>
+        <p className="mt-1 text-sm text-muted-foreground">Manage booking meal plans, linked prices, and guest-type rules.</p>
+      </header>
+      {listError && <p role="alert" className="rounded-md border border-destructive/30 px-3 py-2 text-sm text-destructive">Meal plans could not load. <Button type="button" variant="outline" size="sm" onClick={() => void refetch()}>Reload plans</Button></p>}
+      <Tabs value={tab} activationMode="manual" className="min-w-0" onValueChange={value => {
+        if (saveMutation.isPending) return;
+        if (value === 'manage') goToManage(false);
+        if (value === 'editor') showEditor();
+      }}>
+        <TabsList aria-label="Meal plan views">
+          <TabsTrigger ref={manageRef} value="manage" disabled={saveMutation.isPending}>Manage Plans</TabsTrigger>
+          <TabsTrigger value="editor">{editingPlan ? 'Edit Plan' : 'Add Plan'}</TabsTrigger>
+        </TabsList>
 
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="alias-names">Alias Names (admin only)</Label>
-                  <Textarea id="alias-names" value={formData.alias_names_text}
-                    onChange={(e) => setFormData(prev => ({ ...prev, alias_names_text: e.target.value }))}
-                    placeholder="e.g., Bed & Breakfast, Continental Plan" />
-                </div>
-                <div>
-                  <Label htmlFor="alias-codes">Alias Codes (admin only)</Label>
-                  <Input id="alias-codes" value={formData.alias_codes_text}
-                    onChange={(e) => setFormData(prev => ({ ...prev, alias_codes_text: e.target.value }))}
-                    placeholder="e.g., CP" />
-                </div>
-              </div>
-              <p className="text-xs text-muted-foreground">Separate aliases with commas or new lines. These are alternative names and codes for this plan, not extra plans or website descriptions.</p>
-              <div className="rounded-md border p-3 space-y-2">
-                <Label htmlFor="meal-supplement">Meal Supplement per Person (₹)</Label>
-                <Input id="meal-supplement" type="number" min="0" step="0.01" disabled={!!editingPlan}
-                  value={formData.supplement_amount_text}
-                  onChange={(e) => setFormData(prev => ({ ...prev, supplement_amount_text: e.target.value }))}
-                  placeholder="Not configured" />
-                <Label htmlFor="supplement-effective-from">Effective for stay nights from</Label>
-                <Input id="supplement-effective-from" disabled={!!editingPlan} type="date" value={formData.supplement_effective_from}
-                  onChange={(e) => setFormData(prev => ({ ...prev, supplement_effective_from: e.target.value }))} />
-                <p className="text-xs text-muted-foreground">Per person per night. Automatic meal quantities follow Guest Age & Pricing Policy. For existing plans, change linked meals/prices in the panel below; this metadata form cannot change the supplement. Existing booking/payment snapshots are preserved.</p>
-                {editingPlan && Number(formData.supplement_amount_text) !== Number(editingPlan.supplement_per_person_inr) && <div className="rounded border border-amber-400 p-2 text-sm">
-                  Price impact: this plan changes by ₹{(Number(formData.supplement_amount_text || 0) - Number(editingPlan.supplement_per_person_inr || 0)).toFixed(2)} per person per night from {formData.supplement_effective_from}. Entered room/package anchors stay fixed. For anchors entered with this plan, the derived RO amount moves by the opposite difference × included guests; for RO anchors, this inclusive plan moves by this difference × guests. Review affected rates in Rate Plans before saving.
-                </div>}
+        <TabsContent value="manage" className="min-w-0">
+          <Card className="min-w-0">
+            <CardHeader className="p-3 sm:p-4">
+              <CardTitle className="text-lg">Manage plans</CardTitle>
+              <p className="text-sm text-muted-foreground">Current public plan details and supplements. Staged prices and groups do not change this table until activation.</p>
+            </CardHeader>
+            <CardContent className="px-3 pb-3 sm:px-4 sm:pb-4">
+                <Table aria-label="Meal plans">
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead scope="col">Plan Name</TableHead>
+                      <TableHead scope="col">Code</TableHead>
+                      <TableHead scope="col">Aliases (admin only)</TableHead>
+                      <TableHead scope="col">Meal Supplement / Person</TableHead>
+                      <TableHead scope="col">Included Meals</TableHead>
+                      <TableHead scope="col">Status</TableHead>
+                      <TableHead scope="col">Actions</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {!mealPlans?.length && <TableRow><TableCell colSpan={7} className="text-muted-foreground">No meal plans found.</TableCell></TableRow>}
+                    {mealPlans?.map((plan) => (
+                      <TableRow key={plan.id}>
+                        <TableCell className="font-medium">{plan.plan_name}</TableCell>
+                        <TableCell><code>{plan.plan_code}</code></TableCell>
+                        <TableCell>
+                          <div>{plan.alias_names?.join(' / ') || 'None'}</div>
+                          <div className="text-sm text-muted-foreground">{plan.alias_codes?.join(' / ')}</div>
+                        </TableCell>
+                        <TableCell>
+                          {plan.supplement_per_person_inr == null ? 'Not configured' : `₹${plan.supplement_per_person_inr.toLocaleString('en-IN')}`}
+                          <div className="text-xs text-muted-foreground">{plan.supplement_period === 'per_night' ? 'Per night · ' : ''}Derived from linked meals; saved booking quotes remain fixed</div>
+                        </TableCell>
+                        <TableCell>
+                          {plan.included_meal_types?.length > 0 ? (
+                            plan.included_meal_types.map(m => (
+                              <Badge key={m} variant="outline" className="mr-1 capitalize">{m}</Badge>
+                            ))
+                          ) : (
+                            <span className="text-muted-foreground">None</span>
+                          )}
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex gap-1">
+                            {plan.is_active ? <Badge>Active</Badge> : <Badge variant="outline">Inactive</Badge>}
+                            {plan.is_featured && <Badge variant="secondary">Featured</Badge>}
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex gap-2">
+                            <Button type="button" size="sm" variant="outline" aria-label={`Edit ${plan.plan_name}`} disabled={saveMutation.isPending} onClick={() => handleEdit(plan)}>
+                              <Edit aria-hidden="true" className="h-4 w-4" />
+                            </Button>
+                            <span className="text-xs text-muted-foreground self-center">Availability is managed in Edit Plan</span>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+            </CardContent>
+          </Card>
+        </TabsContent>
 
+        {hasOpenedEditor && <TabsContent value="editor" forceMount className="min-w-0 space-y-3 data-[state=inactive]:hidden" aria-hidden={tab !== 'editor'}>
+          <Card className="min-w-0">
+            <CardHeader className="p-3 sm:p-4">
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <h2 ref={editorRef} tabIndex={-1} className="text-lg font-semibold leading-tight">{editingPlan ? `Edit ${editingPlan.plan_name}` : 'Add Plan'}</h2>
+                <Button type="button" size="sm" variant="ghost" disabled={saveMutation.isPending} onClick={() => goToManage()}><ArrowLeft aria-hidden="true" className="mr-1 h-4 w-4" /> Back to Manage Plans</Button>
               </div>
-              <div>
-                <Label>Included Meals</Label>
-                <div className="flex gap-4 mt-2">
-                  {['breakfast', 'lunch', 'dinner'].map(mealType => (
-                    <div key={mealType} className="flex items-center space-x-2">
-                      <Checkbox 
-                        disabled={!!editingPlan}
-                        checked={formData.included_meal_types.includes(mealType)}
-                        onCheckedChange={() => handleMealTypeToggle(mealType)}
-                      />
-                      <label className="capitalize">{mealType}</label>
+            </CardHeader>
+            <CardContent className="px-3 pb-3 sm:px-4 sm:pb-4">
+              {!editingPlan ? <div className="space-y-2 rounded-md border bg-muted/40 p-3 text-sm">
+                <p>Booking pricing supports four built-in plans: Room Only (EP), Breakfast (CP), Half Board (MAP), and Full Board (AP). New plans cannot be created here.</p>
+                <p className="text-muted-foreground">Choose Edit beside a plan in Manage Plans to update its details. Use the sections below to manage linked pricing, availability, guest-type prices, or dietary variants.</p>
+              </div> : <form className="min-w-0 space-y-3" onSubmit={event => {
+                event.preventDefault();
+                if (!saveMutation.isPending && !metadataStale) saveMutation.mutate({ form: formData, plan: editingPlan });
+              }}>
+                <fieldset disabled={saveMutation.isPending || metadataStale} className="min-w-0 space-y-3">
+                  <legend className="sr-only">Meal plan settings</legend>
+                  <div className={fieldGrid}>
+                    <Field id="meal-plan-code" label="Plan Code" help="The four booking plan codes are locked. Use aliases for alternate names or codes.">
+                      <Input id="meal-plan-code" className={inputClass} value={formData.plan_code} disabled={canonicalCodes.includes(editingPlan.plan_code)} onChange={event => setFormData(prev => ({ ...prev, plan_code: event.target.value }))} placeholder="RO, BB, HB or FB" />
+                    </Field>
+                    <Field id="meal-plan-name" label="Plan Name">
+                      <Input id="meal-plan-name" className={inputClass} value={formData.plan_name} onChange={event => setFormData(prev => ({ ...prev, plan_name: event.target.value }))} placeholder="e.g., Breakfast Included" />
+                    </Field>
+                  </div>
+                  <Field id="meal-plan-description" label="Description" help="Used to describe this plan to guests.">
+                    <Textarea id="meal-plan-description" className="min-h-16 min-w-0 text-sm" rows={2} value={formData.description} onChange={event => setFormData(prev => ({ ...prev, description: event.target.value }))} placeholder="Brief description of this meal plan" />
+                  </Field>
+                  <div className={fieldGrid}>
+                    <Field id="alias-names" label="Alias Names (admin only)" help={aliasHelp}>
+                      <Textarea id="alias-names" className="min-h-16 min-w-0 text-sm" rows={2} value={formData.alias_names_text} onChange={event => setFormData(prev => ({ ...prev, alias_names_text: event.target.value }))} placeholder="e.g., Bed & Breakfast, Continental Plan" />
+                    </Field>
+                    <Field id="alias-codes" label="Alias Codes (admin only)" help={aliasHelp}>
+                      <Input id="alias-codes" className={inputClass} value={formData.alias_codes_text} onChange={event => setFormData(prev => ({ ...prev, alias_codes_text: event.target.value }))} placeholder="e.g., CP" />
+                    </Field>
+                  </div>
+
+                  <section className={sectionClass} aria-labelledby="meal-linked-rates-heading">
+                    <h3 id="meal-linked-rates-heading" className="text-sm font-semibold">Linked rates and meals</h3>
+                    <div className={fieldGrid}>
+                      <Field id="meal-supplement" label="Meal Supplement per Person (₹)" help="Per person per night. Automatic meal quantities follow Guest Age & Pricing Policy. The supplement is read-only here; use Linked meal-plan pricing to change it. Existing booking and payment snapshots are preserved.">
+                        <Input id="meal-supplement" className={inputClass} type="number" min="0" step="0.01" disabled value={editingPlan.supplement_per_person_inr ?? ''} placeholder="Not configured" readOnly />
+                      </Field>
+                      <Field id="supplement-effective-from" label="Effective for stay nights from" help="The saved effective date for the linked supplement. It cannot be edited as plan metadata.">
+                        <Input id="supplement-effective-from" className={inputClass} disabled type="date" value={editingPlan.supplement_effective_from} readOnly />
+                      </Field>
                     </div>
-                  ))}
-                </div>
-              </div>
+                    <div className={fieldGrid}>
+                      <fieldset className="space-y-1">
+                        <legend className="sr-only">Included Meals</legend>
+                        <div aria-hidden="true" className="inline-block align-middle text-sm font-medium">Included Meals</div>
+                        <div className="inline-flex align-middle"><FieldHelp label="Included Meals">Update included meals and alternatives under Linked meal-plan pricing.</FieldHelp></div>
+                        <div className="flex flex-wrap gap-x-3 gap-y-2">
+                          {Array.from(new Set(['breakfast', 'lunch', 'dinner', ...(editingPlan.included_meal_types || [])])).map((mealType, index) => (
+                            <div key={mealType} className="flex items-center gap-2">
+                              <Checkbox id={`meal-type-${index}`} disabled checked={editingPlan.included_meal_types?.includes(mealType) ?? false} />
+                              <Label htmlFor={`meal-type-${index}`} className="capitalize">{mealType.replace(/_/g, ' ')}</Label>
+                            </div>
+                          ))}
+                        </div>
+                      </fieldset>
+                      <Field id="meal-preferred-variant" label="Preferred Variant" help="The saved preference is read-only here. Configure meal alternatives in Linked meal-plan pricing or dietary variants below.">
+                        <select id="meal-preferred-variant" className="h-9 w-full min-w-0 rounded-md border border-input bg-background px-2.5 text-sm disabled:cursor-not-allowed disabled:opacity-50" value={editingPlan.preferred_variant ?? ''} disabled>
+                          <option value="" disabled>Not configured</option>
+                          <option value="veg">Veg</option>
+                          <option value="non_veg">Non-Veg</option>
+                          <option value="jain">Jain</option>
+                        </select>
+                      </Field>
+                    </div>
+                  </section>
 
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label>Preferred Variant</Label>
-                  <select 
-                    className="w-full border rounded-md p-2"
-                    value={formData.preferred_variant}
-                    disabled={!!editingPlan}
-                    onChange={(e) => setFormData(prev => ({ ...prev, preferred_variant: e.target.value }))}
-                  >
-                    <option value="veg">Veg</option>
-                    <option value="non_veg">Non-Veg</option>
-                    <option value="jain">Jain</option>
-                  </select>
+                  <section className={sectionClass} aria-labelledby="meal-plan-availability-heading">
+                    <h3 id="meal-plan-availability-heading" className="text-sm font-semibold">Display and availability</h3>
+                    <div className={fieldGrid}>
+                      <Field id="meal-display-order" label="Display Order">
+                        <Input id="meal-display-order" className={inputClass} type="number" value={Number.isNaN(formData.display_order) ? '' : formData.display_order} onChange={event => setFormData(prev => ({ ...prev, display_order: parseInt(event.target.value, 10) }))} />
+                      </Field>
+                      <div className="grid min-w-0 gap-2.5 min-[920px]:grid-cols-2">
+                        <div className="flex min-h-9 min-w-0 items-center justify-between gap-2 rounded-md border px-2.5 py-1.5">
+                          <div className="flex min-w-0 items-center gap-1"><Label htmlFor="meal-plan-active">Active</Label><FieldHelp label="Active">Use Linked meal-plan pricing below to change booking availability with a reviewed save. Meal plans are independent of cancellation policies.</FieldHelp></div>
+                          <Switch id="meal-plan-active" type="button" checked={editingPlan.is_active} disabled />
+                        </div>
+                        <div className="flex min-h-9 min-w-0 items-center justify-between gap-2 rounded-md border px-2.5 py-1.5">
+                          <Label htmlFor="meal-plan-featured">Featured</Label>
+                          <Switch id="meal-plan-featured" type="button" checked={formData.is_featured} onCheckedChange={checked => setFormData(prev => ({ ...prev, is_featured: checked }))} />
+                        </div>
+                      </div>
+                    </div>
+                  </section>
+                </fieldset>
+                {saveError && <p role="alert" className="text-sm text-destructive">{saveError}</p>}
+                {metadataStale && <p role="alert" className="text-sm text-destructive">Saved plan details have changed. Refresh this plan before editing or saving again.</p>}
+                <div className="flex flex-wrap gap-2 border-t pt-3">
+                  <Button type="submit" size="sm" disabled={saveMutation.isPending || metadataStale}>{saveMutation.isPending ? 'Saving…' : 'Update Meal Plan'}</Button>
+                  <Button type="button" size="sm" variant="outline" disabled={saveMutation.isPending} onClick={() => goToManage()}>Cancel</Button>
+                  {(metadataStale || saveError) && <Button type="button" size="sm" variant="outline" disabled={saveMutation.isPending} onClick={() => void reloadSelectedPlan()}>Refresh plan & discard edits</Button>}
                 </div>
-                <div>
-                  <Label>Display Order</Label>
-                  <Input 
-                    type="number"
-                    value={formData.display_order}
-                    onChange={(e) => setFormData(prev => ({ ...prev, display_order: parseInt(e.target.value) }))}
-                  />
-                </div>
-              </div>
+              </form>}
+            </CardContent>
+          </Card>
 
-              <div className="flex gap-4">
-                <div className="flex items-center space-x-2">
-                  <Switch 
-                    checked={formData.is_active}
-                    disabled={!!editingPlan}
-                    onCheckedChange={(checked) => setFormData(prev => ({ ...prev, is_active: checked }))}
-                  />
-                  <Label>Active</Label>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <Switch 
-                    checked={formData.is_featured}
-                    onCheckedChange={(checked) => setFormData(prev => ({ ...prev, is_featured: checked }))}
-                  />
-                  <Label>Featured</Label>
-                </div>
-              </div>
-
-              <Button 
-                className="w-full" 
-                onClick={() => saveMutation.mutate(formData)}
-                disabled={saveMutation.isPending}
-              >
-                {editingPlan ? 'Update' : 'Create'} Meal Plan
-              </Button>
-            </div>
-          </DialogContent>
-        </Dialog>
-      </div>
-
-      <LiveMealPricing />
-      <MealPlanAgePricing />
-      <MealPlanDietaryVariants plans={mealPlans || []} />
-      <p className="text-sm text-muted-foreground">Current public plan metadata and supplements below. Staged prices and groups above do not replace these until coordinated activation.</p>
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>Plan Name</TableHead>
-            <TableHead>Code</TableHead>
-            <TableHead>Aliases (admin only)</TableHead>
-            <TableHead>Meal Supplement / Person</TableHead>
-            <TableHead>Included Meals</TableHead>
-            <TableHead>Status</TableHead>
-            <TableHead>Actions</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {mealPlans?.map((plan) => (
-            <TableRow key={plan.id}>
-              <TableCell className="font-medium">{plan.plan_name}</TableCell>
-              <TableCell><code>{plan.plan_code}</code></TableCell>
-              <TableCell>
-                <div>{plan.alias_names?.join(' / ') || 'None'}</div>
-                <div className="text-sm text-muted-foreground">{plan.alias_codes?.join(' / ')}</div>
-              </TableCell>
-              <TableCell>
-                {plan.supplement_per_person_inr == null ? 'Not configured' : `₹${plan.supplement_per_person_inr.toLocaleString('en-IN')}`}
-                <div className="text-xs text-muted-foreground">{plan.supplement_period === 'per_night' ? 'Per night · ' : ''}Derived from linked meals; saved booking quotes remain fixed</div>
-              </TableCell>
-              <TableCell>
-                {plan.included_meal_types?.length > 0 ? (
-                  plan.included_meal_types.map(m => (
-                    <Badge key={m} variant="outline" className="mr-1 capitalize">{m}</Badge>
-                  ))
-                ) : (
-                  <span className="text-muted-foreground">None</span>
-                )}
-              </TableCell>
-              <TableCell>
-                <div className="flex gap-1">
-                  {plan.is_active && <Badge>Active</Badge>}
-                  {plan.is_featured && <Badge variant="secondary">Featured</Badge>}
-                </div>
-              </TableCell>
-              <TableCell>
-                <div className="flex gap-2">
-                  <Button size="sm" variant="outline" onClick={() => handleEdit(plan)}>
-                    <Edit className="h-4 w-4" />
-                  </Button>
-                  <span className="text-xs text-muted-foreground self-center">Manage availability above</span>
-                </div>
-              </TableCell>
-            </TableRow>
-          ))}
-        </TableBody>
-      </Table>
-    </div>
+          <ConfigurationSection title="Linked meal-plan pricing and availability" help="Meal Management is the shared price source. Required meal groups and alternatives determine supplements. Changes use reviewed, revision-checked saves.">
+            <LiveMealPricing />
+          </ConfigurationSection>
+          <ConfigurationSection title="Meal prices by guest type" help="Set meal charges by age band. A globally free guest band remains free, and saved bookings are unchanged.">
+            <MealPlanAgePricing />
+          </ConfigurationSection>
+          <ConfigurationSection title="Dietary variants" help="Configure Veg, Non-Veg and Jain descriptions, images and reference prices. Dietary variants are not used by current booking prices or guest selection.">
+            <MealPlanDietaryVariants plans={mealPlans || []} />
+          </ConfigurationSection>
+        </TabsContent>}
+      </Tabs>
+    </section>
   );
 };
 
 export default MealPlansManagement;
-
