@@ -1,6 +1,7 @@
 import { writeGuestParty, legacyGuestCounts, type GuestCounts } from '@/lib/guest-counts';
 import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
+import { readGuestParty } from '@/lib/guestParty';
 import Navigation from '../components/Navigation';
 import DynamicFooter from '../components/DynamicFooter';
 import CombinedFloating from '../components/CombinedFloating';
@@ -46,6 +47,8 @@ const toTitleCaseFeature = (text: string): string => {
 const RoomDetail = () => {
   const { roomId } = useParams();
   const navigate = useNavigate();
+  const [params] = useSearchParams();
+  const [initialParty] = useState(() => readGuestParty(params));
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [roomData, setRoomData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
@@ -56,10 +59,10 @@ const RoomDetail = () => {
   const [seasons, setSeasons] = useState<any[]>([]);
   const [checkInDate, setCheckInDate] = useState<Date>();
   const [checkOutDate, setCheckOutDate] = useState<Date>();
-  const [adults, setAdults] = useState<number>(2);
-  const [children, setChildren] = useState<number>(0);
-  const [infants, setInfants] = useState<number>(0);
-  const [guestCounts, setGuestCounts] = useState<GuestCounts>(legacyGuestCounts(2));
+  const [adults, setAdults] = useState<number>(initialParty.adults);
+  const [children, setChildren] = useState<number>(initialParty.children);
+  const [infants, setInfants] = useState<number>(initialParty.infants);
+  const [guestCounts, setGuestCounts] = useState<GuestCounts>(initialParty.guestCounts);
 
   // Popover states for auto-advance
   const [checkInOpen, setCheckInOpen] = useState(false);

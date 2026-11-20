@@ -49,6 +49,10 @@ before(async()=>{
  create function public.rate_override_disabled(uuid) returns boolean language sql as $$select false$$;`);
  const scoped=readFileSync(new URL('../supabase/migrations/20261120191936_c781140e-8d70-4d68-abd2-b74fa2559278.sql',import.meta.url),'utf8');
  await db.exec(scoped.slice(0,scoped.indexOf('REVOKE ALL')));
+ await db.exec("alter table room_types add column max_guests integer default 6");
+ const def=(await db.query("select pg_get_functiondef('public.calculate_guest_type_rate_variants(uuid,date,date,jsonb,integer,uuid,text,boolean)'::regprocedure) value")).rows[0].value;
+ await db.exec(def.replace('public.calculate_guest_type_rate_variants(', 'guest_pricing_private.calculate_guest_type_rate_variants('));
+ await db.exec(readFileSync(new URL('../supabase/migrations/20261120192409_19fde029-0ebd-4360-b817-9aab6eeb6f0a.sql',import.meta.url),'utf8'));
 });
 after(async()=>{if(db)await db.close();});
 const scalar=async(sql,params=[]) => (await db.query(sql,params)).rows[0]?.value;
@@ -89,4 +93,8 @@ test('scoped custom rates use unit override before type override and preserve ex
   assert.equal(Number((await quote('2026-12-10',null)).total),500);
   assert.equal(Number((await quote('2026-12-11',null)).total),400);
  } finally {await db.exec('rollback');}
+});
+test('website capacity includes custom types but retains the infant-only exemption',options,async()=>{
+ await assert.rejects(scalar("select guest_pricing_private.calculate_guest_type_rate_variants($1,'2026-12-10','2026-12-12',$2,4,null,'direct',true) value",[id,JSON.stringify({adult:2,toddler:5})]),/GUEST_CAPACITY_EXCEEDED/);
+ assert.deepEqual(await scalar("select guest_pricing_private.calculate_guest_type_rate_variants($1,'2026-12-10','2026-12-12',$2,4,null,'direct',true) value",[id,JSON.stringify({adult:2,toddler:4,infant:2})]),[]);
 });

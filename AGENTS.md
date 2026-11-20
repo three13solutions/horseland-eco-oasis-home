@@ -7,6 +7,7 @@
 - Read configured and draft guest types for admin charge editors, and resolve expandable links from original pricing records rather than duplicate rate storage.
 - Keyed pricing runs through a separately named canonical SQL variant entry point behind its publication gate; unchanged legacy engines preserve existing live rates until coordinated activation.
 - Persist guest counts and policy labels from the stored validated quote at booking insertion, never from the current policy, so held and historical prices remain immutable.
+- Resolve keyed accommodation rates through the private scoped resolver (unit/type/category overrides, composition, then anchor), retaining source IDs; this prevents custom guests bypassing saved rate scopes while leaving legacy engines unchanged.
 - Guest-policy drafts are separate from authoritative versions; server-previewed bundles activate in one revision with draft/revision checks so incomplete edits never change live age coverage.
 - Policy deletion uses tombstones for historical versions and soft-deleted drafts; active versions cannot be removed and authoritative booking history remains immutable.
 

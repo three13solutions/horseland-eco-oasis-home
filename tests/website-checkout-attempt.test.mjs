@@ -52,6 +52,13 @@ test('selection fingerprint canonicalizes object ordering and does not store gue
  const s=storage();const hash=await checkoutSelectionKey({email:'fixture@example.invalid',phone:'fixture-phone'});getOrCreateWebsiteCheckout(hash,s,()=>id);
  assert.doesNotMatch(s.getItem(WEBSITE_CHECKOUT_KEY),/fixture@example|fixture-phone/);
 });
+test('custom guest quantities and policy revision change the retained checkout identity',async()=>{
+ const request={guest_counts:{adult:2,toddler:1},guest_age_policy_revision:4};
+ const original=await checkoutSelectionKey({quote_request:request});
+ assert.notEqual(original,await checkoutSelectionKey({quote_request:{...request,guest_counts:{adult:2,toddler:2}}}));
+ assert.notEqual(original,await checkoutSelectionKey({quote_request:{...request,guest_age_policy_revision:5}}));
+ assert.equal(original,await checkoutSelectionKey({quote_request:{guest_age_policy_revision:4,guest_counts:{toddler:1,adult:2}}}));
+});
 test('public inventory wrapper fails closed and never falls back to legacy availability',async()=>{
  const source=readFileSync(new URL('../src/lib/websiteInventory.ts',import.meta.url),'utf8');
  const calls=[];let result={data:3,error:null};

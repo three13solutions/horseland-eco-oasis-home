@@ -29,6 +29,7 @@ const rowBand = (row: Row): GuestAgeBand => {
 
 export default function GuestAgePricingPolicy() {
   const policy = useGuestAgePolicy({ allowInactive: true });
+  const bookingPolicy = useGuestAgePolicy();
   const client = useQueryClient();
   const [form, setForm] = useState<FormState | null>(null);
   const [formError, setFormError] = useState<string | null>(null);
@@ -174,6 +175,7 @@ export default function GuestAgePricingPolicy() {
         <div>
           <h1 className="text-2xl font-semibold">Guest Type Policy</h1>
           <p className="text-sm text-muted-foreground">Pricing status: {live ? 'Live' : 'Staged — not applied to live prices'}</p>
+          <p className="text-xs text-muted-foreground">Custom guest-type pricing: {bookingPolicy.isLoading ? 'Checking status…' : bookingPolicy.isError ? 'Status unavailable' : bookingPolicy.data?.keyed_pricing_active ? 'Live' : 'Staged — website rollout pending'}</p>
         </div>
         <Button disabled={!policy.data} onClick={() => { setFormError(null); setForm({ mode: 'new', band: { key: '', name: '', min_age: 0, max_age: 0, accommodation_rule: 'guest_type', meal_rule: 'full' } }); }}>
           <Plus className="h-4 w-4 mr-1" /> New Policy
@@ -217,7 +219,7 @@ export default function GuestAgePricingPolicy() {
                     </div>
                   </TableCell>
                 </TableRow>
-                {expanded.includes(r.id)&&<TableRow><TableCell colSpan={7} className="bg-muted/30"><GuestLinkedPricing band={r} staged={!live || !!r.draft}/></TableCell></TableRow>}
+                {expanded.includes(r.id)&&<TableRow><TableCell colSpan={7} className="bg-muted/30"><GuestLinkedPricing band={r} staged={!live || !!r.draft || (!['adult','child','infant'].includes(r.key) && !bookingPolicy.data?.keyed_pricing_active)}/></TableCell></TableRow>}
                 </React.Fragment>
               ))}
             </TableBody>

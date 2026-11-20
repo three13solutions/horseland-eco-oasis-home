@@ -1,6 +1,6 @@
 export type GuestBandKey = 'adult' | 'child' | 'infant';
 export interface GuestAgeBand { key: string; name?: string; min_age: number; max_age: number | null; accommodation_rule: 'adult' | 'child' | 'guest_type' | 'free'; meal_rule: 'full' | 'free'; enabled?: boolean }
-export interface GuestAgePolicy { revision: number; bands: GuestAgeBand[]; updated_at: string }
+export interface GuestAgePolicy { revision: number; bands: GuestAgeBand[]; updated_at: string; keyed_pricing_active?: boolean }
 export function validateGuestAgeBands(bands: GuestAgeBand[]): string | null {
   if (!Array.isArray(bands) || !bands.length || bands.some(b=>!b || typeof b!=='object') || new Set(bands.map(b => b.key)).size !== bands.length) return 'Each guest type must have one current policy.';
   const ordered = [...bands].sort((a,b)=>a.min_age-b.min_age);

@@ -77,6 +77,7 @@ export async function calculateBookingQuote(db: any, raw: any, mode: 'website' |
   });
   if (mode === 'website' && error?.code === 'P0001' && error.message?.startsWith('MEAL_PLAN_UNAVAILABLE')) throw new QuoteError('MEAL_PLAN_UNAVAILABLE', 'This meal plan is no longer available for the selected room and stay. Please choose an available plan.');
   if (error?.message?.startsWith('AGE_POLICY_CHANGED')) throw new QuoteError('AGE_POLICY_CHANGED', 'Guest policies changed. Refresh and review your guest selection.');
+  if (error?.message?.startsWith('GUEST_CAPACITY_EXCEEDED')) throw new QuoteError('GUEST_CAPACITY_EXCEEDED', 'Choose a room with capacity for your complete guest party.');
   if (error?.message?.startsWith('GUEST_TYPE_RATE_NOT_CONFIGURED')) throw new QuoteError('GUEST_TYPE_RATE_NOT_CONFIGURED', 'A guest-type charge is not configured for this room and stay. Choose another available room or contact the hotel.');
   if (error) throw new QuoteError('QUOTE_LOOKUP_FAILED', 'The rate could not be calculated. Please refresh.', 503);
   if (mode === 'website' && Array.isArray(variants) && !variants.some(v => v.meal_plan_code === request.meal_plan_code)) throw new QuoteError('MEAL_PLAN_UNAVAILABLE', 'This meal plan is no longer available for the selected room and stay. Please choose an available plan.');
