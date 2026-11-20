@@ -3,6 +3,10 @@
 - Guest-type status is versioned within each age band; staging edits never activate the pricing release, because live engine activation requires its separate rollout checks.
 - Accommodation charge editors retain keyed guest-type modes alongside legacy numeric columns; database triggers resolve linked adult amounts on every write so existing authoritative pricing readers remain compatible.
 - Named guest types and bounded adult segments remain staged until guest collection and canonical quote inputs support those segments; configuration alone must never claim custom live pricing.
+- Use the shared keyed guest-count contract across selection, navigation and server quotes; numeric counts are compatibility projections so custom guest quantities cannot disappear.
+- Read configured and draft guest types for admin charge editors, and resolve expandable links from original pricing records rather than duplicate rate storage.
+- Keyed pricing runs through a separately named canonical SQL variant entry point behind its publication gate; unchanged legacy engines preserve existing live rates until coordinated activation.
+- Persist guest counts and policy labels from the stored validated quote at booking insertion, never from the current policy, so held and historical prices remain immutable.
 - Guest-policy drafts are separate from authoritative versions; server-previewed bundles activate in one revision with draft/revision checks so incomplete edits never change live age coverage.
 - Policy deletion uses tombstones for historical versions and soft-deleted drafts; active versions cannot be removed and authoritative booking history remains immutable.
 

@@ -1,4 +1,6 @@
 import { getMealPlan } from '@/lib/mealPlans';
+import { guestTypeName, type GuestAgePolicy } from '@/lib/guest-age-policy';
+import type { GuestCounts } from '@/lib/guest-counts';
 import { useEffect, useState } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -10,6 +12,8 @@ import { toast } from "@/hooks/use-toast";
 import { formatCurrency } from "@/lib/razorpay";
 
 interface BookingDetails {
+  guest_counts?: GuestCounts;
+  guest_policy_snapshot?: GuestAgePolicy;
   id: string;
   booking_id: string;
   guest_name: string;
@@ -310,6 +314,7 @@ export default function BookingConfirmation() {
               <div>
                 <p className="text-sm text-muted-foreground">Number of Guests</p>
                 <p className="font-semibold">{booking.guests_count}</p>
+                {booking.guest_counts&&<p className="text-sm text-muted-foreground">{Object.entries(booking.guest_counts).filter(([,count])=>count>0).map(([key,count])=>`${count} ${guestTypeName(booking.guest_policy_snapshot?.bands.find(b=>b.key===key) ?? {key})}`).join(' · ')}</p>}
               </div>
               <div>
                 <p className="text-sm text-muted-foreground">Number of Nights</p>

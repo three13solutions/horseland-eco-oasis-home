@@ -1,0 +1,1 @@
+REVOKE ALL ON FUNCTION public.validate_keyed_override_guest() FROM PUBLIC,anon,authenticated;

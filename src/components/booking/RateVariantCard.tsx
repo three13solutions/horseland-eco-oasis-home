@@ -1,4 +1,5 @@
 import React from 'react';
+import { guestHeadcount } from '@/lib/guest-counts';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -62,7 +63,7 @@ export const RateVariantCard: React.FC<RateVariantCardProps> = ({
         <div className="mb-4">
           <div className="text-3xl font-bold">₹{adjustedTotal.toLocaleString()}</div>
           <div className="text-sm text-muted-foreground">
-            ₹{Math.round(adjustedPerNight / Math.max(1, adultsCount + childrenCount + infantsCount)).toLocaleString()} /guest/night (party average) × {nights} nights
+            ₹{Math.round(adjustedPerNight / Math.max(1, variant.guest_counts ? guestHeadcount(variant.guest_counts) : adultsCount + childrenCount + infantsCount)).toLocaleString()} /guest/night (party average) × {nights} nights
           </div>
           {adjustment !== 0 && (
             <div className="text-sm text-primary font-medium mt-1">
