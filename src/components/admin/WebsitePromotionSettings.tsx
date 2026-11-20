@@ -38,6 +38,7 @@ const noteClass = 'text-xs leading-relaxed text-muted-foreground';
 const sectionClass = 'min-w-0 space-y-2.5 border-t pt-3';
 const fieldGrid = 'grid min-w-0 gap-2.5 sm:grid-cols-2';
 const discountGrid = 'grid min-w-0 items-start gap-2.5 grid-cols-[repeat(auto-fit,minmax(min(100%,14rem),1fr))]';
+const roomMealUsageGrid = 'grid min-w-0 items-start gap-2.5 grid-cols-[repeat(auto-fit,minmax(min(100%,14rem),1fr))]';
 const eligibilityGrid = 'grid min-w-0 items-start gap-2.5 grid-cols-[repeat(auto-fit,minmax(min(100%,12rem),1fr))]';
 const visibilityGrid = 'grid min-w-0 gap-2.5 grid-cols-[repeat(auto-fit,minmax(min(100%,16rem),1fr))]';
 const modes = [['RO','Room Only (EP)'], ['BB','Bed & Breakfast (CP)'], ['HB','Half Board (MAP)'], ['FB','Full Board (AP)']] as const;
@@ -274,7 +275,7 @@ export default function WebsitePromotionSettings(){
      <p className={noteClass}>Discount applies to room charges only. Room categories and meal plans below determine which bookings qualify. Meals aren’t discounted.</p>
      <section className={sectionClass} aria-labelledby="promo-eligibility">
       <h3 id="promo-eligibility" className="text-sm font-semibold">Room and meal eligibility</h3>
-      <div className={fieldGrid}>
+      <div className={roomMealUsageGrid} data-promo-layout="room-meal-usage">
        <fieldset className="min-w-0 space-y-1.5">
         <legend className="text-sm font-medium">Room categories</legend>
         <div className="space-y-1 rounded-md border p-2.5">
@@ -308,6 +309,20 @@ export default function WebsitePromotionSettings(){
          </div>)}
         </div>
        </fieldset>
+       <section className="min-w-0 space-y-1.5" aria-labelledby="promo-limits">
+        <h4 id="promo-limits" className="text-sm font-medium">Usage limits</h4>
+        <div className="grid min-w-0 gap-2.5">
+         <Field id="promo-total_usage_limit" label="Total uses"><Input id="promo-total_usage_limit" className={inputClass} type="number" min="1" step="1" placeholder="Unlimited" value={form.total_usage_limit??''} onChange={e=>change('total_usage_limit',e.target.value===''?null:Number(e.target.value))}/></Field>
+         <fieldset className="min-w-0 space-y-1.5">
+          <legend className="text-sm font-medium">Uses per booking email</legend>
+          <div className="flex flex-wrap gap-1.5">
+           {([['unlimited','Unlimited'],['once','Once'],['custom','Custom']] as const).map(([mode,label])=><Button key={mode} size="sm" type="button" aria-pressed={emailMode===mode} variant={emailMode===mode?'default':'outline'} onClick={()=>{setReview(false);setCustomEmail(mode==='custom');if(mode!=='custom')change('per_guest_usage_limit',mode==='once'?1:null);}}>{label}</Button>)}
+          </div>
+          {emailMode==='custom'&&<Field id="promo-per_guest_usage_limit" label="Custom limit"><Input id="promo-per_guest_usage_limit" className={inputClass} type="number" min="1" step="1" placeholder="Enter number of uses" value={form.per_guest_usage_limit??''} onChange={e=>change('per_guest_usage_limit',e.target.value===''?null:Number(e.target.value))}/></Field>}
+         </fieldset>
+        </div>
+        <p className={noteClass}>Limits count completed redemptions and reserved checkout attempts, not quotes. Per-email limits use the booking email, not a verified person. Cancellations do not automatically restore a completed use.</p>
+       </section>
       </div>
      </section>
      <section className={sectionClass} aria-labelledby="promo-dates">
@@ -346,20 +361,6 @@ export default function WebsitePromotionSettings(){
       </div>
       <p className={noteClass}>Booking dates control when the reservation is made. Stay dates control which occupied nights qualify, not checkout day. Dates are inclusive in Asia/Kolkata. Choose Any date for no limit.</p>
       <p className={noteClass}>Weekend eligibility follows the hotel’s date-specific rules, including protected periods.{flat?' All nights must qualify for once-per-booking offers.':''}</p>
-     </section>
-     <section className={sectionClass} aria-labelledby="promo-limits">
-      <h3 id="promo-limits" className="text-sm font-semibold">Usage limits</h3>
-      <div className={fieldGrid}>
-       <Field id="promo-total_usage_limit" label="Total uses"><Input id="promo-total_usage_limit" className={inputClass} type="number" min="1" step="1" placeholder="Unlimited" value={form.total_usage_limit??''} onChange={e=>change('total_usage_limit',e.target.value===''?null:Number(e.target.value))}/></Field>
-       <fieldset className="min-w-0 space-y-1.5">
-        <legend className="text-sm font-medium">Uses per booking email</legend>
-        <div className="flex flex-wrap gap-1.5">
-         {([['unlimited','Unlimited'],['once','Once'],['custom','Custom']] as const).map(([mode,label])=><Button key={mode} size="sm" type="button" aria-pressed={emailMode===mode} variant={emailMode===mode?'default':'outline'} onClick={()=>{setReview(false);setCustomEmail(mode==='custom');if(mode!=='custom')change('per_guest_usage_limit',mode==='once'?1:null);}}>{label}</Button>)}
-        </div>
-        {emailMode==='custom'&&<Field id="promo-per_guest_usage_limit" label="Custom limit"><Input id="promo-per_guest_usage_limit" className={inputClass} type="number" min="1" step="1" placeholder="Enter number of uses" value={form.per_guest_usage_limit??''} onChange={e=>change('per_guest_usage_limit',e.target.value===''?null:Number(e.target.value))}/></Field>}
-       </fieldset>
-      </div>
-      <p className={noteClass}>Limits count completed redemptions and reserved checkout attempts, not quotes. Per-email limits use the booking email, not a verified person. Cancellations do not automatically restore a completed use.</p>
      </section>
      <section className={sectionClass} aria-labelledby="promo-visibility">
       <h3 id="promo-visibility" className="text-sm font-semibold">Visibility and activation</h3>
