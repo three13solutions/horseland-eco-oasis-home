@@ -1,5 +1,9 @@
 # Roadmap
 
+- [ ] Add Room Rate Management below Live Rate Card with seven-day category editing and independent EP/adult/child updates.
+- [ ] Add category/date/day-rule bulk updates with preview and atomic, stale-safe saving through canonical rate plans.
+- [ ] Verify synchronized pricing and weekly/bulk interactions without creating bookings or payment orders.
+
 - [x] Connect guest-type accommodation and meal pricing editors to configured policy types, and show expandable linked-pricing records.
 - [x] Carry dynamic guest types through guest selection, canonical rate variants, checkout snapshots and payment validation without changing existing rates.
 - [x] Verify dynamic pricing, age coverage, capacity, stale quotes and retained checkout: 78 focused checks passed; isolated linked-price expansion/edit/save/read-back and desktop/mobile checks passed; real website quotes match existing rates; four affected quote services deployed. No bookings or payment orders created.
