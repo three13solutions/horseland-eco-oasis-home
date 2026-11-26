@@ -4233,9 +4233,24 @@ export type Database = {
         Returns: number
       }
       get_meal_age_pricing_policy: { Args: never; Returns: Json }
+      get_meal_guest_prices: { Args: never; Returns: Json }
       get_meal_pricing_workspace: { Args: never; Returns: Json }
       get_pricing_preservation_policy: {
         Args: { p_date: string; p_room_type_id: string }
+        Returns: Json
+      }
+      get_regular_buffet_checkout_meal: {
+        Args: {
+          p_adult_rate: number
+          p_adults: number
+          p_check_in: string
+          p_check_out: string
+          p_children: number
+          p_infants: number
+          p_meal_plan_id: string
+          p_night: string
+          p_room_type_id: string
+        }
         Returns: Json
       }
       get_room_type_pricing_cleanup_preview: {
@@ -4343,6 +4358,15 @@ export type Database = {
           p_expected_meal_workspace_revision: number
           p_expected_revision: number
           p_rules: Json
+        }
+        Returns: Json
+      }
+      save_meal_guest_prices: {
+        Args: {
+          p_expected_guest_policy_revision: number
+          p_expected_revision: number
+          p_meal_id: string
+          p_prices: Json
         }
         Returns: Json
       }
