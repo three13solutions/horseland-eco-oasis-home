@@ -1,5 +1,7 @@
 # Roadmap
 
+- [x] List and select Room Rate Management prices by room type; 13 tests and isolated desktop/mobile weekly/bulk save/read-back checks passed without changing connected rates. Connected signed-in verification remains blocked by the external administrator session noted below.
+
 - [x] Add Room Rate Management below Live Rate Card with seven-day category editing and independent EP/adult/child updates.
 - [x] Add category/date/day-rule bulk updates with preview and atomic, stale-safe saving through canonical rate plans; Rate Calendar shares the new live editor and its old drafts remain separate.
 - [x] Verify isolated weekly/bulk save and read-back on desktop/mobile, EP meal additions, atomic stale rejection, linked guest rates, history and preserved stay tiers. No connected live rates, bookings or payment orders changed.

@@ -8,7 +8,7 @@ export type RateGrid = { categories: { id: string; name: string; is_active: bool
 export type RateChange = { type_id: string; date: string; fingerprint: string; ep?: number; adult?: number; child?: number };
 export type RateReview = { before: RateEntry; change: RateChange };
 export const emptyRates = (): RateInputs => ({ ep: '', adult: '', child: '' });
-export const rateCellKey = (category: string, date: string) => `${category}:${date}`;
+export const rateCellKey = (typeId: string, date: string) => `${typeId}:${date}`;
 export const weekDates = (start: string) => dateRange(start, addDays(start, 6));
 export function parseRateInputs(inputs: Partial<RateInputs>): Partial<Record<RateField, number>> {
   const result: Partial<Record<RateField, number>> = {};
@@ -31,19 +31,19 @@ export function reviewEntry(entry: RateEntry, inputs: Partial<RateInputs>): Rate
 }
 export function weeklyReview(grid: RateGrid, draft: Record<string, Partial<RateInputs>>): RateReview[] {
   return grid.entries.flatMap(entry => {
-    const inputs = draft[rateCellKey(entry.category_id, entry.date)];
+    const inputs = draft[rateCellKey(entry.type_id, entry.date)];
     const review = inputs ? reviewEntry(entry, inputs) : null;
     return review ? [review] : [];
   });
 }
 export type BulkRules = { mode: 'same' | 'week' | 'specific'; same: RateInputs; weekdays: RateInputs; weekends: RateInputs; days: Record<number, RateInputs> };
-export function bulkRateReview(grid: RateGrid, categories: string[], dates: string[], rules: BulkRules): RateReview[] {
-  if (!categories.length) throw new Error('Select at least one room category.');
+export function bulkRateReview(grid: RateGrid, typeIds: string[], dates: string[], rules: BulkRules): RateReview[] {
+  if (!typeIds.length) throw new Error('Select at least one room type.');
   if (!dates.length) throw new Error('Select at least one stay date.');
-  for (const id of categories) for (const date of dates) {
-    if (!grid.entries.some(entry => entry.category_id === id && entry.date === date)) throw new Error('A selected category has no assigned room types for these dates.');
+  for (const id of typeIds) for (const date of dates) {
+    if (!grid.entries.some(entry => entry.type_id === id && entry.date === date)) throw new Error('A selected room type has no saved rate entries for these dates.');
   }
-  const reviews = grid.entries.filter(entry => categories.includes(entry.category_id) && dates.includes(entry.date)).flatMap(entry => {
+  const reviews = grid.entries.filter(entry => typeIds.includes(entry.type_id) && dates.includes(entry.date)).flatMap(entry => {
     const day = new Date(`${entry.date}T12:00:00Z`).getUTCDay();
     const inputs = rules.mode === 'same' ? rules.same : rules.mode === 'week' ? (entry.weekend ? rules.weekends : rules.weekdays) : rules.days[day] || emptyRates();
     const review = reviewEntry(entry, inputs);
@@ -55,4 +55,11 @@ export function bulkRateReview(grid: RateGrid, categories: string[], dates: stri
 export function sharedRate(entries: RateEntry[], field: RateField): { value: string; mixed: boolean } {
   const values = new Set(entries.map(entry => entry[field]));
   return { value: values.size === 1 && entries[0]?.[field] != null ? String(entries[0][field]) : '', mixed: values.size > 1 };
+}
+export function roomTypesFromGrid(grid: RateGrid): { id: string; name: string; category_active: boolean }[] {
+  const types = new Map<string, { id: string; name: string; category_active: boolean }>();
+  for (const entry of grid.entries) {
+    if (!types.has(entry.type_id)) types.set(entry.type_id, { id: entry.type_id, name: entry.type_name, category_active: grid.categories.find(category => category.id === entry.category_id)?.is_active ?? true });
+  }
+  return [...types.values()].sort((a, b) => a.name.localeCompare(b.name) || a.id.localeCompare(b.id));
 }
