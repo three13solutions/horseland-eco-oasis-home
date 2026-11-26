@@ -106,7 +106,8 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
       if (saved.state === 'paid') setConfirmationPending(true);
       setCheckoutReference(saved.requestId);
       setReviewLoading(true);
-      loadRetainedCheckout(saved.requestId, saved.checkoutToken!).then(data => {
+      if (!saved.checkoutToken) throw new Error('Your saved checkout cannot be verified. Contact the hotel before starting another payment.');
+      loadRetainedCheckout(saved.requestId, saved.checkoutToken).then(data => {
         if (active) { setRetained(data); setPaymentMessage(null); }
       }).catch(error => { if (active) setPaymentMessage(error.message); })
         .finally(() => { if (active) setReviewLoading(false); });
@@ -400,7 +401,7 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={open => { if (!open) { isOpenRef.current = false; onClose(); } }}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="sm:max-w-md max-h-[90dvh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <CreditCard className="w-5 h-5" />
@@ -469,13 +470,15 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
               <span>Total Amount</span>
               <span>{formatCurrency(payableAmount)}</span>
             </div>
-            {!reviewRequired && !bookingDetails.existingBookingId && offers.length>0 && <div className="space-y-1 pt-2">
+            {!reviewRequired && !bookingDetails.existingBookingId && <div className="space-y-2 pt-2">
+              <label className="block text-sm font-medium" htmlFor="checkout-promo-code">Promo code</label>
+              {offers.length > 0 && <>
               <label className="block text-sm" htmlFor="booking-offer">Available offers</label>
               <select id="booking-offer" aria-label="Available offers" className="w-full rounded border p-2 text-sm" value={promoInput} disabled={!!promoApplied||isProcessing||promoLoading} onChange={e=>setPromoInput(e.target.value)}><option value="">Choose an offer</option>{offers.map(o=><option key={o.code} value={o.code}>{o.code} · {o.label}</option>)}</select>
-              <p className="text-xs text-muted-foreground">Listed offers may have stay restrictions. Apply the code to verify eligibility and the exact discount for this booking.</p>
+              </>}
               {offers.filter(o=>o.code===promoInput).map(o=><p key={o.code} className="text-xs">Booking dates: {o.booking_from||'no start limit'} to {o.booking_to||'no end limit'} (India time). Occupied stay nights: {o.stay_from||'no start limit'} to {o.stay_to||'no end limit'}. {o.day_scope==='weekday'?'Weekdays only. ':o.day_scope==='weekend'?'Weekends only. ':'All day types. '}{o.mixed_stay_mode==='eligible_nights'?'Discount only on qualifying nights.':o.mixed_stay_mode==='all_nights'?'Every occupied night must qualify.':''} Checkout day is excluded. {o.min_stay_nights ? `Minimum ${o.min_stay_nights} nights. ` : ''}{o.excluded_stay_dates?.length ? `Excluded occupied dates: ${o.excluded_stay_dates.join(', ')}. ` : ''}{o.eligible_meal_plan_codes ? `Eligible plans: ${o.eligible_meal_plan_codes.map(c=>({RO:'EP',BB:'CP',HB:'MAP',FB:'AP'}[c]||c)).join(', ')}. ` : ''}{o.eligible_room_category_ids ? 'Selected room categories only; applying verifies this room. ' : ''}{o.total_usage_limit ? 'Limited total redemptions; availability checked at payment. ' : ''}{o.per_guest_usage_limit ? `Maximum ${o.per_guest_usage_limit} uses per booking email. ` : ''}</p>)}
               <div className="flex gap-2">
-                <input aria-label="Promo code" value={promoInput} onChange={e => setPromoInput(e.target.value)} disabled={!!promoApplied || isProcessing || promoLoading}
+                <input id="checkout-promo-code" aria-label="Promo code" value={promoInput} onChange={e => setPromoInput(e.target.value)} disabled={!!promoApplied || isProcessing || promoLoading}
                   placeholder="Promo code" className="flex h-9 w-full rounded-md border border-input bg-background px-3 text-sm uppercase" />
                 {promoApplied
                   ? <Button type="button" variant="outline" size="sm" onClick={clearPromo} disabled={isProcessing}>Remove</Button>
