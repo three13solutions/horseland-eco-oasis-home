@@ -83,6 +83,20 @@ test('only an exact server-fenced pre-provider rejection permits checkout replac
  assert.equal(discardSafelyRejectedWebsiteCheckout(id,body,s),false);
 });
 
+test('retained order clears only after exact explicit server abandonment evidence',()=>{
+ const s=storage();getOrCreateWebsiteCheckout(key,s,()=>id);updateWebsiteCheckout(id,{checkoutToken:'capability',orderId:'order_existing',state:'ready'},s);
+ const evidence={request_id:id,safe_to_change_selection:true,cleared:true,cleared_order_id:'order_other'};
+ assert.equal(discardSafelyRejectedWebsiteCheckout(id,evidence,s),false);
+ assert.equal(readWebsiteCheckout(s).orderId,'order_existing');
+ assert.equal(discardSafelyRejectedWebsiteCheckout(id,{...evidence,cleared_order_id:'order_existing'},s),true);
+ assert.equal(readWebsiteCheckout(s),null);
+});
+test('paid checkout cannot clear even with server evidence',()=>{
+ const s=storage();getOrCreateWebsiteCheckout(key,s,()=>id);updateWebsiteCheckout(id,{checkoutToken:'capability',orderId:'order_paid',state:'paid'},s);
+ assert.equal(discardSafelyRejectedWebsiteCheckout(id,{request_id:id,safe_to_change_selection:true,cleared:true,cleared_order_id:'order_paid'},s),false);
+ assert.equal(readWebsiteCheckout(s).state,'paid');
+});
+
 test('v3 finalization sends capability and signed payment only, never recalculated booking totals',()=>{
  const source=readFileSync(new URL('../src/pages/Booking.tsx',import.meta.url),'utf8');
  const body=source.split('body: checkout ? {')[1].split('} : {')[0];

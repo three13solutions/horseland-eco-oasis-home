@@ -8,6 +8,7 @@ import {classifySavedCheckout} from '../_shared/distributionResume.ts';
 import { admissionIdentity } from '../_shared/distributionAdmission.ts';
 import { createDistributionStore } from '../_shared/distributionStore.ts';
 import { getDistributionRazorpayCredentials, createDistributionRazorpayProvider } from '../_shared/distributionRazorpay.ts';
+import { verifyUnpaidCheckout } from '../_shared/distributionClear.ts';
 const headers={'Access-Control-Allow-Origin':'*','Access-Control-Allow-Headers':'authorization, x-client-info, apikey, content-type','Access-Control-Allow-Methods':'POST, OPTIONS','Content-Type':'application/json','Cache-Control':'no-store'};
 const reply=(body:unknown,status=200)=>new Response(JSON.stringify(body),{status,headers});
 serve(async(req:Request)=>{
@@ -24,16 +25,30 @@ serve(async(req:Request)=>{
   if((body.action==='prepare'||body.action==='resume'||body.action==='clear'))identity={requestId:body.request_id,ownerScope:await verifyCheckoutCapability(body.checkout_token,body.request_id,secret)};
   if(body.action==='clear'){
    if(!identity)throw new InventoryPaymentError('INVALID_CHECKOUT_ACTION','Checkout ownership could not be verified.');
-   const closed=await db.rpc('distribution_close_unused_checkout',{p_request_id:identity.requestId,p_owner_scope:identity.ownerScope});
-   if(closed.error||closed.data!==true)throw new InventoryPaymentError('CHECKOUT_CLEAR_BLOCKED','This checkout has a room hold or payment order and cannot be safely cleared online. Contact the hotel to resolve it before starting another booking.');
-   return reply({request_id:identity.requestId,safe_to_change_selection:true,cleared:true});
+   const saved=await db.rpc('distribution_resume_checkout',{p_request_id:identity.requestId,p_owner_scope:identity.ownerScope});
+   if(saved.error)throw new InventoryPaymentError('CHECKOUT_CLEAR_BLOCKED','Your saved checkout could not be checked. Retry or contact the hotel.');
+   const entry=saved.data;
+   if(entry?.state==='confirmed'||entry?.booking_id)throw new InventoryPaymentError('CHECKOUT_CLEAR_BLOCKED','A booking or payment is already confirmed. Contact the hotel; Clear Booking does not cancel paid bookings.');
+   let closed;
+   if(entry?.provider_order_id&&entry.record){
+    if(body.order_id&&body.order_id!==entry.provider_order_id)throw new InventoryPaymentError('CHECKOUT_CLEAR_BLOCKED','Checkout changed in another window. Reload before clearing.');
+    const credentials=await getDistributionRazorpayCredentials(db,name=>Deno.env.get(name));
+    const evidence=await verifyUnpaidCheckout(entry.record,createDistributionRazorpayProvider(credentials));
+    closed=await db.rpc('distribution_abandon_unpaid_checkout',{p_request_id:identity.requestId,p_owner_scope:identity.ownerScope,p_order:evidence.order,p_payments:evidence.payments});
+   }else{
+    closed=await db.rpc('distribution_close_unused_checkout',{p_request_id:identity.requestId,p_owner_scope:identity.ownerScope});
+   }
+   if(closed.error||closed.data!==true)throw new InventoryPaymentError('CHECKOUT_CLEAR_BLOCKED','This checkout is being prepared or needs payment review. It has not been cleared. Retry or contact the hotel.');
+   return reply({request_id:identity.requestId,safe_to_change_selection:true,cleared:true,cleared_order_id:entry?.provider_order_id??null});
   }
   if(body.action==='resume'){
-   const saved=await db.rpc('distribution_resume_checkout',{p_request_id:identity!.requestId,p_owner_scope:identity!.ownerScope});
+   if(!identity)throw new InventoryPaymentError('INVALID_CHECKOUT_ACTION','Checkout ownership could not be verified.');
+   const saved=await db.rpc('distribution_resume_checkout',{p_request_id:identity.requestId,p_owner_scope:identity.ownerScope});
    if(saved.error||!saved.data)throw new InventoryPaymentError('CHECKOUT_NOT_FOUND','The saved checkout could not be read. Contact the hotel before starting another payment.');
    const entry=saved.data,intent=entry.intent;
    const room=await db.from('room_types').select('name').eq('id',intent.selection.roomTypeId).maybeSingle();
    const base={room_type_name:room.error?undefined:room.data?.name,request_id:body.request_id,quote_request:intent.quoteSnapshot.request,guest_policy_snapshot:intent.quoteSnapshot.variant?.guest_age_policy,guest:intent.bookingMetadata?.guest,booking_id:entry.booking_id??undefined};
+   if(entry.state==='released')return reply({...base,state:'pending',message:'This checkout was cleared. Close this window and use Clear Booking to remove its saved reference; do not pay this old order.'});
    if(entry.state==='confirmed')return reply({...base,state:entry.booking_status==='confirmed'?'confirmed':'pending',message:entry.booking_status==='confirmed'?undefined:'This saved booking needs hotel review. Do not pay again.'});
    if(!entry.provider_order_id||!entry.record)return reply({...base,state:'pending'});
    const credentials=await getDistributionRazorpayCredentials(db,name=>Deno.env.get(name));
@@ -68,7 +83,8 @@ serve(async(req:Request)=>{
   if(stateError||state?.enabled!==true)throw new InventoryPaymentError('INVENTORY_NOT_ACTIVE','The new inventory checkout is not active. Refresh before starting a payment.');
   if(body.action==='session')return reply({request_id:body.request_id,checkout_token:await issueCheckoutCapability(body.request_id,secret)});
   if(body.action!=='prepare'||body.existing_booking_id)return reply({code:'INVALID_CHECKOUT_ACTION',error:'Use the website checkout for a new reservation.'},400);
-  const ownerScope=identity!.ownerScope;
+  if(!identity)throw new InventoryPaymentError('INVALID_CHECKOUT_ACTION','Checkout ownership could not be verified.');
+  const ownerScope=identity.ownerScope;
   const request=normalizeQuoteRequest({...body.quote_request,promo_code:body.promo_code??body.quote_request?.promo_code});
   const metadata=normalizeBookingMetadata(body.guest,body.booking_notes);
   if((body.currency??'INR')!=='INR')throw new QuoteError('INVALID_CURRENCY','Only INR is supported.',400);

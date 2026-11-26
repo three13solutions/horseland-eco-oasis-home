@@ -803,16 +803,16 @@ const Booking = () => {
   };
 
   const handleClearSavedCheckout = async () => {
-    if (clearingCheckout || showPaymentModal || !window.confirm('Clear this saved checkout? The hotel will first check whether it is safe. Paid bookings and existing payment orders will not be cancelled.')) return;
+    if (clearingCheckout || showPaymentModal || !window.confirm('Clear this saved checkout? We will check Razorpay first. If unpaid, your room hold will be released so you can start again. Paid or processing payments cannot be cleared. Do not pay any old payment window after clearing.')) return;
     setClearingCheckout(true);
     setClearCheckoutError(null);
     try {
       await withWebsiteCheckoutLock(async () => {
         const saved = readWebsiteCheckout();
         if (!saved || saved.requestId !== retainedCheckoutAtLoad || !saved.checkoutToken) throw new Error('This checkout cannot be verified. Contact the hotel before starting another booking.');
-        if (saved.state === 'paid' || saved.orderId) throw new Error('This checkout has a payment order or payment awaiting confirmation. Contact the hotel to resolve it before starting another booking.');
+        if (saved.state === 'paid') throw new Error('A payment is awaiting confirmation. Contact the hotel before starting another booking.');
         const { data, error } = await supabase.functions.invoke('create-razorpay-order-v3', {
-          body: { action: 'clear', request_id: saved.requestId, checkout_token: saved.checkoutToken },
+          body: { action: 'clear', request_id: saved.requestId, checkout_token: saved.checkoutToken, order_id: saved.orderId },
         });
         const evidence = await checkoutErrorBody(data, error);
         if (error || !data?.cleared || !discardSafelyRejectedWebsiteCheckout(saved.requestId, data)) {

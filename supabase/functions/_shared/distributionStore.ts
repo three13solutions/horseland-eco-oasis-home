@@ -13,7 +13,12 @@ export function createDistributionStore(db: DistributionRpcClient): InventoryPay
   bindOrder:(record:IntentRecord,operationToken:string,order:ProviderOrder)=>call<void>('distribution_bind_payment_order',{p_record:record,p_operation_token:operationToken,p_order:order}),
   markUnknown:(record:IntentRecord,reason:string)=>call<void>('distribution_mark_payment_unknown',{p_record:record,p_reason:reason}),
   findBoundOrder:(orderId:string,ownerScope:string)=>call<IntentRecord&{orderId:string}>('distribution_find_bound_order',{p_order_id:orderId,p_owner_scope:ownerScope}),
-  confirmCaptured:(record:IntentRecord&{orderId:string},payment:ProviderPayment)=>call<{bookingId:string;unitId:string;reused:boolean}>('distribution_confirm_captured_payment',{p_record:record,p_payment:payment}),
+  confirmCaptured:async(record:IntentRecord&{orderId:string},payment:ProviderPayment)=>{
+   const result=await call<{bookingId:string;unitId:string;reused:boolean;review_required?:boolean}>('distribution_confirm_captured_payment',{p_record:record,p_payment:payment});
+   // The SQL review flag must commit before surfacing the failure to the guest.
+   if(result.review_required)throw new InventoryPaymentError('CLEARED_CHECKOUT_PAYMENT_REVIEW','Payment arrived for a cleared checkout. No booking was created; the hotel must review this payment. Do not pay again.');
+   return result;
+  },
   resume:(requestId:string,ownerScope:string)=>call<PaymentIntent|null>('distribution_resume_payment_intent',{p_request_id:requestId,p_owner_scope:ownerScope}),
  };
 }

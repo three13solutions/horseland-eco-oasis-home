@@ -15,7 +15,11 @@ export async function reconcileCapturedHold(
  if(captured.length!==1)return {status:'review_required',message:'Multiple captured payments require manual review. Inventory remains held.'};
  const paid=await provider.getPayment(captured[0].id);
  if(paid.id!==captured[0].id||paid.order_id!==record.orderId||paid.amount!==record.amountPaise||paid.currency!==record.currency||paid.status!=='captured'||Number(paid.amount_refunded??0)!==0||paid.refund_status)return {status:'review_required',message:'Payment amount, capture or refund state needs manual review. Inventory remains held.'};
- const result=await confirm(record,paid);
+ let result;
+ try{result=await confirm(record,paid);}catch(error){
+  if(error instanceof Error && 'code' in error && error.code==='CLEARED_CHECKOUT_PAYMENT_REVIEW')return {status:'review_required',message:'Payment received after checkout was cleared. The room hold remains released; no booking was created. Review the payment reference and resolve or refund through Razorpay.'};
+  throw error;
+ }
  return {status:'confirmed',bookingId:result.bookingId,reused:result.reused,message:result.reused?'This payment was already confirmed. No inventory was deducted again.':'Captured payment verified and the reserved room confirmed.'};
 }
 

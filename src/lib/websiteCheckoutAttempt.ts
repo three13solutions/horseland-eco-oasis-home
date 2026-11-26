@@ -79,9 +79,10 @@ export function discardSafelyRejectedWebsiteCheckout(requestId: string, evidence
   if (!evidence || typeof evidence !== 'object' || !('safe_to_change_selection' in evidence) ||
       evidence.safe_to_change_selection !== true || !('request_id' in evidence) || evidence.request_id !== requestId) return false;
   const current = readWebsiteCheckout(storage);
-  if (!current || current.requestId !== requestId || current.orderId || current.state === 'paid') return false;
-  // Server attests that this request is permanently fenced and never created
-  // a hold/intent/provider order. A timeout, HTTP status or clock is not evidence.
+  if (!current || current.requestId !== requestId || current.state === 'paid') return false;
+  if (current.orderId && (!('cleared' in evidence) || evidence.cleared !== true || !('cleared_order_id' in evidence) || evidence.cleared_order_id !== current.orderId)) return false;
+  // An exact explicit clear response proves the server permanently fenced the
+  // retained order; ordinary rejected prepares still cannot discard an order.
   storageFor(storage).removeItem(WEBSITE_CHECKOUT_KEY);
   return true;
 }

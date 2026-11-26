@@ -9,7 +9,7 @@ import { Clock3, ShieldCheck } from 'lucide-react';
 import { toast } from 'sonner';
 
 const db = supabase as SupabaseClient;
-type Hold = { hold_id: string; state: string; payment_state: string | null; category_name: string; room_type_name: string; unit_number: string; check_in: string; check_out: string; created_at: string; provider_order_id: string | null; review_reason: string | null };
+type Hold = { hold_id: string; state: string; payment_state: string | null; category_name: string; room_type_name: string; unit_number: string; check_in: string; check_out: string; created_at: string; provider_order_id: string | null; review_reason: string | null; abandoned_at?: string | null; payment_reference?: string | null };
 function ageLabel(value: string) {
   const minutes = Math.max(0, Math.floor((Date.now() - Date.parse(value)) / 60000));
   if (!Number.isFinite(minutes)) return 'Unknown';
@@ -39,12 +39,12 @@ export default function DistributionHolds() {
   return <details open={(query.data?.length ?? 0) > 0} className="rounded-lg border bg-card p-4">
     <summary className="flex cursor-pointer items-center gap-2 font-medium"><Clock3 className="h-4 w-4" />Checkout holds <Badge variant="secondary">{query.data?.length ?? '…'}</Badge></summary>
     <div className="mt-4 space-y-4">
-      <Alert><ShieldCheck className="h-4 w-4" /><AlertDescription>A payment attempt holds an eligible room and its category inventory. Closing checkout or an elapsed timer does not release it. Check payment status to finalise a verified paid checkout; unpaid or uncertain orders remain held for reconciliation.</AlertDescription></Alert>
+      <Alert><ShieldCheck className="h-4 w-4" /><AlertDescription>Unresolved checkouts retain their room holds. Guest-cleared unpaid checkouts release their rooms but retain their payment orders below; any later payment needs hotel review and does not automatically create a booking.</AlertDescription></Alert>
       {query.isError ? <p className="text-sm text-destructive">Pending checkouts could not be loaded. <Button variant="link" onClick={() => query.refetch()}>Retry</Button></p> : query.isLoading ? <p className="text-sm text-muted-foreground">Loading pending checkouts…</p> : query.data?.length === 0 ? <p className="text-sm text-muted-foreground">No pending checkout holds.</p> : <Table><TableHeader><TableRow><TableHead>Room</TableHead><TableHead>Stay</TableHead><TableHead>Held for</TableHead><TableHead>Payment</TableHead><TableHead><span className="sr-only">Actions</span></TableHead></TableRow></TableHeader><TableBody>{query.data?.map(hold => <TableRow key={hold.hold_id}>
         <TableCell><p className="font-medium">{hold.category_name} · {hold.unit_number}</p><p className="text-xs text-muted-foreground">{hold.room_type_name}</p></TableCell>
         <TableCell className="whitespace-nowrap">{hold.check_in} → {hold.check_out}</TableCell>
-        <TableCell>{ageLabel(hold.created_at)}</TableCell>
-        <TableCell><Badge variant={hold.payment_state === 'review_required' ? 'destructive' : 'outline'}>{hold.payment_state === 'review_required' ? 'Needs review' : 'Awaiting verification'}</Badge>{!hold.provider_order_id && <p className="mt-1 max-w-xs text-xs text-muted-foreground">Provider order not yet linked. Checking searches for the exact provider receipt. Unresolved attempts remain protected.</p>}</TableCell>
+        <TableCell>{hold.abandoned_at ? 'Room released' : ageLabel(hold.created_at)}</TableCell>
+        <TableCell><Badge variant={hold.payment_state === 'review_required' ? 'destructive' : 'outline'}>{hold.payment_state === 'review_required' ? 'Needs review' : hold.abandoned_at ? 'Cleared · unpaid' : 'Awaiting verification'}</Badge>{hold.review_reason === 'payment_received_after_checkout_cleared' && <p className="mt-1 max-w-xs text-xs text-destructive">Payment received after clearing. No booking created. Review in Razorpay: {hold.payment_reference}</p>}{hold.abandoned_at && <p className="mt-1 max-w-xs break-all text-xs text-muted-foreground">Order: {hold.provider_order_id}</p>}{!hold.provider_order_id && <p className="mt-1 max-w-xs text-xs text-muted-foreground">Provider order not yet linked. Checking searches for the exact provider receipt. Unresolved attempts remain protected.</p>}</TableCell>
         <TableCell><Button variant="outline" size="sm" disabled={check.isPending} onClick={() => check.mutate(hold.hold_id)}>{check.isPending && check.variables === hold.hold_id ? 'Checking…' : 'Check payment status'}</Button></TableCell>
       </TableRow>)}</TableBody></Table>}
     </div>

@@ -30,10 +30,11 @@ export function createDistributionRazorpayProvider(credentials:{keyId:string;sec
  };
  // Orders auto-capture; an "authorized" payment (capture still pending) is captured explicitly so a verified payment is never left unmatched.
  const getPayment=async(id:string):Promise<ProviderPayment>=>{const path='payments/'+encodeURIComponent(id);const payment=await call<ProviderPayment>(path);if(payment.status!=='authorized')return payment;try{return await call<ProviderPayment>(path+'/capture',{amount:payment.amount,currency:payment.currency});}catch{return await call<ProviderPayment>(path);}};
- return {createOrder:input=>call<ProviderOrder>('orders',{...input,payment_capture:1}),getOrder:id=>call<ProviderOrder>('orders/'+encodeURIComponent(id)),getPayment,listOrderPayments:id=>call<{items:ProviderPayment[]}>('orders/'+encodeURIComponent(id)+'/payments'),findOrdersByReceipt:(receipt,skip,count)=>call<{items:ProviderOrder[]}>(`orders?receipt=${encodeURIComponent(receipt)}&skip=${skip}&count=${count}`),listOrders:(skip,count,to)=>call<{items:(ProviderOrder&{created_at:number})[]}>(`orders?skip=${skip}&count=${count}&to=${to}`)};
+ return {createOrder:input=>call<ProviderOrder>('orders',{...input,payment_capture:1}),getOrder:id=>call<ProviderOrder>('orders/'+encodeURIComponent(id)),getPayment,listOrderPayments:id=>call<{items:ProviderPayment[]}>('orders/'+encodeURIComponent(id)+'/payments?count=100&skip=0'),findOrdersByReceipt:(receipt,skip,count)=>call<{items:ProviderOrder[]}>(`orders?receipt=${encodeURIComponent(receipt)}&skip=${skip}&count=${count}`),listOrders:(skip,count,to)=>call<{items:(ProviderOrder&{created_at:number})[]}>(`orders?skip=${skip}&count=${count}&to=${to}`)};
 }
 export async function verifyDistributionPaymentSignature(secret:string,orderId:string,paymentId:string,signature:string):Promise<boolean>{
  if(!/^[a-f0-9]{64}$/i.test(signature))return false;
  const key=await crypto.subtle.importKey('raw',new TextEncoder().encode(secret),{name:'HMAC',hash:'SHA-256'},false,['verify']);
- return crypto.subtle.verify('HMAC',key,Uint8Array.from(signature.match(/.{2}/g)!,s=>parseInt(s,16)),new TextEncoder().encode(`${orderId}|${paymentId}`));
+ const bytes=signature.match(/.{2}/g);if(!bytes)return false;
+ return crypto.subtle.verify('HMAC',key,Uint8Array.from(bytes,s=>parseInt(s,16)),new TextEncoder().encode(`${orderId}|${paymentId}`));
 }

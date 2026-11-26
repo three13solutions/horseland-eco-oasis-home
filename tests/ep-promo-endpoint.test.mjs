@@ -6,23 +6,24 @@ import vm from 'node:vm';
 import {calculateBookingQuote,assertQuoteMatches,normalizeQuoteRequest,QuoteError} from '../supabase/functions/_shared/bookingQuote.ts';
 import {InventoryPaymentError} from '../supabase/functions/_shared/distributionPaymentCoordinator.ts';
 import {normalizeBookingMetadata,assertResumeMatches} from '../supabase/functions/_shared/distributionCheckout.ts';
+import {verifyUnpaidCheckout} from '../supabase/functions/_shared/distributionClear.ts';
 const source=readFileSync(new URL('../supabase/functions/create-razorpay-order-v3/index.ts',import.meta.url),'utf8').replace(/^import .*;\n/gm,'');
 const quoteRequest={room_type_id:'11111111-1111-4111-8111-111111111111',check_in:'2026-11-18',check_out:'2026-11-20',adults_count:2,children_count:0,infants_count:0,meal_plan_code:'FB',cancellation_policy_code:'free',addons:[]};
 const variant={pricing_status:'verified',room_rate:4100,meal_cost:6040,total_price:10140,price_per_night:5070,quote_fingerprint:'base',meal_plan_code:'FB',cancellation_policy_code:'free',nightly_breakdown:[{date:'2026-11-18',room_only:2000},{date:'2026-11-19',room_only:2100}]};
 const config={code:'EP300',label:'300 off',revision:1,amount_per_night:300,is_active:true};
 const guest={first_name:'Test',last_name:'Guest',email:'guest@example.com',phone:'+919999999999'};
-function harness({enabled=true,retained=null,canClear=true,validOwner=true}={}) {
- let handler,prepared=null,lookups=0;
+function harness({enabled=true,retained=null,canClear=true,validOwner=true,saved=null,providerOrder=null,payments=[],providerError=false}={}) {
+ let handler,prepared=null,lookups=0,abandoned=0;
  const db={rpc:async name=>({data:name==='distribution_checkout_state'?{enabled:true}:true}),from:table=>{lookups++;const result=()=>({data:table==='room_types'?{id:quoteRequest.room_type_id,is_published:true}:table==='website_promo_rollout'?{enabled}:config});const chain={select:()=>chain,eq:()=>chain,maybeSingle:async()=>result(),order:async()=>({data:[{min_amount:0,max_amount:null,gst_percentage:18}]})};return chain}};
- db.rpc=async name=>({data:name==='distribution_close_unused_checkout'?canClear:name==='calculate_website_rate_variants'?[variant]:name==='distribution_checkout_state'?{enabled:true}:true});
+ db.rpc=async name=>{if(name==='distribution_abandon_unpaid_checkout')abandoned++;return{data:name==='distribution_resume_checkout'?saved:['distribution_close_unused_checkout','distribution_abandon_unpaid_checkout'].includes(name)?canClear:name==='calculate_website_rate_variants'?[variant]:name==='distribution_checkout_state'?{enabled:true}:true}};
  const ctx={serve:f=>{handler=f},createClient:()=>db,calculateBookingQuote,assertQuoteMatches,normalizeQuoteRequest,QuoteError,InventoryPaymentError,
  prepareWebsitePayment:async(_s,_p,intent)=>{prepared=intent;return{id:'order_test',amount:intent.amountPaise,currency:'INR'}},
  issueCheckoutCapability:async()=>'',verifyCheckoutCapability:async()=> {if(!validOwner)throw new InventoryPaymentError('INVALID_CHECKOUT_TOKEN','Invalid checkout token');return 'owner';},normalizeBookingMetadata,assertResumeMatches,
  classifySavedCheckout:()=>'',admissionIdentity:async()=>({sourceKey:'x',contactKey:'y',sourceVerified:true}),
- createDistributionStore:()=>({resume:async()=>retained}),getDistributionRazorpayCredentials:async()=>({keyId:'rzp_test_x'}),createDistributionRazorpayProvider:()=>({}),
+ createDistributionStore:()=>({resume:async()=>retained}),getDistributionRazorpayCredentials:async()=>({keyId:'rzp_test_x'}),verifyUnpaidCheckout,createDistributionRazorpayProvider:()=>({getOrder:async()=>{if(providerError)throw Error('Razorpay unavailable');return providerOrder},listOrderPayments:async()=>({items:payments})}),
  Deno:{env:{get:()=>undefined}},Request,Response,JSON,console};
  vm.runInNewContext(stripTypeScriptTypes(source),ctx);
- return{call:async body=>{const response=await handler(new Request('https://test/',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)}));return{status:response.status,body:await response.json()}},get prepared(){return prepared},get lookups(){return lookups}};
+ return{call:async body=>{const response=await handler(new Request('https://test/',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)}));return{status:response.status,body:await response.json()}},get prepared(){return prepared},get lookups(){return lookups},get abandoned(){return abandoned}};
 }
 test('offer preview is non-charging and server calculated',async()=>{const h=harness(),r=await h.call({action:'promo',promo_code:'EP300',quote_request:quoteRequest});assert.equal(r.status,200);assert.equal(r.body.quote.total_amount,11257.2);assert.equal(h.prepared,null)});
 test('browser amount cannot replace discounted amount',async()=>{const h=harness(),r=await h.call({action:'prepare',request_id:'11111111-1111-4111-8111-111111111111',checkout_token:'x',promo_code:'EP300',quote_request:quoteRequest,amount:1,quote_fingerprint:'base:promo:EP300:1:600',guest});assert.equal(r.status,409);assert.equal(r.body.code,'QUOTE_CHANGED');assert.equal(h.prepared,null)});
@@ -38,3 +39,17 @@ test('published legacy promo shape cannot validate EP300 even with rollout enabl
 test('clear unused checkout requires server fencing and creates no payment',async()=>{const h=harness();const r=await h.call({action:'clear',request_id:quoteRequest.room_type_id,checkout_token:'fixture'});assert.equal(r.status,200);assert.equal(r.body.cleared,true);assert.equal(r.body.safe_to_change_selection,true);assert.equal(h.prepared,null)});
 test('clear refuses a checkout with a hold or payment order',async()=>{const h=harness({canClear:false});const r=await h.call({action:'clear',request_id:quoteRequest.room_type_id,checkout_token:'fixture'});assert.equal(r.status,409);assert.equal(r.body.code,'CHECKOUT_CLEAR_BLOCKED');assert.equal(r.body.safe_to_change_selection,false);assert.equal(h.prepared,null)});
 test('clear refuses another owners checkout capability',async()=>{const h=harness({validOwner:false});const r=await h.call({action:'clear',request_id:quoteRequest.room_type_id,checkout_token:'fixture'});assert.equal(r.status,409);assert.notEqual(r.body.cleared,true);assert.equal(r.body.safe_to_change_selection,false)});
+
+const clearBody={action:'clear',request_id:quoteRequest.room_type_id,checkout_token:'fixture',order_id:'order_unpaid'};
+const clearRecord={orderId:'order_unpaid',amountPaise:100000,currency:'INR',receipt:'hl_fixture'};
+const savedOrder={state:'ready',provider_order_id:'order_unpaid',record:clearRecord};
+const unpaidOrder={id:'order_unpaid',amount:100000,currency:'INR',receipt:'hl_fixture',status:'created',amount_paid:0};
+test('unpaid retained order clears through atomic abandonment without creating payments',async()=>{const h=harness({saved:savedOrder,providerOrder:unpaidOrder});const r=await h.call(clearBody);assert.equal(r.status,200);assert.equal(r.body.cleared_order_id,'order_unpaid');assert.equal(h.abandoned,1);assert.equal(h.prepared,null)});
+test('only failed payment attempts permit clearing',async()=>{const h=harness({saved:savedOrder,providerOrder:{...unpaidOrder,status:'attempted'},payments:[{id:'pay_failed',order_id:'order_unpaid',status:'failed'}]});const r=await h.call(clearBody);assert.equal(r.body.cleared,true);assert.equal(h.abandoned,1)});
+for(const status of ['authorized','captured','created','refunded'])test(`${status} payment prevents clearing`,async()=>{const h=harness({saved:savedOrder,providerOrder:unpaidOrder,payments:[{id:'pay_exists',order_id:'order_unpaid',status}]});const r=await h.call(clearBody);assert.equal(r.status,409);assert.equal(r.body.safe_to_change_selection,false);assert.equal(h.abandoned,0)});
+test('paid order blocks even with an empty payment list',async()=>{const h=harness({saved:savedOrder,providerOrder:{...unpaidOrder,status:'paid',amount_paid:100000}});assert.equal((await h.call(clearBody)).status,409);assert.equal(h.abandoned,0)});
+test('provider failure retains checkout and inventory',async()=>{const h=harness({saved:savedOrder,providerError:true});const r=await h.call(clearBody);assert.equal(r.status,503);assert.equal(r.body.safe_to_change_selection,false);assert.equal(h.abandoned,0)});
+test('mismatched stored order cannot clear another checkout',async()=>{const h=harness({saved:savedOrder,providerOrder:{...unpaidOrder,id:'order_other'}});assert.equal((await h.call(clearBody)).status,409);assert.equal(h.abandoned,0)});
+test('confirmed booking cannot be cleared',async()=>{const h=harness({saved:{...savedOrder,state:'confirmed',booking_id:'booking_existing'},providerOrder:unpaidOrder});assert.equal((await h.call(clearBody)).status,409);assert.equal(h.abandoned,0)});
+test('changed order in another tab cannot be cleared',async()=>{const h=harness({saved:savedOrder,providerOrder:unpaidOrder});assert.equal((await h.call({...clearBody,order_id:'order_other'})).status,409);assert.equal(h.abandoned,0)});
+test('incomplete payment list prevents clearing',async()=>{const h=harness({saved:savedOrder,providerOrder:unpaidOrder,payments:Array.from({length:100},()=>({order_id:'order_unpaid',status:'failed'}))});assert.equal((await h.call(clearBody)).status,409);assert.equal(h.abandoned,0)});

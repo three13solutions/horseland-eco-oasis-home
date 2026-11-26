@@ -4149,6 +4149,15 @@ export type Database = {
         Returns: undefined
       }
       deleted_guest_policies: { Args: never; Returns: Json }
+      distribution_abandon_unpaid_checkout: {
+        Args: {
+          p_order: Json
+          p_owner_scope: string
+          p_payments: Json
+          p_request_id: string
+        }
+        Returns: boolean
+      }
       distribution_admin_reconciliation_intent: {
         Args: { p_hold_id: string }
         Returns: Json
@@ -4192,6 +4201,10 @@ export type Database = {
       distribution_inventory_activation_audit: { Args: never; Returns: Json }
       distribution_inventory_grid: {
         Args: { p_end: string; p_start: string }
+        Returns: Json
+      }
+      distribution_lookup_webhook_order: {
+        Args: { p_order_id: string }
         Returns: Json
       }
       distribution_mark_payment_unknown: {

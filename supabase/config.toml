@@ -110,3 +110,6 @@ verify_jwt = true
 
 [functions.admin-promotion-preview]
 verify_jwt = true
+
+[functions.razorpay-webhook]
+verify_jwt = false

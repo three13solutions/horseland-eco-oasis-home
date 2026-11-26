@@ -1,5 +1,8 @@
 # Roadmap
 
+- [ ] Allow owner-verified unpaid saved checkout clearing, atomically release inventory, and retain late payments for admin review; test and deploy.
+- [ ] Enable automatic late-payment notifications by registering the Razorpay webhook (blocked: Razorpay Dashboard configuration by account owner).
+
 - [x] Filter Room Rate Management room types by publication status (All / Published / Unpublished) across weekly rows and bulk selection, saving only visible types; 16 tests passed. Connected signed-in verification remains blocked by the external administrator session noted below.
 
 - [x] List and select Room Rate Management prices by room type; 13 tests and isolated desktop/mobile weekly/bulk save/read-back checks passed without changing connected rates. Connected signed-in verification remains blocked by the external administrator session noted below.
