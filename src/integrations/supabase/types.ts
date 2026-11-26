@@ -4327,6 +4327,10 @@ export type Database = {
         Args: { p_band: Json; p_current: Json; p_drafts: Json }
         Returns: Json
       }
+      room_rate_management_grid: {
+        Args: { p_from: string; p_to: string }
+        Returns: Json
+      }
       room_type_has_pricing: { Args: { p_type: string }; Returns: boolean }
       save_distribution_inventory: {
         Args: { p_changes: Json; p_request_id: string }
@@ -4392,6 +4396,7 @@ export type Database = {
         }
         Returns: number
       }
+      save_room_rate_management: { Args: { p_changes: Json }; Returns: Json }
       save_shared_meal_price: {
         Args: {
           p_expected_revision: number
