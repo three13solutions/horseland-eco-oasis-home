@@ -1,6 +1,6 @@
 # Roadmap
 
-- [ ] Allow owner-verified unpaid saved checkout clearing, atomically release inventory, and retain late payments for admin review; test and deploy.
+- [x] Allow owner-verified unpaid saved checkout clearing, atomically release inventory, retain late payments for admin review, and deploy; isolated database and checkout tests passed, real empty-checkout clear verified through the UI. Existing payable-order UI verification requires the owner's saved capability; no new payment orders or bookings created.
 - [ ] Enable automatic late-payment notifications by registering the Razorpay webhook (blocked: Razorpay Dashboard configuration by account owner).
 
 - [x] Filter Room Rate Management room types by publication status (All / Published / Unpublished) across weekly rows and bulk selection, saving only visible types; 16 tests passed. Connected signed-in verification remains blocked by the external administrator session noted below.

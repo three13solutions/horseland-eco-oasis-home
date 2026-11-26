@@ -81,7 +81,12 @@ serve(async(req:Request)=>{
   }
   const {data:state,error:stateError}=await db.rpc('distribution_checkout_state');
   if(stateError||state?.enabled!==true)throw new InventoryPaymentError('INVENTORY_NOT_ACTIVE','The new inventory checkout is not active. Refresh before starting a payment.');
-  if(body.action==='session')return reply({request_id:body.request_id,checkout_token:await issueCheckoutCapability(body.request_id,secret)});
+  if(body.action==='session'){
+   if(typeof body.request_id!=='string'||!/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(body.request_id))throw new InventoryPaymentError('INVALID_REQUEST_ID','A valid checkout reference is required.');
+   const available=await db.rpc('distribution_checkout_session_available',{p_request_id:body.request_id});
+   if(available.error||available.data!==true)throw new InventoryPaymentError('CHECKOUT_SESSION_EXISTS','This checkout already exists. Resume it with its original saved reference or contact the hotel.');
+   return reply({request_id:body.request_id,checkout_token:await issueCheckoutCapability(body.request_id,secret)});
+  }
   if(body.action!=='prepare'||body.existing_booking_id)return reply({code:'INVALID_CHECKOUT_ACTION',error:'Use the website checkout for a new reservation.'},400);
   if(!identity)throw new InventoryPaymentError('INVALID_CHECKOUT_ACTION','Checkout ownership could not be verified.');
   const ownerScope=identity.ownerScope;

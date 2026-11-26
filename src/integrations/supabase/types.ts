@@ -4171,6 +4171,10 @@ export type Database = {
         Args: { p_operation_token: string; p_order: Json; p_record: Json }
         Returns: undefined
       }
+      distribution_checkout_session_available: {
+        Args: { p_request_id: string }
+        Returns: boolean
+      }
       distribution_checkout_state: { Args: never; Returns: Json }
       distribution_close_unused_checkout: {
         Args: { p_owner_scope: string; p_request_id: string }
