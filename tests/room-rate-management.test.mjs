@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { weekDates, weeklyReview, bulkRateReview, emptyRates, parseRateInputs, roomTypesFromGrid, sharedRate, filterRoomTypesByStatus } from '../src/lib/room-rate-management.ts';
+import { weekDates, weeklyReview, bulkRateReview, emptyRates, parseRateInputs, roomTypesFromGrid, sharedRate, filterRoomTypesByStatus, DEFAULT_ROOM_TYPE_STATUS_FILTER } from '../src/lib/room-rate-management.ts';
 const entry = { category_id:'standard',type_id:'pod',type_name:'Standard',date:'2026-11-26',weekend:false,ep:2500,adult:900,child:600,editable:true,reason:null,fingerprint:'original' };
 const grid = { categories:[{id:'standard',name:'Standard'}],entries:[entry,{...entry,date:'2026-11-27',weekend:true}] };
 const rules = {mode:'same',same:emptyRates(),weekdays:emptyRates(),weekends:emptyRates(),days:{}};
@@ -22,3 +22,4 @@ const statuses=new Map([['pod',true],['balcony',false]]);
 test('status filter lists only published, only unpublished, or every room type',()=>{const types=roomTypesFromGrid(twoTypes);assert.deepEqual(filterRoomTypesByStatus(types,'published',statuses).map(row=>row.id),['pod']);assert.deepEqual(filterRoomTypesByStatus(types,'unpublished',statuses).map(row=>row.id),['balcony']);assert.deepEqual(filterRoomTypesByStatus(types,'all',statuses).map(row=>row.id),['balcony','pod']);});
 test('an unknown publication status keeps rates visible instead of hiding them',()=>{const types=roomTypesFromGrid(twoTypes);assert.deepEqual(filterRoomTypesByStatus(types,'published',new Map([['pod',true]])).map(row=>row.id),['balcony','pod']);assert.equal(filterRoomTypesByStatus(types,'unpublished',null).length,2);});
 test('saving weekly edits skips room types hidden by the status filter',()=>{const result=weeklyReview(twoTypes,{'pod:2026-11-26':{ep:'3000',adult:'',child:''},'balcony:2026-11-26':{ep:'4000',adult:'',child:''}},new Set(['pod']));assert.deepEqual(result.map(row=>row.change.type_id),['pod']);});
+test('the rate editor opens on published room types only',()=>{assert.equal(DEFAULT_ROOM_TYPE_STATUS_FILTER,'published');assert.deepEqual(filterRoomTypesByStatus(roomTypesFromGrid(twoTypes),DEFAULT_ROOM_TYPE_STATUS_FILTER,statuses).map(row=>row.id),['pod']);});

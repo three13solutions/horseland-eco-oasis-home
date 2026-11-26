@@ -3,7 +3,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { addDays, dateRange, hotelToday, validDate } from '@/lib/distribution-inventory';
-import { bulkRateReview, emptyRates, filterRoomTypesByStatus, rateCellKey, rateFields, roomTypesFromGrid, sharedRate, weekDates, weeklyReview, type BulkRules, type RateGrid, type RateInputs, type RateReview, type RoomTypeStatusFilter } from '@/lib/room-rate-management';
+import { bulkRateReview, DEFAULT_ROOM_TYPE_STATUS_FILTER, emptyRates, filterRoomTypesByStatus, rateCellKey, rateFields, roomTypesFromGrid, sharedRate, weekDates, weeklyReview, type BulkRules, type RateGrid, type RateInputs, type RateReview, type RoomTypeStatusFilter } from '@/lib/room-rate-management';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -44,7 +44,7 @@ export default function RoomRateManagement({ embedded = false }: { embedded?: bo
   const [review, setReview] = useState<RateReview[] | null>(null);
   const [preparing, setPreparing] = useState(false);
   const [error, setError] = useState('');
-  const [statusFilter, setStatusFilter] = useState<RoomTypeStatusFilter>('all');
+  const [statusFilter, setStatusFilter] = useState<RoomTypeStatusFilter>(DEFAULT_ROOM_TYPE_STATUS_FILTER);
   const client = useQueryClient();
   const end = addDays(start, 6);
   const query = useQuery({ queryKey: ['room-rate-management', start, end], queryFn: () => readRates(start, end), refetchOnWindowFocus: Object.keys(draft).length === 0 });

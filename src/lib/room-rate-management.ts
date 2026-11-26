@@ -30,6 +30,8 @@ export function reviewEntry(entry: RateEntry, inputs: Partial<RateInputs>): Rate
   return { before: entry, change: { type_id: entry.type_id, date: entry.date, fingerprint: entry.fingerprint, ...changed } };
 }
 export type RoomTypeStatusFilter = 'all' | 'published' | 'unpublished';
+// The rate editor opens on published room types only; admins widen it to unpublished or all from the filter.
+export const DEFAULT_ROOM_TYPE_STATUS_FILTER: RoomTypeStatusFilter = 'published';
 // Room types whose publication status is unknown are treated as published so a failed status lookup never hides rates.
 export function filterRoomTypesByStatus<T extends { id: string }>(types: T[], status: RoomTypeStatusFilter, published: Map<string, boolean> | null): T[] {
   if (!published || status === 'all') return types;
