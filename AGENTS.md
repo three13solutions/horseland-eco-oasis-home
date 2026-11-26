@@ -1,5 +1,7 @@
 # Architecture
 
+- Saved checkout clearing uses the owner-capability-verified server fence and retains any payment order or room hold; Razorpay orders can still accept payment, so browser deletion is not cancellation.
+
 - Room Rate Management and the live Rate Calendar share the same room-type-keyed weekly/bulk editor so edits never affect sibling types in the same category; atomic admin-checked saves split existing EP anchors by date, preserving stay tiers, guest links, unit overrides and protected pricing periods rather than creating a second pricing engine.
 
 - Guest-type status is versioned within each age band; staging edits never activate the pricing release, because live engine activation requires its separate rollout checks.

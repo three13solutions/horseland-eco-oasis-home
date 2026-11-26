@@ -21,7 +21,13 @@ serve(async(req:Request)=>{
   if(Number(req.headers.get('content-length')||0)>262144)return reply({error:'Request too large'},413);
   const body=await req.json();
   allowClose=body.action==='prepare';
-  if((body.action==='prepare'||body.action==='resume'))identity={requestId:body.request_id,ownerScope:await verifyCheckoutCapability(body.checkout_token,body.request_id,secret)};
+  if((body.action==='prepare'||body.action==='resume'||body.action==='clear'))identity={requestId:body.request_id,ownerScope:await verifyCheckoutCapability(body.checkout_token,body.request_id,secret)};
+  if(body.action==='clear'){
+   if(!identity)throw new InventoryPaymentError('INVALID_CHECKOUT_ACTION','Checkout ownership could not be verified.');
+   const closed=await db.rpc('distribution_close_unused_checkout',{p_request_id:identity.requestId,p_owner_scope:identity.ownerScope});
+   if(closed.error||closed.data!==true)throw new InventoryPaymentError('CHECKOUT_CLEAR_BLOCKED','This checkout has a room hold or payment order and cannot be safely cleared online. Contact the hotel to resolve it before starting another booking.');
+   return reply({request_id:identity.requestId,safe_to_change_selection:true,cleared:true});
+  }
   if(body.action==='resume'){
    const saved=await db.rpc('distribution_resume_checkout',{p_request_id:identity!.requestId,p_owner_scope:identity!.ownerScope});
    if(saved.error||!saved.data)throw new InventoryPaymentError('CHECKOUT_NOT_FOUND','The saved checkout could not be read. Contact the hotel before starting another payment.');

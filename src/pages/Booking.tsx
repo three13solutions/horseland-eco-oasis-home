@@ -3,7 +3,7 @@ import { writeGuestParty, legacyGuestCounts, guestHeadcount, type GuestCounts } 
 import { guestTypeName } from '@/lib/guest-age-policy';
 import { useGuestAgePolicy } from '@/hooks/useGuestAgePolicy';
 import type { SupabaseClient } from '@supabase/supabase-js';
-import { readWebsiteCheckout, clearConfirmedWebsiteCheckout, type WebsiteCheckoutContext } from '@/lib/websiteCheckoutAttempt';
+import { readWebsiteCheckout, clearConfirmedWebsiteCheckout, discardSafelyRejectedWebsiteCheckout, checkoutErrorBody, withWebsiteCheckoutLock, type WebsiteCheckoutContext } from '@/lib/websiteCheckoutAttempt';
 import { websiteTypeAvailability } from '@/lib/websiteInventory';
 import { readGuestParty } from '@/lib/guestParty';
 import { normalizeMealPlanCode, type MealPlanCode } from '@/lib/mealPlans';
@@ -190,10 +190,12 @@ const Booking = () => {
   const [selectedPickup, setSelectedPickup] = useState<PickupService | null>(null);
   const [selectedBedding, setSelectedBedding] = useState<BeddingOption[]>([]);
   const [showPaymentModal, setShowPaymentModal] = useState(false);
-  const [retainedCheckoutAtLoad] = useState(() => {
+  const [retainedCheckoutAtLoad, setRetainedCheckoutAtLoad] = useState(() => {
     try { const saved = readWebsiteCheckout(); return saved && saved.state !== 'session' ? saved.requestId : null; }
     catch { return 'unreadable'; }
   });
+  const [clearingCheckout, setClearingCheckout] = useState(false);
+  const [clearCheckoutError, setClearCheckoutError] = useState<string | null>(null);
   const [paymentModalKey, setPaymentModalKey] = useState(0);
   const [paymentResolution, setPaymentResolution] = useState<BookingPaymentResolution | null>(loadPaymentResolution);
   const [resolutionSaved, setResolutionSaved] = useState(true);
@@ -798,6 +800,32 @@ const Booking = () => {
       setSelectedCancellationPolicy(variant.cancellation_policy_code);
     }
     setShowBookingForm(true);
+  };
+
+  const handleClearSavedCheckout = async () => {
+    if (clearingCheckout || showPaymentModal || !window.confirm('Clear this saved checkout? The hotel will first check whether it is safe. Paid bookings and existing payment orders will not be cancelled.')) return;
+    setClearingCheckout(true);
+    setClearCheckoutError(null);
+    try {
+      await withWebsiteCheckoutLock(async () => {
+        const saved = readWebsiteCheckout();
+        if (!saved || saved.requestId !== retainedCheckoutAtLoad || !saved.checkoutToken) throw new Error('This checkout cannot be verified. Contact the hotel before starting another booking.');
+        if (saved.state === 'paid' || saved.orderId) throw new Error('This checkout has a payment order or payment awaiting confirmation. Contact the hotel to resolve it before starting another booking.');
+        const { data, error } = await supabase.functions.invoke('create-razorpay-order-v3', {
+          body: { action: 'clear', request_id: saved.requestId, checkout_token: saved.checkoutToken },
+        });
+        const evidence = await checkoutErrorBody(data, error);
+        if (error || !data?.cleared || !discardSafelyRejectedWebsiteCheckout(saved.requestId, data)) {
+          throw new Error(typeof evidence?.error === 'string' ? evidence.error : 'Clearing could not be confirmed. Your saved checkout is retained; contact the hotel.');
+        }
+        localStorage.removeItem('currentBooking');
+        setRetainedCheckoutAtLoad(null);
+        navigate('/booking', { replace: true });
+        toast({ title: 'Booking cleared', description: 'Your unused checkout has been cleared. You can start a new booking.' });
+      });
+    } catch (error) {
+      setClearCheckoutError(error instanceof Error ? error.message : 'Your checkout could not be cleared safely. Contact the hotel.');
+    } finally { setClearingCheckout(false); }
   };
 
   const handleClearBooking = () => {
@@ -1630,8 +1658,10 @@ const Booking = () => {
           <CardContent className="space-y-4">
             <p>An earlier checkout needs to be resumed or reconciled before starting a different payment. Its room hold has not been released.</p>
             {retainedCheckoutAtLoad !== 'unreadable' && <p className="text-sm break-all">Checkout reference: {retainedCheckoutAtLoad}</p>}
-            <Button onClick={() => setShowPaymentModal(true)}>Review saved checkout</Button>
+            <Button disabled={clearingCheckout} onClick={() => setShowPaymentModal(true)}>Review saved checkout</Button>
+            <Button variant="destructive" disabled={clearingCheckout || showPaymentModal || retainedCheckoutAtLoad === 'unreadable'} onClick={handleClearSavedCheckout}>{clearingCheckout ? 'Checking…' : 'Clear Booking'}</Button>
             <Button variant="outline" asChild><a href="/contact">Contact the hotel</a></Button>
+            {clearCheckoutError && <p role="alert" className="text-sm text-destructive">{clearCheckoutError}</p>}
           </CardContent>
         </Card>
         <PaymentModal isOpen={showPaymentModal} onClose={() => setShowPaymentModal(false)} onSuccess={handlePaymentSuccess}
