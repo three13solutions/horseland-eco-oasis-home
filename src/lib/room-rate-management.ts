@@ -29,8 +29,15 @@ export function reviewEntry(entry: RateEntry, inputs: Partial<RateInputs>): Rate
   if (!Object.keys(changed).length) return null;
   return { before: entry, change: { type_id: entry.type_id, date: entry.date, fingerprint: entry.fingerprint, ...changed } };
 }
-export function weeklyReview(grid: RateGrid, draft: Record<string, Partial<RateInputs>>): RateReview[] {
+export type RoomTypeStatusFilter = 'all' | 'published' | 'unpublished';
+// Room types whose publication status is unknown are treated as published so a failed status lookup never hides rates.
+export function filterRoomTypesByStatus<T extends { id: string }>(types: T[], status: RoomTypeStatusFilter, published: Map<string, boolean> | null): T[] {
+  if (!published || status === 'all') return types;
+  return types.filter(type => (published.get(type.id) ?? true) === (status === 'published'));
+}
+export function weeklyReview(grid: RateGrid, draft: Record<string, Partial<RateInputs>>, visibleTypeIds?: Set<string>): RateReview[] {
   return grid.entries.flatMap(entry => {
+    if (visibleTypeIds && !visibleTypeIds.has(entry.type_id)) return [];
     const inputs = draft[rateCellKey(entry.type_id, entry.date)];
     const review = inputs ? reviewEntry(entry, inputs) : null;
     return review ? [review] : [];
