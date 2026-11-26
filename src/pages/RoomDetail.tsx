@@ -15,6 +15,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { supabase } from '@/integrations/supabase/client';
 import { format } from 'date-fns';
+import { useRoomPageRates } from '@/hooks/useRoomPageRates';
 import { cn } from '@/lib/utils';
 import { 
   Users, 
@@ -60,6 +61,7 @@ const RoomDetail = () => {
   const [seasons, setSeasons] = useState<any[]>([]);
   const [checkInDate, setCheckInDate] = useState<Date>();
   const [checkOutDate, setCheckOutDate] = useState<Date>();
+  const liveRates = useRoomPageRates(roomId, checkInDate, checkOutDate);
   const [adults, setAdults] = useState<number>(initialParty.adults);
   const [children, setChildren] = useState<number>(initialParty.children);
   const [infants, setInfants] = useState<number>(initialParty.infants);
@@ -570,106 +572,33 @@ const RoomDetail = () => {
                   </div>
 
                   <div className="mb-6">
-                    <div className="flex items-center gap-3 mb-2">
+                    <div className="flex items-center gap-3 mb-1">
                       <span className="text-3xl font-heading font-bold text-primary">
-                        ₹{roomData.base_price?.toLocaleString('en-IN')}
+                        {liveRates.loading && liveRates.nightly == null ? '…' : `₹${Math.round(liveRates.nightly ?? roomData.base_price ?? 0).toLocaleString('en-IN')}`}
                       </span>
                     </div>
-                    <span className="text-sm text-muted-foreground font-body">per night (base price)</span>
-                    
-                    {/* Seasonal Pricing Toggle */}
-                    {seasonalPricing.length > 0 && (
+                    <span className="text-sm text-muted-foreground font-body">
+                      {checkInDate && checkOutDate ? 'avg per night for your dates' : 'per night tonight'} (Room only)
+                    </span>
+                    <p className="text-xs text-muted-foreground font-body mt-1">Meal plans can be added at booking.</p>
+                    {liveRates.week.some(d => d.price != null) && (
                       <div className="mt-3">
                         <button
                           onClick={() => setShowSeasonalPricing(!showSeasonalPricing)}
                           className="flex items-center gap-2 text-xs text-primary hover:text-primary/80 transition-colors font-body"
                         >
                           <CalendarIcon className="w-3.5 h-3.5" />
-                          <span>See seasonal rates</span>
-                          {showSeasonalPricing ? (
-                            <ChevronUp className="w-3.5 h-3.5" />
-                          ) : (
-                            <ChevronDown className="w-3.5 h-3.5" />
-                          )}
+                          <span>See next 7 days</span>
+                          {showSeasonalPricing ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
                         </button>
-                        
                         {showSeasonalPricing && (
-                          <div className="mt-3 space-y-3 animate-in fade-in slide-in-from-top-2 duration-200">
-                            {/* Group pricing by season */}
-                            {seasons.map((season) => {
-                              const seasonPrices = seasonalPricing.filter(
-                                (sp) => sp.season?.id === season.id
-                              );
-                              
-                              if (seasonPrices.length === 0) return null;
-                              
-                              return (
-                                <div key={season.id} className="space-y-2">
-                                  <div className="flex items-center gap-2 mb-2">
-                                    <div 
-                                      className="w-2 h-2 rounded-full" 
-                                      style={{ backgroundColor: season.color }}
-                                    />
-                                    <span className="text-xs font-body font-semibold">
-                                      {season.name}
-                                    </span>
-                                  </div>
-                                  
-                                  <div className="grid grid-cols-2 gap-2 ml-4">
-                                    {seasonPrices.map((sp) => (
-                                      <div 
-                                        key={sp.id} 
-                                        className="flex items-center justify-between p-2 rounded-lg border bg-card/30"
-                                      >
-                                        <span className="text-xs font-body text-muted-foreground">
-                                          {sp.day_type?.name}
-                                        </span>
-                                        <span className="text-sm font-heading font-bold">
-                                          ₹{sp.price?.toLocaleString('en-IN')}
-                                        </span>
-                                      </div>
-                                    ))}
-                                  </div>
-                                </div>
-                              );
-                            })}
-                            
-                            {/* Season Guide */}
-                            <div className="pt-2 border-t space-y-1.5">
-                              <p className="text-[10px] font-body font-semibold text-muted-foreground uppercase tracking-wide mb-2">
-                                Season Guide
-                              </p>
-                              <div className="space-y-1.5">
-                                {seasons.map((season) => {
-                                  const periods = season.season_periods || [];
-                                  const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-                                  
-                                  return (
-                                    <div key={season.id} className="flex items-start gap-2">
-                                      <div 
-                                        className="w-1.5 h-1.5 rounded-full mt-1.5 flex-shrink-0" 
-                                        style={{ backgroundColor: season.color }}
-                                      />
-                                      <p className="text-xs font-body text-muted-foreground leading-relaxed">
-                                        <span className="font-medium">{season.name}:</span>{' '}
-                                        {periods.map((p: any, idx: number) => (
-                                          <span key={idx}>
-                                            {monthNames[p.start_month - 1]} {p.start_day} - {monthNames[p.end_month - 1]} {p.end_day}
-                                            {idx < periods.length - 1 && ', '}
-                                          </span>
-                                        ))}
-                                        {season.description && ` (${season.description})`}
-                                      </p>
-                                    </div>
-                                  );
-                                })}
-                                <div className="pt-1 mt-1 border-t">
-                                  <p className="text-xs font-body text-muted-foreground leading-relaxed">
-                                    <span className="font-medium">Note:</span> Weekend rates apply to Fri-Sun and all holidays
-                                  </p>
-                                </div>
+                          <div className="mt-3 grid grid-cols-2 gap-2 animate-in fade-in slide-in-from-top-2 duration-200">
+                            {liveRates.week.map(d => (
+                              <div key={d.date.toISOString()} className="flex items-center justify-between p-2 rounded-lg border bg-card/30">
+                                <span className="text-xs font-body text-muted-foreground">{format(d.date, 'EEE, d MMM')}</span>
+                                <span className="text-sm font-heading font-bold">{d.price != null ? `₹${Math.round(d.price).toLocaleString('en-IN')}` : '—'}</span>
                               </div>
-                            </div>
+                            ))}
                           </div>
                         )}
                       </div>
