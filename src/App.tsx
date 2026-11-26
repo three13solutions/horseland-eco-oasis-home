@@ -77,6 +77,7 @@ import LiveRateCard from "./pages/admin/LiveRateCard";
 import GSTConfiguration from "./pages/admin/GSTConfiguration";
 import RateOverrides from "./pages/admin/RateOverrides";
 import RatePlans from "./pages/admin/RatePlans";
+import RoomRateManagement from "./pages/admin/RoomRateManagement";
 import GuestAgePricingPolicy from "./pages/admin/GuestAgePricingPolicy";
 import { Navigate } from 'react-router-dom';
 // Old imports kept for backwards compatibility within consolidated pages
@@ -149,6 +150,7 @@ function App() {
                 <Route path="pricing/rates" element={<BasePricing />} />
                 <Route path="pricing/rules" element={<PricingRules />} />
                 <Route path="pricing/rate-card" element={<LiveRateCard />} />
+                <Route path="pricing/room-rates" element={<RoomRateManagement />} />
                 <Route path="pricing/meal-plans" element={<MealPlansManagement />} />
                 <Route path="pricing/cancellation-policies" element={<CancellationPoliciesManagement />} />
                 <Route path="pricing/gst" element={<GSTConfiguration />} />

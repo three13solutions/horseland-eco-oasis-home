@@ -1,5 +1,7 @@
 # Architecture
 
+- Room Rate Management and the live Rate Calendar share the same weekly/bulk editor; atomic admin-checked saves split existing EP anchors by date, preserving stay tiers, guest links, unit overrides and protected pricing periods rather than creating a second pricing engine.
+
 - Guest-type status is versioned within each age band; staging edits never activate the pricing release, because live engine activation requires its separate rollout checks.
 - Accommodation charge editors retain keyed guest-type modes alongside legacy numeric columns; database triggers resolve linked adult amounts on every write so existing authoritative pricing readers remain compatible.
 - Named guest types and bounded adult segments remain staged until guest collection and canonical quote inputs support those segments; configuration alone must never claim custom live pricing.

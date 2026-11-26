@@ -1,8 +1,9 @@
 # Roadmap
 
-- [ ] Add Room Rate Management below Live Rate Card with seven-day category editing and independent EP/adult/child updates.
-- [ ] Add category/date/day-rule bulk updates with preview and atomic, stale-safe saving through canonical rate plans.
-- [ ] Verify synchronized pricing and weekly/bulk interactions without creating bookings or payment orders.
+- [x] Add Room Rate Management below Live Rate Card with seven-day category editing and independent EP/adult/child updates.
+- [x] Add category/date/day-rule bulk updates with preview and atomic, stale-safe saving through canonical rate plans; Rate Calendar shares the new live editor and its old drafts remain separate.
+- [x] Verify isolated weekly/bulk save and read-back on desktop/mobile, EP meal additions, atomic stale rejection, linked guest rates, history and preserved stay tiers. No connected live rates, bookings or payment orders changed.
+- [ ] Verify signed-in Room Rate Management saves against connected website quotes (blocked: user-managed Supabase cannot supply an administrator test session).
 
 - [x] Connect guest-type accommodation and meal pricing editors to configured policy types, and show expandable linked-pricing records.
 - [x] Carry dynamic guest types through guest selection, canonical rate variants, checkout snapshots and payment validation without changing existing rates.

@@ -95,6 +95,7 @@ export default function AdminLayout() {
 
   const getPageInfo = () => {
     const path = location.pathname;
+    if (path.startsWith('/admin/pricing/room-rates')) return { label: 'Room Rate Management', description: 'Weekly and bulk EP rates' };
     
     if (path.startsWith('/admin/distribution/availability') || path.startsWith('/admin/distribution/inventory')) return { label: 'Room Inventory', description: 'Room type website inventory' };
     if (path.startsWith('/admin/distribution/channels')) return { label: 'Channels', description: 'Booking source definitions' };

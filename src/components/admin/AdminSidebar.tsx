@@ -95,6 +95,7 @@ const pricingMenuItems = [
     path: '/admin/pricing/rate-card', 
     description: 'View computed pricing' 
   },
+  { icon: DollarSign, label: 'Room Rate Management', path: '/admin/pricing/room-rates', description: 'Weekly and bulk EP room rates' },
   { icon: Percent, label: 'Promo Codes', path: '/admin/pricing/promotions', description: 'Website offer configuration and rollout status' },
   { icon: DollarSign, label: 'Rate Plans', path: '/admin/pricing/rate-plans', description: 'One price, all meal options' },
   { 

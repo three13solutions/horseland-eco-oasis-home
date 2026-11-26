@@ -1,0 +1,1 @@
+DO $$ DECLARE d text; BEGIN SELECT pg_get_functiondef('room_rate_private.save_room_rate_management(jsonb)'::regprocedure) INTO d; d:=replace(d,'''mode'',''custom''','''mode'',''fixed'''); EXECUTE d; END $$;
