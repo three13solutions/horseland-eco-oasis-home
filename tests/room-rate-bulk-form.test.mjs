@@ -1,0 +1,11 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { applyPicks, bulkFormKey, bulkSummary, noPicks } from '../src/pages/admin/roomRateBulkForm.ts';
+import { bulkRateReview, emptyRates } from '../src/lib/room-rate-management.ts';
+const entry = { category_id:'s',type_id:'pod',type_name:'Standard',date:'2026-11-27',weekend:false,ep:2500,adult:900,child:600,editable:true,reason:null,fingerprint:'f' };
+const grid = { categories:[], entries:[entry,{...entry,date:'2026-11-28',weekend:true}] };
+const base = { mode:'week', same:emptyRates(), weekdays:{ep:'3000',adult:'1000',child:''}, weekends:{ep:'5000',adult:'',child:'0'}, days:{} };
+test('unticked fields stay unchanged but keep their typed value in the form',()=>{const r=applyPicks(base,{weekdays:{...noPicks(),ep:true},weekends:{...noPicks(),child:true}});assert.deepEqual(r.weekdays,{ep:'3000',adult:'',child:''});assert.deepEqual(r.weekends,{ep:'',adult:'',child:'0'});assert.equal(base.weekdays.adult,'1000');});
+test('weekday and weekend keep independent rates; zero is applied',()=>{const rows=bulkRateReview(grid,['pod'],['2026-11-27','2026-11-28'],applyPicks(base,{weekdays:{...noPicks(),ep:true},weekends:{ep:true,adult:false,child:true}}));assert.deepEqual(rows.map(r=>r.change),[{type_id:'pod',date:'2026-11-27',fingerprint:'f',ep:3000},{type_id:'pod',date:'2026-11-28',fingerprint:'f',ep:5000,child:0}]);assert.deepEqual(bulkSummary(rows),{dates:2,rooms:1,fields:3});});
+test('nothing ticked means nothing to apply',()=>assert.throws(()=>bulkRateReview(grid,['pod'],['2026-11-27'],applyPicks(base,{})),/at least one changed price/));
+test('preview key changes on any submitted edit and ignores inactive groups',()=>{const k=x=>bulkFormKey({typeIds:['pod'],dates:['2026-11-27'],rules:base,picks:{weekdays:{...noPicks(),ep:true}},...x});const a=k({});assert.notEqual(a,k({typeIds:['pod','b']}));assert.notEqual(a,k({dates:['2026-11-28']}));assert.notEqual(a,k({rules:{...base,weekdays:{...base.weekdays,ep:'3100'}}}));assert.equal(a,k({rules:{...base,same:{ep:'9',adult:'',child:''}}}));assert.equal(a,k({typeIds:['pod']}));});
