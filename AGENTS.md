@@ -1,5 +1,7 @@
 # Architecture
 
+- Undated Stay card prices scan one-night, two-adult public canonical variants over a bounded discovery window, keeping the winning dates/variant and failing closed on incomplete scans; never use static base rates or create checkout orders for discovery.
+
 - Saved checkout clearing verifies ownership and Razorpay unpaid evidence before atomically abandoning the order and releasing inventory; retain abandoned order records and block all booking fulfillment for late payments because Razorpay orders cannot be cancelled.
 
 - Room Rate Management and the live Rate Calendar share the same room-type-keyed weekly/bulk editor so edits never affect sibling types in the same category; atomic admin-checked saves split existing EP anchors by date, preserving stay tiers, guest links, unit overrides and protected pricing periods rather than creating a second pricing engine.

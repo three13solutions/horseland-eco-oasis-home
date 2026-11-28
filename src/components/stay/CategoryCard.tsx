@@ -9,6 +9,8 @@ import MediaAsset from '@/components/MediaAsset';
 import { Users, MapPin, Coffee, UtensilsCrossed, Home, CreditCard, XCircle, Check } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useDynamicPricing } from '@/hooks/useDynamicPricing';
+import { useStayStartingRate } from '@/hooks/useStayStartingRate';
+import { STARTING_RATE_DAYS } from '@/lib/stay-starting-rate';
 
 export type Category = {
   id: string;
@@ -45,6 +47,8 @@ const CategoryCard: React.FC<Props> = ({ category, onViewDetails, onBookNow, vie
   const navigate = useNavigate();
   const [selectedMealPlan, setSelectedMealPlan] = useState<string>('');
   const [selectedCancellationPolicy, setSelectedCancellationPolicy] = useState<string>('');
+  const hasDates = !!(checkIn && checkOut);
+  const starting = useStayStartingRate(category.id, !hasDates);
 
   // Fetch dynamic pricing variants
   const { data: variants, isLoading, isError: ratesError } = useDynamicPricing({
@@ -137,9 +141,9 @@ const CategoryCard: React.FC<Props> = ({ category, onViewDetails, onBookNow, vie
   const nights = checkIn && checkOut ? countBookingNights(checkIn, checkOut) : 1;
 
   // Use database variant prices (which include both meal plan AND cancellation policy adjustments)
-  // Only fallback to manual calculation if variants aren't loaded yet
+  // Undated prices must also be publicly bookable variants, never static rates.
   const { displayPrice, totalPrice, pricePerPerson } = useMemo(() => {
-    if (selectedVariant) {
+    if (selectedVariant && checkIn && checkOut) {
       // Use prices from database variants (includes meal plan + cancellation policy)
       return { 
         displayPrice: selectedVariant.price_per_night,
@@ -150,9 +154,13 @@ const CategoryCard: React.FC<Props> = ({ category, onViewDetails, onBookNow, vie
     
     // A dated offer needs a server-confirmed eligible variant. No client-side
     // fallback can resurrect a hidden plan or silently quote another plan.
-    if (!checkIn || !checkOut) return { displayPrice: category.basePrice, totalPrice: category.basePrice, pricePerPerson: Math.round(category.basePrice / guests) };
+    if (!checkIn || !checkOut) return { displayPrice: starting.rate?.variant.price_per_night ?? 0, totalPrice: starting.rate?.variant.total_price ?? 0, pricePerPerson: 0 };
     return { displayPrice: 0, totalPrice: 0, pricePerPerson: 0 };
-  }, [selectedVariant, selectedMealPlan, adults, children, guests, nights, category.basePrice, checkIn, checkOut]);
+  }, [selectedVariant, selectedMealPlan, adults, children, guests, nights, starting.rate, checkIn, checkOut]);
+
+  const hasDisplayPrice = hasDates ? !!selectedVariant : !!starting.rate;
+  const priceLabel = hasDates ? (selectedVariant ? 'Price per night' : 'Choose an available plan')
+    : starting.loading ? 'Checking prices…' : starting.rate ? 'Starting from' : 'Select dates for pricing';
 
   const handleBookNow = () => {
     if (checkIn && checkOut && (!selectedVariant || isLoading)) return;
@@ -300,14 +308,15 @@ const CategoryCard: React.FC<Props> = ({ category, onViewDetails, onBookNow, vie
             <div className="flex items-end justify-between gap-4 mt-4">
               <div>
                 <div className="text-xs text-muted-foreground mb-1">
-                  {selectedVariant ? 'Price per night' : checkIn && checkOut ? 'Choose an available plan' : 'Starting from · select dates'}
+                  {priceLabel}
                 </div>
                 <span className="text-2xl font-heading font-bold text-primary">
-                  {selectedVariant || !checkIn || !checkOut ? `₹${displayPrice.toLocaleString()}` : '—'}
+                  {hasDisplayPrice ? `₹${displayPrice.toLocaleString()}` : hasDates ? '—' : null}
                 </span>
                 <span className="text-sm text-muted-foreground ml-1">
-                  /night
+                  {hasDisplayPrice ? '/night' : null}
                 </span>
+                {!hasDates && starting.rate && <div className="text-xs text-muted-foreground mt-1">2 adults · 1 night · next {STARTING_RATE_DAYS} days</div>}
                 {selectedVariant && (
                   <div className="text-xs text-muted-foreground mt-1">
                     Total: ₹{totalPrice.toLocaleString()} for {nights} night{nights > 1 ? 's' : ''} · {guestHeadcount(guestCounts ?? legacyGuestCounts(adults,children,infants))} guests
@@ -444,14 +453,15 @@ const CategoryCard: React.FC<Props> = ({ category, onViewDetails, onBookNow, vie
         <div className="space-y-3">
           <div>
             <div className="text-xs text-muted-foreground mb-1">
-              {selectedVariant ? 'Price per night' : checkIn && checkOut ? 'Choose an available plan' : 'Starting from · select dates'}
+              {priceLabel}
             </div>
             <span className="text-2xl font-heading font-bold text-primary">
-              {selectedVariant || !checkIn || !checkOut ? `₹${displayPrice.toLocaleString()}` : '—'}
+              {hasDisplayPrice ? `₹${displayPrice.toLocaleString()}` : hasDates ? '—' : null}
             </span>
             <span className="text-sm text-muted-foreground ml-1">
-              /night
+              {hasDisplayPrice ? '/night' : null}
             </span>
+            {!hasDates && starting.rate && <div className="text-xs text-muted-foreground mt-1">2 adults · 1 night · next {STARTING_RATE_DAYS} days</div>}
             {selectedVariant && (
               <div className="text-xs text-muted-foreground mt-1">
                 Total: ₹{totalPrice.toLocaleString()} for {nights} night{nights > 1 ? 's' : ''} · {guestHeadcount(guestCounts ?? legacyGuestCounts(adults,children,infants))} guests
