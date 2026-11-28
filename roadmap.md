@@ -1,6 +1,7 @@
 # Roadmap
 
-- [x] Replace undated Stay card prices with bookable two-adult website variants in both layouts; verified all four winning stays with fresh public inventory and matching dated UI quotes, plus mobile rendering and 33 focused tests. No bookings or orders created. Uses next 30 days pending the user's window choice; an unrelated existing checkout source-pattern test still fails.
+- [x] Show each published room type's saved Room Only (EP) base price on undated Stay cards in grid and list views; browser checks matched Superior ₹7,000, Deluxe ₹6,000, Standard ₹5,000 and Basement Hideouts ₹4,000, with no page errors. Canonical dated quote code is unchanged; 19 focused pricing tests passed.
+- [x] Replace undated Stay card prices with bookable two-adult website variants in both layouts; verified all four winning stays with fresh public inventory and matching dated UI quotes, plus mobile rendering and 33 focused tests. No bookings or orders created. Superseded by the saved-base-price display request above.
 
 - [x] Allow owner-verified unpaid saved checkout clearing, atomically release inventory, retain late payments for admin review, and deploy; isolated database and checkout tests passed, real empty-checkout clear verified through the UI. Existing payable-order UI verification requires the owner's saved capability; no new payment orders or bookings created.
 - [ ] Enable automatic late-payment notifications by registering the Razorpay webhook (blocked: Razorpay Dashboard configuration by account owner).

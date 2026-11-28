@@ -1,6 +1,6 @@
 # Architecture
 
-- Undated Stay card prices scan one-night, two-adult public canonical variants over a bounded discovery window, keeping the winning dates/variant and failing closed on incomplete scans; never use static base rates or create checkout orders for discovery.
+- Undated Stay cards show the saved room-type Room Only (EP) base price for two adults, with no availability scan or checkout orders; dated prices continue to use the public canonical variant quote.
 
 - Saved checkout clearing verifies ownership and Razorpay unpaid evidence before atomically abandoning the order and releasing inventory; retain abandoned order records and block all booking fulfillment for late payments because Razorpay orders cannot be cancelled.
 
