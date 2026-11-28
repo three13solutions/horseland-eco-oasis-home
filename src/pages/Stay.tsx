@@ -8,6 +8,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { LayoutGrid, List, Filter } from 'lucide-react';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
+import { savedStayEpPrice } from '@/lib/stay-base-price';
 
 
 // Helper function to map room features to category attributes
@@ -107,7 +108,25 @@ const Stay = () => {
           return;
         }
 
-        const mappedCategories = data.map(mapRoomToCategory);
+        const today = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Kolkata', year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date());
+        const { data: anchors, error: rateError } = await supabase
+          .from('rate_plan_anchors')
+          .select('id, room_type_id, room_unit_id, amount, quoted_nights, included_adults, source_meal_plan_code, source_override_id, is_active, verified_basis, start_date, end_date, min_nights, max_nights, day_type, priority, updated_at')
+          .in('room_type_id', data.map(room => room.id))
+          .eq('is_active', true)
+          .eq('verified_basis', true)
+          .is('source_override_id', null)
+          .is('room_unit_id', null)
+          .in('source_meal_plan_code', ['RO', 'EP'])
+          .in('day_type', ['weekday', 'all'])
+          .eq('included_adults', 2)
+          .eq('quoted_nights', 1);
+        if (rateError) console.error('Error loading saved EP base rates:', rateError);
+        const mappedCategories = data.map(room => ({
+          ...mapRoomToCategory(room),
+          // Never fall back to the older listing price if saved EP pricing is unavailable.
+          basePrice: savedStayEpPrice(anchors ?? [], room.id, today) ?? 0,
+        }));
         setCategories(mappedCategories);
       } catch (error) {
         console.error('Error loading room types:', error);

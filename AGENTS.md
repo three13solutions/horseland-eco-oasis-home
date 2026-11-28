@@ -1,6 +1,6 @@
 # Architecture
 
-- Undated Stay cards show the saved room-type Room Only (EP) base price for two adults, with no availability scan or checkout orders; dated prices continue to use the public canonical variant quote.
+- Undated Stay cards read the current verified room-type weekday/all one-night EP anchor for two adults from Rate Management, never legacy room_types.base_price, packages, unit overrides or weekend premiums; no availability scan or checkout orders, and dated prices keep the public canonical variant quote.
 
 - Saved checkout clearing verifies ownership and Razorpay unpaid evidence before atomically abandoning the order and releasing inventory; retain abandoned order records and block all booking fulfillment for late payments because Razorpay orders cannot be cancelled.
 

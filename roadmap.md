@@ -1,5 +1,7 @@
 # Roadmap
 
+- [x] Correct Stay-only undated cards to read saved Room Rate Management EP anchors rather than the legacy listing price; Basement Hideouts shows ₹2,000 for two people per night. Preserve other pages, dated quotes, pricing records and booking flow.
+
 - [x] Record that each room type's saved Room Only (EP) base price is configured for 2 people per night: Stay cards state "for 2 people per night · Room Only" in both layouts, the booking page's Selected Room card shows the whole base price for 2 people instead of a per-guest figure, and the rule is saved to project memory. Homepage and individual room pages stay unchanged per the user's choice. 3 focused tests passed; browser checks showed Superior ₹7,000, Deluxe ₹6,000, Standard ₹5,000 and Basement Hideouts ₹4,000 with the note in grid and list views, the booking page reading "₹6,000 for 2 people per night (Room Only)", no per-guest line and no page errors.
 - [x] Show each published room type's saved Room Only (EP) base price on undated Stay cards in grid and list views; browser checks matched Superior ₹7,000, Deluxe ₹6,000, Standard ₹5,000 and Basement Hideouts ₹4,000, with no page errors. Canonical dated quote code is unchanged; 19 focused pricing tests passed.
 - [x] Replace undated Stay card prices with bookable two-adult website variants in both layouts; verified all four winning stays with fresh public inventory and matching dated UI quotes, plus mobile rendering and 33 focused tests. No bookings or orders created. Superseded by the saved-base-price display request above.
