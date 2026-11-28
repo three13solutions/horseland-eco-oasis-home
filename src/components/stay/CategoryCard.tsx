@@ -9,7 +9,7 @@ import MediaAsset from '@/components/MediaAsset';
 import { Users, MapPin, Coffee, UtensilsCrossed, Home, CreditCard, XCircle, Check } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useDynamicPricing } from '@/hooks/useDynamicPricing';
-import { savedRoomOnlyBasePrice } from '@/lib/stay-base-price';
+import { savedRoomOnlyBasePrice, BASE_PRICE_COVERED_PEOPLE } from '@/lib/stay-base-price';
 
 export type Category = {
   id: string;
@@ -315,7 +315,7 @@ const CategoryCard: React.FC<Props> = ({ category, onViewDetails, onBookNow, vie
                 <span className="text-sm text-muted-foreground ml-1">
                   {hasDisplayPrice ? '/night' : null}
                 </span>
-                {!hasDates && basePrice !== null && <div className="text-xs text-muted-foreground mt-1">2 adults · Room Only</div>}
+                {!hasDates && basePrice !== null && <div className="text-xs text-muted-foreground mt-1">for {BASE_PRICE_COVERED_PEOPLE} people per night · Room Only</div>}
                 {selectedVariant && (
                   <div className="text-xs text-muted-foreground mt-1">
                     Total: ₹{totalPrice.toLocaleString()} for {nights} night{nights > 1 ? 's' : ''} · {guestHeadcount(guestCounts ?? legacyGuestCounts(adults,children,infants))} guests
@@ -460,7 +460,7 @@ const CategoryCard: React.FC<Props> = ({ category, onViewDetails, onBookNow, vie
             <span className="text-sm text-muted-foreground ml-1">
               {hasDisplayPrice ? '/night' : null}
             </span>
-            {!hasDates && basePrice !== null && <div className="text-xs text-muted-foreground mt-1">2 adults · Room Only</div>}
+            {!hasDates && basePrice !== null && <div className="text-xs text-muted-foreground mt-1">for {BASE_PRICE_COVERED_PEOPLE} people per night · Room Only</div>}
             {selectedVariant && (
               <div className="text-xs text-muted-foreground mt-1">
                 Total: ₹{totalPrice.toLocaleString()} for {nights} night{nights > 1 ? 's' : ''} · {guestHeadcount(guestCounts ?? legacyGuestCounts(adults,children,infants))} guests

@@ -7,6 +7,7 @@ import { readWebsiteCheckout, clearConfirmedWebsiteCheckout, discardSafelyReject
 import { websiteTypeAvailability } from '@/lib/websiteInventory';
 import { readGuestParty } from '@/lib/guestParty';
 import { normalizeMealPlanCode, type MealPlanCode } from '@/lib/mealPlans';
+import { BASE_PRICE_COVERED_PEOPLE, basePriceForTwoPeople } from '@/lib/stay-base-price';
 import React, { useState, useEffect, useRef } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { Calendar, Users, Clock, MapPin, Wifi, Coffee, Car, Utensils, Plus, Minus, Bed, CarFront, Sparkles, Package, ChevronDown, CalendarIcon, Edit2 } from 'lucide-react';
@@ -1709,7 +1710,11 @@ const Booking = () => {
                       <div className="flex-1">
                         <h3 className="font-semibold">{selectedRoomType.name}</h3>
                         <p className="text-sm text-muted-foreground">Up to {selectedRoomType.max_guests} guests</p>
-                        <p className="text-sm text-muted-foreground mt-1">₹{Math.round(selectedRoomType.base_price / Math.max(1, adultsCount + childrenCount + infantsCount)).toLocaleString()}/guest/night</p>
+                        <p className="text-sm text-muted-foreground mt-1">
+                          {basePriceForTwoPeople(selectedRoomType.base_price) === null
+                            ? 'Room Only base price not configured'
+                            : `₹${basePriceForTwoPeople(selectedRoomType.base_price)!.toLocaleString('en-IN')} for ${BASE_PRICE_COVERED_PEOPLE} people per night (Room Only)`}
+                        </p>
                       </div>
                       <Button variant="outline" onClick={() => {
                         // Navigate to search availability with current dates and guests
